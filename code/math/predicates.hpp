@@ -43,33 +43,35 @@ float32 orient3d(vector3 a, vector3 b, vector3 c, vector3 d)
 //
 // Let the triangle ABC appear in the counter-clockwise order, as indicated by the orient2d(A, B, C) > 0.
 //
-// Then, when in_circle2d(A, B, C, D) > 0, D lies inside the circle through the three points A, B, and C;
-// if in_circle(A, B, C, D) < 0, then D lies outside the circle;
-// if in_circle(A, B, C, D) = 0, then four points are cocircular.
+// Then, when in_circle2d(A, B, C, P) > 0, P lies inside the circle through the three points A, B, and C;
+// if in_circle(A, B, C, P) < 0, then P lies outside the circle;
+// if in_circle(A, B, C, P) = 0, then four points are cocircular.
 //
 // If orient2d(A, B, C) < 0, the result is reversed.
 //
-float32 in_circle2d(vector2 a, vector2 b, vector2 c, vector2 d)
+float32 in_circle2d(vector2 a, vector2 b, vector2 c, vector2 p)
 {
-    float32 result = determinant(make_matrix3(a.x - d.x, a.y - d.y, square(a.x - d.x) + square(a.y - d.y),
-                                              b.x - d.x, b.y - d.y, square(b.x - d.x) + square(b.y - d.y),
-                                              c.x - d.x, c.y - d.y, square(c.x - d.x) + square(c.y - d.y)));
+    matrix3 m = make_matrix3(a.x - p.x, a.y - p.y, square(a.x - p.x) + square(a.y - p.y),
+                             b.x - p.x, b.y - p.y, square(b.x - p.x) + square(b.y - p.y),
+                             c.x - p.x, c.y - p.y, square(c.x - p.x) + square(c.y - p.y))
+    float32 result = determinant(m);
     return result;
 }
 
 //
 // Let the four points A, B, C, and D be oriented such that orient3d(A, B, C, D) > 0,
 //
-// Then, when in_sphere(A, B, C, D, E) > 0, then E lies inside the sphere through A, B, C, and D;
-// if in_sphere(A, B, C, D, E) < 0, then E lies outside the sphere;
-// if in_sphere(A, B, C, D, E) = 0, then five points are cospherical
+// Then, when in_sphere(A, B, C, D, P) > 0, then P lies inside the sphere through A, B, C, and D;
+// if in_sphere(A, B, C, D, P) < 0, then P lies outside the sphere;
+// if in_sphere(A, B, C, D, P) = 0, then five points are cospherical
 //
-float32 in_sphere3d(vector3 a, vector3 b, vector3 c, vector3 d, vector3 e)
+float32 in_sphere3d(vector3 a, vector3 b, vector3 c, vector3 d, vector3 p)
 {
-    float32 result = determinant(make_matrix4(a.x - e.x, a.y - e.y, a.z - e.z, square(a.x - e.x) + square(a.y - e.y) + square(a.z - e.z),
-                                              b.x - e.x, b.y - e.y, b.z - e.z, square(b.x - e.x) + square(b.y - e.y) + square(b.z - e.z),
-                                              c.x - e.x, c.y - e.y, c.z - e.z, square(c.x - e.x) + square(c.y - e.y) + square(c.z - e.z),
-                                              d.x - e.x, d.y - e.y, d.z - e.z, square(d.x - e.x) + square(d.y - e.y) + square(d.z - e.z)));
+    matrix4 m = make_matrix4(a.x - p.x, a.y - p.y, a.z - p.z, square(a.x - p.x) + square(a.y - p.y) + square(a.z - p.z),
+                             b.x - p.x, b.y - p.y, b.z - p.z, square(b.x - p.x) + square(b.y - p.y) + square(b.z - p.z),
+                             c.x - p.x, c.y - p.y, c.z - p.z, square(c.x - p.x) + square(c.y - p.y) + square(c.z - p.z),
+                             d.x - p.x, d.y - p.y, d.z - p.z, square(d.x - p.x) + square(d.y - p.y) + square(d.z - p.z))
+    float32 result = determinant(m);
     return result;
 }
 
