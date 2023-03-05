@@ -2,7 +2,7 @@
 #define PLATFORM_WIN32_HPP
 
 #include <base.hpp>
-#include <memory.hpp>
+#include <memory/memory.hpp>
 
 #include <windows.h>
 
@@ -57,8 +57,7 @@ struct dll
     HMODULE  handle;
     FILETIME timestamp;
 
-    template <typename FunctionPointer>
-    [[nodiscard]]
+    template <typename FunctionPointer> [[nodiscard]]
     FunctionPointer get_function(char const *name)
     {
         void *address = GetProcAddress(handle, name);

@@ -1,5 +1,5 @@
-#ifndef MEMORY_HPP
-#define MEMORY_HPP
+#ifndef MEMORY_MEMORY_HPP
+#define MEMORY_MEMORY_HPP
 
 #include <base.hpp>
 
@@ -41,4 +41,4 @@ struct memory_block
 };
 
 
-#endif // MEMORY_HPP
+#endif // MEMORY_MEMORY_HPP

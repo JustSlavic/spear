@@ -349,9 +349,17 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     game_dll game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
     memory_block game_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(8));
 
+    execution_context context = {};
+
     if (game.initialize_memory)
     {
-        game.initialize_memory(game_memory);
+        game.initialize_memory(&context, game_memory);
+    }
+    else
+    {
+        MessageBeep(MB_ICONERROR);
+        MessageBoxA(0, "System error! Could not load Game DLL.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
+        return 1;
     }
 
     struct vertex
@@ -458,7 +466,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
         if (game.update_and_render)
         {
-            game.update_and_render(game_memory);
+            game.update_and_render(&context, game_memory);
         }
 
         // Draw plane
@@ -470,6 +478,19 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
             glBindVertexArray(vertex_array_id);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
             glDrawElements(GL_TRIANGLES, ARRAY_COUNT(indices), GL_UNSIGNED_INT, NULL);
+        }
+
+        for (usize cmd_index = context.next_command_index; cmd_index < context.command_queue_size; cmd_index = (cmd_index + 1) % ARRAY_COUNT(context.command_queue))
+        {
+            auto cmd = pop_execution_command(&context);
+            switch (cmd.type)
+            {
+                case execution_context::command::exit:
+                {
+                    running = false;
+                }
+                break;
+            }
         }
 
         SwapBuffers(device_context);
