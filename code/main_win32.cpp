@@ -276,7 +276,8 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     }
 
     gl::initialize();
-
+    gl::set_clear_color(0, 0, 0, 1);
+    gl::vsync(true);
 
     struct vertex
     {
@@ -351,8 +352,8 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
     }
 
-    auto plane_vs = gl::compile_shader(vs_source, GL_VERTEX_SHADER);
-    auto plane_fs = gl::compile_shader(fs_source, GL_FRAGMENT_SHADER);
+    auto plane_vs = gl::compile_shader(vs_source, gl::shader::vertex);
+    auto plane_fs = gl::compile_shader(fs_source, gl::shader::fragment);
     auto plane_shader = gl::link_shader(plane_vs, plane_fs);
     glDeleteShader(plane_vs);
     glDeleteShader(plane_fs);
@@ -378,13 +379,11 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
             viewport_changed = false;
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        gl::clear();
 
         // Draw plane
         {
-            glUseProgram(plane_shader.id);
-
+            gl::use_shader(plane_shader);
             gl::uniform(plane_shader, "u_view", view);
             gl::uniform(plane_shader, "u_projection", projection);
 
@@ -394,8 +393,6 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
 
         SwapBuffers(device_context);
-
-        Sleep(30);
     }
 
     return 0;

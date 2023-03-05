@@ -198,6 +198,24 @@ void initialize()
 }
 
 
+void set_clear_color(float32 r, float32 g, float32 b, float32 a)
+{
+    glClearColor(r, g, b, a);
+}
+
+
+void set_clear_color(math::vector4 color)
+{
+    set_clear_color(color.r, color.g, color.b, color.a);
+}
+
+
+void clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+
 void vsync(bool turn_on)
 {
     wglSwapIntervalEXT(turn_on ? 1 : 0);
@@ -235,6 +253,12 @@ struct shader
     uint32_t id;
     uint32_t vertex_shader;
     uint32_t fragment_shader;
+
+    enum shader_type
+    {
+        vertex = GL_VERTEX_SHADER,
+        fragment = GL_FRAGMENT_SHADER,
+    };
 };
 
 
@@ -248,7 +272,7 @@ bool32_t is_shader_program_valid(uint32_t program)
 }
 
 
-uint32_t compile_shader(char const *source_code, GLenum shader_type)
+uint32_t compile_shader(char const *source_code, shader::shader_type shader_type)
 {
     uint32_t id = glCreateShader(shader_type);
     glShaderSource(id, 1, &source_code, NULL);
@@ -303,6 +327,12 @@ shader link_shader(uint32_t vs, uint32_t fs)
     }
 
     return result;
+}
+
+
+void use_shader(shader s)
+{
+    glUseProgram(s.id);
 }
 
 
