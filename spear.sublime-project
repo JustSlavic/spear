@@ -1,0 +1,21 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build_systems":
+    [
+        {
+            "name": "Build Debug",
+
+            "windows": {
+                "shell_cmd": "call $folder\\build.bat",
+                "working_dir": "$folder\\build",
+                "file_regex": "^((?:\\w\\:|\\.{1,2})[\\d\\w\\\\\\.\\/]+)\\((\\d+)\\)\\:()(.*)$",
+                "syntax": "Packages/User/Win32_BuildResults.sublime-syntax",
+            },
+        },
+    ],
+}

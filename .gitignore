@@ -1,0 +1,22 @@
+# Build directory
+build/
+
+# Sublime Text
+*.sublime-workspace
+
+# Visual Studio
+.vs/
+
+*.pdb
+*.sln
+*.ilk
+*.exp
+*.map
+
+# Binaries
+*.lib
+*.exe
+*.dll
+
+# Art
+data/
