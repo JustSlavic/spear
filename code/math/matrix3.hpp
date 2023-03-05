@@ -13,10 +13,15 @@ struct matrix3
 {
     union
     {
-        struct {
+        struct
+        {
             float32 _11, _12, _13;
             float32 _21, _22, _23;
             float32 _31, _32, _33;
+        };
+        struct
+        {
+            vector3 _1, _2, _3;
         };
         vector3 row[3];
         float32 e[3][3];

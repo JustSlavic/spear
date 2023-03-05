@@ -13,11 +13,16 @@ struct matrix4
 {
     union
     {
-        struct {
+        struct
+        {
             float32 _11, _12, _13, _14;
             float32 _21, _22, _23, _24;
             float32 _31, _32, _33, _34;
             float32 _41, _42, _43, _44;
+        };
+        struct
+        {
+            vector4 _1, _2, _3, _4;
         };
         vector4 row[4];
         float32 e[4][4];
@@ -167,20 +172,16 @@ matrix4 make_matrix4 (T t)
     return result;
 }
 
-template <typename T11, typename T12, typename T13, typename T14,
-          typename T21, typename T22, typename T23, typename T24,
-          typename T31, typename T32, typename T33, typename T34,
-          typename T41, typename T42, typename T43, typename T44>
-matrix4 make_matrix4 (T11 t11, T12 t12, T13 t13, T14 t14,
-                      T21 t21, T22 t22, T23 t23, T24 t24,
-                      T31 t31, T32 t32, T33 t33, T34 t34,
-                      T41 t41, T42 t42, T43 t43, T44 t44)
+matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
+                      float32 t21, float32 t22, float32 t23, float32 t24,
+                      float32 t31, float32 t32, float32 t33, float32 t34,
+                      float32 t41, float32 t42, float32 t43, float32 t44)
 {
     matrix4 result = {
-        (float32) t11, (float32) t12, (float32) t13, (float32) t14,
-        (float32) t21, (float32) t22, (float32) t23, (float32) t24,
-        (float32) t31, (float32) t32, (float32) t33, (float32) t34,
-        (float32) t41, (float32) t42, (float32) t43, (float32) t44,
+        t11, t12, t13, t14,
+        t21, t22, t23, t24,
+        t31, t32, t33, t34,
+        t41, t42, t43, t44,
     };
     return result;
 }
