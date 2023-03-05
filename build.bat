@@ -13,5 +13,9 @@ SET LIBS=User32.lib Gdi32.lib Winmm.lib Xinput.lib opengl32.lib
 
 IF NOT EXIST build mkdir build
 
-
 cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fespear ../code/main_win32.cpp /link /PDB:spear.pdb %LINKER_FLAGS% %LIBS%
+
+for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds"') do SET PDB_FILENAME="%%i.pdb"
+echo WAITING FOR PDB > lock.tmp
+cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
+del lock.tmp

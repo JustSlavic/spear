@@ -33,13 +33,16 @@ typedef double float64;
 
 #define DEBUG_BREAK __debugbreak
 #define FORCE_INLINE __forceinline
+#define DLL_EXPORT __declspec(dllexport)
 
 #endif // COMPILER_MSVC
 
-
+typedef uint8_t  byte;
 typedef  int32_t bool32_t;
 typedef uint64_t size_t;
 typedef  int64_t isize_t;
+typedef uint64_t usize;
+typedef  int64_t isize;
 typedef uint64_t uintptr_t;
 typedef  int64_t intptr_t;
 typedef  int64_t ptrdiff_t;

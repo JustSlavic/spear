@@ -3,8 +3,10 @@
 
 // Project headers
 #include <base.hpp>
+#include <string.hpp>
 #include <math/vector3.hpp>
 #include <opengl/gl.hpp>
+#include <game.hpp>
 
 
 GLOBAL bool32_t running;
@@ -45,6 +47,47 @@ void main()
     result_color = fragment_color;
 }
 )GLSL";
+
+
+
+struct game_dll
+{
+    win32::dll dll;
+    initialize_memory_t *initialize_memory;
+    update_and_render_t *update_and_render;
+};
+
+
+game_dll load_game_dll(string dll_path, string temp_dll_path, string lock_filename)
+{
+    game_dll result = {};
+
+    uint32_t dwAttrib = GetFileAttributes(lock_filename.data);
+    bool lock_file_exists = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+
+    if (!lock_file_exists)
+    {
+        CopyFile(dll_path.data, temp_dll_path.data, FALSE);
+
+        result.dll = win32::load_dll(temp_dll_path.data);
+
+        if (result.dll)
+        {
+            result.initialize_memory = result.dll.get_function<initialize_memory_t *>("initialize_memory");
+            result.update_and_render = result.dll.get_function<update_and_render_t *>("update_and_render");
+        }
+    }
+
+    return result;
+}
+
+
+void unload_game_dll(game_dll *library)
+{
+    win32::unload_dll(&library->dll);
+    library->initialize_memory = NULL;
+    library->update_and_render = NULL;
+}
 
 
 LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -279,6 +322,38 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     gl::set_clear_color(0, 0, 0, 1);
     gl::vsync(true);
 
+    char buffer[256] = {};
+
+    uint32_t program_path_size = win32::get_program_path(instance, buffer, ARRAY_COUNT(buffer));
+
+    uint32_t last_slash_index = 0;
+    for (uint32_t char_index = 0; char_index < program_path_size; char_index++) {
+        if (buffer[char_index] == '\\') {
+            last_slash_index = char_index;
+        }
+    }
+    uint32_t program_path_size_no_filename = last_slash_index + 1;
+
+    char game_dll_buffer[256] = {};
+    memory::copy(game_dll_buffer, buffer, program_path_size_no_filename);
+    memory::copy(game_dll_buffer + program_path_size_no_filename, "game.dll", 8);
+
+    char temp_dll_buffer[256] = {};
+    memory::copy(temp_dll_buffer, buffer, program_path_size_no_filename);
+    memory::copy(temp_dll_buffer + program_path_size_no_filename, "temp.dll", 8);
+
+    char lock_tmp_buffer[256] = {};
+    memory::copy(lock_tmp_buffer, buffer, program_path_size_no_filename);
+    memory::copy(lock_tmp_buffer + program_path_size_no_filename, "lock.tmp", 8);
+
+    game_dll game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
+    memory_block game_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(8));
+
+    if (game.initialize_memory)
+    {
+        game.initialize_memory(game_memory);
+    }
+
     struct vertex
     {
         math::vector3 position;
@@ -380,6 +455,11 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
 
         gl::clear();
+
+        if (game.update_and_render)
+        {
+            game.update_and_render(game_memory);
+        }
 
         // Draw plane
         {
