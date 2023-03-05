@@ -105,5 +105,13 @@ typedef int16_t sound_sample_t;
 #define STRINGIFY(X)     STRINGIFY_(X)
 
 
+template <typename T>
+void swap(T &a, T &b)
+{
+    T tmp = a;
+    a = b;
+    b = tmp;
+}
+
 
 #endif // BASE_HPP

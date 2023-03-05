@@ -168,13 +168,90 @@ matrix3 make_matrix3 (T11 t11, T12 t12, T13 t13,
     return result;
 }
 
+vector3 operator * (matrix3 a, vector3 v)
+{
+    vector3 result;
 
-// @todo:
-// - transpose
-// - determinant
-// - m * a
-// - a * m
-// - m * m
+    result.x = a._11*v._1 + a._12*v._2 + a._13*v._3;
+    result.y = a._21*v._1 + a._22*v._2 + a._23*v._3;
+    result.z = a._31*v._1 + a._32*v._2 + a._33*v._3;
+
+    return result;
+}
+
+vector3 operator * (vector3 v, matrix3 a)
+{
+    vector3 result;
+
+    result.x = a._11*v._1 + a._21*v._2 + a._31*v._3;
+    result.y = a._12*v._1 + a._22*v._2 + a._32*v._3;
+    result.z = a._13*v._1 + a._23*v._2 + a._33*v._3;
+
+    return result;
+}
+
+matrix3 operator * (matrix3 a, matrix3 b)
+{
+    matrix3 result;
+
+    result._11 = a._11*b._11 + a._12*b._21 + a._13*b._31;
+    result._12 = a._11*b._12 + a._12*b._22 + a._13*b._32;
+    result._13 = a._11*b._13 + a._12*b._23 + a._13*b._33;
+
+    result._21 = a._21*b._11 + a._22*b._21 + a._23*b._31;
+    result._22 = a._21*b._12 + a._22*b._22 + a._23*b._32;
+    result._23 = a._21*b._13 + a._22*b._23 + a._23*b._33;
+
+    result._31 = a._31*b._11 + a._32*b._21 + a._33*b._31;
+    result._32 = a._31*b._12 + a._32*b._22 + a._33*b._32;
+    result._33 = a._31*b._13 + a._32*b._23 + a._33*b._33;
+
+    return result;
+}
+
+void transpose(matrix3& m)
+{
+    swap(m._12, m._21);
+    swap(m._13, m._31);
+    swap(m._23, m._32);
+}
+
+matrix3 transposed(matrix3 m)
+{
+    transpose(m);
+    return m;
+}
+
+float32 determinant(matrix3 const& m)
+{
+    float32 result = m._11 * (m._22 * m._33 - m._23 * m._32)
+                   - m._12 * (m._21 * m._33 - m._23 * m._31)
+                   + m._13 * (m._21 * m._32 - m._23 * m._31);
+}
+
+
+matrix2 adjoint(matrix2 const& m)
+{
+    matrix2 result = {
+        m._22*m._33 - m._23*n._32, m._13*m._32 - m._12*m._33, m._12*m._23 - m._13*m._22,
+        m._23*m._31 - m._21*m._33, m._11*m._33 - m._13*m._31, m._13*m._21 - m._11*m._23,
+        m._21*m._32 - m._22*m._31, m._12*m._31 - m._11*m._32, m._11*m._22 - m._12*m._21,
+    };
+    return result;
+}
+
+matrix2 inverse(matrix2 const& m)
+{
+    matrix2 result = matrix2::zero();
+
+    float32 det = determinant(m);
+    if (!is_zero(det))
+    {
+        result = (1.0f / det) * adjoint(m);
+    }
+
+    return result;
+}
 
 
 } // namespace math

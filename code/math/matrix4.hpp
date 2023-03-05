@@ -186,12 +186,88 @@ matrix4 make_matrix4 (T11 t11, T12 t12, T13 t13, T14 t14,
 }
 
 
-// @todo:
-// - transpose
-// - determinant
-// - m * a
-// - a * m
-// - m * m
+vector4 operator * (matrix4 a, vector4 v)
+{
+    vector4 result;
+
+    result.x = a._11*v._1 + a._12*v._2 + a._13*v._3 + a._14*v._4;
+    result.y = a._21*v._1 + a._22*v._2 + a._23*v._3 + a._24*v._4;
+    result.z = a._31*v._1 + a._32*v._2 + a._33*v._3 + a._34*v._4;
+    result.w = a._41*v._1 + a._42*v._2 + a._43*v._3 + a._44*v._4;
+
+    return result;
+}
+
+vector4 operator * (vector4 v, matrix4 a)
+{
+    vector4 result;
+
+    result.x = a._11*v._1 + a._21*v._2 + a._31*v._3 + a._41*v._4;
+    result.y = a._12*v._1 + a._22*v._2 + a._32*v._3 + a._42*v._4;
+    result.z = a._13*v._1 + a._23*v._2 + a._33*v._3 + a._43*v._4;
+    result.w = a._14*v._1 + a._24*v._2 + a._34*v._3 + a._44*v._4;
+
+    return result;
+}
+
+matrix4 operator * (matrix4 a, matrix4 b)
+{
+    matrix4 result;
+
+    result._11 = a._11*b._11 + a._12*b._21 + a._13*b._31 + a._14*b._41;
+    result._12 = a._11*b._12 + a._12*b._22 + a._13*b._32 + a._14*b._42;
+    result._13 = a._11*b._13 + a._12*b._23 + a._13*b._33 + a._14*b._43;
+    result._14 = a._11*b._14 + a._12*b._24 + a._13*b._34 + a._14*b._44;
+
+    result._21 = a._21*b._11 + a._22*b._21 + a._23*b._31 + a._24*b._41;
+    result._22 = a._21*b._12 + a._22*b._22 + a._23*b._32 + a._24*b._42;
+    result._23 = a._21*b._13 + a._22*b._23 + a._23*b._33 + a._24*b._43;
+    result._24 = a._21*b._14 + a._22*b._24 + a._23*b._34 + a._24*b._44;
+
+    result._31 = a._31*b._11 + a._32*b._21 + a._33*b._31 + a._34*b._41;
+    result._32 = a._31*b._12 + a._32*b._22 + a._33*b._32 + a._34*b._42;
+    result._33 = a._31*b._13 + a._32*b._23 + a._33*b._33 + a._34*b._43;
+    result._34 = a._31*b._14 + a._32*b._24 + a._33*b._34 + a._34*b._44;
+
+    result._41 = a._41*b._11 + a._42*b._21 + a._43*b._31 + a._44*b._41;
+    result._42 = a._41*b._12 + a._42*b._22 + a._43*b._32 + a._44*b._42;
+    result._43 = a._41*b._13 + a._42*b._23 + a._43*b._33 + a._44*b._43;
+    result._44 = a._41*b._14 + a._42*b._24 + a._43*b._34 + a._44*b._44;
+
+    return result;
+}
+
+void transpose(matrix4& m)
+{
+    swap(m._12, m._21);
+    swap(m._13, m._31);
+    swap(m._14, m._41);
+    swap(m._23, m._32);
+    swap(m._24, m._42);
+    swap(m._34, m._43);
+}
+
+matrix4 transposed(matrix4 m)
+{
+    transpose(m);
+    return m;
+}
+
+float32 determinant(matrix4 const& m)
+{
+    float m_33_44_34_43 = (m._33 * m._44 - m._34 * m._43);
+    float m_32_43_33_42 = (m._32 * m._43 - m._33 * m._42);
+    float m_32_44_34_42 = (m._32 * m._44 - m._34 * m._42);
+    float m_31_42_32_41 = (m._31 * m._42 - m._32 * m._41);
+    float m_31_43_33_41 = (m._31 * m._43 - m._33 * m._41);
+    float m_31_44_34_41 = (m._31 * m._44 - m._34 * m._41);
+
+    float result = m._11 * (m._22 * m_33_44_34_43 - m._23 * m_32_44_34_42 + m._24 * m_32_43_33_42)
+                 - m._12 * (m._21 * m_33_44_34_43 - m._23 * m_31_44_34_41 + m._24 * m_31_43_33_41)
+                 + m._13 * (m._21 * m_32_44_34_42 - m._22 * m_31_44_34_41 + m._24 * m_31_42_32_41)
+                 - m._14 * (m._21 * m_32_43_33_42 - m._22 * m_31_43_33_41 + m._23 * m_31_42_32_41);
+    return result;
+}
 
 
 } // namespace math

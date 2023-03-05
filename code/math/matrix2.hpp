@@ -151,13 +151,77 @@ matrix2 make_matrix2 (T11 t11, T12 t12,
     return result;
 }
 
+vector2 operator * (matrix2 a, vector2 v)
+{
+    vector2 result;
 
-// @todo:
-// - transpose
-// - determinant
-// - m * a
-// - a * m
-// - m * m
+    result.x = a._11*v._1 + a._12*v._2;
+    result.y = a._21*v._1 + a._22*v._2;
+
+    return result;
+}
+
+vector2 operator * (vector2 v, matrix2 a)
+{
+    vector2 result;
+
+    result.x = a._11*v._1 + a._21*v._2;
+    result.y = a._12*v._1 + a._22*v._2;
+
+    return result;
+}
+
+matrix2 operator * (matrix2 a, matrix2 b)
+{
+    matrix2 result;
+
+    result._11 = a._11*b._11 + a._12*b._21;
+    result._12 = a._11*b._12 + a._12*b._22;
+
+    result._21 = a._21*b._11 + a._22*b._21;
+    result._22 = a._21*b._12 + a._22*b._22;
+
+    return result;
+}
+
+void transpose(matrix2& m)
+{
+    swap(m._12, m._21);
+}
+
+matrix2 transposed(matrix2 m)
+{
+    transpose(m);
+    return m;
+}
+
+float32 determinant(matrix2 const& m)
+{
+    float32 result = m._11 * m._22 - m._12 * m._21;
+    return result;
+}
+
+matrix2 adjoint(matrix2 const& m)
+{
+    matrix2 result = {
+         m._22, -m._12,
+        -m._21,  m._11,
+    };
+    return result;
+}
+
+matrix2 inverse(matrix2 const& m)
+{
+    matrix2 result = matrix2::zero();
+
+    float32 det = determinant(m);
+    if (!is_zero(det))
+    {
+        result = (1.0f / det) * adjoint(m);
+    }
+
+    return result;
+}
 
 
 } // namespace math
