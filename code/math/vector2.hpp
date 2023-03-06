@@ -27,12 +27,32 @@ struct vector2
         return result;
     }
 
-    float *data() {
+    float *data()
+    {
         return &e[0];
     }
 
-    float const *data() const {
+    float const *data() const
+    {
         return &e[0];
+    }
+
+    static vector2 zero()
+    {
+        vector2 result = { 0.0f, 0.0f };
+        return result;
+    }
+
+    static vector2 ex()
+    {
+        vector2 result = { 1.0f, 0.0f };
+        return result;
+    }
+
+    static vector2 ey()
+    {
+        vector2 result = { 0.0f, 1.0f };
+        return result;
     }
 };
 
