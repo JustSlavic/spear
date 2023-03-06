@@ -142,6 +142,15 @@ void process_pending_messages(input_devices *inp)
                 switch (virtual_key_code)
                 {
                     case VK_ESCAPE: process_button_state(&inp->keyboard_device[keyboard::esc], is_down);
+                        break;
+                    case 'W': process_button_state(&inp->keyboard_device[keyboard::w], is_down);
+                        break;
+                    case 'A': process_button_state(&inp->keyboard_device[keyboard::a], is_down);
+                        break;
+                    case 'S': process_button_state(&inp->keyboard_device[keyboard::s], is_down);
+                        break;
+                    case 'D': process_button_state(&inp->keyboard_device[keyboard::d], is_down);
+                        break;
                 }
             }
             break;

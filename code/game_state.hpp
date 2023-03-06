@@ -15,6 +15,8 @@ struct entity
 
 struct game_state
 {
+    math::vector3 camera_position;
+
     entity entities[1024];
     usize  entity_count;
 };
