@@ -285,9 +285,9 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
     }
 
-    gfx::gl::initialize();
-    gfx::gl::set_clear_color(0, 0, 0, 1);
-    gfx::gl::vsync(true);
+    gfx::initialize(gfx::graphics_api::opengl);
+    gfx::set_clear_color(0, 0, 0, 1);
+    gfx::vsync(true);
 
     char buffer[256] = {};
 
@@ -331,7 +331,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
     auto view = math::matrix4::identity();
     float32 aspect_ratio = 16.0f / 9.0f;
-    auto projection = gfx::gl::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
     running = true;
     while (running)
@@ -340,29 +340,17 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
         if (viewport_changed)
         {
-            auto viewport = gfx::gl::make_viewport(current_client_width, current_client_height, aspect_ratio);
-            gfx::gl::set_viewport(viewport);
+            auto viewport = gfx::make_viewport(current_client_width, current_client_height, aspect_ratio);
+            gfx::set_viewport(viewport);
             viewport_changed = false;
         }
 
-        gfx::gl::clear();
+        gfx::clear();
 
         if (game.update_and_render)
         {
             game.update_and_render(&context, game_memory);
         }
-
-        // Draw plane
-        // {
-        //     auto buffers = opengl_rectangle(math::rectangle2::from_center_size({0, 0}, 1, 1), {1, 1, 1, 1});
-        //     gl::use_shader(plane_shader);
-        //     gl::uniform(plane_shader, "u_view", view);
-        //     gl::uniform(plane_shader, "u_projection", projection);
-
-        //     glBindVertexArray(buffers.vao);
-        //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.ibo);
-        //     glDrawElements(GL_TRIANGLES, buffers.ibo_size, GL_UNSIGNED_INT, NULL);
-        // }
 
         for (usize cmd_index = context.next_execution_command_index;
              cmd_index < context.execution_command_queue_size;
@@ -389,7 +377,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
                 case gfx::render_command::setup_camera:
                 {
-                    view = gfx::gl::make_look_at_matrix(cmd->camera_position, cmd->look_at_position, cmd->camera_up_direction);
+                    view = gfx::make_look_at_matrix(cmd->camera_position, cmd->look_at_position, cmd->camera_up_direction);
                 }
                 break;
 

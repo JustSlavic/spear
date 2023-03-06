@@ -19,11 +19,6 @@ struct execution_command
 };
 
 
-
-
-
-
-
 struct execution_context
 {
     execution_command execution_command_queue[32];

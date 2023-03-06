@@ -5,10 +5,22 @@
 #include <math/vector3.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
+#include <gfx/viewport.hpp>
 
 
 namespace gfx
 {
+
+enum class graphics_api
+{
+    none,
+    software,
+    opengl,
+    vulkan,
+    direct3d11,
+    direct3d12,
+    metal,
+};
 
 struct render_command
 {
@@ -41,7 +53,16 @@ struct render_command
     };
 };
 
-
+void initialize(graphics_api api);
+void vsync(bool32_t active);
+void set_clear_color(float32 r, float32 g, float32 b, float32 a);
+void clear();
+void set_viewport(viewport vp);
+math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up);
+math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
+math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
+math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);
+math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f);
 void setup_projection_matrix(render_command *cmd);
 void setup_camera(render_command *cmd);
 void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 projection);

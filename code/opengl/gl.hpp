@@ -162,7 +162,7 @@ namespace gl {
 
 #if OS_WINDOWS
 
-void initialize()
+bool32_t initialize()
 {
     glGenFramebuffers = (glGenFramebuffersType *) wglGetProcAddress("glGenFramebuffers");
     glBindFramebuffer = (glBindFramebufferType *) wglGetProcAddress("glBindFramebuffer");
@@ -198,32 +198,14 @@ void initialize()
     glUniform4f = (glUniform4fType *) wglGetProcAddress("glUniform4f");
     glUniformMatrix4fv = (glUniformMatrix4fvType *) wglGetProcAddress("glUniformMatrix4fv");
     glTexImage2DMultisample = (glTexImage2DMultisampleType *) wglGetProcAddress("glTexImage2DMultisample");
+
+    return true;
 }
-
-
-void set_clear_color(float32 r, float32 g, float32 b, float32 a)
-{
-    glClearColor(r, g, b, a);
-}
-
-
-void set_clear_color(math::vector4 color)
-{
-    set_clear_color(color.r, color.g, color.b, color.a);
-}
-
-
-void clear()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-}
-
 
 void vsync(bool turn_on)
 {
     wglSwapIntervalEXT(turn_on ? 1 : 0);
 }
-
 
 #endif // OS_WINDOWS
 
@@ -232,7 +214,6 @@ void vsync(bool turn_on)
     auto err = glGetError();   \
     if (err) { ASSERT_FAIL(); } \
 } void(0)
-
 
 char const *gl_error_string(GLenum ec)
 {
@@ -250,6 +231,20 @@ char const *gl_error_string(GLenum ec)
     return NULL;
 }
 
+void set_clear_color(float32 r, float32 g, float32 b, float32 a)
+{
+    glClearColor(r, g, b, a);
+}
+
+void set_clear_color(math::vector4 color)
+{
+    set_clear_color(color.r, color.g, color.b, color.a);
+}
+
+void clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
 
 struct shader
 {
@@ -374,133 +369,7 @@ void uniform(shader s, char const *name, math::matrix4 const& m)
 }
 
 
-math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
-{
-    math::matrix4 result = {};
 
-    result._11 = 2.0f * n / w;
-    result._22 = 2.0f * n / h;
-    result._33 = -(f + n) / (f - n);
-    result._34 = -1.0f;
-    result._43 = -2.0f * f * n / (f - n);
-
-    return result;
-}
-
-
-math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
-{
-    //     w/2
-    //   +-----+
-    //   |    /
-    //   |   /
-    // n |  /
-    //   | / angle = fov/2
-    //   |/  tg(fov / 2) = (w/2) / n
-    //   +   => 2n / w = 1 / tg(fov / 2)
-
-    float32 tf2 = (1.0f / math::tangent(0.5f * fov));
-
-    math::matrix4 result = {};
-
-    result._11 = tf2;
-    result._22 = tf2 * aspect_ratio;
-    result._33 = -(f + n) / (f - n);
-    result._34 = -1.0f;
-    result._43 = -2.0f * f * n / (f - n);
-
-    return result;
-}
-
-
-math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
-{
-    math::matrix4 result = {};
-
-    result._11 = 2.0f / w;
-    result._22 = 2.0f / h;
-    result._33 = -2.0f / (f - n);
-    result._43 = -(f + n) / (f - n);
-    result._44 = 1.0f;
-
-    return result;
-}
-
-math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
-{
-    math::matrix4 result;
-
-    result._11 = 1.0f;
-    result._22 = 1.0f * aspect_ratio;
-    result._33 = -2.0f / (f - n);
-    result._43 = -(f + n) / (f - n);
-    result._44 = 1.0f;
-
-    return result;
-}
-
-
-math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up)
-{
-    using namespace math;
-
-    vector3 f = normalized(at - eye);
-    vector3 s = normalized(cross(f, up));
-    vector3 u = cross(s, f);
-
-    matrix4 result =
-    {
-         s.x,  u.x,  -f.x, 0,
-         s.y,  u.y,  -f.y, 0,
-         s.z,  u.z,  -f.z, 0,
-        -dot(s, eye), -dot(u, eye), dot(f, eye), 1,
-    };
-
-    return result;
-}
-
-
-struct viewport
-{
-    uint32_t offset_x;
-    uint32_t offset_y;
-    uint32_t width;
-    uint32_t height;
-};
-
-
-viewport make_viewport(uint32_t width, uint32_t height, float32 desired_aspect_ratio)
-{
-    viewport result;
-
-    float32 aspect_ratio = (float32) width / (float32) height;
-    if (aspect_ratio < desired_aspect_ratio)
-    {
-        // Black strips on top and bottom of the screen
-        result.width    = width;
-        result.height   = (uint32_t) (result.width / desired_aspect_ratio);
-        result.offset_x = 0;
-        result.offset_y = (height - result.height) / 2;
-    }
-    else if (aspect_ratio > desired_aspect_ratio)
-    {
-        // Black strips on left and right of the screen
-        result.height   = height;
-        result.width    = (uint32_t) (result.height * desired_aspect_ratio);
-        result.offset_x = (width - result.width) / 2;
-        result.offset_y = 0;
-    }
-    else
-    {
-        // No black strips
-        result.width    = width;
-        result.height   = height;
-        result.offset_x = 0;
-        result.offset_y = 0;
-    }
-
-    return result;
-}
 
 
 void set_viewport(viewport vp)
