@@ -5,6 +5,7 @@
 #include <base.hpp>
 #include <string.hpp>
 #include <math/vector3.hpp>
+#include <renderer.hpp>
 #include <opengl/gl.hpp>
 #include <game.hpp>
 
@@ -14,40 +15,6 @@ GLOBAL bool32_t running;
 GLOBAL uint32_t current_client_width;
 GLOBAL uint32_t current_client_height;
 GLOBAL bool32_t viewport_changed;
-
-
-char const *vs_source = R"GLSL(
-#version 400
-
-layout (location = 0) in vec3 vertex_position;
-layout (location = 1) in vec3 vertex_color;
-
-out vec4 fragment_color;
-
-uniform mat4 u_view;
-uniform mat4 u_projection;
-
-void main()
-{
-    vec4 p = u_projection * u_view * vec4(vertex_position, 1.0);
-    fragment_color = vec4(vertex_color, 1.0);
-    gl_Position = p;
-}
-)GLSL";
-
-
-char const *fs_source = R"GLSL(
-#version 400
-
-in vec4 fragment_color;
-out vec4 result_color;
-
-void main()
-{
-    result_color = fragment_color;
-}
-)GLSL";
-
 
 
 struct game_dll
@@ -318,9 +285,9 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
     }
 
-    gl::initialize();
-    gl::set_clear_color(0, 0, 0, 1);
-    gl::vsync(true);
+    gfx::gl::initialize();
+    gfx::gl::set_clear_color(0, 0, 0, 1);
+    gfx::gl::vsync(true);
 
     char buffer[256] = {};
 
@@ -362,93 +329,9 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         return 1;
     }
 
-    struct vertex
-    {
-        math::vector3 position;
-        math::vector3 color;
-    };
-
-    vertex vertices[] =
-    {
-        { math::make_vector3(-1, -1, 0), math::make_vector3(0, 0, 1) }, // 0 bottom left
-        { math::make_vector3( 1, -1, 0), math::make_vector3(0, 1, 0) }, // 1 bottom right
-        { math::make_vector3( 1,  1, 0), math::make_vector3(1, 0, 0) }, // 2 top right
-        { math::make_vector3(-1,  1, 0), math::make_vector3(1, 1, 0) }, // 3 top left
-    };
-
-    uint32_t vertex_buffer_id = 0;
-    {
-        glGenBuffers(1, &vertex_buffer_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    }
-
-    uint32_t indices[] = {
-        0, 1, 2,  // first triangle
-        2, 3, 0,  // second triangle
-    };
-
-    uint32_t index_buffer_id = 0;
-    {
-        glGenBuffers(1, &index_buffer_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    }
-
-    uint32_t vertex_array_id = 0;
-    {
-        glGenVertexArrays(1, &vertex_array_id);
-        glBindVertexArray(vertex_array_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-
-        uint32_t attrib_index = 0;
-        uint64_t offset = 0;
-        {
-            uint32_t count = 3; // Because it's vector3
-
-            glEnableVertexAttribArray(attrib_index);
-            glVertexAttribPointer(
-                attrib_index,      // Index
-                count,             // Count
-                GL_FLOAT,          // Type
-                GL_FALSE,          // Normalized?
-                sizeof(vertex),    // Stride
-                (void *) offset);  // Offset
-
-            attrib_index += 1;
-            offset += (count * sizeof(float32));
-        }
-        {
-            uint32_t count = 3; // Because it's color32
-
-            glEnableVertexAttribArray(attrib_index);
-            glVertexAttribPointer(
-                attrib_index,      // Index
-                count,             // Count
-                GL_FLOAT,          // Type
-                GL_FALSE,          // Normalized?
-                sizeof(vertex),    // Stride
-                (void *) offset);  // Offset
-
-            attrib_index += 1;
-            offset += (count * sizeof(float32));
-        }
-    }
-
-    auto plane_vs = gl::compile_shader(vs_source, gl::shader::vertex);
-    auto plane_fs = gl::compile_shader(fs_source, gl::shader::fragment);
-    auto plane_shader = gl::link_shader(plane_vs, plane_fs);
-    glDeleteShader(plane_vs);
-    glDeleteShader(plane_fs);
-    GL_CHECK_ERRORS();
-
-    auto camera_position = math::make_vector3(0, 0, -3);
-    auto look_at_position = math::make_vector3(0, 0, 0);
-    auto camera_up_direction = math::make_vector3(0, 1, 0);
-    auto view = gl::make_look_at_matrix(camera_position, look_at_position, camera_up_direction);
-
+    auto view = math::matrix4::identity();
     float32 aspect_ratio = 16.0f / 9.0f;
-    auto projection = gl::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = gfx::gl::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
     running = true;
     while (running)
@@ -457,12 +340,12 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
         if (viewport_changed)
         {
-            auto viewport = gl::make_viewport(current_client_width, current_client_height, aspect_ratio);
-            gl::set_viewport(viewport);
+            auto viewport = gfx::gl::make_viewport(current_client_width, current_client_height, aspect_ratio);
+            gfx::gl::set_viewport(viewport);
             viewport_changed = false;
         }
 
-        gl::clear();
+        gfx::gl::clear();
 
         if (game.update_and_render)
         {
@@ -470,22 +353,25 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
 
         // Draw plane
-        {
-            gl::use_shader(plane_shader);
-            gl::uniform(plane_shader, "u_view", view);
-            gl::uniform(plane_shader, "u_projection", projection);
+        // {
+        //     auto buffers = opengl_rectangle(math::rectangle2::from_center_size({0, 0}, 1, 1), {1, 1, 1, 1});
+        //     gl::use_shader(plane_shader);
+        //     gl::uniform(plane_shader, "u_view", view);
+        //     gl::uniform(plane_shader, "u_projection", projection);
 
-            glBindVertexArray(vertex_array_id);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-            glDrawElements(GL_TRIANGLES, ARRAY_COUNT(indices), GL_UNSIGNED_INT, NULL);
-        }
+        //     glBindVertexArray(buffers.vao);
+        //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.ibo);
+        //     glDrawElements(GL_TRIANGLES, buffers.ibo_size, GL_UNSIGNED_INT, NULL);
+        // }
 
-        for (usize cmd_index = context.next_command_index; cmd_index < context.command_queue_size; cmd_index = (cmd_index + 1) % ARRAY_COUNT(context.command_queue))
+        for (usize cmd_index = context.next_execution_command_index;
+             cmd_index < context.execution_command_queue_size;
+             cmd_index = (cmd_index + 1) % ARRAY_COUNT(context.execution_command_queue))
         {
             auto cmd = pop_execution_command(&context);
             switch (cmd.type)
             {
-                case execution_context::command::exit:
+                case execution_command::exit:
                 {
                     running = false;
                 }
@@ -493,8 +379,34 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
             }
         }
 
+        for (usize cmd_index = 0; cmd_index < context.render_command_queue_size; cmd_index++)
+        {
+            auto *cmd = context.render_command_queue + cmd_index;
+            switch (cmd->type)
+            {
+                case gfx::render_command::setup_projection_matrix:
+                break;
+
+                case gfx::render_command::setup_camera:
+                {
+                    view = gfx::gl::make_look_at_matrix(cmd->camera_position, cmd->look_at_position, cmd->camera_up_direction);
+                }
+                break;
+
+                case gfx::render_command::draw_rectangle:
+                {
+                    gfx::draw_rectangle(cmd, view, projection);
+                }
+                break;
+            }
+        }
+        context.render_command_queue_size = 0;
+
         SwapBuffers(device_context);
     }
 
     return 0;
 }
+
+
+#include <renderer.cpp>

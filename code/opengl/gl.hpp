@@ -7,6 +7,10 @@
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 
+#if OS_WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif // OS_WiNDOWS
 #include <gl/gl.h>
 
 
@@ -153,9 +157,8 @@ GLOBAL glUniform4fType *glUniform4f;
 GLOBAL glUniformMatrix4fvType *glUniformMatrix4fv;
 GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
 
-
-namespace gl
-{
+namespace gfx {
+namespace gl {
 
 #if OS_WINDOWS
 
@@ -507,6 +510,7 @@ void set_viewport(viewport vp)
 
 
 } // namespace gl
+} // namespace gfx
 
 
 #endif // OPENGL_GL_HPP
