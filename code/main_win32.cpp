@@ -5,9 +5,11 @@
 #include <base.hpp>
 #include <string.hpp>
 #include <math/vector3.hpp>
-#include <renderer.hpp>
-#include <opengl/gl.hpp>
+#include <gfx/renderer.hpp>
 #include <game.hpp>
+
+// @note: needed for initializing opengl context in window, probably should abstract it away too?
+#include <gfx/opengl/gl.hpp>
 
 
 GLOBAL bool32_t running;
@@ -397,4 +399,4 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 }
 
 
-#include <renderer.cpp>
+#include <gfx/renderer.cpp>

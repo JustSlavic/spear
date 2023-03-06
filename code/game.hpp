@@ -3,7 +3,7 @@
 
 #include <base.hpp>
 #include <memory/memory.hpp>
-#include <renderer.hpp>
+#include <gfx/renderer.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 

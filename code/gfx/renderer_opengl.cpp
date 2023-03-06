@@ -1,5 +1,5 @@
-#include <renderer.hpp>
-#include <opengl/gl.hpp>
+#include "renderer.hpp"
+#include <gfx/opengl/gl.hpp>
 
 #include <math/vector4.hpp>
 #include <math/rectangle2.hpp>
