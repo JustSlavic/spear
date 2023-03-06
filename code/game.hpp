@@ -25,7 +25,7 @@ struct execution_context
     usize execution_command_queue_size;
     usize next_execution_command_index;
 
-    gfx::render_command render_command_queue[32];
+    gfx::render_command render_command_queue[1024];
     usize render_command_queue_size;
 };
 
