@@ -2,6 +2,7 @@
 #define GAME_HPP
 
 #include <base.hpp>
+#include <input.hpp>
 #include <memory/memory.hpp>
 #include <gfx/renderer.hpp>
 #include <math/matrix4.hpp>
@@ -57,7 +58,7 @@ INLINE void push_render_command(execution_context *context, gfx::render_command 
 #define INITIALIZE_MEMORY_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION(initialize_memory_t);
 
-#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory)
+#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory, input_devices *input)
 typedef UPDATE_AND_RENDER_FUNCTION(update_and_render_t);
 
 extern "C"

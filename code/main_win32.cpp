@@ -6,6 +6,7 @@
 #include <string.hpp>
 #include <math/vector3.hpp>
 #include <gfx/renderer.hpp>
+#include <input.hpp>
 #include <game.hpp>
 
 // @note: needed for initializing opengl context in window, probably should abstract it away too?
@@ -113,7 +114,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wParam, 
 }
 
 
-void process_pending_messages()
+void process_pending_messages(input_devices *inp)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -133,6 +134,15 @@ void process_pending_messages()
             case WM_KEYDOWN:
             case WM_KEYUP:
             {
+                uint32_t virtual_key_code  = (uint32_t) message.wParam;
+                bool32_t alt_down = (message.lParam & (1 << 29)) != 0;
+                bool32_t was_down = (message.lParam & (1 << 30)) != 0;
+                bool32_t is_down  = (message.lParam & (1 << 31)) == 0;
+
+                switch (virtual_key_code)
+                {
+                    case VK_ESCAPE: process_button_state(&inp->keyboard_device[keyboard::esc], is_down);
+                }
             }
             break;
 
@@ -335,10 +345,13 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
+    input_devices input = {};
+
     running = true;
     while (running)
     {
-        process_pending_messages();
+        reset_transitions(&input.keyboard_device);
+        process_pending_messages(&input);
 
         uint64_t dll_file_time = win32::get_file_time(game_dll_buffer);
         if (dll_file_time > game.dll.timestamp)
@@ -358,7 +371,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
         if (game.update_and_render)
         {
-            game.update_and_render(&context, game_memory);
+            game.update_and_render(&context, game_memory, &input);
         }
 
         for (usize cmd_index = context.next_execution_command_index;

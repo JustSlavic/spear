@@ -31,13 +31,18 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 // Arguments:
 // - execution_context *context;
 // - memory_block game_memory;
+// - input_devices input;
 //
 UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {
     using namespace math;
 
     game_state *gs = (game_state *) game_memory.memory;
-    // push_execution_command(context, {execution_context::command::exit});
+
+    if (get_press_count(input->keyboard_device[keyboard::esc]))
+    {
+        push_execution_command(context, {execution_command::exit});
+    }
 
     gfx::render_command setup_camera_command;
     setup_camera_command.type = gfx::render_command::setup_camera;
