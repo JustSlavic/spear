@@ -51,11 +51,20 @@ INLINE void free_memory(memory_block memory)
     ASSERT_MSG(success, "VirtualFree failed");
 }
 
+INLINE uint64_t get_file_time(char const *file_path)
+{
+    WIN32_FILE_ATTRIBUTE_DATA file_data;
+    GetFileAttributesExA(file_path, GetFileExInfoStandard, &file_data);
+    FILETIME file_time = file_data.ftLastWriteTime;
+    uint64_t result = ((uint64_t) file_time.dwLowDateTime) | (((uint64_t) file_time.dwHighDateTime) << 32);
+    return result;
+}
+
 
 struct dll
 {
     HMODULE  handle;
-    FILETIME timestamp;
+    uint64_t timestamp;
 
     template <typename FunctionPointer> [[nodiscard]]
     FunctionPointer get_function(char const *name)
@@ -77,9 +86,7 @@ dll load_dll(char const *file_path)
     result.handle = LoadLibraryA(file_path);
     if (result.handle)
     {
-        WIN32_FILE_ATTRIBUTE_DATA file_data;
-        GetFileAttributesExA(file_path, GetFileExInfoStandard, &file_data);
-        result.timestamp = file_data.ftLastWriteTime;
+        result.timestamp = get_file_time(file_path);
     }
     return result;
 }

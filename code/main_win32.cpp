@@ -340,6 +340,13 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     {
         process_pending_messages();
 
+        uint64_t dll_file_time = win32::get_file_time(game_dll_buffer);
+        if (dll_file_time > game.dll.timestamp)
+        {
+            unload_game_dll(&game);
+            game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
+        }
+
         if (viewport_changed)
         {
             auto viewport = gfx::make_viewport(current_client_width, current_client_height, aspect_ratio);
