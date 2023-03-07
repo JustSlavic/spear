@@ -5,8 +5,7 @@
 #include <math/float32.hpp>
 
 
-namespace math
-{
+namespace math {
 
 
 struct vector2
@@ -77,42 +76,50 @@ INLINE vector2 &operator *= (vector2 &a, float32 c)
     return a;
 }
 
-INLINE vector2 operator - (vector2 a) {
+INLINE vector2 operator - (vector2 a)
+{
     vector2 result = { -a.x, -a.y };
     return result;
 }
 
-INLINE vector2 operator + (vector2 a, vector2 b) {
+INLINE vector2 operator + (vector2 a, vector2 b)
+{
     vector2 result = { a.x + b.x, a.y + b.y };
     return result;
 }
 
-INLINE vector2 operator - (vector2 a, vector2 b) {
+INLINE vector2 operator - (vector2 a, vector2 b)
+{
     vector2 result = { a.x - b.x, a.y - b.y };
     return result;
 }
 
-INLINE vector2 operator * (vector2 a, float32 c) {
+INLINE vector2 operator * (vector2 a, float32 c)
+{
     vector2 result = { c * a.x, c * a.y };
     return result;
 }
 
-INLINE vector2 operator * (float32 c, vector2 a) {
+INLINE vector2 operator * (float32 c, vector2 a)
+{
     vector2 result = { c * a.x, c * a.y };
     return result;
 }
 
-INLINE vector2 operator / (vector2 a, float32 c) {
+INLINE vector2 operator / (vector2 a, float32 c)
+{
     vector2 result = { a.x / c, a.y / c };
     return result;
 }
 
-INLINE bool operator == (vector2 a, vector2 b) {
+INLINE bool operator == (vector2 a, vector2 b)
+{
     bool result = (a.x == b.x) && (a.y == b.y);
     return result;
 }
 
-INLINE bool operator != (vector2 a, vector2 b) {
+INLINE bool operator != (vector2 a, vector2 b)
+{
     bool result = !(a == b);
     return result;
 }
@@ -164,7 +171,8 @@ INLINE vector2 coordinate_divide(vector2 a, vector2 b)
 INLINE void normalize(vector2 &a)
 {
     float32 n = length(a);
-    if (n > 0) {
+    if (n > 0)
+    {
         a.x /= n;
         a.y /= n;
     }

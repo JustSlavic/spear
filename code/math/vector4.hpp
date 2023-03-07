@@ -102,42 +102,50 @@ INLINE vector4 &operator *= (vector4 &a, float32 c)
     return a;
 }
 
-INLINE vector4 operator - (vector4 a) {
+INLINE vector4 operator - (vector4 a)
+{
     vector4 result = { -a.x, -a.y, -a.z, -a.w };
     return result;
 }
 
-INLINE vector4 operator + (vector4 a, vector4 b) {
+INLINE vector4 operator + (vector4 a, vector4 b)
+{
     vector4 result = { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
     return result;
 }
 
-INLINE vector4 operator - (vector4 a, vector4 b) {
+INLINE vector4 operator - (vector4 a, vector4 b)
+{
     vector4 result = { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
     return result;
 }
 
-INLINE vector4 operator * (vector4 a, float32 c) {
+INLINE vector4 operator * (vector4 a, float32 c)
+{
     vector4 result = { c * a.x, c * a.y, c * a.z, c * a.w };
     return result;
 }
 
-INLINE vector4 operator * (float32 c, vector4 a) {
+INLINE vector4 operator * (float32 c, vector4 a)
+{
     vector4 result = { c * a.x, c * a.y, c * a.z, c * a.w };
     return result;
 }
 
-INLINE vector4 operator / (vector4 a, float32 c) {
+INLINE vector4 operator / (vector4 a, float32 c)
+{
     vector4 result = { a.x / c, a.y / c, a.z / c, a.w / c };
     return result;
 }
 
-INLINE bool operator == (vector4 a, vector4 b) {
+INLINE bool operator == (vector4 a, vector4 b)
+{
     bool result = (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);
     return result;
 }
 
-INLINE bool operator != (vector4 a, vector4 b) {
+INLINE bool operator != (vector4 a, vector4 b)
+{
     bool result = !(a == b);
     return result;
 }
@@ -189,7 +197,8 @@ INLINE vector4 coordinate_divide(vector4 a, vector4 b)
 INLINE void normalize(vector4 &a)
 {
     float32 n = length(a);
-    if (n > 0) {
+    if (n > 0)
+    {
         a.x /= n;
         a.y /= n;
         a.z /= n;
@@ -197,7 +206,8 @@ INLINE void normalize(vector4 &a)
     }
 }
 
-INLINE vector4 normalized(vector4 a) {
+INLINE vector4 normalized(vector4 a)
+{
     vector4 result = a;
     normalize(result);
     return result;

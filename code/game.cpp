@@ -14,8 +14,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 {
     using namespace math;
 
+    ASSERT(sizeof(game_state) < game_memory.size);
     game_state *gs = (game_state *) game_memory.memory;
-    gs->entity_count = 1; // @note: let zero-indexed entity be 'null entity' representing lack of entity
+
+    // @note: let zero-indexed entity be 'null entity' representing lack of entity
+    gs->entity_count = 1;
 
     gs->camera_position = make_vector3(0, 0, -3);
 
@@ -26,7 +29,6 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     void *vbo_buffer = ALLOCATE_BUFFER_(&context->temporary_allocator, sizeof(vbo));
     memory::copy(vbo_buffer, vbo, sizeof(vbo));
 
-    // @todo: save vbo in the temporary arena in the context
     gs->rectangle_mesh = context->create_mesh_resource((float32 *)vbo_buffer);
     push_execution_command(context, create_mesh_resource_command(vbo));
 
@@ -78,7 +80,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     float32 camera_speed = 0.1f;
-    gs->camera_position += camera_velocity * camera_speed;
+    gs->camera_position += camera_velocity * camera_speed; // @todo: use dt
 
     {
         gfx::render_command setup_camera_command;

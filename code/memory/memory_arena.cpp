@@ -9,7 +9,7 @@ struct memory_arena
     ALLOCATOR_BASE;
 };
 
-static_assert(sizeof(memory_arena) <= sizeof(allocator), "size of arena_allocator is too large!");
+static_assert(sizeof(memory_arena) <= sizeof(allocator), "size of memory_arena is too large!");
 
 
 void initialize_memory_arena(allocator *a, void *memory, usize size)
@@ -27,7 +27,7 @@ void *arena_allocate(allocator *a, usize size, usize alignment)
 
     void *result = NULL;
     void *pointer = (byte *) arena->memory + arena->used;
-    usize padding = memory::get_padding(pointer, alignment);
+    usize padding = get_padding(pointer, alignment);
     if ((arena->used + padding + size) <= arena->size)
     {
         result = (byte *) arena->memory + arena->used + padding;
