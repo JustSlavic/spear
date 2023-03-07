@@ -65,6 +65,7 @@ struct execution_context
     gfx::render_command render_command_queue[1024];
     usize render_command_queue_size;
 
+    memory::allocator temporary_allocator;
     rs::resource_storage resource_storage;
 
     rs::resource_token create_mesh_resource(float32 *vbo)

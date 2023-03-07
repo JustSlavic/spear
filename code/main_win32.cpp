@@ -337,7 +337,10 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     game_dll game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
     memory_block game_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(8));
 
+    memory_block scratchpad_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(1));
+
     execution_context context = {};
+    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
 
     if (game.initialize_memory)
     {
@@ -420,6 +423,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
             }
         }
         context.render_command_queue_size = 0;
+        memory::reset_allocator(&context.temporary_allocator);
 
         SwapBuffers(device_context);
     }
@@ -429,3 +433,4 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
 
 
 #include <gfx/renderer.cpp>
+#include <memory/allocator.cpp>

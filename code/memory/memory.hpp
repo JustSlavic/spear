@@ -31,6 +31,20 @@ void *copy(void *destination, void const *source, usize count)
 }
 
 
+usize get_padding(void *pointer, usize alignment)
+{
+    usize result = (alignment - ((usize)pointer & (alignment - 1))) & (alignment - 1);
+    return result;
+}
+
+
+void *align_pointer(void *pointer, usize alignment)
+{
+    void *result = (byte *) pointer + get_padding(pointer, alignment);
+    return result;
+}
+
+
 } // namespace memory
 
 

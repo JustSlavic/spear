@@ -23,8 +23,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
                        0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
                        0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
                       -0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f, };
+    void *vbo_buffer = ALLOCATE_BUFFER_(&context->temporary_allocator, sizeof(vbo));
+    memory::copy(vbo_buffer, vbo, sizeof(vbo));
+
     // @todo: save vbo in the temporary arena in the context
-    gs->rectangle_mesh = context->create_mesh_resource(vbo);
+    gs->rectangle_mesh = context->create_mesh_resource((float32 *)vbo_buffer);
     push_execution_command(context, create_mesh_resource_command(vbo));
 
     for (int y = 0; y < 5; y++)
@@ -103,3 +106,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_render_command(context, render_rectangle);
     }
 }
+
+
+#include <memory/allocator.cpp>

@@ -41,7 +41,7 @@ struct shader_resource
 
 struct resource_storage
 {
-    allocator heap;
+    memory::allocator heap;
 
 };
 
