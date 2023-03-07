@@ -19,6 +19,14 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->camera_position = make_vector3(0, 0, -3);
 
+    float32 vbo[] = { -0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                       0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                       0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                      -0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f, };
+    // @todo: save vbo in the temporary arena in the context
+    gs->rectangle_mesh = context->create_mesh_resource(vbo);
+    push_execution_command(context, create_mesh_resource_command(vbo));
+
     for (int y = 0; y < 5; y++)
     {
         for (int x = 0; x < 5; x++)
@@ -45,7 +53,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     if (get_press_count(input->keyboard_device[keyboard::esc]))
     {
-        push_execution_command(context, {execution_command::exit});
+        push_execution_command(context, exit_command());
     }
 
     vector3 camera_velocity = vector3::zero();

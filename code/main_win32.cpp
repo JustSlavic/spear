@@ -28,7 +28,7 @@ struct game_dll
 };
 
 
-game_dll load_game_dll(string dll_path, string temp_dll_path, string lock_filename)
+game_dll load_game_dll(string_view dll_path, string_view temp_dll_path, string_view lock_filename)
 {
     game_dll result = {};
 

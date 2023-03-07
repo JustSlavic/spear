@@ -7,6 +7,7 @@
 #include <gfx/renderer.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
+#include <resource_system.hpp>
 
 
 struct execution_command
@@ -14,10 +15,45 @@ struct execution_command
     enum command_type
     {
         exit,
+
+        create_mesh_resource,
+        load_mesh_resource,
+
+        create_texture_resource,
+        load_texture_resource,
+
+        create_shader_resource,
+        load_shader_resource,
     };
 
     command_type type;
+
+    union
+    {
+        struct
+        {
+            float32 *vbo;
+        };
+    };
 };
+
+
+INLINE execution_command exit_command()
+{
+    execution_command result;
+    result.type = execution_command::exit;
+
+    return result;
+}
+
+INLINE execution_command create_mesh_resource_command(float32 *vbo)
+{
+    execution_command result;
+    result.type = execution_command::create_mesh_resource;
+    result.vbo = vbo;
+
+    return result;
+}
 
 
 struct execution_context
@@ -28,6 +64,14 @@ struct execution_context
 
     gfx::render_command render_command_queue[1024];
     usize render_command_queue_size;
+
+    rs::resource_storage resource_storage;
+
+    rs::resource_token create_mesh_resource(float32 *vbo)
+    {
+        auto result = rs::create_mesh_resource(&resource_storage, vbo);
+        return result;
+    }
 };
 
 

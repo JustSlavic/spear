@@ -18,14 +18,14 @@ usize size_with0(const char *s)
 }
 
 
-struct string
+struct string_view
 {
     char *data = NULL;
     usize size = 0;
 
-    string() = default;
+    string_view() = default;
 
-    string(char const *c_string)
+    string_view(char const *c_string)
     {
         data = (char *) c_string;
         size = size_no0(c_string);

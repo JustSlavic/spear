@@ -2,6 +2,7 @@
 #define GAME_STATE_HPP
 
 #include <base.hpp>
+#include <resource_system.hpp>
 #include <math/vector2.hpp>
 
 
@@ -16,6 +17,7 @@ struct entity
 struct game_state
 {
     math::vector3 camera_position;
+    rs::resource_token rectangle_mesh;
 
     entity entities[1024];
     usize  entity_count;
