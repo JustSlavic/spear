@@ -310,8 +310,20 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     gfx::set_clear_color(0, 0, 0, 1);
     gfx::vsync(true);
 
-    char buffer[256] = {};
+    // Allocate the memory and initialize allocators on it
 
+    memory_block game_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(1));
+    memory_block scratchpad_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(1));
+    memory_block resource_memory = win32::allocate_memory((void *) TERABYTES(3), MEGABYTES(1));
+
+    execution_context context = {};
+
+    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
+    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
+
+    // Getting CWD
+
+    char buffer[256] = {};
     uint32_t program_path_size = win32::get_program_path(instance, buffer, ARRAY_COUNT(buffer));
 
     uint32_t last_slash_index = 0;
@@ -321,6 +333,8 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         }
     }
     uint32_t program_path_size_no_filename = last_slash_index + 1;
+
+    // Constructing the names of game dlls
 
     char game_dll_buffer[256] = {};
     memory::copy(game_dll_buffer, buffer, program_path_size_no_filename);
@@ -334,13 +348,9 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     memory::copy(lock_tmp_buffer, buffer, program_path_size_no_filename);
     memory::copy(lock_tmp_buffer + program_path_size_no_filename, "lock.tmp", 8);
 
+    // Load the game code and initialize the memory
+
     game_dll game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
-    memory_block game_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(8));
-
-    memory_block scratchpad_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(1));
-
-    execution_context context = {};
-    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
 
     if (game.initialize_memory)
     {

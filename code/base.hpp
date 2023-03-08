@@ -108,6 +108,9 @@ typedef int16_t sound_sample_t;
 #define STRINGIFY(X)     STRINGIFY_(X)
 
 
+#define loop while (true)
+
+
 template <typename T>
 void swap(T &a, T &b)
 {

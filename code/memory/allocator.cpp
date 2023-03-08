@@ -3,14 +3,28 @@
 #include <memory/memory_arena.cpp>
 // #include <memory/memory_stack.cpp>
 // #include <memory/memory_pool.cpp>
-// #include <memory/memory_heap.cpp>
+#include <memory/memory_heap.cpp>
 
 
 namespace memory {
 
 // void initialize_memory_stack(allocator *a, void *memory, usize size);
 // void initialize_memory_pool(allocator *a, void *memory, usize size);
-// void initialize_memory_heap(allocator *a, void *memory, usize size);
+
+void reset_allocator(allocator *a)
+{
+    switch (a->type)
+    {
+        case allocator::arena: arena_reset(a);
+            break;
+        case allocator::stack: // @todo
+            break;
+        case allocator::pool: // @todo
+            break;
+        case allocator::heap: // @todo
+            break;
+    }
+}
 
 void *allocate_(allocator *a, usize size, usize alignment)
 {
@@ -23,7 +37,7 @@ void *allocate_(allocator *a, usize size, usize alignment)
             break;
         case allocator::pool: // @todo
             break;
-        case allocator::heap: // @todo
+        case allocator::heap: result = heap_allocate(a, size, alignment);
             break;
     }
     return result;
@@ -39,8 +53,37 @@ void *allocate(allocator *a, usize size, usize alignment)
     return result;
 }
 
-// @todo
-// array allocate_array(allocator *a, usize size, usize alignment);
+void deallocate(allocator *a, void *memory)
+{
+    switch (a->type)
+    {
+        case allocator::arena: // @todo
+            break;
+        case allocator::stack: // @todo
+            break;
+        case allocator::pool: // @todo
+            break;
+        case allocator::heap: heap_deallocate(a, memory);
+            break;
+    }
+}
+
+void *reallocate(allocator *a, void *memory, usize size)
+{
+    void *result = NULL;
+    switch (a->type)
+    {
+        case allocator::arena: // @todo
+            break;
+        case allocator::stack: // @todo
+            break;
+        case allocator::pool: // @todo
+            break;
+        case allocator::heap: // @todo
+            break;
+    }
+    return result;
+}
 
 memory_block allocate_block_(allocator *a, usize size, usize alignment)
 {
@@ -59,25 +102,7 @@ memory_block allocate_block(allocator *a, usize size, usize alignment)
 }
 
 // @todo
-// void *reallocate(allocator *a, void *memory, usize size);
-
-// @todo
-// void deallocate(allocator *a, void *memory, usize size);
-
-void reset_allocator(allocator *a)
-{
-    switch (a->type)
-    {
-        case allocator::arena: arena_reset(a);
-            break;
-        case allocator::stack: // @todo
-            break;
-        case allocator::pool: // @todo
-            break;
-        case allocator::heap: // @todo
-            break;
-    }
-}
+// array allocate_array(allocator *a, usize size, usize alignment);
 
 
 } // namespace memory

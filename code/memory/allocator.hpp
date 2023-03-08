@@ -5,10 +5,20 @@
 #include <memory/memory.hpp>
 
 
-#define ALLOCATOR_BASE struct { ::memory::allocator::allocator_type type; void *memory; usize size; usize used; }
+#define ALLOCATOR_BASE struct \
+{ \
+    ::memory::allocator::allocator_type type; \
+    void *memory; \
+    usize size;   \
+    usize used;   \
+}
 
 #define ALLOCATE_(ALLOCATOR, TYPE) (TYPE *) allocate_(ALLOCATOR, sizeof(TYPE), alignof(TYPE))
 #define ALLOCATE(ALLOCATOR, TYPE) (TYPE *) allocate(ALLOCATOR, sizeof(TYPE), alignof(TYPE))
+#define DEALLOCATE(ALLOCATOR, POINTER) deallocate(ALLOCATOR, POINTER)
+
+// #define REALLOCATE
+
 
 #define ALLOCATE_BUFFER_(ALLOCATOR, SIZE) (void *) allocate_(ALLOCATOR, SIZE, 1);
 #define ALLOCATE_BUFFER(ALLOCATOR, SIZE) (void *) allocate(ALLOCATOR, SIZE, 1);
@@ -39,17 +49,17 @@ struct allocator
 void initialize_memory_arena(allocator *a, void *memory, usize size);
 // void initialize_memory_stack(allocator *a, void *memory, usize size);
 // void initialize_memory_pool(allocator *a, void *memory, usize size);
-// void initialize_memory_heap(allocator *a, void *memory, usize size);
+void initialize_memory_heap(allocator *a, void *memory, usize size);
+void reset_allocator(allocator *a);
 
 void *allocate_(allocator *a, usize size, usize alignment);
 void *allocate(allocator *a, usize size, usize alignment);
-// array allocate_array(allocator *a, usize size, usize alignment);
+void deallocate(allocator *a, void *memory);
+// void *reallocate(allocator *a, void *memory, usize size);
 memory_block allocate_block_(allocator *a, usize size, usize alignment);
 memory_block allocate_block(allocator *a, usize size, usize alignment);
-// void *reallocate(allocator *a, void *memory, usize size);
-// void deallocate(allocator *a, void *memory, usize size);
+// array allocate_array(allocator *a, usize size, usize alignment);
 
-void reset_allocator(allocator *a);
 
 } // namespace memory
 
