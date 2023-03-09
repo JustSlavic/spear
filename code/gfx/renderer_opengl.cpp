@@ -119,10 +119,10 @@ void setup_camera(render_command *cmd)
 
 struct render_with_indices
 {
-    uint32_t vbo;
-    uint32_t ibo;
-    uint32_t ibo_size;
-    uint32_t vao;
+    uint32 vbo;
+    uint32 ibo;
+    uint32 ibo_size;
+    uint32 vao;
 };
 
 render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
@@ -141,35 +141,35 @@ render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
         { math::make_vector3(rect.min.x, rect.max.y, 0), color.rgb }, // 3 top left
     };
 
-    uint32_t vertex_buffer_id = 0;
+    uint32 vertex_buffer_id = 0;
     {
         glGenBuffers(1, &vertex_buffer_id);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     }
 
-    uint32_t indices[] = {
+    uint32 indices[] = {
         0, 1, 2,  // first triangle
         2, 3, 0,  // second triangle
     };
 
-    uint32_t index_buffer_id = 0;
+    uint32 index_buffer_id = 0;
     {
         glGenBuffers(1, &index_buffer_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     }
 
-    uint32_t vertex_array_id = 0;
+    uint32 vertex_array_id = 0;
     {
         glGenVertexArrays(1, &vertex_array_id);
         glBindVertexArray(vertex_array_id);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
 
-        uint32_t attrib_index = 0;
-        uint64_t offset = 0;
+        uint32 attrib_index = 0;
+        uint64 offset = 0;
         {
-            uint32_t count = 3; // Because it's vector3
+            uint32 count = 3; // Because it's vector3
 
             glEnableVertexAttribArray(attrib_index);
             glVertexAttribPointer(
@@ -184,7 +184,7 @@ render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
             offset += (count * sizeof(float32));
         }
         {
-            uint32_t count = 3; // Because it's color32
+            uint32 count = 3; // Because it's color32
 
             glEnableVertexAttribArray(attrib_index);
             glVertexAttribPointer(

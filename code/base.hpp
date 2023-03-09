@@ -18,15 +18,15 @@
 #define LITTLE_ENDIAN 1234
 #define BIG_ENDIAN    4321
 
-typedef __int8  int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
+typedef __int8  int8;
+typedef __int16 int16;
+typedef __int32 int32;
+typedef __int64 int64;
 
-typedef unsigned __int8  uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
+typedef unsigned __int8  uint8;
+typedef unsigned __int16 uint16;
+typedef unsigned __int32 uint32;
+typedef unsigned __int64 uint64;
 
 typedef float  float32;
 typedef double float64;
@@ -37,22 +37,34 @@ typedef double float64;
 
 #endif // COMPILER_MSVC
 
-typedef uint8_t  byte;
-typedef  int32_t bool32_t;
-typedef uint64_t size_t;
-typedef  int64_t isize_t;
-typedef uint64_t usize;
-typedef  int64_t isize;
-typedef uint64_t uintptr_t;
-typedef  int64_t intptr_t;
-typedef  int64_t ptrdiff_t;
+#if COMPILER_GNU
+
+typedef signed char        int8;
+typedef signed short       int16;
+typedef signed int         int32;
+typedef signed long long   int64;
+
+typedef unsigned char      uint8;
+typedef unsigned short     uint16;
+typedef unsigned int       uint32;
+typedef unsigned long long uint64;
+
+#endif // COMPILER_GNU
+
+typedef uint8  byte;
+typedef  int32 bool32;
+typedef uint64 usize;
+typedef  int64 isize;
+typedef uint64 uintptr;
+typedef  int64 intptr;
+typedef  int64 ptrdiff;
 
 
 // Sound sample is 16-bit number
 // Sound frame is 2 samples: [left, right]
 // Sound period is a number of frames
 // Sound buffer is a bunch of periods?
-typedef int16_t sound_sample_t;
+typedef int16 sound_sample_t;
 
 
 #define INT8_MIN   0x80
@@ -106,6 +118,8 @@ typedef int16_t sound_sample_t;
 
 #define STRINGIFY_(X)    #X
 #define STRINGIFY(X)     STRINGIFY_(X)
+
+#define UNUSED(X) (void) (X)
 
 
 #define loop while (true)

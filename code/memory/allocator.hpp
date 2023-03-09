@@ -42,7 +42,7 @@ struct allocator
     };
 
     ALLOCATOR_BASE;
-    uint8_t data[16];
+    uint8 data[16];
 };
 
 

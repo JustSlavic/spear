@@ -26,7 +26,7 @@ struct vector4
         struct { vector3 rgb; float32 pad_2; };
     };
 
-    float32 & operator [] (int32_t index)
+    float32 & operator [] (int32 index)
     {
         ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
 

@@ -17,7 +17,7 @@ void initialize(graphics_api api)
 {
     if (api == graphics_api::opengl)
     {
-        bool32_t result = gl::initialize();
+        bool32 result = gl::initialize();
         if (result) active_api = graphics_api::opengl;
     }
     else
@@ -29,7 +29,7 @@ void initialize(graphics_api api)
         // void mt::initialize();
 }
 
-void vsync(bool32_t active)
+void vsync(bool32 active)
 {
     if (active_api == graphics_api::opengl)
         gl::vsync(active);

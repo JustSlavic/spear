@@ -1,11 +1,11 @@
 {
-	"folders":
-	[
-		{
-			"path": "."
-		}
-	],
-	"build_systems":
+    "folders":
+    [
+        {
+            "path": "."
+        }
+    ],
+    "build_systems":
     [
         {
             "name": "Build Debug",
@@ -16,6 +16,10 @@
                 "file_regex": "^((?:\\w\\:|\\.{1,2})[\\d\\w\\\\\\.\\/]+)\\((\\d+)\\)\\:()(.*)$",
                 "syntax": "Packages/User/Win32_BuildResults.sublime-syntax",
             },
+            "linux": {
+                "shell_cmd": "$folder/build.sh",
+                "working_dir": "$folder/build",
+            }
         },
     ],
 }

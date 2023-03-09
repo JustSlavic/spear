@@ -13,11 +13,11 @@
 #include <gfx/opengl/gl.hpp>
 
 
-GLOBAL bool32_t running;
+GLOBAL bool32 running;
 
-GLOBAL uint32_t current_client_width;
-GLOBAL uint32_t current_client_height;
-GLOBAL bool32_t viewport_changed;
+GLOBAL uint32 current_client_width;
+GLOBAL uint32 current_client_height;
+GLOBAL bool32 viewport_changed;
 
 
 struct game_dll
@@ -32,7 +32,7 @@ game_dll load_game_dll(string_view dll_path, string_view temp_dll_path, string_v
 {
     game_dll result = {};
 
-    uint32_t dwAttrib = GetFileAttributes(lock_filename.data);
+    uint32 dwAttrib = GetFileAttributes(lock_filename.data);
     bool lock_file_exists = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 
     if (!lock_file_exists)
@@ -134,10 +134,10 @@ void process_pending_messages(input_devices *inp)
             case WM_KEYDOWN:
             case WM_KEYUP:
             {
-                uint32_t virtual_key_code  = (uint32_t) message.wParam;
-                bool32_t alt_down = (message.lParam & (1 << 29)) != 0;
-                bool32_t was_down = (message.lParam & (1 << 30)) != 0;
-                bool32_t is_down  = (message.lParam & (1 << 31)) == 0;
+                uint32 virtual_key_code  = (uint32) message.wParam;
+                bool32 alt_down = (message.lParam & (1 << 29)) != 0;
+                bool32 was_down = (message.lParam & (1 << 30)) != 0;
+                bool32 is_down  = (message.lParam & (1 << 31)) == 0;
 
                 switch (virtual_key_code)
                 {
@@ -164,10 +164,10 @@ void process_pending_messages(input_devices *inp)
 }
 
 
-int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32_t show_code)
+int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32 show_code)
 {
-    int32_t primary_monitor_width  = GetSystemMetrics(SM_CXSCREEN);
-    int32_t primary_monitor_height = GetSystemMetrics(SM_CYSCREEN);
+    int32 primary_monitor_width  = GetSystemMetrics(SM_CXSCREEN);
+    int32 primary_monitor_height = GetSystemMetrics(SM_CYSCREEN);
     HBRUSH black_brush = CreateSolidBrush(RGB(0, 0, 0));
 
     WNDCLASSA window_class {};
@@ -196,8 +196,8 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         return 1;
     }
 
-    int32_t client_width  = 800;
-    int32_t client_height = 600;
+    int32 client_width  = 800;
+    int32 client_height = 600;
     RECT window_rectangle = { 0, 0, client_width, client_height };
     if (!AdjustWindowRect(&window_rectangle, WS_OVERLAPPEDWINDOW, false))
     {
@@ -275,12 +275,12 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
                     0, // End
                 };
 
-                int32_t pixel_format;
-                uint32_t number_formats;
+                int32 pixel_format;
+                uint32 number_formats;
                 wglChoosePixelFormatARB(device_context, wgl_attribute_list, NULL, 1, &pixel_format, &number_formats);
                 SetPixelFormat(device_context, pixel_format, &desired_pixel_format);
 
-                int32_t wgl_context_attrib_list[] =
+                int32 wgl_context_attrib_list[] =
                 {
                     WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
                     WGL_CONTEXT_MINOR_VERSION_ARB, 0,
@@ -324,15 +324,15 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
     // Getting CWD
 
     char buffer[256] = {};
-    uint32_t program_path_size = win32::get_program_path(instance, buffer, ARRAY_COUNT(buffer));
+    uint32 program_path_size = win32::get_program_path(instance, buffer, ARRAY_COUNT(buffer));
 
-    uint32_t last_slash_index = 0;
-    for (uint32_t char_index = 0; char_index < program_path_size; char_index++) {
+    uint32 last_slash_index = 0;
+    for (uint32 char_index = 0; char_index < program_path_size; char_index++) {
         if (buffer[char_index] == '\\') {
             last_slash_index = char_index;
         }
     }
-    uint32_t program_path_size_no_filename = last_slash_index + 1;
+    uint32 program_path_size_no_filename = last_slash_index + 1;
 
     // Constructing the names of game dlls
 
@@ -375,7 +375,7 @@ int32_t WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line,
         reset_transitions(&input.keyboard_device);
         process_pending_messages(&input);
 
-        uint64_t dll_file_time = win32::get_file_time(game_dll_buffer);
+        uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
         if (dll_file_time > game.dll.timestamp)
         {
             unload_game_dll(&game);

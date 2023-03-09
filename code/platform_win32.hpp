@@ -11,22 +11,22 @@ namespace win32
 {
 
 
-uint32_t get_program_path(HINSTANCE instance, char *buffer, uint32_t buffer_size)
+uint32 get_program_path(HINSTANCE instance, char *buffer, uint32 buffer_size)
 {
-    uint32_t result_size = GetModuleFileNameA(instance, buffer, buffer_size);
+    uint32 result_size = GetModuleFileNameA(instance, buffer, buffer_size);
     return result_size;
 }
 
 
-INLINE int32_t width(RECT rectangle)
+INLINE int32 width(RECT rectangle)
 {
-    int32_t result = rectangle.right - rectangle.left;
+    int32 result = rectangle.right - rectangle.left;
     return result;
 }
 
-INLINE int32_t height(RECT rectangle)
+INLINE int32 height(RECT rectangle)
 {
-    int32_t result = rectangle.bottom - rectangle.top;
+    int32 result = rectangle.bottom - rectangle.top;
     return result;
 }
 
@@ -47,16 +47,16 @@ INLINE memory_block allocate_memory(usize size)
 
 INLINE void free_memory(memory_block memory)
 {
-    bool32_t success = VirtualFree(memory.memory, 0, MEM_RELEASE);
+    bool32 success = VirtualFree(memory.memory, 0, MEM_RELEASE);
     ASSERT_MSG(success, "VirtualFree failed");
 }
 
-INLINE uint64_t get_file_time(char const *file_path)
+INLINE uint64 get_file_time(char const *file_path)
 {
     WIN32_FILE_ATTRIBUTE_DATA file_data;
     GetFileAttributesExA(file_path, GetFileExInfoStandard, &file_data);
     FILETIME file_time = file_data.ftLastWriteTime;
-    uint64_t result = ((uint64_t) file_time.dwLowDateTime) | (((uint64_t) file_time.dwHighDateTime) << 32);
+    uint64 result = ((uint64) file_time.dwLowDateTime) | (((uint64) file_time.dwHighDateTime) << 32);
     return result;
 }
 
@@ -64,7 +64,7 @@ INLINE uint64_t get_file_time(char const *file_path)
 struct dll
 {
     HMODULE  handle;
-    uint64_t timestamp;
+    uint64 timestamp;
 
     template <typename FunctionPointer> [[nodiscard]]
     FunctionPointer get_function(char const *name)
@@ -102,7 +102,7 @@ void unload_dll(dll *library)
 }
 
 
-#define THREAD_FUNCTION(NAME) uint32_t NAME(void *parameter)
+#define THREAD_FUNCTION(NAME) uint32 NAME(void *parameter)
 typedef THREAD_FUNCTION(thread_function_t);
 
 

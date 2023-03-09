@@ -118,7 +118,7 @@ typedef void glUniform1fType(GLint location, GLfloat v0);
 typedef void glUniform2fType(GLint location, GLfloat v0, GLfloat v1);
 typedef void glUniform3fType(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
 typedef void glUniform4fType(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
-typedef void glUniformMatrix4fvType(int32_t location, size_t count, bool transpose, float32 const *value);
+typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose, float32 const *value);
 typedef void glTexImage2DMultisampleType(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
 
 
@@ -162,7 +162,7 @@ namespace gl {
 
 #if OS_WINDOWS
 
-bool32_t initialize()
+bool32 initialize()
 {
     glGenFramebuffers = (glGenFramebuffersType *) wglGetProcAddress("glGenFramebuffers");
     glBindFramebuffer = (glBindFramebufferType *) wglGetProcAddress("glBindFramebuffer");
@@ -248,9 +248,9 @@ void clear()
 
 struct shader
 {
-    uint32_t id;
-    uint32_t vertex_shader;
-    uint32_t fragment_shader;
+    uint32 id;
+    uint32 vertex_shader;
+    uint32 fragment_shader;
 
     enum shader_type
     {
@@ -260,27 +260,27 @@ struct shader
 };
 
 
-bool32_t is_shader_program_valid(uint32_t program)
+bool32 is_shader_program_valid(uint32 program)
 {
     glValidateProgram(program);
-    bool32_t program_valid;
+    bool32 program_valid;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &program_valid);
 
     return program_valid;
 }
 
 
-uint32_t compile_shader(char const *source_code, shader::shader_type shader_type)
+uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
 {
-    uint32_t id = glCreateShader(shader_type);
+    uint32 id = glCreateShader(shader_type);
     glShaderSource(id, 1, &source_code, NULL);
     glCompileShader(id);
 
-    int32_t successful;
+    int32 successful;
     glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
     if (successful == GL_FALSE)
     {
-        int32_t length;
+        int32 length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
 
         // @todo: use transient memory for that
@@ -301,9 +301,9 @@ uint32_t compile_shader(char const *source_code, shader::shader_type shader_type
 }
 
 
-shader link_shader(uint32_t vs, uint32_t fs)
+shader link_shader(uint32 vs, uint32 fs)
 {
-    uint32_t id = glCreateProgram();
+    uint32 id = glCreateProgram();
     glAttachShader(id, vs);
     glAttachShader(id, fs);
     glLinkProgram(id);

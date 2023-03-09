@@ -54,7 +54,7 @@ struct render_command
 };
 
 void initialize(graphics_api api);
-void vsync(bool32_t active);
+void vsync(bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void clear();
 void set_viewport(viewport vp);

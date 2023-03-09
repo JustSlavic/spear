@@ -21,30 +21,30 @@
 
 struct button_state
 {
-    bool32_t is_down;
-    uint32_t transition_count;
+    bool32 is_down;
+    uint32 transition_count;
 };
 
 
-INLINE uint32_t get_press_count(button_state button)
+INLINE uint32 get_press_count(button_state button)
 {
-    uint32_t result = (button.transition_count + (button.is_down > 0)) / 2;
+    uint32 result = (button.transition_count + (button.is_down > 0)) / 2;
     return result;
 }
 
-INLINE uint32_t get_release_count(button_state button)
+INLINE uint32 get_release_count(button_state button)
 {
-    uint32_t result = (button.transition_count - (button.is_down > 0) + 1) / 2;
+    uint32 result = (button.transition_count - (button.is_down > 0) + 1) / 2;
     return result;
 }
 
-INLINE uint32_t get_hold_count(button_state button)
+INLINE uint32 get_hold_count(button_state button)
 {
-    uint32_t result = (button.transition_count + (button.is_down > 0) + 1) / 2;
+    uint32 result = (button.transition_count + (button.is_down > 0) + 1) / 2;
     return result;
 }
 
-INLINE void process_button_state(button_state *button, bool32_t is_down)
+INLINE void process_button_state(button_state *button, bool32 is_down)
 {
     if (button->is_down != is_down)
     {

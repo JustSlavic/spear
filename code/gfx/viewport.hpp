@@ -8,13 +8,13 @@ namespace gfx {
 
 struct viewport
 {
-    uint32_t offset_x;
-    uint32_t offset_y;
-    uint32_t width;
-    uint32_t height;
+    uint32 offset_x;
+    uint32 offset_y;
+    uint32 width;
+    uint32 height;
 };
 
-viewport make_viewport(uint32_t width, uint32_t height, float32 desired_aspect_ratio)
+viewport make_viewport(uint32 width, uint32 height, float32 desired_aspect_ratio)
 {
     viewport result;
 
@@ -23,7 +23,7 @@ viewport make_viewport(uint32_t width, uint32_t height, float32 desired_aspect_r
     {
         // Black strips on top and bottom of the screen
         result.width    = width;
-        result.height   = (uint32_t) (result.width / desired_aspect_ratio);
+        result.height   = (uint32) (result.width / desired_aspect_ratio);
         result.offset_x = 0;
         result.offset_y = (height - result.height) / 2;
     }
@@ -31,7 +31,7 @@ viewport make_viewport(uint32_t width, uint32_t height, float32 desired_aspect_r
     {
         // Black strips on left and right of the screen
         result.height   = height;
-        result.width    = (uint32_t) (result.height * desired_aspect_ratio);
+        result.width    = (uint32) (result.height * desired_aspect_ratio);
         result.offset_x = (width - result.width) / 2;
         result.offset_y = 0;
     }

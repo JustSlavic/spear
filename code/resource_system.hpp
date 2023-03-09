@@ -11,7 +11,7 @@ namespace rs
 
 struct resource_token
 {
-    uint32_t id;
+    uint32 id;
 };
 
 
