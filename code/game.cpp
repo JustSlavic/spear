@@ -22,15 +22,15 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->camera_position = make_vector3(0, 0, -3);
 
-    float32 vbo[] = { -0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                       0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                       0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                      -0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f, };
-    void *vbo_buffer = ALLOCATE_BUFFER_(&context->temporary_allocator, sizeof(vbo));
-    memory::copy(vbo_buffer, vbo, sizeof(vbo));
+    float32 vbo_init[] = { -0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                            0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                            0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
+                           -0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f, };
+    auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
+    memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
 
-    gs->rectangle_mesh = context->create_mesh_resource((float32 *)vbo_buffer);
-    push_execution_command(context, create_mesh_resource_command(vbo));
+    gs->rectangle_vbo = create_mesh_resource(&context->resource_storage, vbo);
+    // push_execution_command(context, create_mesh_resource_command(vbo));
 
     for (int y = 0; y < 5; y++)
     {
@@ -99,6 +99,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         rectangle2 aabb = entity->bounding_box;
         aabb.min += entity->position;
         aabb.max += entity->position;
+
+
 
         gfx::render_command render_rectangle;
         render_rectangle.type = gfx::render_command::draw_rectangle;

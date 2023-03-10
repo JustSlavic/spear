@@ -28,6 +28,9 @@
 #define ALLOCATE_BLOCK_(ALLOCATOR, SIZE) allocate_block_(ALLOCATOR, SIZE, 1);
 #define ALLOCATE_BLOCK(ALLOCATOR, SIZE) allocate_block(ALLOCATOR, SIZE, 1);
 
+#define ALLOCATE_COPY(ALLOCATOR, OBJECT) allocate_copy(ALLOCATOR, OBJECT)
+#define ALLOCATE_COPY_TO_BLOCK(ALLOCATOR, OBJECT) allocate_copy_to_block(ALLOCATOR, OBJECT)
+
 
 namespace memory {
 
@@ -59,6 +62,37 @@ void deallocate(allocator *a, void *memory);
 memory_block allocate_block_(allocator *a, usize size, usize alignment);
 memory_block allocate_block(allocator *a, usize size, usize alignment);
 // array allocate_array(allocator *a, usize size, usize alignment);
+
+template <typename T>
+T *allocate_copy(allocator *a, T *pointer)
+{
+    auto *result = ALLOCATE_(a, T);
+    memory::copy(result, pointer, sizeof(T));
+    return result;
+}
+
+memory_block allocate_copy(allocator *a, memory_block block)
+{
+    memory_block result = ALLOCATE_BLOCK(a, block.size);
+    memory::copy(result.memory, block.memory, block.size);
+    return result;
+}
+
+template <typename T>
+memory_block allocate_copy_to_block(allocator *a, T *pointer)
+{
+    T *result_pointer = ALLOCATE_(a, T);
+    memory_block result = { result_pointer, sizeof(T) };
+    memory::copy(result.memory, pointer, sizeof(T));
+    return result;
+}
+
+memory_block allocate_copy_to_block(allocator *a, memory_block block)
+{
+    memory_block result = ALLOCATE_BLOCK(a, block.size);
+    memory::copy(result.memory, block.memory, block.size);
+    return result;
+}
 
 
 } // namespace memory

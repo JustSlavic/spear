@@ -15,15 +15,10 @@ struct resource_token
 };
 
 
-struct resource
-{
-    void *data;
-};
-
-
 struct mesh_resource
 {
-
+    memory_block vbo;
+    memory_block ibo;
 };
 
 
@@ -39,15 +34,36 @@ struct shader_resource
 };
 
 
-struct resource_storage
+struct resource
 {
-    memory::allocator heap;
+    bool32 is_loaded_on_videocard;
+    union
+    {
+        mesh_resource mesh;
+    };
 };
 
 
-INLINE resource_token create_mesh_resource(resource_storage *storage, float32 *vbo)
+struct resource_storage
 {
-    resource_token result = {};
+    memory::allocator heap;
+
+    // @todo: hash table string_id("name") -> pointer to resource in heap memory
+    // if name's not provided, generate it randomly?
+    // @todo: random?
+    resource resources[32];
+    uint32 resource_count;
+};
+
+
+INLINE resource_token create_mesh_resource(resource_storage *storage, memory_block vbo)
+{
+    ASSERT(storage->resource_count < ARRAY_COUNT(storage->resources));
+    uint32 id = storage->resource_count++;
+
+    storage->resources[id].mesh.vbo = ALLOCATE_COPY(&storage->heap, vbo);
+
+    resource_token result = {id};
     return result;
 }
 

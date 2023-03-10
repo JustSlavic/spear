@@ -67,12 +67,6 @@ struct execution_context
 
     memory::allocator temporary_allocator;
     rs::resource_storage resource_storage;
-
-    rs::resource_token create_mesh_resource(float32 *vbo)
-    {
-        auto result = rs::create_mesh_resource(&resource_storage, vbo);
-        return result;
-    }
 };
 
 
