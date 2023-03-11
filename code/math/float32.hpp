@@ -36,7 +36,19 @@ float32 to_degrees(float32 radians)
     return result;
 }
 
-float32 tangent(float32 x)
+float32 sin(float32 x)
+{
+    float32 result = sinf(x);
+    return result;
+}
+
+float32 cos(float32 x)
+{
+    float32 result = cosf(x);
+    return result;
+}
+
+float32 tg(float32 x)
 {
     float32 result = tanf(x);
     return result;

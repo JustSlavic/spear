@@ -10,7 +10,8 @@ struct entity
 {
     math::vector2 position;
     math::vector2 velocity;
-    math::rectangle2 bounding_box;
+    float32 width, height;
+    float32 rotation;
 };
 
 

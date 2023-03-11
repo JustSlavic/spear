@@ -69,7 +69,7 @@ INLINE matrix4 & operator += (matrix4 & a, matrix4 b)
     return a;
 }
 
-INLINE matrix4 &operator -= (matrix4 &a, matrix4 b)
+INLINE matrix4 &operator -= (matrix4 & a, matrix4 b)
 {
     a._11 -= b._11; a._12 -= b._12; a._13 -= b._13; a._14 -= b._14;
     a._21 -= b._21; a._22 -= b._22; a._23 -= b._23; a._24 -= b._24;
@@ -78,7 +78,7 @@ INLINE matrix4 &operator -= (matrix4 &a, matrix4 b)
     return a;
 }
 
-INLINE matrix4 &operator *= (matrix4 &a, float32 c)
+INLINE matrix4 &operator *= (matrix4 & a, float32 c)
 {
     a._11 *= c; a._12 *= c; a._13 *= c; a._14 *= c;
     a._21 *= c; a._22 *= c; a._23 *= c; a._24 *= c;
@@ -172,10 +172,10 @@ matrix4 make_matrix4 (T t)
     return result;
 }
 
-matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
-                      float32 t21, float32 t22, float32 t23, float32 t24,
-                      float32 t31, float32 t32, float32 t33, float32 t34,
-                      float32 t41, float32 t42, float32 t43, float32 t44)
+INLINE matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
+                             float32 t21, float32 t22, float32 t23, float32 t24,
+                             float32 t31, float32 t32, float32 t33, float32 t34,
+                             float32 t41, float32 t42, float32 t43, float32 t44)
 {
     matrix4 result = {
         t11, t12, t13, t14,
@@ -187,7 +187,7 @@ matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
 }
 
 
-vector4 operator * (matrix4 a, vector4 v)
+INLINE vector4 operator * (matrix4 a, vector4 v)
 {
     vector4 result;
 
@@ -199,7 +199,7 @@ vector4 operator * (matrix4 a, vector4 v)
     return result;
 }
 
-vector4 operator * (vector4 v, matrix4 a)
+INLINE vector4 operator * (vector4 v, matrix4 a)
 {
     vector4 result;
 
@@ -211,7 +211,7 @@ vector4 operator * (vector4 v, matrix4 a)
     return result;
 }
 
-matrix4 operator * (matrix4 a, matrix4 b)
+INLINE matrix4 operator * (matrix4 a, matrix4 b)
 {
     matrix4 result;
 
@@ -236,6 +236,87 @@ matrix4 operator * (matrix4 a, matrix4 b)
     result._44 = a._41*b._14 + a._42*b._24 + a._43*b._34 + a._44*b._44;
 
     return result;
+}
+
+INLINE vector4 &operator *= (vector4 v, matrix4 &m)
+{
+    v = v * m;
+    return v;
+}
+
+INLINE matrix4 &operator *= (matrix4& a, matrix4& b)
+{
+    a = a * b;
+    return a;
+}
+
+void translate(matrix4 & m, vector3 v)
+{
+    m._4.xyz += v;
+}
+
+matrix4 translated(vector3 v, matrix4 m)
+{
+    translate(m, v);
+    return m;
+}
+
+void scale(matrix4 & m, vector3 v)
+{
+    m._11 *= v.x;
+    m._22 *= v.y;
+    m._33 *= v.z;
+}
+
+matrix4 scaled(vector3 v, matrix4 m)
+{
+    scale(m, v);
+    return m;
+}
+
+void rotate_x(matrix4 & m, float32 a)
+{
+    auto rotation = make_matrix4(1,             0,             0, 0,
+                                 0,  math::cos(a), -math::sin(a), 0,
+                                 0,  math::sin(a),  math::cos(a), 0,
+                                 0,             0,             0, 1);
+    m *= rotation;
+}
+
+matrix4 rotated_x(float32 a, matrix4 m)
+{
+    rotate_x(m, a);
+    return m;
+}
+
+void rotate_y(matrix4 & m, float32 b)
+{
+    auto rotation = make_matrix4(math::cos(b), 0, -math::sin(b), 0,
+                                            0, 1,             0, 0,
+                                 math::sin(b), 0,  math::cos(b), 0,
+                                            0, 0,             0, 1);
+    m *= rotation;
+}
+
+matrix4 rotated_y(float32 b, matrix4 m)
+{
+    rotate_y(m, b);
+    return m;
+}
+
+void rotate_z(matrix4 & m, float32 y)
+{
+    auto rotation = make_matrix4(math::cos(y), math::sin(y), 0, 0,
+                                -math::sin(y), math::cos(y), 0, 0,
+                                            0,            0, 1, 0,
+                                            0,            0, 0, 1);
+    m *= rotation;
+}
+
+matrix4 rotated_z(float32 y, matrix4 m)
+{
+    rotate_z(m, y);
+    return m;
 }
 
 void transpose(matrix4& m)

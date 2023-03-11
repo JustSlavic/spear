@@ -70,7 +70,7 @@ math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, floa
     //   |/  tg(fov / 2) = (w/2) / n
     //   +   => 2n / w = 1 / tg(fov / 2)
 
-    float32 tf2 = (1.0f / math::tangent(0.5f * fov));
+    float32 tf2 = (1.0f / math::tg(0.5f * fov));
 
     math::matrix4 result = {};
 
