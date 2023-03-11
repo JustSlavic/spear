@@ -66,6 +66,7 @@ struct execution_context
     usize render_command_queue_size;
 
     memory::allocator temporary_allocator;
+    memory::allocator renderer_allocator;
     rs::resource_storage resource_storage;
 };
 
@@ -91,6 +92,24 @@ INLINE void push_render_command(execution_context *context, gfx::render_command 
     ASSERT(context->render_command_queue_size < ARRAY_COUNT(context->render_command_queue));
     context->render_command_queue[context->render_command_queue_size] = cmd;
     context->render_command_queue_size += 1;
+}
+
+INLINE void push_setup_camera_command(execution_context *context, gfx::render_command::command_setup_camera setup_camera)
+{
+    gfx::render_command cmd;
+    cmd.type = gfx::render_command::command_type::setup_camera;
+    cmd.setup_camera = setup_camera;
+
+    push_render_command(context, cmd);
+}
+
+INLINE void push_draw_mesh_1_command(execution_context *context, gfx::render_command::command_draw_mesh_1 draw_mesh_1)
+{
+    gfx::render_command cmd;
+    cmd.type = gfx::render_command::command_type::draw_mesh_1;
+    cmd.draw_mesh_1 = draw_mesh_1;
+
+    push_render_command(context, cmd);
 }
 
 

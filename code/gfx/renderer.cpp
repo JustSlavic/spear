@@ -123,4 +123,22 @@ void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 proje
         gl::draw_rectangle(cmd, view, projection);
 }
 
+void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 view, math::matrix4 projection)
+{
+    rs::resource *resource = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.mesh_token);
+    if (resource->type == rs::resource_type::mesh)
+    {
+        if (!resource->render_data)
+        {
+            gl::load_mesh(context, resource);
+        }
+        gl::draw_indexed_triangles(resource, cmd->draw_mesh_1.model, view, projection);
+    }
+    else
+    {
+        // @todo: process error
+    }
+}
+
+
 } // namespace gfx

@@ -6,6 +6,11 @@
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 #include <gfx/viewport.hpp>
+#include <gfx/vertex_buffer_layout.hpp>
+#include <resource_system.hpp>
+
+
+struct execution_context;
 
 
 namespace gfx
@@ -24,32 +29,41 @@ enum class graphics_api
 
 struct render_command
 {
-    enum command_type
+    enum class command_type
     {
         setup_projection_matrix,
         setup_camera,
         draw_rectangle,
+        draw_mesh_1,
+    };
+    struct command_setup_projection_matrix
+    {
+        math::matrix4 projection;
+    };
+    struct command_setup_camera
+    {
+        math::vector3 camera_position;
+        math::vector3 look_at_position;
+        math::vector3 camera_up_direction;
+    };
+    struct command_draw_rectangle
+    {
+        math::rectangle2 rect;
+        math::matrix4 model;
+    };
+    struct command_draw_mesh_1
+    {
+        rs::resource_token mesh_token;
+        math::matrix4 model;
     };
 
     command_type type;
-
     union
     {
-        struct // setup_projection_matrix
-        {
-            math::matrix4 projection;
-        };
-        struct // setup_camera
-        {
-            math::vector3 camera_position;
-            math::vector3 look_at_position;
-            math::vector3 camera_up_direction;
-        };
-        struct // draw_rectangle
-        {
-            math::rectangle2 rect;
-            math::matrix4 model;
-        };
+        command_setup_projection_matrix setup_projection_matrix;
+        command_setup_camera setup_camera;
+        command_draw_rectangle draw_rectangle;
+        command_draw_mesh_1 draw_mesh_1;
     };
 };
 
@@ -66,6 +80,7 @@ math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 
 void setup_projection_matrix(render_command *cmd);
 void setup_camera(render_command *cmd);
 void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 projection);
+void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 view, math::matrix4 projection);
 
 
 } // namespace gfx

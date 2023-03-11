@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 #include <gfx/opengl/gl.hpp>
 
+#include <math/integer.hpp>
 #include <math/vector4.hpp>
 #include <math/rectangle2.hpp>
 
@@ -19,12 +20,13 @@ layout (location = 1) in vec3 vertex_color;
 
 out vec4 fragment_color;
 
+uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
 
 void main()
 {
-    vec4 p = u_projection * u_view * vec4(vertex_position, 1.0);
+    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
     fragment_color = vec4(vertex_color, 1.0);
     gl_Position = p;
 }
@@ -215,8 +217,9 @@ void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 proje
     PERSIST auto plane_fs = compile_shader(fs_source, shader::fragment);
     PERSIST auto shader = link_shader(plane_vs, plane_fs);
 
-    auto buffers = opengl_rectangle(cmd->rect, {1, 1, 1, 1});
+    auto buffers = opengl_rectangle(cmd->draw_rectangle.rect, {1, 1, 1, 1});
     use_shader(shader);
+    uniform(shader, "u_model", math::matrix4::identity());
     uniform(shader, "u_view", view);
     uniform(shader, "u_projection", projection);
 
@@ -224,6 +227,88 @@ void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 proje
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.ibo);
     glDrawElements(GL_TRIANGLES, buffers.ibo_size, GL_UNSIGNED_INT, NULL);
 }
+
+struct render_mesh_data
+{
+    uint32 vertex_buffer_id;
+    uint32 index_buffer_id;
+    uint32 vertex_array_id;
+};
+
+void load_mesh(execution_context *context, rs::resource *resource)
+{
+    uint32 vertex_buffer_id = 0;
+    {
+        glGenBuffers(1, &vertex_buffer_id);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        glBufferData(GL_ARRAY_BUFFER, resource->mesh.vbo.size, resource->mesh.vbo.memory, GL_STATIC_DRAW);
+    }
+
+    uint32 index_buffer_id = 0;
+    {
+        glGenBuffers(1, &index_buffer_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, resource->mesh.ibo.size, resource->mesh.ibo.memory, GL_STATIC_DRAW);
+    }
+
+    uint32 vertex_array_id = 0;
+    {
+        glGenVertexArrays(1, &vertex_array_id);
+        glBindVertexArray(vertex_array_id);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+
+        uint32 stride = 0;
+        for (uint32 attrib_index = 0; attrib_index < resource->mesh.vbl.element_count; attrib_index++)
+        {
+            stride += (resource->mesh.vbl.elements[attrib_index].count * sizeof(float32));
+        }
+
+        usize offset = 0;
+        for (uint32 attrib_index = 0; attrib_index < resource->mesh.vbl.element_count; attrib_index++)
+        {
+            uint32 count = resource->mesh.vbl.elements[attrib_index].count;
+            glEnableVertexAttribArray(attrib_index);
+            glVertexAttribPointer(
+                attrib_index,      // Index
+                count,             // Count
+                GL_FLOAT,          // Type
+                GL_FALSE,          // Normalized?
+                stride,            // Stride
+                (void *) offset);  // Offset
+
+            offset += (count * sizeof(float32));
+        }
+    }
+
+    if (resource->render_data == NULL)
+    {
+        resource->render_data = ALLOCATE(&context->renderer_allocator, render_mesh_data);
+    }
+
+    auto *data = (render_mesh_data *) resource->render_data;
+    data->vertex_buffer_id = vertex_buffer_id;
+    data->index_buffer_id = index_buffer_id;
+    data->vertex_array_id = vertex_array_id;
+}
+
+void draw_indexed_triangles(rs::resource *resource, math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+{
+    PERSIST auto plane_vs = compile_shader(vs_source, shader::vertex);
+    PERSIST auto plane_fs = compile_shader(fs_source, shader::fragment);
+    PERSIST auto shader = link_shader(plane_vs, plane_fs);
+
+    use_shader(shader);
+    uniform(shader, "u_model", model);
+    uniform(shader, "u_view", view);
+    uniform(shader, "u_projection", projection);
+
+    auto *render_data = (render_mesh_data *) resource->render_data;
+
+    glBindVertexArray(render_data->vertex_array_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, render_data->index_buffer_id);
+    glDrawElements(GL_TRIANGLES, truncate_int32(resource->mesh.ibo.size), GL_UNSIGNED_INT, NULL);
+}
+
 
 } // namespace gl
 

@@ -3,11 +3,11 @@
 
 // Project headers
 #include <base.hpp>
+#include <game.hpp>
 #include <string.hpp>
 #include <math/vector3.hpp>
 #include <gfx/renderer.hpp>
 #include <input.hpp>
-#include <game.hpp>
 
 // @note: needed for initializing opengl context in window, probably should abstract it away too?
 #include <gfx/opengl/gl.hpp>
@@ -312,13 +312,20 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // Allocate the memory and initialize allocators on it
 
-    memory_block game_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(1));
-    memory_block scratchpad_memory = win32::allocate_memory((void *) TERABYTES(2), MEGABYTES(1));
-    memory_block resource_memory = win32::allocate_memory((void *) TERABYTES(3), MEGABYTES(1));
+    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(4));
+
+    memory::allocator global_allocator;
+    memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
+
+    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1))
 
     execution_context context = {};
 
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
+    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory.memory, renderer_memory.size);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
 
     // Getting CWD
@@ -416,20 +423,25 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             auto *cmd = context.render_command_queue + cmd_index;
             switch (cmd->type)
             {
-                case gfx::render_command::setup_projection_matrix:
+                case gfx::render_command::command_type::setup_projection_matrix:
                 break;
 
-                case gfx::render_command::setup_camera:
+                case gfx::render_command::command_type::setup_camera:
                 {
-                    view = gfx::make_look_at_matrix(cmd->camera_position, cmd->look_at_position, cmd->camera_up_direction);
+                    view = gfx::make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
                 }
                 break;
 
-                case gfx::render_command::draw_rectangle:
+                case gfx::render_command::command_type::draw_rectangle:
                 {
                     gfx::draw_rectangle(cmd, view, projection);
                 }
                 break;
+
+                case gfx::render_command::command_type::draw_mesh_1:
+                {
+                    gfx::draw_mesh_1(&context, cmd, view, projection);
+                }
             }
         }
         context.render_command_queue_size = 0;

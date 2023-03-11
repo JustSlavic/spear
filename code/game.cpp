@@ -22,14 +22,29 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->camera_position = make_vector3(0, 0, -3);
 
-    float32 vbo_init[] = { -0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                            0.025f, -0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                            0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f,
-                           -0.025f,  0.025f, 0.0f, 1.0f, 1.0f, 1.0f, };
+    float32 vbo_init[] = {
+        -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+         1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+    };
+
+    uint32 ibo_init[] = {
+        0, 1, 2, // first triangle
+        2, 3, 0, // second triangle
+    };
+
+    gfx::vertex_buffer_layout vbl = {};
+    gfx::push_layout_element(&vbl, 3);
+    gfx::push_layout_element(&vbl, 3);
+
     auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
     memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
 
-    gs->rectangle_vbo = create_mesh_resource(&context->resource_storage, vbo);
+    auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
+    memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+    gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
     // push_execution_command(context, create_mesh_resource_command(vbo));
 
     for (int y = 0; y < 5; y++)
@@ -39,7 +54,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
             auto *entity = push_entity(gs);
             entity->position = make_vector2(0.1f * x, 0.1f * y);
             entity->velocity = make_vector2(0, 0);
-            entity->bounding_box = rectangle2::from_center_size(make_vector2(0, 0), 0.05f, 0.05f);
+            entity->bounding_box = rectangle2::from_center_size(make_vector2(0, 0), 0.025f, 0.025f);
         }
     }
 }
@@ -83,31 +98,39 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     gs->camera_position += camera_velocity * camera_speed; // @todo: use dt
 
     {
-        gfx::render_command setup_camera_command;
-        setup_camera_command.type = gfx::render_command::setup_camera;
-        setup_camera_command.camera_position = gs->camera_position;
-        setup_camera_command.look_at_position = make_vector3(gs->camera_position.x, gs->camera_position.y, 0);
-        setup_camera_command.camera_up_direction = make_vector3(0, 1, 0);
+        gfx::render_command::command_setup_camera setup_camera;
+        setup_camera.camera_position = gs->camera_position;
+        setup_camera.look_at_position = make_vector3(gs->camera_position.x, gs->camera_position.y, 0);
+        setup_camera.camera_up_direction = make_vector3(0, 1, 0);
 
-        push_render_command(context, setup_camera_command);
+        push_setup_camera_command(context, setup_camera);
     }
+
+    // {
+
+
+    //     gfx::render_command draw_rectangle;
+    //     draw_rectangle.type = gfx::render_command::draw_rectangle;
+    //     draw_rectangle.rect = aabb;
+    //     draw_rectangle.model = matrix4::identity();
+
+    //     push_render_command(context, draw_rectangle);
+    // }
 
     for (int entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
         auto *entity = gs->entities + entity_index;
 
         rectangle2 aabb = entity->bounding_box;
-        aabb.min += entity->position;
-        aabb.max += entity->position;
 
+        gfx::render_command::command_draw_mesh_1 draw_mesh;
+        draw_mesh.mesh_token = gs->rectangle_mesh;
+        draw_mesh.model = math::matrix4::identity();
+        draw_mesh.model._11 = math::width(entity->bounding_box);
+        draw_mesh.model._22 = math::height(entity->bounding_box);
+        draw_mesh.model._4.xy = entity->position;
 
-
-        gfx::render_command render_rectangle;
-        render_rectangle.type = gfx::render_command::draw_rectangle;
-        render_rectangle.rect = aabb;
-        render_rectangle.model = matrix4::identity();
-
-        push_render_command(context, render_rectangle);
+        push_draw_mesh_1_command(context, draw_mesh);
     }
 }
 
