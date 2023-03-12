@@ -19,6 +19,7 @@ struct game_state
 {
     math::vector3 camera_position;
     rs::resource_token rectangle_mesh;
+    rs::resource_token rectangle_shader;
 
     entity entities[1024];
     usize  entity_count;

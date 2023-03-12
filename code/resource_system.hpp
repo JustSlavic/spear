@@ -3,6 +3,7 @@
 
 #include <base.hpp>
 #include <memory/allocator.hpp>
+#include <string_id.hpp>
 #include <resource_token.hpp>
 #include <gfx/renderer.hpp>
 
@@ -11,6 +12,12 @@ namespace rs
 {
 
 
+enum class resource_type
+{
+    mesh,
+    shader,
+};
+
 struct mesh_resource
 {
     memory_block vbo;
@@ -18,23 +25,15 @@ struct mesh_resource
     gfx::vertex_buffer_layout vbl;
 };
 
-
 struct texture_resource
 {
 
 };
 
-
 struct shader_resource
 {
-
+    string_id name;
 };
-
-enum class resource_type
-{
-    mesh,
-};
-
 
 struct resource
 {
@@ -43,10 +42,10 @@ struct resource
     union
     {
         mesh_resource mesh;
+        shader_resource shader;
     };
     void *render_data;
 };
-
 
 struct resource_storage
 {
@@ -60,26 +59,43 @@ struct resource_storage
 };
 
 
-INLINE resource_token create_mesh_resource(resource_storage *storage, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl)
+INLINE resource_token get_new_resource_token(resource_storage *storage)
 {
     ASSERT(storage->resource_count < ARRAY_COUNT(storage->resources));
-    uint32 id = storage->resource_count++;
-
-    storage->resources[id].type = rs::resource_type::mesh;
-    storage->resources[id].mesh.vbo = ALLOCATE_COPY(&storage->heap, vbo);
-    storage->resources[id].mesh.ibo = ALLOCATE_COPY(&storage->heap, ibo);
-    storage->resources[id].mesh.vbl = vbl;
-
-    resource_token result = {id};
+    resource_token result = {storage->resource_count++};
     return result;
 }
 
 INLINE resource *get_resource(resource_storage *storage, resource_token token)
 {
-    ASSERT(0 <= token.id && token.id < ARRAY_COUNT(storage->resources));
-
     resource *result = storage->resources + token.id;
     return result;
+}
+
+INLINE resource_token create_mesh_resource(resource_storage *storage, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl)
+{
+    resource_token token = get_new_resource_token(storage);
+    if (token.id)
+    {
+        resource *r = get_resource(storage, token);
+        r->type = rs::resource_type::mesh;
+        r->mesh.vbo = ALLOCATE_COPY(&storage->heap, vbo);
+        r->mesh.ibo = ALLOCATE_COPY(&storage->heap, ibo);
+        r->mesh.vbl = vbl;
+    }
+    return token;
+}
+
+INLINE resource_token create_shader_resource(resource_storage *storage, string_id name)
+{
+    resource_token token = get_new_resource_token(storage);
+    if (token.id)
+    {
+        resource *r = get_resource(storage, token);
+        r->type = rs::resource_type::shader;
+        r->shader.name = name;
+    }
+    return token;
 }
 
 

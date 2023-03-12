@@ -68,6 +68,7 @@ struct execution_context
     memory::allocator temporary_allocator;
     memory::allocator renderer_allocator;
     rs::resource_storage resource_storage;
+    string_id_storage strid_storage;
 };
 
 

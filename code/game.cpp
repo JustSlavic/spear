@@ -45,7 +45,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
     gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
-    // push_execution_command(context, create_mesh_resource_command(vbo));
+    gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
 
     for (int y = 0; y < 5; y++)
     {
@@ -128,3 +128,4 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
 
 #include <memory/allocator.cpp>
+#include <string_id.cpp>

@@ -5,6 +5,7 @@
 #include <base.hpp>
 #include <game.hpp>
 #include <string.hpp>
+#include <string_id.hpp>
 #include <math/vector3.hpp>
 #include <gfx/renderer.hpp>
 #include <input.hpp>
@@ -312,7 +313,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // Allocate the memory and initialize allocators on it
 
-    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(4));
+    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(5));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
@@ -320,13 +321,16 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1))
+    memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
     execution_context context = {};
+    context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
 
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory.memory, renderer_memory.size);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
+    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory.memory, string_id_memory.size);
 
     // Getting CWD
 
@@ -456,3 +460,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
 #include <gfx/renderer.cpp>
 #include <memory/allocator.cpp>
+#include <string_id.cpp>
