@@ -368,10 +368,6 @@ void uniform(shader s, char const *name, math::matrix4 const& m)
     glUniformMatrix4fv(location, 1, GL_FALSE, m.data());
 }
 
-
-
-
-
 void set_viewport(viewport vp)
 {
     glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);

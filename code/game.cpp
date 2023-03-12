@@ -116,6 +116,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
         gfx::render_command::command_draw_mesh_1 draw_mesh;
         draw_mesh.mesh_token = gs->rectangle_mesh;
+        draw_mesh.shader_token = gs->rectangle_shader;
         draw_mesh.model =
             math::translated(math::make_vector3(entity->position.x, entity->position.y, 0),
             math::rotated_z(entity->rotation,

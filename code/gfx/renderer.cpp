@@ -125,18 +125,30 @@ void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 proje
 
 void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 view, math::matrix4 projection)
 {
-    rs::resource *resource = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.mesh_token);
-    if (resource->type == rs::resource_type::mesh)
+    rs::resource *mesh = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.mesh_token);
+    if (mesh->type == rs::resource_type::mesh)
     {
-        if (!resource->render_data)
+        rs::resource *shader = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.shader_token);
+        if (shader->type == rs::resource_type::shader)
         {
-            gl::load_mesh(context, resource);
+            if (!mesh->render_data)
+            {
+                gl::load_mesh(context, mesh);
+            }
+            if (!shader->render_data)
+            {
+                gl::load_shader(context, shader);
+            }
+            gl::draw_indexed_triangles(mesh, shader, cmd->draw_mesh_1.model, view, projection);
         }
-        gl::draw_indexed_triangles(resource, cmd->draw_mesh_1.model, view, projection);
+        else
+        {
+            // @todo: shader resource is not valid
+        }
     }
     else
     {
-        // @todo: process error
+        // @todo: mesh resource is not valid
     }
 }
 

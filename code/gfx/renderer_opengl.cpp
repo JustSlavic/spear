@@ -235,6 +235,11 @@ struct render_mesh_data
     uint32 vertex_array_id;
 };
 
+struct render_shader_data
+{
+    shader program;
+};
+
 void load_mesh(execution_context *context, rs::resource *resource)
 {
     uint32 vertex_buffer_id = 0;
@@ -291,22 +296,35 @@ void load_mesh(execution_context *context, rs::resource *resource)
     data->vertex_array_id = vertex_array_id;
 }
 
-void draw_indexed_triangles(rs::resource *resource, math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+void load_shader(execution_context *context, rs::resource *resource)
 {
-    PERSIST auto plane_vs = compile_shader(vs_source, shader::vertex);
-    PERSIST auto plane_fs = compile_shader(fs_source, shader::fragment);
-    PERSIST auto shader = link_shader(plane_vs, plane_fs);
+    // @todo: load this from file
+    auto vs = compile_shader(vs_source, shader::vertex);
+    auto fs = compile_shader(fs_source, shader::fragment);
+    auto program = link_shader(vs, fs);
 
-    use_shader(shader);
-    uniform(shader, "u_model", model);
-    uniform(shader, "u_view", view);
-    uniform(shader, "u_projection", projection);
+    if (resource->render_data == NULL)
+    {
+        resource->render_data = ALLOCATE(&context->renderer_allocator, render_shader_data);
+    }
 
-    auto *render_data = (render_mesh_data *) resource->render_data;
+    auto *data = (render_shader_data *) resource->render_data;
+    data->program = program;
+}
 
-    glBindVertexArray(render_data->vertex_array_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, render_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, truncate_int32(resource->mesh.ibo.size), GL_UNSIGNED_INT, NULL);
+void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+{
+    auto *mesh_render_data = (render_mesh_data *) mesh->render_data;
+    auto *shader_render_data = (render_shader_data *) shader->render_data;
+
+    use_shader(shader_render_data->program);
+    uniform(shader_render_data->program, "u_model", model);
+    uniform(shader_render_data->program, "u_view", view);
+    uniform(shader_render_data->program, "u_projection", projection);
+
+    glBindVertexArray(mesh_render_data->vertex_array_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);
+    glDrawElements(GL_TRIANGLES, truncate_int32(mesh->mesh.ibo.size), GL_UNSIGNED_INT, NULL);
 }
 
 

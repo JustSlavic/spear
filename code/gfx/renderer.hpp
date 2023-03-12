@@ -54,6 +54,7 @@ struct render_command
     struct command_draw_mesh_1
     {
         rs::resource_token mesh_token;
+        rs::resource_token shader_token;
         math::matrix4 model;
     };
 
