@@ -306,10 +306,10 @@ matrix4 rotated_y(float32 b, matrix4 m)
 
 void rotate_z(matrix4 & m, float32 y)
 {
-    auto rotation = make_matrix4(math::cos(y), math::sin(y), 0, 0,
-                                -math::sin(y), math::cos(y), 0, 0,
-                                            0,            0, 1, 0,
-                                            0,            0, 0, 1);
+    auto rotation = make_matrix4(math::cos(y), -math::sin(y), 0, 0,
+                                 math::sin(y),  math::cos(y), 0, 0,
+                                            0,             0, 1, 0,
+                                            0,             0, 0, 1);
     m *= rotation;
 }
 
