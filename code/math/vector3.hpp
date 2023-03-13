@@ -138,17 +138,27 @@ INLINE bool operator != (vector3 a, vector3 b)
     return result;
 }
 
-template <typename XYZ>
-vector3 make_vector3 (XYZ xyz)
+#define V3_1(xyz) ::math::make_vector3((float32) (xyz))
+#define V3_2(xy, z) ::math::make_vector3((xy), (float32) (z))
+#define V3_3(x, y, z) ::math::make_vector3((float32) (x), (float32) (y), (float32) (z))
+
+#define V3(...) MACRO_EXPAND(MACRO_OVERLOAD_3(__VA_ARGS__, V3_3, V3_2, V3_1)(__VA_ARGS__))
+
+vector3 make_vector3 (float32 value)
 {
-    vector3 result = { (float32) xyz, (float32) xyz, (float32) xyz };
+    vector3 result = { value, value, value };
     return result;
 }
 
-template <typename X, typename Y, typename Z>
-vector3 make_vector3 (X x, Y y, Z z)
+vector3 make_vector3 (float32 x, float32 y, float32 z)
 {
-    vector3 result = { (float32) x, (float32) y, (float32) z };
+    vector3 result = { x, y, z };
+    return result;
+}
+
+vector3 make_vector3 (vector2 xy, float32 z)
+{
+    vector3 result = { xy.x, xy.y, z };
     return result;
 }
 

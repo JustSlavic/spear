@@ -21,21 +21,18 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
-    gs->camera_position = make_vector3(0, 0, -10);
+    gs->camera_position = V3(0, 0, -10);
 
     float32 vbo_init[] = {
         -1.0f, -1.0f, 0.0f,
          1.0f, -1.0f, 0.0f,
          1.0f,  1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f,
-         0.0f, -4.5f, 0.0f,
     };
 
     uint32 ibo_init[] = {
         0, 1, 2, // first triangle
         2, 3, 0, // second triangle
-
-        0, 1, 4,
     };
 
     gfx::vertex_buffer_layout vbl = {};
@@ -54,9 +51,10 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     {
         for (int x = 0; x < 5; x++)
         {
+            // comment to find
             auto *entity = push_entity(gs);
-            entity->position = make_vector2(x, y);
-            entity->velocity = make_vector2(-0.01 * x, 0.01 * x - 0.01 * y * y);
+            entity->position = V2(x, y);
+            entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y);
             entity->width = 0.1f;
             entity->height = 0.05f;
             entity->rotation = 0.0f;
@@ -104,11 +102,12 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     float32 camera_speed = 0.1f;
     gs->camera_position += camera_velocity * camera_speed * dt;
 
+    // Setup camera
     {
         gfx::render_command::command_setup_camera setup_camera;
         setup_camera.camera_position = gs->camera_position;
-        setup_camera.look_at_position = make_vector3(gs->camera_position.x, gs->camera_position.y, 0);
-        setup_camera.camera_up_direction = make_vector3(0, 1, 0);
+        setup_camera.look_at_position = V3(gs->camera_position.x, gs->camera_position.y, 0);
+        setup_camera.camera_up_direction = V3(0, 1, 0);
 
         push_setup_camera_command(context, setup_camera);
     }
@@ -123,9 +122,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
 #if 0
-    auto gravity = math::make_vector2(0, -9.8); // m/s^2
+    auto gravity = V2(0, -9.8); // m/s^2
 #else
-    auto gravity = math::make_vector2(0, 0); // m/s^2
+    auto gravity = V2(0, 0); // m/s^2
 #endif
 
     for (int entity_index = 1; entity_index < gs->entity_count; entity_index++)
@@ -140,11 +139,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_mesh.mesh_token = gs->rectangle_mesh;
         draw_mesh.shader_token = gs->rectangle_shader;
         draw_mesh.model =
-            math::translated(math::make_vector3(entity->position.x, entity->position.y, 0),
+            math::translated(V3(entity->position.x, entity->position.y, 0),
             math::rotated_z(entity->rotation,
-            math::scaled(math::make_vector3(entity->width, entity->height, 1),
+            math::scaled(V3(entity->width, entity->height, 1),
                 math::matrix4::identity())));
-        draw_mesh.color = math::make_vector4(0.1, 0.32, 0.72, 1);
+        draw_mesh.color = V4(0.1f, 0.32f, 0.72f, 1.0f);
 
         push_draw_mesh_with_color_command(context, draw_mesh);
     }

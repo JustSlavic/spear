@@ -121,6 +121,12 @@ typedef int16 sound_sample_t;
 
 #define UNUSED(X) (void) (X)
 
+#define MACRO_EXPAND(X) X
+
+#define MACRO_OVERLOAD_1(_1, NAME, ...) NAME
+#define MACRO_OVERLOAD_2(_1, _2, NAME, ...) NAME
+#define MACRO_OVERLOAD_3(_1, _2, _3, NAME, ...) NAME
+#define MACRO_OVERLOAD_4(_1, _2, _3, _4, NAME, ...) NAME
 
 #define loop while (true)
 

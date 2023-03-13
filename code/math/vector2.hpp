@@ -124,17 +124,20 @@ INLINE bool operator != (vector2 a, vector2 b)
     return result;
 }
 
-template <typename XY>
-vector2 make_vector2(XY xy)
+#define V2_1(xy) ::math::make_vector2((float32) (xy))
+#define V2_2(x, y) ::math::make_vector2((float32) (x), (float32) (y))
+
+#define V2(...) MACRO_EXPAND(MACRO_OVERLOAD_2(__VA_ARGS__, V2_2, V2_1)(__VA_ARGS__))
+
+vector2 make_vector2(float32 value)
 {
-    vector2 result = { (float32) xy, (float32) xy };
+    vector2 result = { value, value };
     return result;
 }
 
-template <typename X, typename Y>
-vector2 make_vector2(X x, Y y)
+vector2 make_vector2(float32 x, float32 y)
 {
-    vector2 result = { (float32) x, (float32) y };
+    vector2 result = { x, y };
     return result;
 }
 

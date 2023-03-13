@@ -1,7 +1,6 @@
 #ifndef MATH_VECTOR4_HPP
 #define MATH_VECTOR4_HPP
 
-
 #include <base.hpp>
 #include <math/vector2.hpp>
 #include <math/vector3.hpp>
@@ -150,17 +149,34 @@ INLINE bool operator != (vector4 a, vector4 b)
     return result;
 }
 
-template <typename XYZW>
-vector4 make_vector4 (XYZW xyzw)
+#define V4_1(xyzw) ::math::make_vector4((float32) (xyzw))
+#define V4_2(xyz, w) ::math::make_vector4((xyz), (float32) (w))
+#define V4_3(xy, z, w) ::math::make_vector4((xy), (float32) (z), (float32) (w))
+#define V4_4(x, y, z, w) ::math::make_vector4((float32) (x), (float32) (y), (float32) (z), (float32) (w))
+
+#define V4(...) MACRO_EXPAND(MACRO_OVERLOAD_4(__VA_ARGS__, V4_4, V4_3, V4_2, V4_1)(__VA_ARGS__))
+
+vector4 make_vector4 (float32 value)
 {
-    vector4 result = { (float32) xyzw, (float32) xyzw, (float32) xyzw, (float32) xyzw };
+    vector4 result = { value, value, value, value };
     return result;
 }
 
-template <typename X, typename Y, typename Z, typename W>
-vector4 make_vector4 (X x, Y y, Z z, W w)
+vector4 make_vector4 (float32 x, float32 y, float32 z, float32 w)
 {
-    vector4 result = { (float32) x, (float32) y, (float32) z, (float32) w };
+    vector4 result = { x, y, z, w };
+    return result;
+}
+
+vector4 make_vector4 (vector2 xy, float32 z, float32 w)
+{
+    vector4 result = { xy.x, xy.y, z, w };
+    return result;
+}
+
+vector4 make_vector4 (vector3 xyz, float32 w)
+{
+    vector4 result = { xyz.x, xyz.y, xyz.z, w };
     return result;
 }
 
