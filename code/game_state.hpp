@@ -12,6 +12,7 @@ struct entity
     math::vector2 velocity;
     float32 width, height;
     float32 rotation;
+    float32 rotational_velocity;
 };
 
 

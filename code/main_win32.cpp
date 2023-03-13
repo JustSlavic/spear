@@ -8,6 +8,7 @@
 #include <string_id.hpp>
 #include <math/vector3.hpp>
 #include <gfx/renderer.hpp>
+#include <os/time.hpp>
 #include <input.hpp>
 
 // @note: needed for initializing opengl context in window, probably should abstract it away too?
@@ -307,6 +308,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
     }
 
+    int32 monitor_refresh_rate_hz = GetDeviceCaps(device_context, VREFRESH);
+
     gfx::initialize(gfx::graphics_api::opengl);
     gfx::set_clear_color(0, 0, 0, 1);
     gfx::vsync(true);
@@ -380,6 +383,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     input_devices input = {};
 
+    int32 game_update_frequency_hz = monitor_refresh_rate_hz;
+    float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
+    float32 last_frame_dt = target_seconds_per_frame;
+    os::timepoint last_timepoint = win32::get_wall_clock();
+
     running = true;
     while (running)
     {
@@ -404,7 +412,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-            game.update_and_render(&context, game_memory, &input);
+            game.update_and_render(&context, game_memory, &input, last_frame_dt);
         }
 
         for (usize cmd_index = context.next_execution_command_index;
@@ -436,22 +444,39 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_rectangle:
+                case gfx::render_command::command_type::draw_background:
                 {
-                    gfx::draw_rectangle(cmd, view, projection);
+                    gfx::draw_background(&context, cmd);
                 }
                 break;
 
                 case gfx::render_command::command_type::draw_mesh_1:
                 {
-                    gfx::draw_mesh_1(&context, cmd, view, projection);
+                    gfx::draw_polygon_simple(&context,
+                        cmd->draw_mesh_1.mesh_token, cmd->draw_mesh_1.shader_token,
+                        cmd->draw_mesh_1.model, view, projection,
+                        math::vector4::zero());
                 }
+                break;
+
+                case gfx::render_command::command_type::draw_mesh_with_color:
+                {
+                    gfx::draw_polygon_simple(&context,
+                        cmd->draw_mesh_with_color.mesh_token, cmd->draw_mesh_with_color.shader_token,
+                        cmd->draw_mesh_with_color.model, view, projection,
+                        cmd->draw_mesh_with_color.color);
+                }
+                break;
             }
         }
         context.render_command_queue_size = 0;
         memory::reset_allocator(&context.temporary_allocator);
 
         SwapBuffers(device_context);
+
+        os::timepoint end_of_frame = win32::get_wall_clock();
+        last_frame_dt = get_seconds(end_of_frame - last_timepoint);
+        last_timepoint = end_of_frame;
     }
 
     return 0;

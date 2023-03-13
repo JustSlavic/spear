@@ -2,6 +2,7 @@
 #include <game_state.hpp>
 
 #include <math/rectangle2.hpp>
+#include <math/vector4.hpp>
 #include <math/matrix4.hpp>
 
 
@@ -20,22 +21,24 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
-    gs->camera_position = make_vector3(0, 0, -3);
+    gs->camera_position = make_vector3(0, 0, -10);
 
     float32 vbo_init[] = {
-        -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-         1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+         0.0f, -4.5f, 0.0f,
     };
 
     uint32 ibo_init[] = {
         0, 1, 2, // first triangle
         2, 3, 0, // second triangle
+
+        0, 1, 4,
     };
 
     gfx::vertex_buffer_layout vbl = {};
-    gfx::push_layout_element(&vbl, 3);
     gfx::push_layout_element(&vbl, 3);
 
     auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
@@ -52,11 +55,12 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         for (int x = 0; x < 5; x++)
         {
             auto *entity = push_entity(gs);
-            entity->position = make_vector2(0.1f * x, 0.1f * y);
-            entity->velocity = make_vector2(0, 0);
-            entity->width = 0.05f;
-            entity->height = 0.025f;
+            entity->position = make_vector2(x, y);
+            entity->velocity = make_vector2(-0.01 * x, 0.01 * x - 0.01 * y * y);
+            entity->width = 0.1f;
+            entity->height = 0.05f;
             entity->rotation = 0.0f;
+            entity->rotational_velocity = 0.01f * x * y - 0.025f;
         }
     }
 }
@@ -66,6 +70,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 // - execution_context *context;
 // - memory_block game_memory;
 // - input_devices input;
+// - float32 dt;
 //
 UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {
@@ -97,7 +102,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     float32 camera_speed = 0.1f;
-    gs->camera_position += camera_velocity * camera_speed; // @todo: use dt
+    gs->camera_position += camera_velocity * camera_speed * dt;
 
     {
         gfx::render_command::command_setup_camera setup_camera;
@@ -108,13 +113,30 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_setup_camera_command(context, setup_camera);
     }
 
+    // Background
+    {
+        gfx::render_command::command_draw_background draw_background;
+        draw_background.mesh = gs->rectangle_mesh;
+        draw_background.shader = gs->rectangle_shader;
+        draw_background.color = math::make_vector4(1.0, 1.0, 1.0, 1.0);
+        push_draw_background_command(context, draw_background);
+    }
+
+#if 0
+    auto gravity = math::make_vector2(0, -9.8); // m/s^2
+#else
+    auto gravity = math::make_vector2(0, 0); // m/s^2
+#endif
+
     for (int entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
         auto *entity = gs->entities + entity_index;
 
-        entity->rotation += 0.01f;
+        entity->rotation = entity->rotation + entity->rotational_velocity * dt;
+        entity->velocity = entity->velocity + gravity * dt;
+        entity->position = entity->position + entity->velocity * dt;
 
-        gfx::render_command::command_draw_mesh_1 draw_mesh;
+        gfx::render_command::command_draw_mesh_with_color draw_mesh;
         draw_mesh.mesh_token = gs->rectangle_mesh;
         draw_mesh.shader_token = gs->rectangle_shader;
         draw_mesh.model =
@@ -122,8 +144,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             math::rotated_z(entity->rotation,
             math::scaled(math::make_vector3(entity->width, entity->height, 1),
                 math::matrix4::identity())));
+        draw_mesh.color = math::make_vector4(0.1, 0.32, 0.72, 1);
 
-        push_draw_mesh_1_command(context, draw_mesh);
+        push_draw_mesh_with_color_command(context, draw_mesh);
     }
 }
 

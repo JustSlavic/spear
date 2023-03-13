@@ -23,11 +23,12 @@ out vec4 fragment_color;
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
+uniform vec4 u_color;
 
 void main()
 {
     vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
-    fragment_color = vec4(vertex_color, 1.0);
+    fragment_color = vec4(vertex_color, 1.0) + u_color;
     gl_Position = p;
 }
 )GLSL";
@@ -211,23 +212,6 @@ render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
     return result;
 }
 
-void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 projection)
-{
-    PERSIST auto plane_vs = compile_shader(vs_source, shader::vertex);
-    PERSIST auto plane_fs = compile_shader(fs_source, shader::fragment);
-    PERSIST auto shader = link_shader(plane_vs, plane_fs);
-
-    auto buffers = opengl_rectangle(cmd->draw_rectangle.rect, {1, 1, 1, 1});
-    use_shader(shader);
-    uniform(shader, "u_model", math::matrix4::identity());
-    uniform(shader, "u_view", view);
-    uniform(shader, "u_projection", projection);
-
-    glBindVertexArray(buffers.vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.ibo);
-    glDrawElements(GL_TRIANGLES, buffers.ibo_size, GL_UNSIGNED_INT, NULL);
-}
-
 struct render_mesh_data
 {
     uint32 vertex_buffer_id;
@@ -312,7 +296,7 @@ void load_shader(execution_context *context, rs::resource *resource)
     data->program = program;
 }
 
-void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection, math::vector4 color)
 {
     auto *mesh_render_data = (render_mesh_data *) mesh->render_data;
     auto *shader_render_data = (render_shader_data *) shader->render_data;
@@ -321,6 +305,7 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
     uniform(shader_render_data->program, "u_model", model);
     uniform(shader_render_data->program, "u_view", view);
     uniform(shader_render_data->program, "u_projection", projection);
+    uniform(shader_render_data->program, "u_color", color);
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);

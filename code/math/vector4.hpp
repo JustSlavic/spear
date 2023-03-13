@@ -151,14 +151,14 @@ INLINE bool operator != (vector4 a, vector4 b)
 }
 
 template <typename XYZW>
-vector4 make_vector3 (XYZW xyzw)
+vector4 make_vector4 (XYZW xyzw)
 {
     vector4 result = { (float32) xyzw, (float32) xyzw, (float32) xyzw, (float32) xyzw };
     return result;
 }
 
 template <typename X, typename Y, typename Z, typename W>
-vector4 make_vector3 (X x, Y y, Z z, W w)
+vector4 make_vector4 (X x, Y y, Z z, W w)
 {
     vector4 result = { (float32) x, (float32) y, (float32) z, (float32) w };
     return result;

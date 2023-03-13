@@ -104,6 +104,15 @@ INLINE void push_setup_camera_command(execution_context *context, gfx::render_co
     push_render_command(context, cmd);
 }
 
+INLINE void push_draw_background_command(execution_context *context, gfx::render_command::command_draw_background draw_bg)
+{
+    gfx::render_command cmd;
+    cmd.type = gfx::render_command::command_type::draw_background;
+    cmd.draw_background = draw_bg;
+
+    push_render_command(context, cmd);
+}
+
 INLINE void push_draw_mesh_1_command(execution_context *context, gfx::render_command::command_draw_mesh_1 draw_mesh_1)
 {
     gfx::render_command cmd;
@@ -113,11 +122,20 @@ INLINE void push_draw_mesh_1_command(execution_context *context, gfx::render_com
     push_render_command(context, cmd);
 }
 
+INLINE void push_draw_mesh_with_color_command(execution_context *context, gfx::render_command::command_draw_mesh_with_color draw_mesh)
+{
+    gfx::render_command cmd;
+    cmd.type = gfx::render_command::command_type::draw_mesh_with_color;
+    cmd.draw_mesh_with_color = draw_mesh;
+
+    push_render_command(context, cmd);
+}
+
 
 #define INITIALIZE_MEMORY_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION(initialize_memory_t);
 
-#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory, input_devices *input)
+#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory, input_devices *input, float32 dt)
 typedef UPDATE_AND_RENDER_FUNCTION(update_and_render_t);
 
 extern "C"

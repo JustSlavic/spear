@@ -3,13 +3,41 @@
 
 #include <base.hpp>
 #include <memory/memory.hpp>
+#include <os/time.hpp>
 
 #include <windows.h>
 
 
-namespace win32
-{
+namespace win32 {
 
+
+uint64 get_processor_cycles()
+{
+    return __rdtsc();
+}
+
+[[nodiscard]]
+int64 get_wall_clock_frequency()
+{
+    PERSIST int64 cache;
+    if (cache == 0)
+    {
+        LARGE_INTEGER performance_counter_frequency;
+        // @note: this always succeeds on WinXP and higher
+        QueryPerformanceFrequency(&performance_counter_frequency);
+        cache = performance_counter_frequency.QuadPart;
+    }
+    return cache;
+}
+
+[[nodiscard]]
+os::timepoint get_wall_clock()
+{
+    LARGE_INTEGER PerformanceCounter;
+    // @note: this always succeeds on WinXP and higher
+    QueryPerformanceCounter(&PerformanceCounter);
+    return { (uint64) PerformanceCounter.QuadPart };
+}
 
 uint32 get_program_path(HINSTANCE instance, char *buffer, uint32 buffer_size)
 {

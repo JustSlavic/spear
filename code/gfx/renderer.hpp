@@ -33,8 +33,9 @@ struct render_command
     {
         setup_projection_matrix,
         setup_camera,
-        draw_rectangle,
+        draw_background,
         draw_mesh_1,
+        draw_mesh_with_color,
     };
     struct command_setup_projection_matrix
     {
@@ -45,6 +46,12 @@ struct render_command
         math::vector3 camera_position;
         math::vector3 look_at_position;
         math::vector3 camera_up_direction;
+    };
+    struct command_draw_background
+    {
+        rs::resource_token mesh;
+        rs::resource_token shader;
+        math::vector4 color;
     };
     struct command_draw_rectangle
     {
@@ -57,14 +64,23 @@ struct render_command
         rs::resource_token shader_token;
         math::matrix4 model;
     };
+    struct command_draw_mesh_with_color
+    {
+        rs::resource_token mesh_token;
+        rs::resource_token shader_token;
+        math::matrix4 model;
+        math::vector4 color;
+    };
 
     command_type type;
     union
     {
         command_setup_projection_matrix setup_projection_matrix;
         command_setup_camera setup_camera;
+        command_draw_background draw_background;
         command_draw_rectangle draw_rectangle;
         command_draw_mesh_1 draw_mesh_1;
+        command_draw_mesh_with_color draw_mesh_with_color;
     };
 };
 
@@ -73,15 +89,25 @@ void vsync(bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void clear();
 void set_viewport(viewport vp);
+
 math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up);
 math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
 math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
 math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);
 math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f);
+
 void setup_projection_matrix(render_command *cmd);
 void setup_camera(render_command *cmd);
-void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 projection);
-void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 view, math::matrix4 projection);
+
+void draw_polygon_simple(execution_context *context,
+                         rs::resource_token mesh_token,
+                         rs::resource_token shader_token,
+                         math::matrix4 model,
+                         math::matrix4 view,
+                         math::matrix4 projection,
+                         math::vector4 color);
+
+void draw_background(execution_context *context, render_command *cmd);
 
 
 } // namespace gfx

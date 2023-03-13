@@ -117,18 +117,18 @@ void setup_camera(render_command *cmd)
 
 }
 
-void draw_rectangle(render_command *cmd, math::matrix4 view, math::matrix4 projection)
+void draw_polygon_simple(execution_context *context,
+                         rs::resource_token mesh_token,
+                         rs::resource_token shader_token,
+                         math::matrix4 model,
+                         math::matrix4 view,
+                         math::matrix4 projection,
+                         math::vector4 color)
 {
-    if (active_api == graphics_api::opengl)
-        gl::draw_rectangle(cmd, view, projection);
-}
-
-void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 view, math::matrix4 projection)
-{
-    rs::resource *mesh = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.mesh_token);
+    rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
     if (mesh->type == rs::resource_type::mesh)
     {
-        rs::resource *shader = rs::get_resource(&context->resource_storage, cmd->draw_mesh_1.shader_token);
+        rs::resource *shader = rs::get_resource(&context->resource_storage, shader_token);
         if (shader->type == rs::resource_type::shader)
         {
             if (!mesh->render_data)
@@ -139,7 +139,7 @@ void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 
             {
                 gl::load_shader(context, shader);
             }
-            gl::draw_indexed_triangles(mesh, shader, cmd->draw_mesh_1.model, view, projection);
+            gl::draw_indexed_triangles(mesh, shader, model, view, projection, color);
         }
         else
         {
@@ -150,6 +150,17 @@ void draw_mesh_1(execution_context *context, render_command *cmd, math::matrix4 
     {
         // @todo: mesh resource is not valid
     }
+}
+
+void draw_background(execution_context *context, render_command *cmd)
+{
+    draw_polygon_simple(context,
+                        cmd->draw_background.mesh,
+                        cmd->draw_background.shader,
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
+                        cmd->draw_background.color);
 }
 
 
