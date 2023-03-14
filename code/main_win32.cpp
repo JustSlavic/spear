@@ -208,7 +208,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         return 1;
     }
 
-
     HDC device_context = GetDC(window);
     {
         HGLRC temp_render_context = {};
@@ -219,7 +218,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         desired_pixel_format.nVersion = 1;
         desired_pixel_format.dwFlags = PFD_SUPPORT_OPENGL|PFD_DRAW_TO_WINDOW|PFD_DOUBLEBUFFER;
         desired_pixel_format.iPixelType = PFD_TYPE_RGBA;
-        desired_pixel_format.cColorBits = 32;
+        desired_pixel_format.cColorBits = 24;
         desired_pixel_format.cAlphaBits = 8;
         desired_pixel_format.cDepthBits = 24;
         desired_pixel_format.cStencilBits = 8;
@@ -272,8 +271,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     WGL_COLOR_BITS_ARB, 32,
                     WGL_DEPTH_BITS_ARB, 24,
                     WGL_STENCIL_BITS_ARB, 8,
-                    // WGL_SAMPLE_BUFFERS_ARB, 1,
-                    // WGL_SAMPLES_ARB, 4,
+                    WGL_SAMPLE_BUFFERS_ARB, 1,
+                    // WGL_SAMPLES_ARB, 1,
                     0, // End
                 };
 

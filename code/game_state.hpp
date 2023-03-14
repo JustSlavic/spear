@@ -13,6 +13,8 @@ struct entity
     float32 width, height;
     float32 rotation;
     float32 rotational_velocity;
+
+    math::rectangle2 aabb;
 };
 
 

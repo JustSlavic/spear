@@ -10,6 +10,7 @@ namespace math
 
 
 GLOBAL constexpr float32 pi = 3.14159265358979323846f;
+GLOBAL constexpr float32 infinity = HUGE_VALF;
 
 
 float32 absolute(float32 x)

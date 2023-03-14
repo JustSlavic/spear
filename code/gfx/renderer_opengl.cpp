@@ -138,10 +138,10 @@ render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
 
     vertex vertices[] =
     {
-        { math::make_vector3(rect.min.x, rect.min.y, 0), color.rgb }, // 0 bottom left
-        { math::make_vector3(rect.max.x, rect.min.y, 0), color.rgb }, // 1 bottom right
-        { math::make_vector3(rect.max.x, rect.max.y, 0), color.rgb }, // 2 top right
-        { math::make_vector3(rect.min.x, rect.max.y, 0), color.rgb }, // 3 top left
+        { V3(math::bottom_left(rect), 0), color.rgb }, // 0 bottom left
+        { V3(math::bottom_right(rect), 0), color.rgb }, // 1 bottom right
+        { V3(math::top_right(rect), 0), color.rgb }, // 2 top right
+        { V3(math::top_left(rect), 0), color.rgb }, // 3 top left
     };
 
     uint32 vertex_buffer_id = 0;
