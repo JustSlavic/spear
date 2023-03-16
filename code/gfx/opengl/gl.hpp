@@ -92,6 +92,10 @@ int glXGetFBConfigAttrib(Display *dpy, GLXFBConfig config, int attribute, int *v
 const char *glXQueryExtensionsString( Display *dpy, int screen );
 }
 
+typedef void glXSwapIntervalEXTType(Display *display, GLXDrawable drawable, int interval);
+
+GLOBAL glXSwapIntervalEXTType *glXSwapIntervalEXT;
+
 #endif // OS_LINUX
 
 

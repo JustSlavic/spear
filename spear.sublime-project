@@ -19,6 +19,8 @@
             "linux": {
                 "shell_cmd": "$folder/build.sh",
                 "working_dir": "$folder/build",
+                "file_regex": "^([\\w\\/\\.]+)\\:(\\d+)\\:(\\d+)\\:(.*)$",
+                "syntax": "Packages/User/gcc_build.sublime-syntax"
             }
         },
     ],

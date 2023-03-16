@@ -61,20 +61,20 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     e2->height = 3.0f;
     e2->rotational_velocity = 0.05f;
 
-    // for (int y = 0; y < 5; y++)
-    // {
-    //     for (int x = 0; x < 5; x++)
-    //     {
-    //         // comment to find
-    //         auto *entity = push_entity(gs);
-    //         entity->position = V2(x, y);
-    //         entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y);
-    //         entity->width = 0.1f;
-    //         entity->height = 0.3f;
-    //         entity->rotation = 0.0f;
-    //         entity->rotational_velocity = 0.01f * x * y - 0.025f;
-    //     }
-    // }
+    for (int y = 0; y < 5; y++)
+    {
+        for (int x = 0; x < 5; x++)
+        {
+            // comment to find
+            auto *entity = push_entity(gs);
+            entity->position = V2(x, y);
+            entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y);
+            entity->width = 0.1f;
+            entity->height = 0.3f;
+            entity->rotation = 0.0f;
+            entity->rotational_velocity = 0.01f * x * y - 0.025f;
+        }
+    }
 }
 
 //

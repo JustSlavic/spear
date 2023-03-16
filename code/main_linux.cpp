@@ -59,6 +59,9 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXC
 
 
 GLOBAL bool32 running = true;
+GLOBAL uint32 current_display_width;
+GLOBAL uint32 current_display_height;
+GLOBAL uint32 display_size_changed;
 
 
 // Helper to check for extension string presence.  Adapted from:
@@ -104,13 +107,16 @@ static int ctxErrorHandler(Display *dpy, XErrorEvent *ev)
 
 int main(int argc, char **argv, char **env)
 {
+    int32 display_width = 800;
+    int32 display_height = 600;
+
     Display* display = XOpenDisplay(NULL);
     if (display == NULL)
     {
         return 1;
     }
 
-// Get a matching FB config
+    // Get a matching FB config
     int visual_attribs[] =
     {
         GLX_X_RENDERABLE    , True,
@@ -123,7 +129,7 @@ int main(int argc, char **argv, char **env)
         GLX_ALPHA_SIZE      , 8,
         GLX_DEPTH_SIZE      , 24,
         GLX_STENCIL_SIZE    , 8,
-        GLX_DOUBLEBUFFER    , True,
+        GLX_DOUBLEBUFFER    , true,
         //GLX_SAMPLE_BUFFERS  , 1,
         //GLX_SAMPLES         , 4,
         None
@@ -154,8 +160,8 @@ int main(int argc, char **argv, char **env)
     // Pick the FB config/visual with the most samples per pixel
     printf("Getting XVisualInfos\n");
 
-    int desired_num_sample_buffers = 1;
-    int desired_num_samples = 4;
+    int desired_num_sample_buffers = 0;
+    int desired_num_samples = 0;
     XVisualInfo *x_visual_info = NULL;
     GLXFBConfig x_framebuffer_config = {};
 
@@ -189,23 +195,30 @@ int main(int argc, char **argv, char **env)
     printf("Creating colormap\n");
     Colormap x_colormap = XCreateColormap(display, RootWindow(display, x_visual_info->screen), x_visual_info->visual, AllocNone);
 
-    XSetWindowAttributes swa;
-    swa.colormap          = x_colormap;
-    swa.background_pixmap = 0;
-    swa.border_pixel      = 0;
-    swa.event_mask        = StructureNotifyMask;
+    XSetWindowAttributes x_window_attributes;
+    x_window_attributes.colormap          = x_colormap;
+    x_window_attributes.background_pixmap = 0;
+    x_window_attributes.border_pixel      = 0;
+    x_window_attributes.event_mask        =
+        ExposureMask |
+        KeyPressMask |
+        KeyReleaseMask |
+        PointerMotionMask |
+        ButtonPressMask |
+        StructureNotifyMask |
+        ButtonReleaseMask;
 
     printf("Creating window\n");
     Window window = XCreateWindow(
         display, RootWindow(display, x_visual_info->screen),
         0, 0,
-        800, 600,
+        display_width, display_height,
         0,
         x_visual_info->depth,
         InputOutput,
         x_visual_info->visual,
         CWBorderPixel|CWColormap|CWEventMask,
-        &swa);
+        &x_window_attributes);
 
     if (!window)
     {
@@ -221,15 +234,6 @@ int main(int argc, char **argv, char **env)
     // Process window close event through event handler so XNextEvent does not fail
     Atom del_window = XInternAtom(display, "WM_DELETE_WINDOW", 0);
     XSetWMProtocols(display, window, &del_window, 1);
-
-    // Select kind of events we are interested in
-                                                                                                                                                                                                                                                                                                                                                                                                           XSelectInput(display, window,
-        ExposureMask |
-        KeyPressMask |
-        KeyReleaseMask |
-        PointerMotionMask |
-        ButtonPressMask |
-        ButtonReleaseMask);
 
     // Display the window
     XMapWindow(display, window);
@@ -348,6 +352,15 @@ int main(int argc, char **argv, char **env)
     initialize_memory(&context, game_memory);
     gfx::set_clear_color(0, 0, 0, 1);
 
+    glXSwapIntervalEXT = (glXSwapIntervalEXTType *) glXGetProcAddress((GLubyte const *) "glXSwapIntervalEXT");
+
+    GLXDrawable x_drawable = glXGetCurrentDrawable();
+    const int interval = 1;
+    if (x_drawable)
+    {
+        glXSwapIntervalEXT(display, x_drawable, interval);
+    }
+
     auto view = math::matrix4::identity();
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
@@ -389,65 +402,90 @@ int main(int argc, char **argv, char **env)
                     }
                 }
             }
+
+            switch (event.type)
+            {
+                case ButtonPress:
+                case ButtonRelease:
+                {
+                    // b32 is_down = (event.type == ButtonPress);
+
+                    // if (event.xbutton.button == MOUSE_LMB)
+                    // {
+                    //     linux_process_key_event(&mouse->LMB, is_down);
+                    // }
+                    // else if (event.xbutton.button == MOUSE_MMB)
+                    // {
+                    //     linux_process_key_event(&mouse->MMB, is_down);
+                    // }
+                    // else if (event.xbutton.button == MOUSE_RMB)
+                    // {
+                    //     linux_process_key_event(&mouse->RMB, is_down);
+                    // }
+                }
+                break;
+
+                case KeyPress:
+                case KeyRelease:
+                {
+                    bool32 is_down = (event.type == KeyPress);
+                    UNUSED(is_down);
+                    switch (event.xkey.keycode)
+                    {
+                        case KEYCODE_ESC: process_button_state(&input.keyboard_device[keyboard::esc], is_down);
+                            break;
+                        case KEYCODE_W: process_button_state(&input.keyboard_device[keyboard::w], is_down);
+                            break;
+                        case KEYCODE_A: process_button_state(&input.keyboard_device[keyboard::a], is_down);
+                            break;
+                        case KEYCODE_S: process_button_state(&input.keyboard_device[keyboard::s], is_down);
+                            break;
+                        case KEYCODE_D: process_button_state(&input.keyboard_device[keyboard::d], is_down);
+                            break;
+                    }
+                }
+                break;
+
+                // printf("keycode release: %d\n", e.keycode);
+                // print_binary(e.state);
+                // printf("\n");
+                // printf(
+                //     "[ B1 B2 B3 B4 B5 Shift Lock Control M1 M2 M3 M4 M5 ]\n"
+                //     "[ %2d %2d %2d %2d %2d %5d %4d %7d %2d %2d %2d %2d %2d ]\n",
+                //     (e.state & Button1Mask) > 0, // LMB
+                //     (e.state & Button2Mask) > 0, // MMB
+                //     (e.state & Button3Mask) > 0, // RMB
+                //     (e.state & Button4Mask) > 0, //
+                //     (e.state & Button5Mask) > 0, //
+                //     (e.state & ShiftMask) > 0,   // Shift
+                //     (e.state & LockMask) > 0,    // CapsLock
+                //     (e.state & ControlMask) > 0, //
+                //     (e.state & Mod1Mask) > 0,    //
+                //     (e.state & Mod2Mask) > 0,    // NumLock
+                //     (e.state & Mod3Mask) > 0,    //
+                //     (e.state & Mod4Mask) > 0,    // window/Super Key
+                //     (e.state & Mod5Mask) > 0);   //
+
+                case ClientMessage:
+                    running = false;
+                break;
+
+                case ConfigureNotify:
+                {
+                    // printf("x=%d; y=%d\n", event.xconfigure.x, event.xconfigure.y);
+                    current_display_width = event.xconfigure.width;
+                    current_display_height = event.xconfigure.height;
+                    display_size_changed = true;
+                }
+                break;
+            }
         }
 
-        switch (event.type)
+        if (display_size_changed)
         {
-            case MotionNotify:
-            {
-            }
-            break;
-
-            case ButtonPress:
-            case ButtonRelease:
-            {
-            }
-            break;
-
-            case KeyPress:
-            case KeyRelease:
-            {
-                bool32 is_down = (event.type == KeyPress);
-                UNUSED(is_down);
-                if (event.xkey.keycode == KEYCODE_ESC)
-                {
-                    running = false;
-                }
-            }
-            break;
-
-            // printf("keycode release: %d\n", e.keycode);
-            // print_binary(e.state);
-            // printf("\n");
-            // printf(
-            //     "[ B1 B2 B3 B4 B5 Shift Lock Control M1 M2 M3 M4 M5 ]\n"
-            //     "[ %2d %2d %2d %2d %2d %5d %4d %7d %2d %2d %2d %2d %2d ]\n",
-            //     (e.state & Button1Mask) > 0, // LMB
-            //     (e.state & Button2Mask) > 0, // MMB
-            //     (e.state & Button3Mask) > 0, // RMB
-            //     (e.state & Button4Mask) > 0, //
-            //     (e.state & Button5Mask) > 0, //
-            //     (e.state & ShiftMask) > 0,   // Shift
-            //     (e.state & LockMask) > 0,    // CapsLock
-            //     (e.state & ControlMask) > 0, //
-            //     (e.state & Mod1Mask) > 0,    //
-            //     (e.state & Mod2Mask) > 0,    // NumLock
-            //     (e.state & Mod3Mask) > 0,    //
-            //     (e.state & Mod4Mask) > 0,    // window/Super Key
-            //     (e.state & Mod5Mask) > 0);   //
-
-            case ClientMessage:
-                running = false;
-                break;
-            case Expose:
-                int x = event.xexpose.x;
-                int y = event.xexpose.y;
-                int w = event.xexpose.width;
-                int h = event.xexpose.height;
-                UNUSED(x); UNUSED(y); UNUSED(w); UNUSED(h);
-                // @todo: get new window buffer size
-                // linux_resize_screen_buffer(&screen_buffer, x + w, y + h);
-                break;
+            auto viewport = gfx::make_viewport(current_display_width, current_display_height, aspect_ratio);
+            gfx::set_viewport(viewport);
+            display_size_changed = false;
         }
 
         gfx::clear();
