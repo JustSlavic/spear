@@ -1,6 +1,9 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
+#include <base.hpp>
+
+
 //
 // Transition count helps detect very quick pressing.
 //

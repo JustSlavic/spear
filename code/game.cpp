@@ -141,7 +141,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     auto gravity = V2(0, 0); // m/s^2
 #endif
 
-    for (int entity_index = 1; entity_index < gs->entity_count; entity_index++)
+    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
         auto *entity = gs->entities + entity_index;
 

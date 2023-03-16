@@ -1,3 +1,6 @@
+#ifndef MEMORY_MEMORY_HEAP_HPP
+#define MEMORY_MEMORY_HEAP_HPP
+
 #include "allocator.hpp"
 
 
@@ -218,3 +221,5 @@ void heap_deallocate(allocator *a, void *memory)
 
 
 } // namespace memory
+
+#endif // MEMORY_MEMORY_HEAP_HPP

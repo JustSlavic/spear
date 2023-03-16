@@ -49,6 +49,13 @@ typedef unsigned short     uint16;
 typedef unsigned int       uint32;
 typedef unsigned long long uint64;
 
+typedef float  float32;
+typedef double float64;
+
+#define DEBUG_BREAK __builtin_trap
+#define FORCE_INLINE
+#define DLL_EXPORT
+
 #endif // COMPILER_GNU
 
 typedef uint8  byte;

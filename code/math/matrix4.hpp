@@ -165,9 +165,9 @@ matrix4 make_matrix4 (T t)
 {
     matrix4 result = {
         t, t, t, t,
-        t, t, t, t
-        t, t, t, t
-        t, t, t, t
+        t, t, t, t,
+        t, t, t, t,
+        t, t, t, t,
     };
     return result;
 }
@@ -238,19 +238,19 @@ INLINE matrix4 operator * (matrix4 a, matrix4 b)
     return result;
 }
 
-INLINE vector4 &operator *= (vector4 v, matrix4 &m)
+INLINE vector4& operator *= (vector4& v, matrix4 const& m)
 {
     v = v * m;
     return v;
 }
 
-INLINE matrix4 &operator *= (matrix4& a, matrix4& b)
+INLINE matrix4& operator *= (matrix4& a, matrix4 const & b)
 {
     a = a * b;
     return a;
 }
 
-void translate(matrix4 & m, vector3 v)
+void translate(matrix4& m, vector3 v)
 {
     m._4.xyz += v;
 }

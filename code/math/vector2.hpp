@@ -18,7 +18,7 @@ struct vector2
         float32 e[2];
     };
 
-    float32 & operator [] (int32 index)
+    float32 & operator [] (uint32 index)
     {
         ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
 

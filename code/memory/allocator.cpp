@@ -1,9 +1,12 @@
+#ifndef MEMORY_MEMORY_ALLOCATOR_CPP
+#define MEMORY_MEMORY_ALLOCATOR_CPP
+
 #include "allocator.hpp"
 
-#include <memory/memory_arena.cpp>
+#include <memory/memory_arena.hpp>
 // #include <memory/memory_stack.cpp>
 // #include <memory/memory_pool.cpp>
-#include <memory/memory_heap.cpp>
+#include <memory/memory_heap.hpp>
 
 
 namespace memory {
@@ -106,3 +109,5 @@ memory_block allocate_block(allocator *a, usize size, usize alignment)
 
 
 } // namespace memory
+
+#endif // MEMORY_MEMORY_ALLOCATOR_CPP

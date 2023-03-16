@@ -1,3 +1,6 @@
+#ifndef STRING_ID_CPP
+#define STRING_ID_CPP
+
 #include "string_id.hpp"
 
 #include <memory/allocator.hpp>
@@ -7,7 +10,7 @@
 int32 get_index_in_hash_table(string_id_storage *storage, uint32 hash)
 {
     int32 result = -1;
-    for (int offset = 0; offset < ARRAY_COUNT(storage->hash_table_hashes); offset++)
+    for (uint32 offset = 0; offset < ARRAY_COUNT(storage->hash_table_hashes); offset++)
     {
         int32 index = (hash + offset) % ARRAY_COUNT(storage->hash_table_hashes);
         uint32 slot = storage->hash_table_hashes[index];
@@ -30,7 +33,7 @@ GLOBAL uint32 primes[32] = {
 uint32 make_string_id_hash(char const *buffer, usize size)
 {
     uint32 hash = 0;
-    for (int index = 0; index < size; index++)
+    for (uint32 index = 0; index < size; index++)
     {
         hash += buffer[index] * primes[index % ARRAY_COUNT(primes)];
     }
@@ -78,3 +81,5 @@ char const *get_cstring_by_id(string_id_storage *storage, string_id id)
     char const *result = (char const *) storage->arena.memory + id.id;
     return result;
 }
+
+#endif // STRING_ID_CPP

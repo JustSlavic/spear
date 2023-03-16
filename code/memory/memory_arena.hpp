@@ -1,3 +1,6 @@
+#ifndef MEMORY_MEMORY_ARENA_HPP
+#define MEMORY_MEMORY_ARENA_HPP
+
 #include "allocator.hpp"
 
 
@@ -43,3 +46,5 @@ void arena_reset(allocator *a)
 }
 
 } // namespace memory
+
+#endif // MEMORY_MEMORY_ARENA_HPP
