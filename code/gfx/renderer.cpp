@@ -1,8 +1,8 @@
 #include "renderer.hpp"
 #include "renderer_opengl.cpp"
+#include "renderer_dx11.cpp"
 
 // @todo:
-// #include <renderer_direct3d11.cpp>
 // #include <renderer_direct3d12.cpp>
 // #include <renderer_vulkan.cpp>
 // #include <renderer_metal.cpp>
@@ -13,20 +13,19 @@ namespace gfx
 
 GLOBAL graphics_api active_api;
 
-void initialize(graphics_api api)
+
+bool32 initialize_opengl(driver *d)
 {
-    if (api == graphics_api::opengl)
-    {
-        bool32 result = gl::initialize();
-        if (result) active_api = graphics_api::opengl;
-    }
-    else
-        ASSERT_FAIL("NOT IMPLEMENTED");
-        // @todo:
-        // void dx11::initialize();
-        // void dx12::initialize();
-        // void vk::initialize();
-        // void mt::initialize();
+    bool32 result = gl::initialize();
+    if (result) active_api = graphics_api::opengl;
+    return result;
+}
+
+bool32 initialize_dx11(platform::window *w, driver *d)
+{
+    bool32 result = dx11::initialize(w);
+    if (result) active_api = graphics_api::dx11;
+    return result;
 }
 
 void vsync(bool32 active)
@@ -53,6 +52,15 @@ void set_viewport(viewport vp)
         gl::set_viewport(vp);
     else
         ASSERT_FAIL("NOT IMPLEMENTED");
+}
+
+void swap_buffers(platform::window *w, driver *d)
+{
+    if (active_api == graphics_api::opengl)
+        gl::swap_buffers(w);
+    else if (active_api == graphics_api::dx11)
+        // dx::swap_buffers(d);
+        ASSERT_FAIL();
 }
 
 math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up)

@@ -2,6 +2,7 @@
 #define RENDERER_HPP
 
 #include <base.hpp>
+#include <platform.hpp>
 #include <math/vector3.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
@@ -22,9 +23,14 @@ enum class graphics_api
     software,
     opengl,
     vulkan,
-    direct3d11,
-    direct3d12,
+    dx11,
+    dx12,
     metal,
+};
+
+struct driver
+{
+    uint8 data[64];
 };
 
 struct render_command
@@ -84,11 +90,13 @@ struct render_command
     };
 };
 
-void initialize(graphics_api api);
+bool32 initialize_opengl(driver *d);
+bool32 initialize_dx11(platform::window *w, driver *d);
 void vsync(bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void clear();
 void set_viewport(viewport vp);
+void swap_buffers(platform::window *w, driver *d);
 
 math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up);
 math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);

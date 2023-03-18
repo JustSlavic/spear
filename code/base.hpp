@@ -35,6 +35,8 @@ typedef double float64;
 #define FORCE_INLINE __forceinline
 #define DLL_EXPORT __declspec(dllexport)
 
+#define RELEASE_COM(PTR) do { if ((PTR)) { (PTR)->Release(); } (PTR) = NULL; } while(0)
+
 #endif // COMPILER_MSVC
 
 #if COMPILER_GNU

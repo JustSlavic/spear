@@ -128,89 +128,6 @@ struct render_with_indices
     uint32 vao;
 };
 
-render_with_indices opengl_rectangle(math::rectangle2 rect, math::vector4 color)
-{
-    struct vertex
-    {
-        math::vector3 position;
-        math::vector3 color;
-    };
-
-    vertex vertices[] =
-    {
-        { V3(math::bottom_left(rect), 0), color.rgb }, // 0 bottom left
-        { V3(math::bottom_right(rect), 0), color.rgb }, // 1 bottom right
-        { V3(math::top_right(rect), 0), color.rgb }, // 2 top right
-        { V3(math::top_left(rect), 0), color.rgb }, // 3 top left
-    };
-
-    uint32 vertex_buffer_id = 0;
-    {
-        glGenBuffers(1, &vertex_buffer_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    }
-
-    uint32 indices[] = {
-        0, 1, 2,  // first triangle
-        2, 3, 0,  // second triangle
-    };
-
-    uint32 index_buffer_id = 0;
-    {
-        glGenBuffers(1, &index_buffer_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    }
-
-    uint32 vertex_array_id = 0;
-    {
-        glGenVertexArrays(1, &vertex_array_id);
-        glBindVertexArray(vertex_array_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-
-        uint32 attrib_index = 0;
-        uint64 offset = 0;
-        {
-            uint32 count = 3; // Because it's vector3
-
-            glEnableVertexAttribArray(attrib_index);
-            glVertexAttribPointer(
-                attrib_index,      // Index
-                count,             // Count
-                GL_FLOAT,          // Type
-                GL_FALSE,          // Normalized?
-                sizeof(vertex),    // Stride
-                (void *) offset);  // Offset
-
-            attrib_index += 1;
-            offset += (count * sizeof(float32));
-        }
-        {
-            uint32 count = 3; // Because it's color32
-
-            glEnableVertexAttribArray(attrib_index);
-            glVertexAttribPointer(
-                attrib_index,      // Index
-                count,             // Count
-                GL_FLOAT,          // Type
-                GL_FALSE,          // Normalized?
-                sizeof(vertex),    // Stride
-                (void *) offset);  // Offset
-
-            attrib_index += 1;
-            offset += (count * sizeof(float32));
-        }
-    }
-
-    render_with_indices result;
-    result.vbo = vertex_buffer_id;
-    result.ibo = index_buffer_id;
-    result.ibo_size = sizeof(indices);
-    result.vao = vertex_array_id;
-
-    return result;
-}
 
 struct render_mesh_data
 {
@@ -219,10 +136,12 @@ struct render_mesh_data
     uint32 vertex_array_id;
 };
 
+
 struct render_shader_data
 {
     shader program;
 };
+
 
 void load_mesh(execution_context *context, rs::resource *resource)
 {
