@@ -90,13 +90,13 @@ struct render_command
     };
 };
 
-bool32 initialize_opengl(void *d);
-bool32 initialize_dx11(void *w, driver *d);
+bool32 initialize_opengl(void *driver);
+bool32 initialize_dx11(void *window, driver *driver);
 void vsync(bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void clear();
 void set_viewport(viewport vp);
-void swap_buffers(void *w, driver *d);
+void swap_buffers(void *window, void *driver);
 
 math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up);
 math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);

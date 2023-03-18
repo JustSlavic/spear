@@ -3,7 +3,6 @@
 #include <base.hpp>
 
 #include <game.hpp>
-#include <gfx/gl.hpp>
 #include <gfx/renderer.hpp>
 
 
@@ -60,13 +59,126 @@ GLOBAL uint32 current_display_height;
 GLOBAL uint32 display_size_changed;
 
 
+void process_pending_messages(linux::window *window, input_devices *input)
+{
+    XEvent event;
+    while (XPending(window->x_display))
+    {
+        XNextEvent(window->x_display, &event);
+
+        //
+        // @note: X11 key-repeat BS:
+        // The X-Server always sends you repeated keys. It's bad, because I want
+        // to be precise when player hits/releases the keyboard key.
+        // The event stream looks like this:
+        //
+        //    ... [real-press] ... [repeat-release]-[repeat-press]  [repeat-release]-[repeat-press]  [real-release] ...
+        //
+        // Repeat events always go in pairs: RELEASE-PRESS, and always have the same timestamp.
+        // I detect that in the code below, and just skip them.
+        //
+        XEvent next_event;
+        if (XPending(window->x_display))
+        {
+            // @note: XPeekEvent is blocking call. XPending makes sure I call XPeekEvent only when
+            // there are events present in the queue.
+            XPeekEvent(window->x_display, &next_event);
+            if ((event.type == KeyRelease) && (next_event.type == KeyPress))
+            {
+                if (event.xkey.time == next_event.xkey.time)
+                {
+                    XNextEvent(window->x_display, &next_event); // Poll next event from the queue
+                    continue; // Skip
+                }
+            }
+        }
+
+        switch (event.type)
+        {
+            case ButtonPress:
+            case ButtonRelease:
+            {
+                // b32 is_down = (event.type == ButtonPress);
+
+                // if (event.xbutton.button == MOUSE_LMB)
+                // {
+                //     linux_process_key_event(&mouse->LMB, is_down);
+                // }
+                // else if (event.xbutton.button == MOUSE_MMB)
+                // {
+                //     linux_process_key_event(&mouse->MMB, is_down);
+                // }
+                // else if (event.xbutton.button == MOUSE_RMB)
+                // {
+                //     linux_process_key_event(&mouse->RMB, is_down);
+                // }
+            }
+            break;
+
+            case KeyPress:
+            case KeyRelease:
+            {
+                bool32 is_down = (event.type == KeyPress);
+                switch (event.xkey.keycode)
+                {
+                    case KEYCODE_ESC: process_button_state(&input->keyboard_device[keyboard::esc], is_down);
+                        break;
+                    case KEYCODE_W: process_button_state(&input->keyboard_device[keyboard::w], is_down);
+                        break;
+                    case KEYCODE_A: process_button_state(&input->keyboard_device[keyboard::a], is_down);
+                        break;
+                    case KEYCODE_S: process_button_state(&input->keyboard_device[keyboard::s], is_down);
+                        break;
+                    case KEYCODE_D: process_button_state(&input->keyboard_device[keyboard::d], is_down);
+                        break;
+                }
+            }
+            break;
+
+            // printf("keycode release: %d\n", e.keycode);
+            // print_binary(e.state);
+            // printf("\n");
+            // printf(
+            //     "[ B1 B2 B3 B4 B5 Shift Lock Control M1 M2 M3 M4 M5 ]\n"
+            //     "[ %2d %2d %2d %2d %2d %5d %4d %7d %2d %2d %2d %2d %2d ]\n",
+            //     (e.state & Button1Mask) > 0, // LMB
+            //     (e.state & Button2Mask) > 0, // MMB
+            //     (e.state & Button3Mask) > 0, // RMB
+            //     (e.state & Button4Mask) > 0, //
+            //     (e.state & Button5Mask) > 0, //
+            //     (e.state & ShiftMask) > 0,   // Shift
+            //     (e.state & LockMask) > 0,    // CapsLock
+            //     (e.state & ControlMask) > 0, //
+            //     (e.state & Mod1Mask) > 0,    //
+            //     (e.state & Mod2Mask) > 0,    // NumLock
+            //     (e.state & Mod3Mask) > 0,    //
+            //     (e.state & Mod4Mask) > 0,    // window/Super Key
+            //     (e.state & Mod5Mask) > 0);   //
+
+            case ClientMessage:
+                running = false;
+            break;
+
+            case ConfigureNotify:
+            {
+                // printf("x=%d; y=%d\n", event.xconfigure.x, event.xconfigure.y);
+                current_display_width = event.xconfigure.width;
+                current_display_height = event.xconfigure.height;
+                display_size_changed = true;
+            }
+            break;
+        }
+    }
+}
+
+
 int main(int argc, char **argv, char **env)
 {
-    int32 display_width = 800;
-    int32 display_height = 600;
+    int32 display_width = 2400;
+    int32 display_height = 1600;
 
     linux::window window = {};
-    gfx::gl::glx_driver driver = {};
+    gfx::driver driver = {};
 
     linux::create_opengl_window(display_width, display_height, &window, &driver);
 
@@ -103,116 +215,7 @@ int main(int argc, char **argv, char **env)
     while (running)
     {
         reset_transitions(&input.keyboard_device);
-
-        XEvent event;
-        while (XPending(window.x_display))
-        {
-            XNextEvent(window.x_display, &event);
-
-            //
-            // @note: X11 key-repeat BS:
-            // The X-Server always sends you repeated keys. It's bad, because I want
-            // to be precise when player hits/releases the keyboard key.
-            // The event stream looks like this:
-            //
-            //    ... [real-press] ... [repeat-release]-[repeat-press]  [repeat-release]-[repeat-press]  [real-release] ...
-            //
-            // Repeat events always go in pairs: RELEASE-PRESS, and always have the same timestamp.
-            // I detect that in the code below, and just skip them.
-            //
-            XEvent next_event;
-            if (XPending(window.x_display))
-            {
-                // @note: XPeekEvent is blocking call. XPending makes sure I call XPeekEvent only when
-                // there are events present in the queue.
-                XPeekEvent(window.x_display, &next_event);
-                if ((event.type == KeyRelease) && (next_event.type == KeyPress))
-                {
-                    if (event.xkey.time == next_event.xkey.time)
-                    {
-                        XNextEvent(window.x_display, &next_event); // Poll next event from the queue
-                        continue; // Skip
-                    }
-                }
-            }
-
-            switch (event.type)
-            {
-                case ButtonPress:
-                case ButtonRelease:
-                {
-                    // b32 is_down = (event.type == ButtonPress);
-
-                    // if (event.xbutton.button == MOUSE_LMB)
-                    // {
-                    //     linux_process_key_event(&mouse->LMB, is_down);
-                    // }
-                    // else if (event.xbutton.button == MOUSE_MMB)
-                    // {
-                    //     linux_process_key_event(&mouse->MMB, is_down);
-                    // }
-                    // else if (event.xbutton.button == MOUSE_RMB)
-                    // {
-                    //     linux_process_key_event(&mouse->RMB, is_down);
-                    // }
-                }
-                break;
-
-                case KeyPress:
-                case KeyRelease:
-                {
-                    bool32 is_down = (event.type == KeyPress);
-                    UNUSED(is_down);
-                    switch (event.xkey.keycode)
-                    {
-                        case KEYCODE_ESC: process_button_state(&input.keyboard_device[keyboard::esc], is_down);
-                            break;
-                        case KEYCODE_W: process_button_state(&input.keyboard_device[keyboard::w], is_down);
-                            break;
-                        case KEYCODE_A: process_button_state(&input.keyboard_device[keyboard::a], is_down);
-                            break;
-                        case KEYCODE_S: process_button_state(&input.keyboard_device[keyboard::s], is_down);
-                            break;
-                        case KEYCODE_D: process_button_state(&input.keyboard_device[keyboard::d], is_down);
-                            break;
-                    }
-                }
-                break;
-
-                // printf("keycode release: %d\n", e.keycode);
-                // print_binary(e.state);
-                // printf("\n");
-                // printf(
-                //     "[ B1 B2 B3 B4 B5 Shift Lock Control M1 M2 M3 M4 M5 ]\n"
-                //     "[ %2d %2d %2d %2d %2d %5d %4d %7d %2d %2d %2d %2d %2d ]\n",
-                //     (e.state & Button1Mask) > 0, // LMB
-                //     (e.state & Button2Mask) > 0, // MMB
-                //     (e.state & Button3Mask) > 0, // RMB
-                //     (e.state & Button4Mask) > 0, //
-                //     (e.state & Button5Mask) > 0, //
-                //     (e.state & ShiftMask) > 0,   // Shift
-                //     (e.state & LockMask) > 0,    // CapsLock
-                //     (e.state & ControlMask) > 0, //
-                //     (e.state & Mod1Mask) > 0,    //
-                //     (e.state & Mod2Mask) > 0,    // NumLock
-                //     (e.state & Mod3Mask) > 0,    //
-                //     (e.state & Mod4Mask) > 0,    // window/Super Key
-                //     (e.state & Mod5Mask) > 0);   //
-
-                case ClientMessage:
-                    running = false;
-                break;
-
-                case ConfigureNotify:
-                {
-                    // printf("x=%d; y=%d\n", event.xconfigure.x, event.xconfigure.y);
-                    current_display_width = event.xconfigure.width;
-                    current_display_height = event.xconfigure.height;
-                    display_size_changed = true;
-                }
-                break;
-            }
-        }
+        process_pending_messages(&window, &input);
 
         if (display_size_changed)
         {
@@ -285,11 +288,11 @@ int main(int argc, char **argv, char **env)
         context.render_command_queue_size = 0;
         memory::reset_allocator(&context.temporary_allocator);
 
-        glXSwapBuffers (window.x_display, window.x_window);
+        gfx::swap_buffers(&window, &driver);
     }
 
-    glXMakeCurrent(window.x_display, 0, 0);
-    glXDestroyContext(window.x_display, driver.glx_context);
+    // glXMakeCurrent(window.x_display, 0, 0);
+    // glXDestroyContext(window.x_display, ((gfx::gl::glx_driver *) &driver)->glx_context);
 
     XDestroyWindow(window.x_display, window.x_window);
     XFreeColormap(window.x_display, window.x_colormap);

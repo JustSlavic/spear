@@ -59,7 +59,7 @@ void set_viewport(viewport vp)
         ASSERT_FAIL("NOT IMPLEMENTED");
 }
 
-void swap_buffers(void *wnd, driver *drv)
+void swap_buffers(void *wnd, void *drv)
 {
     if (active_api == graphics_api::opengl)
     {
