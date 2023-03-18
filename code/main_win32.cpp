@@ -148,7 +148,7 @@ void process_pending_messages(input_devices *inp)
 int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32 show_code)
 {
     auto choosen_api = gfx::graphics_api::opengl;
-    platform::window window = {};
+    win32::window window = {};
     gfx::driver driver = {};
 
     if (choosen_api == gfx::graphics_api::opengl)
@@ -159,7 +159,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     else if (choosen_api == gfx::graphics_api::dx11)
     {
         win32::create_simple_window(instance, 800, 600, window_callback, &window);
-        gfx::initialize_dx11(&window, &driver);
+        // gfx::initialize_dx11(&window, &driver);
     }
 
     gfx::set_clear_color(0, 0, 0, 1);

@@ -1,4 +1,3 @@
-// Direct 3D 11
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
@@ -43,11 +42,9 @@ struct shader
 GLOBAL dx11_driver Dx;
 
 
-bool32 initialize(platform::window *w)
+bool32 initialize(win32::window *w, driver *d)
 {
     HRESULT Result;
-
-    auto Win32_Window = (win32::window *) w;
 
     DXGI_SWAP_CHAIN_DESC SwapChainDescription;
     ZeroMemory(&SwapChainDescription, sizeof(SwapChainDescription));
@@ -61,7 +58,7 @@ bool32 initialize(platform::window *w)
     SwapChainDescription.SampleDesc.Quality = 0;
     SwapChainDescription.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     SwapChainDescription.BufferCount = 2;
-    SwapChainDescription.OutputWindow = Win32_Window->handle;
+    SwapChainDescription.OutputWindow = w->handle;
     SwapChainDescription.Windowed = TRUE;
     // SwapChainDescription.SwapEffect =  //?
     // SwapChainDescription.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // Allow full-screen switching

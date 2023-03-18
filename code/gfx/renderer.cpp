@@ -21,9 +21,9 @@ bool32 initialize_opengl(driver *d)
     return result;
 }
 
-bool32 initialize_dx11(platform::window *w, driver *d)
+bool32 initialize_dx11(win32::window *w, driver *d)
 {
-    bool32 result = dx11::initialize(w);
+    bool32 result = dx11::initialize(w, d);
     if (result) active_api = graphics_api::dx11;
     return result;
 }
@@ -54,10 +54,10 @@ void set_viewport(viewport vp)
         ASSERT_FAIL("NOT IMPLEMENTED");
 }
 
-void swap_buffers(platform::window *w, driver *d)
+void swap_buffers(void *wnd, driver *drv)
 {
     if (active_api == graphics_api::opengl)
-        gl::swap_buffers(w);
+        gl::swap_buffers(wnd);
     else if (active_api == graphics_api::dx11)
         // dx::swap_buffers(d);
         ASSERT_FAIL();

@@ -1,15 +1,12 @@
 #include "renderer.hpp"
-#include <gfx/opengl/gl.hpp>
+#include <gfx/gl.hpp>
 
 #include <math/integer.hpp>
 #include <math/vector4.hpp>
 #include <math/rectangle2.hpp>
 
 
-namespace gfx
-{
-
-namespace gl
+namespace gfx::gl
 {
 
 GLOBAL char const *vs_source = R"GLSL(
@@ -232,6 +229,4 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
 }
 
 
-} // namespace gl
-
-} // namespace gfx
+} // namespace gfx::gl

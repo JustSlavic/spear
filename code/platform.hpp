@@ -5,17 +5,6 @@
 
 
 namespace platform {
-    
-
-struct window
-{
-    uint32 width;
-    uint32 height;
-
-    byte data[32];
-};
-
-
 } // namespace platform
 
 

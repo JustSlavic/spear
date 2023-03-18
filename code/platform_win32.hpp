@@ -13,7 +13,7 @@
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 namespace gfx::gl {
-bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, platform::window *pWindow);
+bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w);
 }
 
 namespace win32 {
@@ -36,17 +36,15 @@ struct window
     HDC device_context;
 };
 
-static_assert(sizeof(window) < sizeof(platform::window));
-
-bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, platform::window *pWindow)
+bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, window *w)
 {
-    bool32 result = gfx::gl::create_opengl_window(Instance, ClientWidth, ClientHeight, WindowCallback, pWindow);
+    bool32 result = gfx::gl::create_opengl_window(Instance, ClientWidth, ClientHeight, WindowCallback, w);
     return result;
 }
 
-bool32 create_simple_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, platform::window *pWindow)
+bool32 create_simple_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, window *w)
 {
-    auto *Result = (window *) pWindow;
+    auto *result = (window *) w;
 
     int32 PrimaryMonitorWidth  = GetSystemMetrics(SM_CXSCREEN);
     int32 PrimaryMonitorHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -94,8 +92,8 @@ bool32 create_simple_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientH
         return false;
     }
 
-    Result->handle = window;
-    Result->device_context = GetDC(window);
+    result->handle = window;
+    result->device_context = GetDC(window);
 
     return true;
 }
