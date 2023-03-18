@@ -58,6 +58,8 @@ typedef double float64;
 #define FORCE_INLINE
 #define DLL_EXPORT
 
+#define NULL ((void *) 0)
+
 #endif // COMPILER_GNU
 
 typedef uint8  byte;

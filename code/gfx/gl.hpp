@@ -46,7 +46,7 @@ typedef void glBindFramebufferType(GLenum target, GLuint framebuffer);
 typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 typedef void glBlitFramebufferType(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 typedef void glClearBufferivType(GLenum buffer, GLint drawbuffer, GLint const *value);
-typedef void glActiveTextureType(GLenum texture);
+// typedef void glActiveTextureType(GLenum texture);
 typedef void glGenBuffersType(GLsizei n, GLuint *buffers);
 typedef void glBindBufferType(GLenum target, GLuint buffer);
 typedef void glBufferDataType(GLenum target, intptr_t size, const void *data, GLenum usage);
@@ -81,7 +81,7 @@ GLOBAL glBindFramebufferType *glBindFramebuffer;
 GLOBAL glFramebufferTexture2DType *glFramebufferTexture2D;
 GLOBAL glBlitFramebufferType *glBlitFramebuffer;
 GLOBAL glClearBufferivType *glClearBufferiv;
-GLOBAL glActiveTextureType *glActiveTexture;
+// GLOBAL glActiveTextureType *glActiveTexture;
 GLOBAL glGenBuffersType *glGenBuffers;
 GLOBAL glBindBufferType *glBindBuffer;
 GLOBAL glBufferDataType *glBufferData;
@@ -147,6 +147,126 @@ void set_clear_color(math::vector4 color)
 void clear()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+
+struct shader
+{
+    uint32 id;
+    uint32 vertex_shader;
+    uint32 fragment_shader;
+
+    enum shader_type
+    {
+        vertex = GL_VERTEX_SHADER,
+        fragment = GL_FRAGMENT_SHADER,
+    };
+};
+
+
+bool32 is_shader_program_valid(uint32 program)
+{
+    glValidateProgram(program);
+    bool32 program_valid;
+    glGetProgramiv(program, GL_VALIDATE_STATUS, &program_valid);
+
+    return program_valid;
+}
+
+uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
+{
+    uint32 id = glCreateShader(shader_type);
+    glShaderSource(id, 1, &source_code, NULL);
+    glCompileShader(id);
+
+    int32 successful;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
+    if (successful == GL_FALSE)
+    {
+        int32 length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+
+        // @todo: use transient memory for that
+        char* message = new char[length + 1];
+        memory::set(message, 0, length + 1);
+
+        glGetShaderInfoLog(id, length, &length, message);
+
+        // osOutputDebugString("%s", message);
+
+        glDeleteShader(id);
+        delete[] message;
+
+        return 0;
+    }
+
+    return id;
+}
+
+shader link_shader(uint32 vs, uint32 fs)
+{
+    uint32 id = glCreateProgram();
+    glAttachShader(id, vs);
+    glAttachShader(id, fs);
+    glLinkProgram(id);
+    glDetachShader(id, vs);
+    glDetachShader(id, fs);
+
+    GL_CHECK_ERRORS();
+
+    shader result = {};
+    if (is_shader_program_valid(id))
+    {
+        result.id = id;
+        result.vertex_shader = vs;
+        result.fragment_shader = fs;
+    }
+    else
+    {
+        // @todo: process error
+    }
+
+    return result;
+}
+
+void use_shader(shader s)
+{
+    glUseProgram(s.id);
+}
+
+void uniform(shader s, char const *name, float f)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    glUniform1f(location, f);
+}
+
+void uniform(shader s, char const *name, math::vector2 const& v)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    glUniform2f(location, v.x, v.y);
+}
+
+void uniform(shader s, char const *name, math::vector3 const& v)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    glUniform3f(location, v.x, v.y, v.z);
+}
+
+void uniform(shader s, char const *name, math::vector4 const& v)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    glUniform4f(location, v.x, v.y, v.z, v.w);
+}
+
+void uniform(shader s, char const *name, math::matrix4 const& m)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, m.data());
+}
+
+void set_viewport(viewport vp)
+{
+    glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
 }
 
 

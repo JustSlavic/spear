@@ -2,11 +2,34 @@
 #define PLATFORM_LINUX_HPP
 
 #include <base.hpp>
+#include <memory/memory.hpp>
+
 #include <sys/mman.h>
+#include <X11/Xlib.h>
+
+
+namespace gfx::gl {
+bool32 create_opengl_window(int32, int32, void *, void *);
+}
 
 
 namespace linux
 {
+
+
+struct window
+{
+    Display   *x_display;
+    Window     x_window;
+    Colormap   x_colormap;
+};
+
+
+bool32 create_opengl_window(int32 width, int32 height, void *window, void *driver)
+{
+    bool32 result = gfx::gl::create_opengl_window(width, height, window, driver);
+    return result;
+}
 
 
 INLINE memory_block allocate_memory(void *base_address, usize size)

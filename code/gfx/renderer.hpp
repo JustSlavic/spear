@@ -90,7 +90,7 @@ struct render_command
     };
 };
 
-bool32 initialize_opengl(driver *d);
+bool32 initialize_opengl(void *d);
 bool32 initialize_dx11(void *w, driver *d);
 void vsync(bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);

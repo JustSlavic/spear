@@ -1,6 +1,9 @@
 #include "renderer.hpp"
 #include "renderer_opengl.cpp"
+
+#if OS_WINDOWS
 #include "renderer_dx11.cpp"
+#endif
 
 // @todo:
 // #include <renderer_direct3d12.cpp>
@@ -14,24 +17,26 @@ namespace gfx
 GLOBAL graphics_api active_api;
 
 
-bool32 initialize_opengl(driver *d)
+bool32 initialize_opengl(void *d)
 {
     bool32 result = gl::initialize();
     if (result) active_api = graphics_api::opengl;
     return result;
 }
 
+#if OS_WINDOWS
 bool32 initialize_dx11(win32::window *w, driver *d)
 {
     bool32 result = dx11::initialize(w, d);
     if (result) active_api = graphics_api::dx11;
     return result;
 }
+#endif // OS_WINDOWS
 
-void vsync(bool32 active)
+void vsync(void *window, bool32 active)
 {
     if (active_api == graphics_api::opengl)
-        gl::vsync(active);
+        gl::vsync(window, active);
 }
 
 void set_clear_color(float32 r, float g, float b, float a)
@@ -57,10 +62,14 @@ void set_viewport(viewport vp)
 void swap_buffers(void *wnd, driver *drv)
 {
     if (active_api == graphics_api::opengl)
+    {
         gl::swap_buffers(wnd);
+    }
     else if (active_api == graphics_api::dx11)
+    {
         // dx::swap_buffers(d);
         ASSERT_FAIL();
+    }
 }
 
 math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up)
