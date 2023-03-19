@@ -13,6 +13,12 @@ GLOBAL constexpr float32 pi = 3.14159265358979323846f;
 GLOBAL constexpr float32 infinity = HUGE_VALF;
 
 
+bool32 finite(float32 x)
+{
+    bool32 result = (x < infinity) && (x > -infinity);
+    return result;
+}
+
 float32 absolute(float32 x)
 {
     float32 result = (x < 0) ? -x : x;

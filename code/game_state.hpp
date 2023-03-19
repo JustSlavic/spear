@@ -30,6 +30,7 @@ struct entity
     float32 rotational_velocity;
 
     math::rectangle2 aabb;
+    bool32 collided;
 };
 
 

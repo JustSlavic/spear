@@ -77,6 +77,7 @@ typedef  int64 ptrdiff;
 // Sound buffer is a bunch of periods?
 typedef int16 sound_sample_t;
 
+#define EPSILON    1e-6
 
 #define INT8_MIN   0x80
 #define INT16_MIN  0x8000
@@ -117,11 +118,11 @@ typedef int16 sound_sample_t;
 
 
 #ifdef DEBUG
-#define ASSERT(COND)          if (COND) {} else { DEBUG_BREAK(); } void(0)
-#define ASSERT_MSG(COND, ...) if (COND) {} else { DEBUG_BREAK(); } void(0)
+#define ASSERT(COND)          if (COND) {} else { DEBUG_BREAK(); } (void)(0)
+#define ASSERT_MSG(COND, ...) if (COND) {} else { DEBUG_BREAK(); } (void)(0)
 #else
-#define ASSERT(COND)          void(0)
-#define ASSERT_MSG(COND, ...) void(0)
+#define ASSERT(COND)          (void)(0)
+#define ASSERT_MSG(COND, ...) (void)(0)
 #endif // DEBUG
 
 #define ASSERT_FAIL(...) ASSERT_MSG(false, __VA_ARGS__)
@@ -141,7 +142,7 @@ typedef int16 sound_sample_t;
 
 #define loop while (true)
 
-
+#define SWAP(X, Y) { decltype(X) tmp__ = X; Y = X; X = tmp__; } while(0)
 template <typename T>
 void swap(T &a, T &b)
 {

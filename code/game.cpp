@@ -50,33 +50,68 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
     gs->circle_shader = create_shader_resource(&context->resource_storage, STRID("circle.shader"));
 
-    auto *e1 = push_entity(gs);
-    e1->type = ENTITY_CIRCLE;
-    e1->position = V2(0.0, 0.f);
-    e1->velocity = V2(0.0, 0.0);
-    e1->mass = 1.0f;
-    e1->radius = .20f;
+    // auto *e1 = push_entity(gs);
+    // e1->type = ENTITY_CIRCLE;
+    // e1->position = V2(0.001, 0.f);
+    // e1->velocity = V2(0.0, 0.0);
+    // e1->mass = 1.0f;
+    // e1->radius = .001f;
 
-    auto *e2 = push_entity(gs);
-    e2->type = ENTITY_CIRCLE;
-    e2->position = V2(10.0, 0);
-    e2->velocity = V2(-0.5, 0);
-    e2->mass = 1.0f;
-    e2->radius = .20f;
+    // auto *e2 = push_entity(gs);
+    // e2->type = ENTITY_CIRCLE;
+    // e2->position = V2(100.0, 0);
+    // e2->velocity = V2(-0.5, 0);
+    // e2->mass = 1.0f;
+    // e2->radius = .20f;
 
-    for (int y = 0; y < 5; y++)
+    for (int y = -3; y < 4; y++)
     {
-        for (int x = 0; x < 5; x++)
+        for (int x = -3; x < 4; x++)
         {
             // comment to find
             auto *entity = push_entity(gs);
             entity->type = ENTITY_CIRCLE;
-            entity->position = V2(x - 2.f, y - 2.f);
-            entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y) * 0.5f;
-            entity->radius = 0.1f;
-            entity->mass = 1.0f;
+            entity->position = V2(x, y);
+            entity->velocity = -V2(x, y) * 0.01f;
+            entity->radius = 0.05f * math::absolute(x) + 0.1f;
+            entity->mass = 0.5f * math::absolute(x) + 1.f;
         }
     }
+}
+
+math::rectangle2 compute_aabb(entity *e)
+{
+    math::rectangle2 aabb;
+    aabb.center = e->position;
+
+    if (e->type == ENTITY_CIRCLE)
+    {
+        aabb.radii = V2(e->radius);
+    }
+    else if (e->type == ENTITY_RECTANGLE)
+    {
+        auto transform = math::rotated_z(e->rotation, math::matrix4::identity());
+
+        auto lt = V4(e->position.x - e->width * .5f, e->position.y + e->height * .5f, 0, 1);
+        auto lb = V4(e->position.x - e->width * .5f, e->position.y - e->height * .5f, 0, 1);
+        auto rt = V4(e->position.x + e->width * .5f, e->position.y + e->height * .5f, 0, 1);
+        auto rb = V4(e->position.x + e->width * .5f, e->position.y - e->height * .5f, 0, 1);
+
+        lt = lt * transform;
+        lb = lb * transform;
+        rt = rt * transform;
+        rb = rb * transform;
+
+        aabb.radii.x = 0.5f * math::absolute(lt.x - rb.x);
+        aabb.radii.y = 0.5f * math::absolute(lt.y - rb.y);
+
+        float32 rx = 0.5f * math::absolute(lb.x - rt.x);
+        float32 ry = 0.5f * math::absolute(lb.y - rt.y);
+
+        if (aabb.radii.x < rx) aabb.radii.x = rx;
+        if (aabb.radii.y < ry) aabb.radii.y = ry;
+    }
+    return aabb;
 }
 
 //
@@ -104,7 +139,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
     if (get_hold_count(input->keyboard_device[keyboard::a]))
     {
-        camera_velocity.x += 1;
+        camera_velocity.x -= 1;
     }
     if (get_hold_count(input->keyboard_device[keyboard::s]))
     {
@@ -112,7 +147,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
     if (get_hold_count(input->keyboard_device[keyboard::d]))
     {
-        camera_velocity.x -= 1;
+        camera_velocity.x += 1;
     }
 
     float32 camera_speed = 0.1f;
@@ -147,66 +182,58 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     {
         auto *entity = gs->entities + entity_index;
 
-        auto v = entity->velocity;
-        entity->rotation = entity->rotation + entity->rotational_velocity * dt;
-        entity->velocity = entity->velocity + gravity * dt;
-        entity->position = entity->position + v * dt;
-
-        math::rectangle2 aabb;
-        aabb.center = entity->position;
-
-        if (entity->type == ENTITY_CIRCLE)
+        float32 dt_ = dt;
+        for (int move = 0; move < 4; move++)
         {
-            aabb.radii = V2(entity->radius);
-        }
-        else if (entity->type == ENTITY_RECTANGLE)
-        {
-            auto transform = math::rotated_z(entity->rotation, math::matrix4::identity());
+            // printf("entity %d move %d:\n", entity_index, move + 1);
+            auto acceleration = gravity;
 
-            auto lt = V4(entity->position.x - entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
-            auto lb = V4(entity->position.x - entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
-            auto rt = V4(entity->position.x + entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
-            auto rb = V4(entity->position.x + entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
+            auto v = entity->velocity;
+            entity->velocity = entity->velocity + acceleration * dt_;
+            entity->rotation = entity->rotation + entity->rotational_velocity * dt;
 
-            lt = lt * transform;
-            lb = lb * transform;
-            rt = rt * transform;
-            rb = rb * transform;
+            auto old_p = entity->position;
+            entity->position = entity->position + v * dt_;
+            auto new_p = entity->position;
 
-            aabb.radii.x = 0.5f * math::absolute(lt.x - rb.x);
-            aabb.radii.y = 0.5f * math::absolute(lt.y - rb.y);
+            math::rectangle2 aabb = compute_aabb(entity);
+            entity->aabb = aabb;
 
-            float32 rx = 0.5f * math::absolute(lb.x - rt.x);
-            float32 ry = 0.5f * math::absolute(lb.y - rt.y);
+            collision_data collision;
+            bool32 collided = find_collision_point(gs, entity_index, &collision);
+            if (collided)
+            {
+                auto normal = normalized(collision.point - entity->position);
+                float32 overlap_depth = entity->radius - length(collision.point - entity->position);
+                ASSERT(overlap_depth >= 0.f);
+                entity->position -= overlap_depth * normal;
 
-            if (aabb.radii.x < rx) aabb.radii.x = rx;
-            if (aabb.radii.y < ry) aabb.radii.y = ry;
-        }
+                auto *entity1 = entity;
+                auto *entity2 = get_entity(gs, collision.entity_index);
+                auto m1 = entity->mass;
+                auto m2 = entity2->mass;
 
-        entity->aabb = aabb;
+                auto proj_v1 = dot(entity->velocity, normal);
+                auto proj_v2 = dot(entity2->velocity, normal);
+                auto v1_ = 2.f * m2 / (m1 + m2) * proj_v2 - (m2 - m1) / (m1 + m2) * proj_v1;
+                auto v2_ = 2.f * m1 / (m2 + m1) * proj_v1 - (m1 - m2) / (m2 + m1) * proj_v2;
 
-        collision_data collision;
-        bool32 collided = find_collision_point(gs, entity_index, &collision);
+                entity1->velocity = entity1->velocity - (proj_v1 + v1_) * normal;
+                entity2->velocity = entity2->velocity - (proj_v2 - v2_) * normal;
 
-        if (collided)
-        {
-            auto normal = normalized(collision.point - entity->position);
-            float32 overlap_depth = entity->radius - length(collision.point - entity->position);
-            // ASSERT(overlap_depth >= 0.f);
-            entity->position -= overlap_depth * normal;
+                entity1->collided = true;
+                entity2->collided = true;
+            }
 
-            auto *entity1 = entity;
-            auto *entity2 = get_entity(gs, collision.entity_index);
-            auto m1 = entity->mass;
-            auto m2 = entity2->mass;
+            float32 d = length(old_p - entity->position);
+            if (math::absolute(d) < EPSILON) break;
+            float32 full_d = length(old_p - new_p);
 
-            auto proj_v1 = dot(entity->velocity, normal);
-            auto proj_v2 = dot(entity2->velocity, normal);
-            auto v1_ = 2.f * m2 / (m1 + m2) * proj_v2 - (m2 - m1) / (m1 + m2) * proj_v1;
-            auto v2_ = 2.f * m1 / (m2 + m1) * proj_v1 - (m1 - m2) / (m2 + m1) * proj_v2;
-
-            entity1->velocity = entity1->velocity - proj_v1 * normal + (v1_ * (-normal));
-            entity2->velocity = entity2->velocity - proj_v2 * normal + (v2_ * ( normal));
+            // printf("d=%f %%of path passed = %5.2f%%\n", d, d / full_d * 100.f);
+            auto ddt = dt_ * (d / full_d);
+            dt_ -= ddt;
+            // printf("ddt=%f\n", ddt);
+            if (dt_ < EPSILON) break;
         }
 
         // gfx::render_command::command_draw_mesh_with_color draw_aabb;
@@ -228,11 +255,14 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             math::rotated_z(entity->rotation,
             math::scaled(V3(entity->radius, entity->radius, 1),
                 math::matrix4::identity())));
-        draw_mesh.color = collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f, 0.32f, 0.72f, 1.0f);
+        draw_mesh.color = entity->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.05f * entity_index, 0.32f, 0.72f, 1.0f);
 
         push_draw_mesh_with_color_command(context, draw_mesh);
+
+        entity->collided = false;
     }
 
+#if 0
     double energy = 0;
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
@@ -241,6 +271,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     printf("energy=%lf\n", energy);
+#endif
 }
 
 
