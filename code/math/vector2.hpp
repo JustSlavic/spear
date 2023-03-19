@@ -188,8 +188,35 @@ INLINE vector2 normalized(vector2 a)
     return result;
 }
 
+// Reflect a vector along the normal to the mirror
+// \  |n /
+// v\ | /r
+//   \|/
+// -------mirror
+INLINE vector2 reflect(vector2 v, vector2 n)
+{
+    // v = dot(v, n)*n + (v - dot(v, n)*n)
+    // reflect the component that is perpendicular to n
+    // r = - dot(v, n)*n + (v - dot(v, n)*n)
+    // r = v - 2*dot(v, n)*n
+    vector2 result = v - 2.0f*dot(v, n)*n;
+    return result;
+}
+
+// Reflect a vector through a mirror
+//    |mirror
+// \  |  /
+// v\ | /r
+//   \|/
+//    |
+INLINE vector2 mirror(vector2 v, vector2 m)
+{
+    // The same as 'reflect', but makes result is conserves the direction of vector
+    vector2 result = -reflect(v, m);
+    return result;
+}
+
 
 } // namespace math
-
 
 #endif // MATH_VECTOR2_HPP

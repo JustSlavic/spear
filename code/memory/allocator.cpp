@@ -24,7 +24,7 @@ void reset_allocator(allocator *a)
             break;
         case allocator::pool: // @todo
             break;
-        case allocator::heap: // @todo
+        case allocator::heap: heap_reset(a);
             break;
     }
 }

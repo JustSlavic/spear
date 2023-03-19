@@ -253,6 +253,10 @@ bool32 create_opengl_window(int32 width, int32 height, void *w, void *d)
     auto *driver = (gfx::gl::glx_driver *) d;
     driver->glx_context = glx_context;
 
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
     return true;
 }
 

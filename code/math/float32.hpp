@@ -19,6 +19,12 @@ float32 absolute(float32 x)
     return result;
 }
 
+float32 square(float32 x)
+{
+    float32 result = x * x;
+    return result;
+}
+
 float32 square_root(float32 x)
 {
     float32 result = sqrtf(x);

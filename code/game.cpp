@@ -7,7 +7,7 @@
 
 #include <collision.hpp>
 
-
+#include <stdio.h>
 //
 // Arguments:
 // - execution_context *context;
@@ -23,7 +23,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
-    gs->camera_position = V3(0, 0, -8);
+    gs->camera_position = V3(0, 0, 8);
 
     float32 vbo_init[] = {
         -1.0f, -1.0f, 0.0f,
@@ -48,18 +48,21 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
     gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
+    gs->circle_shader = create_shader_resource(&context->resource_storage, STRID("circle.shader"));
 
     auto *e1 = push_entity(gs);
-    e1->position = V2(-1.0, 0);
-    e1->width = 1.0f;
-    e1->height = 2.0f;
-    e1->rotational_velocity = -0.03f;
+    e1->type = ENTITY_CIRCLE;
+    e1->position = V2(0.0, 0.f);
+    e1->velocity = V2(0.0, 0.0);
+    e1->mass = 1.0f;
+    e1->radius = .20f;
 
     auto *e2 = push_entity(gs);
-    e2->position = V2(1.0, 0);
-    e2->width = 1.0f;
-    e2->height = 3.0f;
-    e2->rotational_velocity = 0.05f;
+    e2->type = ENTITY_CIRCLE;
+    e2->position = V2(10.0, 0);
+    e2->velocity = V2(-0.5, 0);
+    e2->mass = 1.0f;
+    e2->radius = .20f;
 
     for (int y = 0; y < 5; y++)
     {
@@ -67,12 +70,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         {
             // comment to find
             auto *entity = push_entity(gs);
-            entity->position = V2(x, y);
-            entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y);
-            entity->width = 0.1f;
-            entity->height = 0.3f;
-            entity->rotation = 0.0f;
-            entity->rotational_velocity = 0.01f * x * y - 0.025f;
+            entity->type = ENTITY_CIRCLE;
+            entity->position = V2(x - 2.f, y - 2.f);
+            entity->velocity = V2(-0.01 * x, 0.01 * x - 0.01 * y * y) * 0.5f;
+            entity->radius = 0.1f;
+            entity->mass = 1.0f;
         }
     }
 }
@@ -145,61 +147,100 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     {
         auto *entity = gs->entities + entity_index;
 
+        auto v = entity->velocity;
         entity->rotation = entity->rotation + entity->rotational_velocity * dt;
         entity->velocity = entity->velocity + gravity * dt;
-        entity->position = entity->position + entity->velocity * dt;
-
-        auto transform = math::rotated_z(entity->rotation, math::matrix4::identity());
-
-        auto lt = V4(entity->position.x - entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
-        auto lb = V4(entity->position.x - entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
-        auto rt = V4(entity->position.x + entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
-        auto rb = V4(entity->position.x + entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
-
-        lt = lt * transform;
-        lb = lb * transform;
-        rt = rt * transform;
-        rb = rb * transform;
+        entity->position = entity->position + v * dt;
 
         math::rectangle2 aabb;
         aabb.center = entity->position;
-        aabb.radii.x = 0.5f * math::absolute(lt.x - rb.x);
-        aabb.radii.y = 0.5f * math::absolute(lt.y - rb.y);
 
-        float32 rx = 0.5f * math::absolute(lb.x - rt.x);
-        float32 ry = 0.5f * math::absolute(lb.y - rt.y);
+        if (entity->type == ENTITY_CIRCLE)
+        {
+            aabb.radii = V2(entity->radius);
+        }
+        else if (entity->type == ENTITY_RECTANGLE)
+        {
+            auto transform = math::rotated_z(entity->rotation, math::matrix4::identity());
 
-        if (aabb.radii.x < rx) aabb.radii.x = rx;
-        if (aabb.radii.y < ry) aabb.radii.y = ry;
+            auto lt = V4(entity->position.x - entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
+            auto lb = V4(entity->position.x - entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
+            auto rt = V4(entity->position.x + entity->width * .5f, entity->position.y + entity->height * .5f, 0, 1);
+            auto rb = V4(entity->position.x + entity->width * .5f, entity->position.y - entity->height * .5f, 0, 1);
+
+            lt = lt * transform;
+            lb = lb * transform;
+            rt = rt * transform;
+            rb = rb * transform;
+
+            aabb.radii.x = 0.5f * math::absolute(lt.x - rb.x);
+            aabb.radii.y = 0.5f * math::absolute(lt.y - rb.y);
+
+            float32 rx = 0.5f * math::absolute(lb.x - rt.x);
+            float32 ry = 0.5f * math::absolute(lb.y - rt.y);
+
+            if (aabb.radii.x < rx) aabb.radii.x = rx;
+            if (aabb.radii.y < ry) aabb.radii.y = ry;
+        }
 
         entity->aabb = aabb;
 
-        math::vector2 collision_point;
-        bool32 collided = find_collision_point(gs, entity_index, &collision_point);
+        collision_data collision;
+        bool32 collided = find_collision_point(gs, entity_index, &collision);
 
-        gfx::render_command::command_draw_mesh_with_color draw_aabb;
-        draw_aabb.mesh_token = gs->rectangle_mesh;
-        draw_aabb.shader_token = gs->rectangle_shader;
-        draw_aabb.model =
-            math::translated(V3(entity->position.x, entity->position.y, 0),
-            math::scaled(V3(aabb.radii, 1),
-                math::matrix4::identity()));
-        draw_aabb.color = collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
+        if (collided)
+        {
+            auto normal = normalized(collision.point - entity->position);
+            float32 overlap_depth = entity->radius - length(collision.point - entity->position);
+            // ASSERT(overlap_depth >= 0.f);
+            entity->position -= overlap_depth * normal;
 
-        push_draw_mesh_with_color_command(context, draw_aabb);
+            auto *entity1 = entity;
+            auto *entity2 = get_entity(gs, collision.entity_index);
+            auto m1 = entity->mass;
+            auto m2 = entity2->mass;
+
+            auto proj_v1 = dot(entity->velocity, normal);
+            auto proj_v2 = dot(entity2->velocity, normal);
+            auto v1_ = 2.f * m2 / (m1 + m2) * proj_v2 - (m2 - m1) / (m1 + m2) * proj_v1;
+            auto v2_ = 2.f * m1 / (m2 + m1) * proj_v1 - (m1 - m2) / (m2 + m1) * proj_v2;
+
+            entity1->velocity = entity1->velocity - proj_v1 * normal + (v1_ * (-normal));
+            entity2->velocity = entity2->velocity - proj_v2 * normal + (v2_ * ( normal));
+        }
+
+        // gfx::render_command::command_draw_mesh_with_color draw_aabb;
+        // draw_aabb.mesh_token = gs->rectangle_mesh;
+        // draw_aabb.shader_token = gs->rectangle_shader;
+        // draw_aabb.model =
+        //     math::translated(V3(entity->position.x, entity->position.y, 0),
+        //     math::scaled(V3(aabb.radii, 1),
+        //         math::matrix4::identity()));
+        // draw_aabb.color = collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
+
+        // push_draw_mesh_with_color_command(context, draw_aabb);
 
         gfx::render_command::command_draw_mesh_with_color draw_mesh;
         draw_mesh.mesh_token = gs->rectangle_mesh;
-        draw_mesh.shader_token = gs->rectangle_shader;
+        draw_mesh.shader_token = gs->circle_shader;
         draw_mesh.model =
             math::translated(V3(entity->position.x, entity->position.y, 0),
             math::rotated_z(entity->rotation,
-            math::scaled(V3(0.5f * entity->width, 0.5f * entity->height, 1),
+            math::scaled(V3(entity->radius, entity->radius, 1),
                 math::matrix4::identity())));
-        draw_mesh.color = V4(0.1f, 0.32f, 0.72f, 1.0f);
+        draw_mesh.color = collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f, 0.32f, 0.72f, 1.0f);
 
         push_draw_mesh_with_color_command(context, draw_mesh);
     }
+
+    double energy = 0;
+    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
+    {
+        auto *e = get_entity(gs, entity_index);
+        energy += (0.5f * e->mass * math::length_squared(e->velocity));
+    }
+
+    printf("energy=%lf\n", energy);
 }
 
 

@@ -26,6 +26,12 @@ struct string_id
     uint32 id;
 };
 
+bool32 operator == (string_id id1, string_id id2)
+{
+    bool32 result = (id1.id == id2.id);
+    return result;
+}
+
 
 string_id make_string_id(string_id_storage *, char const *string, usize size);
 string_id make_string_id(string_id_storage *, char const *string);

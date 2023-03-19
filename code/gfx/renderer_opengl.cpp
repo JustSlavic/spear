@@ -16,6 +16,7 @@ layout (location = 0) in vec3 vertex_position;
 layout (location = 1) in vec3 vertex_color;
 
 out vec4 fragment_color;
+out vec2 fragment_position;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
@@ -26,6 +27,7 @@ void main()
 {
     vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
     fragment_color = vec4(vertex_color, 1.0) + u_color;
+    fragment_position = vertex_position.xy;
     gl_Position = p;
 }
 )GLSL";
@@ -35,12 +37,35 @@ GLOBAL char const *fs_source = R"GLSL(
 #version 400
 
 in vec4 fragment_color;
+in vec2 fragment_screen_position;
+
 out vec4 result_color;
 
 void main()
 {
     result_color = fragment_color;
 }
+)GLSL";
+
+
+GLOBAL char const *fs_circle_source = R"GLSL(
+#version 400
+#define lerp mix
+
+in vec4 fragment_color;
+in vec2 fragment_position;
+
+out vec4 result_color;
+
+void main()
+{
+    if (dot(fragment_position, fragment_position) < 1.0)
+        result_color = fragment_color;
+    else
+        result_color = vec4(0, 0, 0, 0);
+    // result_color = lerp(fragment_color, vec4(1, 1, 1, 1), dot(fragment_position, fragment_position));
+}
+
 )GLSL";
 
 
@@ -198,9 +223,21 @@ void load_mesh(execution_context *context, rs::resource *resource)
 
 void load_shader(execution_context *context, rs::resource *resource)
 {
-    // @todo: load this from file
-    auto vs = compile_shader(vs_source, shader::vertex);
-    auto fs = compile_shader(fs_source, shader::fragment);
+    uint32 vs = 0;
+    uint32 fs = 0;
+    if (resource->shader.name == STRID("rectangle.shader"))
+    {
+        // @todo: load this from file
+        vs = compile_shader(vs_source, shader::vertex);
+        fs = compile_shader(fs_source, shader::fragment);
+    }
+    if (resource->shader.name == STRID("circle.shader"))
+    {
+        // @todo: load this from file
+        vs = compile_shader(vs_source, shader::vertex);
+        fs = compile_shader(fs_circle_source, shader::fragment);
+    }
+
     auto program = link_shader(vs, fs);
 
     if (resource->render_data == NULL)
