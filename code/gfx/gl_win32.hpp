@@ -35,6 +35,9 @@ GLOBAL wglCreateContextAttribsARBType *wglCreateContextAttribsARB;
 GLOBAL wglSwapIntervalEXTType *wglSwapIntervalEXT;
 GLOBAL wglGetSwapIntervalEXTType *wglGetSwapIntervalEXT;
 
+GLOBAL glActiveTextureType *glActiveTexture;
+typedef void glActiveTextureType(GLenum texture);
+
 
 namespace gfx::gl {
 

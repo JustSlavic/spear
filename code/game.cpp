@@ -266,6 +266,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                         // @todo
                     }
                     break;
+
+                    case ENTITY_INVALID:
+                        ASSERT_FAIL();
                 }
             }
 
@@ -355,6 +358,10 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             break;
 
             case ENTITY_ORIENTED_RECTANGLE:
+            break;
+
+            case ENTITY_INVALID:
+                ASSERT_FAIL();
             break;
         }
     }

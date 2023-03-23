@@ -184,14 +184,14 @@ int main(int argc, char **argv, char **env)
 
     gfx::initialize_opengl(&driver);
 
-    memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(5));
+    memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(30));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
 
-    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(4));
     memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
@@ -202,6 +202,9 @@ int main(int argc, char **argv, char **env)
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory.memory, renderer_memory.size);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
     memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory.memory, string_id_memory.size);
+
+    context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator, sizeof(gfx::render_command)*3000);
+    context.render_command_queue_capacity = 3000;
 
     initialize_memory(&context, game_memory);
     gfx::set_clear_color(0, 0, 0, 1);
