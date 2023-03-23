@@ -62,7 +62,8 @@ struct execution_context
     usize execution_command_queue_size;
     usize next_execution_command_index;
 
-    gfx::render_command render_command_queue[1024];
+    gfx::render_command *render_command_queue;
+    usize render_command_queue_capacity;
     usize render_command_queue_size;
 
     memory::allocator temporary_allocator;
@@ -90,7 +91,7 @@ INLINE execution_command pop_execution_command(execution_context *context)
 
 INLINE void push_render_command(execution_context *context, gfx::render_command cmd)
 {
-    ASSERT(context->render_command_queue_size < ARRAY_COUNT(context->render_command_queue));
+    ASSERT(context->render_command_queue_size < context->render_command_queue_capacity);
     context->render_command_queue[context->render_command_queue_size] = cmd;
     context->render_command_queue_size += 1;
 }

@@ -10,7 +10,8 @@ enum entity_type
 {
     ENTITY_INVALID = 0,
     ENTITY_CIRCLE,
-    ENTITY_RECTANGLE,
+    ENTITY_ALIGNED_RECTANGLE,
+    ENTITY_ORIENTED_RECTANGLE,
 };
 
 struct entity
@@ -37,13 +38,16 @@ struct entity
 
 struct game_state
 {
+    memory::allocator game_allocator;
+
     math::vector3 camera_position;
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
     rs::resource_token circle_shader;
 
-    entity entities[1024];
-    usize  entity_count;
+    entity *entities;
+    usize entities_capacity;
+    usize entity_count;
 
     double energy;
     double energy_last_frame;
@@ -52,7 +56,7 @@ struct game_state
 
 INLINE entity *push_entity(game_state *gs)
 {
-    ASSERT(gs->entity_count < ARRAY_COUNT(gs->entities));
+    ASSERT(gs->entity_count < gs->entities_capacity);
     auto result = gs->entities + gs->entity_count++;
     return result;
 }

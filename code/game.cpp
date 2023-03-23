@@ -21,6 +21,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     ASSERT(sizeof(game_state) < game_memory.size);
     game_state *gs = (game_state *) game_memory.memory;
 
+    memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
+
+    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 200000);
+    gs->entities_capacity = 200000;
+
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
@@ -67,23 +72,30 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     e2->radius = .25f;
 #endif
 
+    auto *border = push_entity(gs);
+    border->type = ENTITY_ALIGNED_RECTANGLE;
+    border->position = V2(-4, 0);
+    border->height = 2.5f;
+    border->width = 0.1f;
+    border->mass = math::infinity;
+
     auto *e1 = push_entity(gs);
     e1->type = ENTITY_CIRCLE;
-    e1->position = V2(5, .3);
-    e1->velocity = V2(-.1, -.02) * 10;
-    e1->mass = 1.0f;
+    e1->position = V2(15, 13);
+    e1->velocity = V2(-.5105, -.5105);
+    e1->mass = 30000.0f;
     e1->radius = .05f;
 
-    for (int y = -10; y < 11; y++)
+    for (int y = -20; y < 21; y++)
     {
-        for (int x = -10; x < 11; x++)
+        for (int x = -20; x < 21; x++)
         {
             // comment to find
             auto *entity = push_entity(gs);
             entity->type = ENTITY_CIRCLE;
-            entity->position = V2(x, y) * 0.201f;
+            entity->position = V2(x, y) * 0.101f;
             entity->velocity = V2(0.f, 0.f);
-            entity->radius = .05f;
+            entity->radius = .025f;
             entity->mass = 0.05f;
         }
     }
@@ -98,7 +110,11 @@ math::rectangle2 compute_aabb(entity *e)
     {
         aabb.radii = V2(e->radius);
     }
-    else if (e->type == ENTITY_RECTANGLE)
+    else if (e->type == ENTITY_ALIGNED_RECTANGLE)
+    {
+        aabb.radii = V2(e->width, e->height);
+    }
+    else if (e->type == ENTITY_ORIENTED_RECTANGLE)
     {
         auto transform = math::rotated_z(e->rotation, math::matrix4::identity());
 
@@ -225,14 +241,31 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 auto *test_entity = get_entity(gs, test_entity_index);
                 if (test_entity->deleted) continue;
 
-                // if (dot(direction, test_entity->position - entity1->position) < 0.f) continue;
-
-                float32 r = 0.f;
-                bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, entity1->radius + test_entity->radius, &r);
-                if (collided && r < distance && r < t)
+                switch (test_entity->type)
                 {
-                    t = r;
-                    entity2 = test_entity;
+                    case ENTITY_CIRCLE:
+                    {
+                        if (dot(direction, test_entity->position - entity1->position) < 0.f) continue;
+
+                        float32 r = 0.f;
+                        bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, entity1->radius + test_entity->radius, &r);
+                        if (collided && r < distance && r < t)
+                        {
+                            t = r;
+                            entity2 = test_entity;
+                        }
+                    }
+                    break;
+                    case ENTITY_ALIGNED_RECTANGLE:
+                    {
+                        // @todo
+                    }
+                    break;
+                    case ENTITY_ORIENTED_RECTANGLE:
+                    {
+                        // @todo
+                    }
+                    break;
                 }
             }
 
@@ -258,8 +291,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 auto proj_p1_ = ((m1 - m2) * proj_p1 + 2.0f * m1 * proj_p2) / (m1 + m2);
                 auto proj_p2_ = (2.0f * m2 * proj_p1 - (m1 - m2) * proj_p2) / (m1 + m2);
 
-                auto p1_ = proj_p1_ * normal + tangent_p1;
-                auto p2_ = proj_p2_ * normal + tangent_p2;
+                auto p1_ = (0.9f) * proj_p1_ * normal + tangent_p1;
+                auto p2_ = (0.9f) * proj_p2_ * normal + tangent_p2;
 
                 entity1->velocity = p1_ / m1;
                 entity2->velocity = p2_ / m2;
@@ -285,20 +318,45 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
         // push_draw_mesh_with_color_command(context, draw_aabb);
 
-        gfx::render_command::command_draw_mesh_with_color draw_mesh;
-        draw_mesh.mesh_token = gs->rectangle_mesh;
-        draw_mesh.shader_token = gs->circle_shader;
-        draw_mesh.model =
-            math::translated(V3(entity1->position.x, entity1->position.y, 0),
-            math::rotated_z(entity1->rotation,
-            math::scaled(V3(entity1->radius, entity1->radius, 1),
-                math::matrix4::identity())));
-        // draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.01f * entity_index, 0.32f, 0.72f, 1.0f);
-        auto c = entity1->velocity * 100.0f;
-        draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
-        // draw_mesh.color = V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
+        switch (entity1->type)
+        {
+            case ENTITY_CIRCLE:
+            {
+                gfx::render_command::command_draw_mesh_with_color draw_mesh;
+                draw_mesh.mesh_token = gs->rectangle_mesh;
+                draw_mesh.shader_token = gs->circle_shader;
+                draw_mesh.model =
+                    math::translated(V3(entity1->position.x, entity1->position.y, 0),
+                    math::rotated_z(entity1->rotation,
+                    math::scaled(V3(entity1->radius, entity1->radius, 1),
+                        math::matrix4::identity())));
+                // draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.01f * entity_index, 0.32f, 0.72f, 1.0f);
+                auto c = entity1->velocity * 100.0f;
+                draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
+                // draw_mesh.color = V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
 
-        push_draw_mesh_with_color_command(context, draw_mesh);
+                push_draw_mesh_with_color_command(context, draw_mesh);
+            }
+            break;
+
+            case ENTITY_ALIGNED_RECTANGLE:
+            {
+                gfx::render_command::command_draw_mesh_with_color draw_aabb;
+                draw_aabb.mesh_token = gs->rectangle_mesh;
+                draw_aabb.shader_token = gs->rectangle_shader;
+                draw_aabb.model =
+                    math::translated(V3(entity1->position.x, entity1->position.y, 0),
+                    math::scaled(V3(entity1->aabb.radii, 1),
+                        math::matrix4::identity()));
+                draw_aabb.color = entity1->collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
+
+                push_draw_mesh_with_color_command(context, draw_aabb);
+            }
+            break;
+
+            case ENTITY_ORIENTED_RECTANGLE:
+            break;
+        }
     }
 
     if (get_hold_count(input->keyboard_device[keyboard::d]))
