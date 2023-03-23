@@ -153,7 +153,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     if (choosen_api == gfx::graphics_api::opengl)
     {
-        win32::create_opengl_window(instance, 800, 600, window_callback, &window);
+        win32::create_opengl_window(instance, 1600, 900, window_callback, &window);
         gfx::initialize_opengl(&driver);
     }
     else if (choosen_api == gfx::graphics_api::dx11)
@@ -164,16 +164,16 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     gfx::set_clear_color(0, 0, 0, 1);
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
-    gfx::vsync(true);
+    gfx::vsync(&window, true);
 
-    // Allocate the memory and initialize allocators on it
+    // @todo: Allocate the memory and initialize allocators on it
 
-    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(5));
+    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(15));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
 
-    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));

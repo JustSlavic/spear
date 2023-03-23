@@ -31,6 +31,8 @@ void *arena_allocate(allocator *a, usize size, usize alignment)
     void *result = NULL;
     void *pointer = (byte *) arena->memory + arena->used;
     usize padding = get_padding(pointer, alignment);
+    
+    ASSERT((arena->used + padding + size) <= arena->size);
     if ((arena->used + padding + size) <= arena->size)
     {
         result = (byte *) arena->memory + arena->used + padding;

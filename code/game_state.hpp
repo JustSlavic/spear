@@ -31,6 +31,7 @@ struct entity
 
     math::rectangle2 aabb;
     bool32 collided;
+    bool32 deleted;
 };
 
 
@@ -43,6 +44,9 @@ struct game_state
 
     entity entities[1024];
     usize  entity_count;
+
+    double energy;
+    double energy_last_frame;
 };
 
 

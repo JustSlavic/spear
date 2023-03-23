@@ -178,6 +178,10 @@ bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientH
         }
     }
 
+    // glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
     win32_window->handle = window;
     win32_window->device_context = device_context;
     return true;

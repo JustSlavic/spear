@@ -5,41 +5,58 @@
 #include <game_state.hpp>
 
 
-struct collision_data
+bool32 test_circle2d_point2d(math::vector2 p1, float32 r1, math::vector2 p2)
 {
-    math::vector2 point;
-    uint32 entity_index;
-};
+    bool32 result = math::length_squared(p2 - p1) - math::square(r1) < EPSILON;
+    return result;
+}
 
 
-bool32 find_collision_point(game_state *gs, uint32 collide_entity_index, collision_data *collision)
+bool32 test_circle2d_circle2d(math::vector2 p1, float32 r1, math::vector2 p2, float32 r2)
 {
-    auto *collide_entity = gs->entities + collide_entity_index;
+    bool32 result = math::length_squared(p2 - p1) - math::square(r1 + r2) < EPSILON;
+    return result;
+}
 
-    bool32 result = false;
-    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
-    {
-        if (entity_index == collide_entity_index) continue;
+bool32 test_ray_sphere(math::vector2 start, math::vector2 direction, math::vector2 center, float32 radius, float32 *r)
+{
+    math::vector2 m = start - center;
+    float32 b = dot(m, direction);
+    float32 c = dot(m, m) - radius * radius;
+    // Exit if ray_start outside sphere and direction poin away from sphere
+    if (c > 0.f && b > 0.f) return false;
 
-        auto *test_entity = gs->entities + entity_index;
+    float32 discriminant = b * b - c;
+    // A negative discriminant corresponds to ray missing a sphere
+    if (discriminant < 0.f) return false;
+    // Ray now found to intersect a sphere, compute smallest t value of intersection
+    float32 t = -b-math::square_root(discriminant);
+    // If t is negative, ray started inside sphere so clamp t to zero
+    if (t < 0.f) t = 0.f;
+    *r = t;
+    return true;
+}
 
-        if (math::is_intersecting(collide_entity->aabb, test_entity->aabb))
-        {
-            if (collide_entity->type == ENTITY_CIRCLE && test_entity->type == ENTITY_CIRCLE)
-            {
-                auto d_sq = math::length_squared(collide_entity->position - test_entity->position);
-                auto r_sq = math::square(collide_entity->radius + test_entity->radius);
-                if (d_sq < r_sq)
-                {
-                    result = true;
-                    // Step back from test entity on its radius
-                    collision->entity_index = entity_index;
-                    collision->point = test_entity->position - test_entity->width * normalized(test_entity->position - collide_entity->position);
-                    break;
-                }
-            }
-        }
-    }
+bool32 test_segment_sphere(math::vector2 start, math::vector2 end, math::vector2 center, float32 radius, float32 *t = NULL)
+{
+    math::vector2 m = start - center;
+    float32 segment_length = 0.f;
+    math::vector2 d = normalized(end - start, &segment_length);
+    float32 b = dot(m, d);
+    float32 c = dot(m, m) - radius * radius;
+    // Exit if ray_start outside sphere and direction poin away from sphere
+    if (c > 0.f && b > 0.f) return false;
+
+    float32 discriminant = b * b - c;
+    // A negative discriminant corresponds to ray missing a sphere
+    if (discriminant < 0.f) return false;
+    // Ray now found to intersect a sphere, compute smallest t value of intersection
+    float32 t_ = -b - math::square_root(discriminant);
+    // If t is negative, ray started inside sphere so clamp t to zero
+    if (t_ < 0.f) t_ = 0.f;
+    if (t) *t = t_;
+    // If t > |end - start| then intersection is further than end point
+    bool32 result = (t_ < segment_length);
     return result;
 }
 

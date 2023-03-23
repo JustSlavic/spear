@@ -1,6 +1,7 @@
 #include <game.hpp>
 #include <game_state.hpp>
 
+#include <math/float64.hpp>
 #include <math/rectangle2.hpp>
 #include <math/vector4.hpp>
 #include <math/matrix4.hpp>
@@ -50,31 +51,40 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
     gs->circle_shader = create_shader_resource(&context->resource_storage, STRID("circle.shader"));
 
-    // auto *e1 = push_entity(gs);
-    // e1->type = ENTITY_CIRCLE;
-    // e1->position = V2(0.001, 0.f);
-    // e1->velocity = V2(0.0, 0.0);
-    // e1->mass = 1.0f;
-    // e1->radius = .001f;
+#if 0
+    auto *e1 = push_entity(gs);
+    e1->type = ENTITY_CIRCLE;
+    e1->position = V2(0, .3);
+    e1->velocity = V2(.001, -.002) * 10;
+    e1->mass = 1.0f;
+    e1->radius = .05f;
 
-    // auto *e2 = push_entity(gs);
-    // e2->type = ENTITY_CIRCLE;
-    // e2->position = V2(100.0, 0);
-    // e2->velocity = V2(-0.5, 0);
-    // e2->mass = 1.0f;
-    // e2->radius = .20f;
+    auto *e2 = push_entity(gs);
+    e2->type = ENTITY_CIRCLE;
+    e2->position = V2(0.3, 0);
+    e2->velocity = V2(-0.001, 0);
+    e2->mass = 100.f;
+    e2->radius = .25f;
+#endif
 
-    for (int y = -3; y < 4; y++)
+    auto *e1 = push_entity(gs);
+    e1->type = ENTITY_CIRCLE;
+    e1->position = V2(5, .3);
+    e1->velocity = V2(-.1, -.02) * 10;
+    e1->mass = 1.0f;
+    e1->radius = .05f;
+
+    for (int y = -10; y < 11; y++)
     {
-        for (int x = -3; x < 4; x++)
+        for (int x = -10; x < 11; x++)
         {
             // comment to find
             auto *entity = push_entity(gs);
             entity->type = ENTITY_CIRCLE;
-            entity->position = V2(x, y);
-            entity->velocity = -V2(x, y) * 0.01f;
-            entity->radius = 0.05f * math::absolute(x) + 0.1f;
-            entity->mass = 0.5f * math::absolute(x) + 1.f;
+            entity->position = V2(x, y) * 0.201f;
+            entity->velocity = V2(0.f, 0.f);
+            entity->radius = .05f;
+            entity->mass = 0.05f;
         }
     }
 }
@@ -180,59 +190,87 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
-        auto *entity = gs->entities + entity_index;
+        auto *entity1 = get_entity(gs, entity_index);
+        if (entity1->deleted) continue;
+
+        entity1->collided = false;
 
         float32 dt_ = dt;
-        for (int move = 0; move < 4; move++)
+        for (int move = 0; move < 5; move++)
         {
-            // printf("entity %d move %d:\n", entity_index, move + 1);
             auto acceleration = gravity;
 
-            auto v = entity->velocity;
-            entity->velocity = entity->velocity + acceleration * dt_;
-            entity->rotation = entity->rotation + entity->rotational_velocity * dt;
+            auto old_v = entity1->velocity;
+            entity1->velocity = entity1->velocity + acceleration * dt_;
+            entity1->rotation = entity1->rotation + entity1->rotational_velocity * dt;
 
-            auto old_p = entity->position;
-            entity->position = entity->position + v * dt_;
-            auto new_p = entity->position;
+            auto old_p = entity1->position;
+            auto new_p = entity1->position + old_v * dt_;
 
-            math::rectangle2 aabb = compute_aabb(entity);
-            entity->aabb = aabb;
+            math::rectangle2 aabb = compute_aabb(entity1);
+            entity1->aabb = aabb;
 
-            collision_data collision;
-            bool32 collided = find_collision_point(gs, entity_index, &collision);
-            if (collided)
+            entity *entity2 = NULL;
+            float32 t = math::infinity;
+            auto full_distance = 0.f;
+            auto direction = normalized(new_p - old_p, &full_distance);
+            auto distance = full_distance;
+
+            if (distance == 0) continue;
+
+            for (uint32 test_entity_index = 1; test_entity_index < gs->entity_count; test_entity_index++)
             {
-                auto normal = normalized(collision.point - entity->position);
-                float32 overlap_depth = entity->radius - length(collision.point - entity->position);
-                ASSERT(overlap_depth >= 0.f);
-                entity->position -= overlap_depth * normal;
+                if (entity_index == test_entity_index) continue;
 
-                auto *entity1 = entity;
-                auto *entity2 = get_entity(gs, collision.entity_index);
-                auto m1 = entity->mass;
+                auto *test_entity = get_entity(gs, test_entity_index);
+                if (test_entity->deleted) continue;
+
+                // if (dot(direction, test_entity->position - entity1->position) < 0.f) continue;
+
+                float32 r = 0.f;
+                bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, entity1->radius + test_entity->radius, &r);
+                if (collided && r < distance && r < t)
+                {
+                    t = r;
+                    entity2 = test_entity;
+                }
+            }
+
+            if (t < math::infinity)
+            {
+                new_p = entity1->position + (t - EPSILON) * direction;
+                direction = normalized(new_p - old_p, &distance);
+
+                auto normal = normalized(entity1->position - entity2->position);
+
+                auto m1 = entity1->mass;
                 auto m2 = entity2->mass;
 
-                auto proj_v1 = dot(entity->velocity, normal);
-                auto proj_v2 = dot(entity2->velocity, normal);
-                auto v1_ = 2.f * m2 / (m1 + m2) * proj_v2 - (m2 - m1) / (m1 + m2) * proj_v1;
-                auto v2_ = 2.f * m1 / (m2 + m1) * proj_v1 - (m1 - m2) / (m2 + m1) * proj_v2;
+                auto p1 = entity1->mass * entity1->velocity;
+                auto p2 = entity2->mass * entity2->velocity;
 
-                entity1->velocity = entity1->velocity - (proj_v1 + v1_) * normal;
-                entity2->velocity = entity2->velocity - (proj_v2 - v2_) * normal;
+                auto proj_p1 = dot(p1, normal);
+                auto proj_p2 = dot(p2, normal);
+
+                auto tangent_p1 = p1 - proj_p1 * normal;
+                auto tangent_p2 = p2 - proj_p2 * normal;
+
+                auto proj_p1_ = ((m1 - m2) * proj_p1 + 2.0f * m1 * proj_p2) / (m1 + m2);
+                auto proj_p2_ = (2.0f * m2 * proj_p1 - (m1 - m2) * proj_p2) / (m1 + m2);
+
+                auto p1_ = proj_p1_ * normal + tangent_p1;
+                auto p2_ = proj_p2_ * normal + tangent_p2;
+
+                entity1->velocity = p1_ / m1;
+                entity2->velocity = p2_ / m2;
 
                 entity1->collided = true;
                 entity2->collided = true;
             }
 
-            float32 d = length(old_p - entity->position);
-            if (math::absolute(d) < EPSILON) break;
-            float32 full_d = length(old_p - new_p);
-
-            // printf("d=%f %%of path passed = %5.2f%%\n", d, d / full_d * 100.f);
-            auto ddt = dt_ * (d / full_d);
+            entity1->position = new_p;
+            auto ddt = dt_ * (distance / full_distance);
             dt_ -= ddt;
-            // printf("ddt=%f\n", ddt);
             if (dt_ < EPSILON) break;
         }
 
@@ -240,10 +278,10 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         // draw_aabb.mesh_token = gs->rectangle_mesh;
         // draw_aabb.shader_token = gs->rectangle_shader;
         // draw_aabb.model =
-        //     math::translated(V3(entity->position.x, entity->position.y, 0),
-        //     math::scaled(V3(aabb.radii, 1),
+        //     math::translated(V3(entity1->position.x, entity1->position.y, 0),
+        //     math::scaled(V3(entity1->aabb.radii, 1),
         //         math::matrix4::identity()));
-        // draw_aabb.color = collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
+        // draw_aabb.color = entity1->collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
 
         // push_draw_mesh_with_color_command(context, draw_aabb);
 
@@ -251,26 +289,37 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_mesh.mesh_token = gs->rectangle_mesh;
         draw_mesh.shader_token = gs->circle_shader;
         draw_mesh.model =
-            math::translated(V3(entity->position.x, entity->position.y, 0),
-            math::rotated_z(entity->rotation,
-            math::scaled(V3(entity->radius, entity->radius, 1),
+            math::translated(V3(entity1->position.x, entity1->position.y, 0),
+            math::rotated_z(entity1->rotation,
+            math::scaled(V3(entity1->radius, entity1->radius, 1),
                 math::matrix4::identity())));
-        draw_mesh.color = entity->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.05f * entity_index, 0.32f, 0.72f, 1.0f);
+        // draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.01f * entity_index, 0.32f, 0.72f, 1.0f);
+        auto c = entity1->velocity * 100.0f;
+        draw_mesh.color = entity1->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
+        // draw_mesh.color = V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
 
         push_draw_mesh_with_color_command(context, draw_mesh);
+    }
 
-        entity->collided = false;
+    if (get_hold_count(input->keyboard_device[keyboard::d]))
+    {
+        for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
+        {
+            auto *e = get_entity(gs, entity_index);
+            if (!e->collided) e->deleted = true;
+        }
     }
 
 #if 0
-    double energy = 0;
+    gs->energy_last_frame = gs->energy;
+    gs->energy = 0;
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
         auto *e = get_entity(gs, entity_index);
-        energy += (0.5f * e->mass * math::length_squared(e->velocity));
+        gs->energy += (0.5f * e->mass * math::length_squared(e->velocity));
     }
-
-    printf("energy=%lf\n", energy);
+    // ASSERT(math::absolute(gs->energy_last_frame - gs->energy) < EPSILON);
+    // printf("energy=%lf\n", gs->energy);
 #endif
 }
 

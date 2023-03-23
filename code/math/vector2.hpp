@@ -181,10 +181,28 @@ INLINE void normalize(vector2 &a)
     }
 }
 
+INLINE void normalize(vector2 &a, float32 *norm)
+{
+    float32 n = length(a);
+    if (n > 0)
+    {
+        a.x /= n;
+        a.y /= n;
+    }
+    *norm = n;
+}
+
 INLINE vector2 normalized(vector2 a)
 {
     vector2 result = a;
     normalize(result);
+    return result;
+}
+
+INLINE vector2 normalized(vector2 a, float32 *norm)
+{
+    vector2 result = a;
+    normalize(result, norm);
     return result;
 }
 

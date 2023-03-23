@@ -92,7 +92,7 @@ struct render_command
 
 bool32 initialize_opengl(void *driver);
 bool32 initialize_dx11(void *window, driver *driver);
-void vsync(bool32 active);
+void vsync(void *window, bool32 active);
 void set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void clear();
 void set_viewport(viewport vp);
