@@ -332,10 +332,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                             }
                         }
                     }
-                    break;
-
-                    case ENTITY_INVALID:
-                        ASSERT_FAIL();
                 }
             }
 
