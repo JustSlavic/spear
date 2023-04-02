@@ -25,6 +25,13 @@ float32 absolute(float32 x)
     return result;
 }
 
+float32 clamp(float32 x, float32 a, float32 b)
+{
+    if (x < a) return a;
+    if (x > b) return b;
+    return x;
+}
+
 float32 square(float32 x)
 {
     float32 result = x * x;
