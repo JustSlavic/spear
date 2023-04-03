@@ -319,6 +319,20 @@ void swap_buffers(void *wnd)
 }
 
 
+void destroy_window_and_driver(void *window, void *driver)
+{
+    auto *linux_window = (linux::window *) window;
+    auto *x_opengl_driver = (glx_driver *) driver;
+
+    glXMakeCurrent(linux_window->x_display, 0, 0);
+    glXDestroyContext(linux_window->x_display, x_opengl_driver->glx_context);
+
+    XDestroyWindow(linux_window->x_display, linux_window->x_window);
+    XFreeColormap(linux_window->x_display, linux_window->x_colormap);
+    XCloseDisplay(linux_window->x_display);
+}
+
+
 } // namespace gfx::gl
 
 #endif // GLX_GL_X11_HPP

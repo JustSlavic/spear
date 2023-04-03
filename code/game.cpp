@@ -295,7 +295,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
                     math::vector2 vertices[4] = { br, tr, tl, bl };
 
-                    for (int i = 0; i < ARRAY_COUNT(vertices); i++)
+                    for (uint32 i = 0; i < ARRAY_COUNT(vertices); i++)
                     {
                         auto ray1 = old_p;
                         auto ray2 = new_p;

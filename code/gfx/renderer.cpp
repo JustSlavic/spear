@@ -33,6 +33,12 @@ bool32 initialize_dx11(win32::window *w, driver *d)
 }
 #endif // OS_WINDOWS
 
+void destroy_window_and_driver(void *window, void *driver)
+{
+    if (active_api == graphics_api::opengl)
+        gl::destroy_window_and_driver(window, driver);
+}
+
 void vsync(void *window, bool32 active)
 {
     if (active_api == graphics_api::opengl)

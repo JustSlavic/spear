@@ -294,13 +294,7 @@ int main(int argc, char **argv, char **env)
         gfx::swap_buffers(&window, &driver);
     }
 
-    // glXMakeCurrent(window.x_display, 0, 0);
-    // glXDestroyContext(window.x_display, ((gfx::gl::glx_driver *) &driver)->glx_context);
-
-    XDestroyWindow(window.x_display, window.x_window);
-    XFreeColormap(window.x_display, window.x_colormap);
-    XCloseDisplay(window.x_display);
-
+    gfx::destroy_window_and_driver(&window, &driver);
     return 0;
 }
 
