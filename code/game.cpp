@@ -4,6 +4,7 @@
 #include <math/float64.hpp>
 #include <math/rectangle2.hpp>
 #include <math/vector4.hpp>
+#include <math/matrix2.hpp>
 #include <math/matrix4.hpp>
 
 #include <collision.hpp>
@@ -102,17 +103,17 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // auto *e1 = push_entity(gs);
     // e1->type = ENTITY_CIRCLE;
-    // e1->position = V2(5, 2);
-    // e1->velocity = V2(-0.05105, -0.02) * 30;
+    // e1->position = V2(0, 2);
+    // e1->velocity = V2(-0.05105, -0.02) * 100;
     // e1->mass = 5.f;
     // e1->radius = .05f;
 
-    auto *e2 = push_entity(gs);
-    e2->type = ENTITY_CIRCLE;
-    e2->position = V2(0, 0);
-    e2->velocity = V2(0.08105, -0.05305);
-    e2->mass = 5.f;
-    e2->radius = .05f;
+    // auto *e2 = push_entity(gs);
+    // e2->type = ENTITY_CIRCLE;
+    // e2->position = V2(-1, 0);
+    // e2->velocity = V2(0.08105, -0.05305);
+    // e2->mass = 5.f;
+    // e2->radius = .05f;
 
     for (int y = -10; y < 11; y++)
     {
@@ -240,8 +241,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
         e->collided = false;
 
-#define FIXED_DT 0.3333f
-        float32 dt_ = FIXED_DT; // dt; // * 0.05f;
+        float32 dt_ = dt; // * 0.05f;
         for (int move = 0; move < 5; move++)
         {
             auto acceleration = gravity;
@@ -323,7 +323,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                             temp_collision.entity1 = e;
                             temp_collision.entity2 = test_entity;
                             temp_collision.point = ray1 + normalized(ray2 - ray1) * r;
-                            temp_collision.normal = normalized(c1 - c2);
+                            temp_collision.normal = math::rotated(90_degrees, normalized(cap2 - cap1));
                             temp_collision.t_in_meters = r;
 
                             if (temp_collision.t_in_meters < collision.t_in_meters)
@@ -337,7 +337,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             if (collision.t_in_meters < math::infinity)
             {
-                new_p = old_p + (collision.t_in_meters - 100.f*EPSILON) * direction;
+                new_p = old_p + collision.t_in_meters * direction + EPSILON * collision.normal;
                 direction = normalized(new_p - old_p, &distance);
 
                 auto m1 = collision.entity1->mass;

@@ -274,48 +274,54 @@ matrix4 scaled(vector3 v, matrix4 m)
     return m;
 }
 
-void rotate_x(matrix4 & m, float32 a)
+void rotate_x(matrix4 & m, float32 radians)
 {
-    auto rotation = make_matrix4(1,             0,             0, 0,
-                                 0,  math::cos(a), -math::sin(a), 0,
-                                 0,  math::sin(a),  math::cos(a), 0,
-                                 0,             0,             0, 1);
+    auto c = math::cos(radians);
+    auto s = math::sin(radians);
+    auto rotation = make_matrix4(1,  0,  0,  0,
+                                 0,  c, -s,  0,
+                                 0,  s,  c,  0,
+                                 0,  0,  0,  1);
     m *= rotation;
 }
 
-matrix4 rotated_x(float32 a, matrix4 m)
+matrix4 rotated_x(float32 radians, matrix4 m)
 {
-    rotate_x(m, a);
+    rotate_x(m, radians);
     return m;
 }
 
-void rotate_y(matrix4 & m, float32 b)
+void rotate_y(matrix4 & m, float32 radians)
 {
-    auto rotation = make_matrix4(math::cos(b), 0, -math::sin(b), 0,
-                                            0, 1,             0, 0,
-                                 math::sin(b), 0,  math::cos(b), 0,
-                                            0, 0,             0, 1);
+    auto c = math::cos(radians);
+    auto s = math::sin(radians);
+    auto rotation = make_matrix4(c,  0, -s,  0,
+                                 0,  1,  0,  0,
+                                 s,  0,  c,  0,
+                                 0,  0,  0,  1);
     m *= rotation;
 }
 
-matrix4 rotated_y(float32 b, matrix4 m)
+matrix4 rotated_y(float32 radians, matrix4 m)
 {
-    rotate_y(m, b);
+    rotate_y(m, radians);
     return m;
 }
 
-void rotate_z(matrix4 & m, float32 y)
+void rotate_z(matrix4 & m, float32 radians)
 {
-    auto rotation = make_matrix4(math::cos(y), -math::sin(y), 0, 0,
-                                 math::sin(y),  math::cos(y), 0, 0,
-                                            0,             0, 1, 0,
-                                            0,             0, 0, 1);
+    auto c = math::cos(radians);
+    auto s = math::sin(radians);
+    auto rotation = make_matrix4(c, -s,  0,  0,
+                                 s,  c,  0,  0,
+                                 0,  0,  1,  0,
+                                 0,  0,  0,  1);
     m *= rotation;
 }
 
-matrix4 rotated_z(float32 y, matrix4 m)
+matrix4 rotated_z(float32 radians, matrix4 m)
 {
-    rotate_z(m, y);
+    rotate_z(m, radians);
     return m;
 }
 

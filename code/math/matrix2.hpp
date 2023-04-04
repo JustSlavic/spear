@@ -94,7 +94,7 @@ INLINE matrix2 operator - (matrix2 a, matrix2 b) {
     return result;
 }
 
-INLINE matrix2 operator * (matrix2 a, f32 c) {
+INLINE matrix2 operator * (matrix2 a, float32 c) {
     matrix2 result = {
         a._11 * c, a._12 * c,
         a._21 * c, a._22 * c
@@ -102,7 +102,7 @@ INLINE matrix2 operator * (matrix2 a, f32 c) {
     return result;
 }
 
-INLINE matrix2 operator * (f32 c, matrix2 a) {
+INLINE matrix2 operator * (float32 c, matrix2 a) {
     matrix2 result = {
         a._11 * c, a._12 * c,
         a._21 * c, a._22 * c
@@ -110,7 +110,7 @@ INLINE matrix2 operator * (f32 c, matrix2 a) {
     return result;
 }
 
-INLINE matrix2 operator / (matrix2 a, f32 c) {
+INLINE matrix2 operator / (matrix2 a, float32 c) {
     matrix2 result = {
         a._11 / c, a._12 / c,
         a._21 / c, a._22 / c
@@ -215,11 +215,29 @@ matrix2 inverse(matrix2 const& m)
     matrix2 result = matrix2::zero();
 
     float32 det = determinant(m);
-    if (!is_zero(det))
+    if (not near_zero(det))
     {
         result = (1.0f / det) * adjoint(m);
     }
 
+    return result;
+}
+
+matrix2 rotate_matrix(angle radians)
+{
+    float32 c = math::cos(radians);
+    float32 s = math::sin(radians);
+    matrix2 result =
+    {
+        c, -s,
+        s, c,
+    };
+    return result;
+}
+
+vector2 rotated(angle radians, vector2 v)
+{
+    vector2 result = rotate_matrix(radians) * v;
     return result;
 }
 

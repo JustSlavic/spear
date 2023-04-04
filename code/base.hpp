@@ -15,6 +15,10 @@
 
 #ifdef COMPILER_MSVC
 
+#define not !
+#define and &&
+#define or ||
+
 #define LITTLE_ENDIAN 1234
 #define BIG_ENDIAN    4321
 

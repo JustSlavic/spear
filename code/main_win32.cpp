@@ -269,7 +269,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-            game.update_and_render(&context, game_memory, &input, last_frame_dt);
+#define FIXED_DT 0.3333f
+            game.update_and_render(&context, game_memory, &input, FIXED_DT);
+#undef FIXED_DT
         }
 
         for (usize cmd_index = context.next_execution_command_index;

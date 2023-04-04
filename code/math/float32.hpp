@@ -5,17 +5,22 @@
 #include <math.h>
 
 
-namespace math
-{
+namespace math {
 
 
 GLOBAL constexpr float32 pi = 3.14159265358979323846f;
 GLOBAL constexpr float32 infinity = HUGE_VALF;
 
 
+bool32 near_zero(float32 x)
+{
+    bool32 result = (-EPSILON < x) and (x < EPSILON);
+    return result;
+}
+
 bool32 finite(float32 x)
 {
-    bool32 result = (x < infinity) && (x > -infinity);
+    bool32 result = (-infinity < x) and (x < infinity);
     return result;
 }
 
@@ -71,6 +76,50 @@ float32 cos(float32 x)
 float32 tg(float32 x)
 {
     float32 result = tanf(x);
+    return result;
+}
+
+struct angle
+{
+    float32 radians;
+};
+
+angle operator ""_degrees (uint64 degrees)
+{
+    angle result;
+    result.radians = to_radians((float32)degrees);
+    return result;
+}
+
+angle operator ""_degrees (long double degrees)
+{
+    angle result;
+    result.radians = to_radians((float32)degrees);
+    return result;
+}
+
+angle operator ""_radians (uint64 radians)
+{
+    angle result;
+    result.radians = (float32) radians;
+    return result;
+}
+
+float32 sin(angle a)
+{
+    float32 result = sinf(a.radians);
+    return result;
+}
+
+float32 cos(angle a)
+{
+    float32 result = cosf(a.radians);
+    return result;
+}
+
+float32 tan(angle a)
+{
+    float32 result = tanf(a.radians);
     return result;
 }
 
