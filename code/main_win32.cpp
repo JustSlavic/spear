@@ -335,6 +335,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         last_timepoint = end_of_frame;
     }
 
+    gfx::destroy_window_and_driver(&window, &driver);
+
     return 0;
 }
 

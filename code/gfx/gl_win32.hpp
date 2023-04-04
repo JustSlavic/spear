@@ -241,6 +241,10 @@ void swap_buffers(void *window)
     SwapBuffers(win32_window->device_context);
 }
 
+void destroy_window_and_driver(void *window, void *driver)
+{
+}
+
 
 } // namespace gfx::gl
 
