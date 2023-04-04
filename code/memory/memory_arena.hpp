@@ -24,6 +24,11 @@ void initialize_memory_arena(allocator *a, void *memory, usize size)
     arena->used = 0;
 }
 
+void initialize_memory_arena(allocator *a, memory_block block)
+{
+    initialize_memory_arena(a, block.memory, block.size);
+}
+
 void *arena_allocate(allocator *a, usize size, usize alignment)
 {
     auto *arena = (memory_arena *) a;

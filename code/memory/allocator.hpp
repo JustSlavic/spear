@@ -53,9 +53,11 @@ struct allocator
 
 
 void initialize_memory_arena(allocator *a, void *memory, usize size);
+void initialize_memory_arena(allocator *a, memory_block block);
 // void initialize_memory_stack(allocator *a, void *memory, usize size);
 // void initialize_memory_pool(allocator *a, void *memory, usize size);
 void initialize_memory_heap(allocator *a, void *memory, usize size);
+void initialize_memory_heap(allocator *a, memory_block block);
 void reset_allocator(allocator *a);
 
 void *allocate_(allocator *a, usize size, usize alignment);

@@ -88,6 +88,11 @@ void initialize_memory_heap(allocator *a, void *memory, usize size)
     heap->used += sizeof(memory_heap::header) + sizeof(memory_heap::footer);
 }
 
+void initialize_memory_heap(allocator *a, memory_block block)
+{
+    initialize_memory_heap(a, block.memory, block.size);
+}
+
 void heap_reset(allocator *a)
 {
     initialize_memory_heap(a, a->memory, a->size);

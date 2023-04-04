@@ -171,7 +171,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(25));
 
     memory::allocator global_allocator;
-    memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
+    memory::initialize_memory_arena(&global_allocator, global_memory);
 
     memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
@@ -182,11 +182,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     execution_context context = {};
     context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
 
-    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
-    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory.memory, renderer_memory.size);
-    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
-    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory.memory, string_id_memory.size);
+    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
+    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
+    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
+    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
 
+    // @todo: replace it with
+    // context.render_command_queue = ALLOCATE_ARRAY(&context.renderer_allocator, 3000);
     context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator, sizeof(gfx::render_command)*3000);
     context.render_command_queue_capacity = 3000;
 
