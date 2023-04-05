@@ -435,15 +435,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    if (get_hold_count(input->keyboard_device[keyboard::d]))
-    {
-        for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
-        {
-            auto *e = get_entity(gs, entity_index);
-            if (!e->collided) e->deleted = true;
-        }
-    }
-
 #if 0
     gs->energy_last_frame = gs->energy;
     gs->energy = 0;
