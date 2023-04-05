@@ -103,28 +103,35 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // auto *e1 = push_entity(gs);
     // e1->type = ENTITY_CIRCLE;
-    // e1->position = V2(0, 2);
-    // e1->velocity = V2(-0.05105, -0.02) * 100;
+    // e1->position = V2(0, 1);
+    // e1->velocity = V2(0, 0);
     // e1->mass = 5.f;
     // e1->radius = .05f;
 
     // auto *e2 = push_entity(gs);
     // e2->type = ENTITY_CIRCLE;
-    // e2->position = V2(-1, 0);
-    // e2->velocity = V2(0.08105, -0.05305);
+    // e2->position = V2(0, 0);
+    // e2->velocity = V2(0, 0);
     // e2->mass = 5.f;
     // e2->radius = .05f;
+
+    // auto *e3 = push_entity(gs);
+    // e3->type = ENTITY_CIRCLE;
+    // e3->position = V2(0, -1);
+    // e3->velocity = V2(0, 0);
+    // e3->mass = 5.f;
+    // e3->radius = .05f;
 
     for (int y = -10; y < 11; y++)
     {
         for (int x = -10; x < 11; x++)
         {
-            if (x > -2 && x < 2) continue;
+            // if (x > -2 && x < 2) continue;
             // comment to find
             auto *entity = push_entity(gs);
             entity->type = ENTITY_CIRCLE;
-            entity->position = V2(x + 0.1f * y, y) * 0.201f;
-            entity->velocity = V2(0.f, 0.f);
+            entity->position = V2(x + 0.001 * y, y) * 0.201f;
+            entity->velocity = V2(100, 100);
             entity->radius = .025f;
             entity->mass = 0.05f;
         }
@@ -274,6 +281,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 if ((e->type == ENTITY_CIRCLE) && (test_entity->type == ENTITY_CIRCLE))
                 {
                     if (dot(direction, test_entity->position - e->position) < 0.f) continue;
+                    if (dot(test_entity->position - e->position, test_entity->velocity - e->velocity) > 0.f) continue;
 
                     float32 r = 0.f;
                     bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, e->radius + test_entity->radius, &r);
@@ -337,7 +345,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             if (collision.t_in_meters < math::infinity)
             {
-                new_p = old_p + collision.t_in_meters * direction + EPSILON * collision.normal;
+                new_p = old_p + collision.t_in_meters * direction + 2.0f * EPSILON * collision.normal;
                 direction = normalized(new_p - old_p, &distance);
 
                 auto m1 = collision.entity1->mass;
@@ -355,8 +363,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 auto proj_p1_ = ((m1 - m2) * proj_p1 + 2.0f * m1 * proj_p2) / (m1 + m2);
                 auto proj_p2_ = (2.0f * m2 * proj_p1 - (m1 - m2) * proj_p2) / (m1 + m2);
 
-                auto p1_ = (0.6f) * (proj_p1_ * collision.normal + tangent_p1);
-                auto p2_ = (0.6f) * (proj_p2_ * collision.normal + tangent_p2);
+                auto p1_ = (0.6f * proj_p1_ * collision.normal + tangent_p1);
+                auto p2_ = (0.6f * proj_p2_ * collision.normal + tangent_p2);
 
                 collision.entity1->velocity = p1_ / m1;
                 collision.entity2->velocity = p2_ / m2;
