@@ -23,5 +23,13 @@
                 "syntax": "Packages/User/gcc_build.sublime-syntax"
             }
         },
+        {
+            "name": "Run",
+
+            "windows": {
+                "shell_cmd": "call $folder\\build\\spear.exe",
+                "working_dir": "$folder"
+            }
+        }
     ],
 }

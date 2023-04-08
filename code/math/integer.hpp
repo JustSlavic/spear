@@ -29,4 +29,17 @@ INLINE int32 usize_to_int32(usize x)
 }
 
 
+INLINE int32 min_(int32 x, int32 y)
+{
+    int32 result = (x < y) ? x : y;
+    return result;
+}
+
+INLINE int32 max_(int32 x, int32 y)
+{
+    int32 result = (x < y) ? y : x;
+    return result;
+}
+
+
 #endif // MATH_INTEGER_HPP

@@ -1,6 +1,7 @@
 #include <game.hpp>
 #include <game_state.hpp>
 
+#include <math/integer.hpp>
 #include <math/float64.hpp>
 #include <math/rectangle2.hpp>
 #include <math/vector4.hpp>
@@ -21,6 +22,10 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     ASSERT(sizeof(game_state) < game_memory.size);
     game_state *gs = (game_state *) game_memory.memory;
+    world *w = &gs->world;
+
+    w->chunk_width = 1.0f;
+    w->chunk_height = 1.0f;
 
     memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
 
@@ -73,40 +78,45 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     e2->radius = .25f;
 #endif
 
-    auto *border1 = push_entity(gs);
-    border1->type = ENTITY_ALIGNED_RECTANGLE;
-    border1->position = V2(-4, 0);
-    border1->height = 5.5f;
-    border1->width = 0.1f;
-    border1->mass = 1000000.f;
+    entity_ref border1 = push_entity(gs);
+    border1.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border1.entity->position = V2(-4, 0);
+    border1.entity->height = 5.5f;
+    border1.entity->width = 0.1f;
+    border1.entity->mass = 1000000.f;
+    put_entity_in_chunk(gs, w, border1.eid);
 
-    auto *border2 = push_entity(gs);
-    border2->type = ENTITY_ALIGNED_RECTANGLE;
-    border2->position = V2(0, 2.4);
-    border2->height = 0.1f;
-    border2->width = 8.5f;
-    border2->mass = 1000000.f;
+    entity_ref border2 = push_entity(gs);
+    border2.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border2.entity->position = V2(0, 2.4);
+    border2.entity->height = 0.1f;
+    border2.entity->width = 8.5f;
+    border2.entity->mass = 1000000.f;
+    put_entity_in_chunk(gs, w, border2.eid);
 
-    auto *border3 = push_entity(gs);
-    border3->type = ENTITY_ALIGNED_RECTANGLE;
-    border3->position = V2(0, -2.4);
-    border3->height = 0.1f;
-    border3->width = 8.5f;
-    border3->mass = 1000000.f;
+    entity_ref border3 = push_entity(gs);
+    border3.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border3.entity->position = V2(0, -2.4);
+    border3.entity->height = 0.1f;
+    border3.entity->width = 8.5f;
+    border3.entity->mass = 1000000.f;
+    put_entity_in_chunk(gs, w, border3.eid);
 
-    auto *border4 = push_entity(gs);
-    border4->type = ENTITY_ALIGNED_RECTANGLE;
-    border4->position = V2(4, 0);
-    border4->height = 5.5f;
-    border4->width = 0.1f;
-    border4->mass = 1000000.f;
+    entity_ref border4 = push_entity(gs);
+    border4.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border4.entity->position = V2(4, 0);
+    border4.entity->height = 5.5f;
+    border4.entity->width = 0.1f;
+    border4.entity->mass = 1000000.f;
+    put_entity_in_chunk(gs, w, border4.eid);
 
-    // auto *e1 = push_entity(gs);
-    // e1->type = ENTITY_CIRCLE;
-    // e1->position = V2(0, 1);
-    // e1->velocity = V2(0, 0);
-    // e1->mass = 5.f;
-    // e1->radius = .05f;
+    auto e1 = push_entity(gs);
+    e1.entity->type = ENTITY_CIRCLE;
+    e1.entity->position = V2(-3, 0);
+    e1.entity->velocity = V2(0.1, 0);
+    e1.entity->mass = 5.f;
+    e1.entity->radius = .05f;
+    put_entity_in_chunk(gs, w, e1.eid);
 
     // auto *e2 = push_entity(gs);
     // e2->type = ENTITY_CIRCLE;
@@ -122,18 +132,20 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // e3->mass = 5.f;
     // e3->radius = .05f;
 
-    for (int y = -10; y < 11; y++)
+    for (int y = -15; y < 15; y++)
     {
         for (int x = -10; x < 11; x++)
         {
             // if (x > -2 && x < 2) continue;
             // comment to find
-            auto *entity = push_entity(gs);
-            entity->type = ENTITY_CIRCLE;
-            entity->position = V2(x + 0.001 * y, y) * 0.201f;
-            entity->velocity = V2(100, 100);
-            entity->radius = .025f;
-            entity->mass = 0.05f;
+            entity_ref particle = push_entity(gs);
+            particle.entity->type = ENTITY_CIRCLE;
+            particle.entity->position = V2(x + 0.001 * y, y) * 0.201f;
+            particle.entity->velocity = V2(-x, -y) * 0.1f;
+            particle.entity->radius = .025f;
+            particle.entity->mass = 0.05f;
+
+            put_entity_in_chunk(gs, w, particle.eid);
         }
     }
 }
@@ -177,6 +189,22 @@ math::rectangle2 compute_aabb(entity *e)
     return aabb;
 }
 
+
+void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 x, float32 y, float32 half_width, float32 half_height, math::vector4 color)
+{
+    gfx::render_command::command_draw_mesh_with_color draw_aligned_rectangle;
+    draw_aligned_rectangle.mesh_token = gs->rectangle_mesh;
+    draw_aligned_rectangle.shader_token = gs->rectangle_shader;
+    draw_aligned_rectangle.model =
+        math::translated(V3(x, y, 0),
+        math::scaled(V3(half_width, half_height, 1),
+            math::matrix4::identity()));
+    draw_aligned_rectangle.color = color;
+
+    push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
+}
+
+
 //
 // Arguments:
 // - execution_context *context;
@@ -189,6 +217,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     using namespace math;
 
     game_state *gs = (game_state *) game_memory.memory;
+    world *w = &gs->world;
 
     if (get_press_count(input->keyboard_device[keyboard::esc]))
     {
@@ -235,6 +264,44 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_draw_background_command(context, draw_background);
     }
 
+    // Grid
+    {
+        for (int32 x = -5; x < 5; x++)
+        {
+            float32 x_ = (float32) x + 0.5f;
+            draw_aligned_rectangle(context, gs, x_, 0.f, 0.01f, 3.f, V4(0.9f, 0.9f, 0.9f, 1.0f));
+        }
+        for (int32 y = -5; y < 5; y++)
+        {
+            float32 y_ = (float32) y + 0.5f;
+            draw_aligned_rectangle(context, gs, 0.f, y_, 3.f, 0.01f, V4(0.9f, 0.9f, 0.9f, 1.0f));
+        }
+    }
+
+    for (uint32 eid = 1; eid < gs->entity_count; eid++)
+    {
+        auto *e = get_entity(gs, eid);
+
+        int32 chunk_x, chunk_y;
+        get_chunk_coordinates(w, e->position, &chunk_x, &chunk_y);
+
+        world_chunk **slot = get_world_chunk_slot(gs, w, 0, 0);
+
+        bool32 inside = false;
+        if (slot && (*slot) && (*slot)->entity_count > 0) inside = true;
+
+        draw_aligned_rectangle(context, gs, 0.f, 0.f, 0.5f, 0.5f,
+            inside ? V4(0.f, 1.f, 0.f, 1.f) : V4(1.f, 0.f, 0.f, 1.f));
+    }
+
+    // Coordinates
+    {
+        // X axis
+        draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.005f, V4(0.9, 0.2, 0.2, 1.0));
+        // Y axis
+        draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.005f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    }
+
 #if 1
     auto gravity = V2(0, -0.0098); // m/s^2
 #else
@@ -243,7 +310,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
-        auto *e = get_entity(gs, entity_index);
+        entity *e = get_entity(gs, entity_index);
         if (e->deleted) continue;
 
         e->collided = false;
@@ -271,74 +338,101 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             collision_data collision = no_collision();
 
-            for (uint32 test_entity_index = 1; test_entity_index < gs->entity_count; test_entity_index++)
+            int32 old_chunk_x, old_chunk_y;
+            get_chunk_coordinates(w, old_p, &old_chunk_x, &old_chunk_y);
+            int32 new_chunk_x, new_chunk_y;
+            get_chunk_coordinates(w, old_p, &new_chunk_x, &new_chunk_y);
+
+            int32 min_chunk_x = min_(old_chunk_x, new_chunk_x) - 1;
+            int32 min_chunk_y = min_(old_chunk_y, new_chunk_y) - 1;
+            int32 max_chunk_x = max_(old_chunk_x, new_chunk_x) + 1;
+            int32 max_chunk_y = max_(old_chunk_y, new_chunk_y) + 1;
+
+            for (int32 chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++)
             {
-                if (entity_index == test_entity_index) continue;
-
-                auto *test_entity = get_entity(gs, test_entity_index);
-                if (test_entity->deleted) continue;
-
-                if ((e->type == ENTITY_CIRCLE) && (test_entity->type == ENTITY_CIRCLE))
+                for (int32 chunk_y = min_chunk_y; chunk_y <= max_chunk_y; chunk_y++)
                 {
-                    if (dot(direction, test_entity->position - e->position) < 0.f) continue;
-                    if (dot(test_entity->position - e->position, test_entity->velocity - e->velocity) > 0.f) continue;
+                    world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y);
+                    if (slot == NULL) continue;
 
-                    float32 r = 0.f;
-                    bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, e->radius + test_entity->radius, &r);
-                    if (collided && r < distance && r < collision.t_in_meters)
+                    world_chunk *chunk = *slot;
+
+                    while (chunk)
                     {
-                        collision.entity1 = e;
-                        collision.entity2 = test_entity;
-                        collision.point = test_entity->position + normalized(e->position - test_entity->position) * test_entity->radius;
-                        collision.normal = normalized(e->position - test_entity->position);
-                        collision.t_in_meters = r;
-                    }
-                }
-                else if ((e->type == ENTITY_CIRCLE) && (test_entity->type == ENTITY_ALIGNED_RECTANGLE))
-                {
-                    auto tl = top_left(test_entity->aabb);
-                    auto bl = bottom_left(test_entity->aabb);
-                    auto tr = top_right(test_entity->aabb);
-                    auto br = bottom_right(test_entity->aabb);
-
-                    math::vector2 vertices[4] = { br, tr, tl, bl };
-
-                    for (uint32 i = 0; i < ARRAY_COUNT(vertices); i++)
-                    {
-                        auto ray1 = old_p;
-                        auto ray2 = new_p;
-                        auto cap1 = vertices[i];
-                        auto cap2 = vertices[(i + 1) % ARRAY_COUNT(vertices)];
-                        auto cap_radius = e->radius;
-
-                        auto side = cap2 - cap1;
-                        if (dot(V2(-side.y, side.x), ray2 - ray1) >= 0.f) continue;
-
-                        collision_data temp_collision = {};
-
-                        float32 t1, t2;
-                        math::vector2 c1, c2;
-                        float32 sq_distance = sq_distance_segment_segment(
-                            ray1, ray2, cap1, cap2,
-                            t1, t2, c1, c2);
-
-                        if (sq_distance < math::square(cap_radius))
+                        for (uint32 index_in_chunk = 0; index_in_chunk < chunk->entity_count; index_in_chunk++)
                         {
-                            float32 r = 0.f;
-                            bool32 collided = test_segment_sphere(ray1, ray2, c2, cap_radius, &r);
-                            ASSERT(collided);
+                            uint32 test_eid = chunk->entities[index_in_chunk];
 
-                            temp_collision.entity1 = e;
-                            temp_collision.entity2 = test_entity;
-                            temp_collision.point = ray1 + normalized(ray2 - ray1) * r;
-                            temp_collision.normal = math::rotated(90_degrees, normalized(cap2 - cap1));
-                            temp_collision.t_in_meters = r;
+                            // Do not self collide!
+                            if (entity_index == test_eid) continue;
 
-                            if (temp_collision.t_in_meters < collision.t_in_meters)
+                            entity *test_entity = get_entity(gs, test_eid);
+
+                            if ((e->type == ENTITY_CIRCLE) && (test_entity->type == ENTITY_CIRCLE))
                             {
-                                collision = temp_collision;
+                                if (dot(direction, test_entity->position - e->position) < 0.f) continue;
+                                if (dot(test_entity->position - e->position, test_entity->velocity - e->velocity) > 0.f) continue;
+
+                                float32 r = 0.f;
+                                bool32 collided = test_ray_sphere(old_p, direction, test_entity->position, e->radius + test_entity->radius, &r);
+                                if (collided && r < distance && r < collision.t_in_meters)
+                                {
+                                    collision.entity1 = e;
+                                    collision.entity2 = test_entity;
+                                    collision.point = test_entity->position + normalized(e->position - test_entity->position) * test_entity->radius;
+                                    collision.normal = normalized(e->position - test_entity->position);
+                                    collision.t_in_meters = r;
+                                }
+                            }
+                            else if ((e->type == ENTITY_CIRCLE) && (test_entity->type == ENTITY_ALIGNED_RECTANGLE))
+                            {
+                                auto tl = top_left(test_entity->aabb);
+                                auto bl = bottom_left(test_entity->aabb);
+                                auto tr = top_right(test_entity->aabb);
+                                auto br = bottom_right(test_entity->aabb);
+
+                                math::vector2 vertices[4] = { br, tr, tl, bl };
+
+                                for (uint32 i = 0; i < ARRAY_COUNT(vertices); i++)
+                                {
+                                    auto ray1 = old_p;
+                                    auto ray2 = new_p;
+                                    auto cap1 = vertices[i];
+                                    auto cap2 = vertices[(i + 1) % ARRAY_COUNT(vertices)];
+                                    auto cap_radius = e->radius;
+
+                                    auto side = cap2 - cap1;
+                                    if (dot(V2(-side.y, side.x), ray2 - ray1) >= 0.f) continue;
+
+                                    collision_data temp_collision = {};
+
+                                    float32 t1, t2;
+                                    math::vector2 c1, c2;
+                                    float32 sq_distance = sq_distance_segment_segment(
+                                        ray1, ray2, cap1, cap2,
+                                        t1, t2, c1, c2);
+
+                                    if (sq_distance < math::square(cap_radius))
+                                    {
+                                        float32 r = 0.f;
+                                        bool32 collided = test_segment_sphere(ray1, ray2, c2, cap_radius, &r);
+                                        ASSERT(collided);
+
+                                        temp_collision.entity1 = e;
+                                        temp_collision.entity2 = test_entity;
+                                        temp_collision.point = ray1 + normalized(ray2 - ray1) * r;
+                                        temp_collision.normal = math::rotated(90_degrees, normalized(cap2 - cap1));
+                                        temp_collision.t_in_meters = r;
+
+                                        if (temp_collision.t_in_meters < collision.t_in_meters)
+                                        {
+                                            collision = temp_collision;
+                                        }
+                                    }
+                                }
                             }
                         }
+                        chunk = chunk->next;
                     }
                 }
             }
@@ -373,22 +467,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 collision.entity2->collided = true;
             }
 
+            move_entity_between_chunks(gs, w, entity_index, old_p, new_p);
+
             e->position = new_p;
             auto ddt = dt_ * (distance / full_distance);
             dt_ -= ddt;
             if (dt_ < EPSILON) break;
         }
-
-        // gfx::render_command::command_draw_mesh_with_color draw_aabb;
-        // draw_aabb.mesh_token = gs->rectangle_mesh;
-        // draw_aabb.shader_token = gs->rectangle_shader;
-        // draw_aabb.model =
-        //     math::translated(V3(entity1->position.x, entity1->position.y, 0),
-        //     math::scaled(V3(entity1->aabb.radii, 1),
-        //         math::matrix4::identity()));
-        // draw_aabb.color = entity1->collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
-
-        // push_draw_mesh_with_color_command(context, draw_aabb);
 
         switch (e->type)
         {
@@ -413,16 +498,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             case ENTITY_ALIGNED_RECTANGLE:
             {
-                gfx::render_command::command_draw_mesh_with_color draw_aabb;
-                draw_aabb.mesh_token = gs->rectangle_mesh;
-                draw_aabb.shader_token = gs->rectangle_shader;
-                draw_aabb.model =
-                    math::translated(V3(e->position.x, e->position.y, 0),
-                    math::scaled(V3(e->aabb.radii, 1),
-                        math::matrix4::identity()));
-                draw_aabb.color = e->collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f);
-
-                push_draw_mesh_with_color_command(context, draw_aabb);
+                draw_aligned_rectangle(context, gs, e->position.x, e->position.y, e->aabb.radii.x, e->aabb.radii.y, e->collided ? V4(0.8f, 0.8f, 0.2f, 1.0f) : V4(0.f, 0.6f, 0.0f, 1.0f));
             }
             break;
 

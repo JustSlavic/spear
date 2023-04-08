@@ -12,6 +12,34 @@ GLOBAL constexpr float32 pi = 3.14159265358979323846f;
 GLOBAL constexpr float32 infinity = HUGE_VALF;
 
 
+float32 absolute(float32 x)
+{
+    union { float32 f; uint32 u; } pun;
+    pun.f = x;
+    pun.u = (pun.u & 0x7fffffff);
+    return pun.f;
+}
+
+float32 sign(float32 x)
+{
+    union { float32 f; uint32 u; } pun;
+    pun.f = x;
+    pun.u = (pun.u & 0x80000000) | 0x3f800000;
+    return pun.f;
+}
+
+int32 truncate_to_int32(float32 x)
+{
+    int32 result = (int32) x;
+    return result;
+}
+
+int32 round_to_int32(float32 x)
+{
+    int32 result = (int32) (x + sign(x) * 0.5f);
+    return result;
+}
+
 bool32 near_zero(float32 x)
 {
     bool32 result = (-EPSILON < x) and (x < EPSILON);
@@ -21,12 +49,6 @@ bool32 near_zero(float32 x)
 bool32 finite(float32 x)
 {
     bool32 result = (-infinity < x) and (x < infinity);
-    return result;
-}
-
-float32 absolute(float32 x)
-{
-    float32 result = (x < 0) ? -x : x;
     return result;
 }
 
