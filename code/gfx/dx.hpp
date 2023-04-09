@@ -1,3 +1,10 @@
+#ifndef GFX_DX_HPP
+#define GFX_DX_HPP
+
+
+#include <base.hpp>
+
+
 namespace gfx {
 
 namespace dx {
@@ -70,3 +77,5 @@ INLINE math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, f
 } // namespace dx
 
 } // namespace gfx
+
+#endif // GFX_DX_HPP

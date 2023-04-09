@@ -2,9 +2,7 @@
 #define STRING_ID_CPP
 
 #include "string_id.hpp"
-
-#include <memory/allocator.hpp>
-#include <math/integer.hpp>
+#include <string.hpp>
 
 
 int32 get_index_in_hash_table(string_id_storage *storage, uint32 hash)

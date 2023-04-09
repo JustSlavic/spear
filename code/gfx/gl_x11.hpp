@@ -1,5 +1,7 @@
-#ifndef GLX_GL_X11_HPP
-#define GLX_GL_X11_HPP
+#ifndef GFX_GL_X11_HPP
+#define GFX_GL_X11_HPP
+
+#include <base.hpp>
 
 #include <X11/Xutil.h>
 #include <GL/gl.h>
@@ -335,4 +337,4 @@ void destroy_window_and_driver(void *window, void *driver)
 
 } // namespace gfx::gl
 
-#endif // GLX_GL_X11_HPP
+#endif // GFX_GL_X11_HPP

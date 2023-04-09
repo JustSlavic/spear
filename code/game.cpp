@@ -1,5 +1,5 @@
 #include <game.hpp>
-#include <game_state.hpp>
+#include <game_interface.hpp>
 
 #include <math/integer.hpp>
 #include <math/float64.hpp>
@@ -10,7 +10,6 @@
 
 #include <collision.hpp>
 
-#include <stdio.h>
 //
 // Arguments:
 // - execution_context *context;

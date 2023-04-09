@@ -1,3 +1,8 @@
+#ifndef GFX_DX11_HPP
+#define GFX_DX11_HPP
+
+#include <base.hpp>
+
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
@@ -244,3 +249,5 @@ void set_viewport(viewport vp)
 
 } // namespace dx11
 } // namespace gfx
+
+#endif // GFX_DX11_HPP

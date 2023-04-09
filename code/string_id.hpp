@@ -2,7 +2,6 @@
 #define STRING_ID_HPP
 
 #include <base.hpp>
-#include <string.hpp>
 
 
 struct string_id_storage_hash_entry

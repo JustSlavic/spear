@@ -3,7 +3,7 @@
 
 // Project headers
 #include <base.hpp>
-#include <game.hpp>
+#include <game_interface.hpp>
 #include <string.hpp>
 #include <string_id.hpp>
 #include <math/vector3.hpp>

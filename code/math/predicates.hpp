@@ -1,6 +1,8 @@
 #ifndef MATH_PREDICATES_HPP
 #define MATH_PREDICATES_HPP
 
+#include <base.hpp>
+
 #include <math/vector2.hpp>
 #include <math/vector3.hpp>
 #include <math/matrix2.hpp>

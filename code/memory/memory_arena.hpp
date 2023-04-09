@@ -1,6 +1,7 @@
 #ifndef MEMORY_MEMORY_ARENA_HPP
 #define MEMORY_MEMORY_ARENA_HPP
 
+#include <base.hpp>
 #include "allocator.hpp"
 
 
