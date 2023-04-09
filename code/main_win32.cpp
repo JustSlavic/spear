@@ -11,6 +11,7 @@
 #include <os/time.hpp>
 #include <input.hpp>
 
+#include <stdio.h>
 
 GLOBAL bool32 running;
 
@@ -335,6 +336,21 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         context.render_command_queue_size = 0;
         memory::reset_allocator(&context.temporary_allocator);
+
+#if DEBUG
+#define DEBUG_PRING_COUNTER(COUNTER) \
+        do { \
+            char buffer_[512] = {0}; \
+            sprintf(buffer_, STRINGIFY(COUNTER) " took %llu cycles; %llu hits.\n",  \
+                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].cycle_count,  \
+                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].hit_count);   \
+            OutputDebugStringA(buffer_); \
+        } while(0);
+
+        DEBUG_PRING_COUNTER(GAME_UPDATE_AND_RENDER);
+
+        memory::set(context.debug_measurements, 0, sizeof(context.debug_measurements));
+#endif // DEBUG
 
         gfx::swap_buffers(&window, &driver);
 

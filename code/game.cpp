@@ -83,7 +83,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border1.entity->height = 5.5f;
     border1.entity->width = 0.1f;
     border1.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border1.eid);
+    put_entity_in_chunk(gs, w, border1);
 
     entity_ref border2 = push_entity(gs);
     border2.entity->type = ENTITY_ALIGNED_RECTANGLE;
@@ -91,7 +91,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border2.entity->height = 0.1f;
     border2.entity->width = 8.5f;
     border2.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border2.eid);
+    put_entity_in_chunk(gs, w, border2);
 
     entity_ref border3 = push_entity(gs);
     border3.entity->type = ENTITY_ALIGNED_RECTANGLE;
@@ -99,7 +99,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border3.entity->height = 0.1f;
     border3.entity->width = 8.5f;
     border3.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border3.eid);
+    put_entity_in_chunk(gs, w, border3);
 
     entity_ref border4 = push_entity(gs);
     border4.entity->type = ENTITY_ALIGNED_RECTANGLE;
@@ -107,7 +107,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border4.entity->height = 5.5f;
     border4.entity->width = 0.1f;
     border4.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border4.eid);
+    put_entity_in_chunk(gs, w, border4);
 
     auto e1 = push_entity(gs);
     e1.entity->type = ENTITY_CIRCLE;
@@ -115,7 +115,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     e1.entity->velocity = V2(0.1, 0);
     e1.entity->mass = 5.f;
     e1.entity->radius = .05f;
-    put_entity_in_chunk(gs, w, e1.eid);
+    put_entity_in_chunk(gs, w, e1);
 
     // auto *e2 = push_entity(gs);
     // e2->type = ENTITY_CIRCLE;
@@ -144,7 +144,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
             particle.entity->radius = .025f;
             particle.entity->mass = 0.05f;
 
-            put_entity_in_chunk(gs, w, particle.eid);
+            put_entity_in_chunk(gs, w, particle);
         }
     }
 }
@@ -214,6 +214,8 @@ void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 
 UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {
     using namespace math;
+
+    DEBUG_BEGIN_TIME_MEASUREMENT(GAME_UPDATE_AND_RENDER);
 
     game_state *gs = (game_state *) game_memory.memory;
     world *w = &gs->world;
@@ -521,6 +523,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     // ASSERT(math::absolute(gs->energy_last_frame - gs->energy) < EPSILON);
     // printf("energy=%lf\n", gs->energy);
 #endif
+
+    DEBUG_END_TIME_MEASUREMENT(GAME_UPDATE_AND_RENDER);
 }
 
 

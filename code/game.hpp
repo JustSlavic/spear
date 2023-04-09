@@ -259,18 +259,16 @@ void remove_entity_from_world_chunk_slot(game_state *gs, world *w, world_chunk *
 }
 
 
-void put_entity_in_chunk(game_state *gs, world *w, uint32 eid)
+void put_entity_in_chunk(game_state *gs, world *w, entity_ref ref)
 {
-    entity *e = get_entity(gs, eid);
-
     int32 chunk_x, chunk_y;
-    get_chunk_coordinates(w, e->position, &chunk_x, &chunk_y);
+    get_chunk_coordinates(w, ref.entity->position, &chunk_x, &chunk_y);
 
     world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y, true);
     if (slot)
     {
         ASSERT(*slot);
-        push_entity_in_world_chunk_slot(gs, w, slot, eid, chunk_x, chunk_y);
+        push_entity_in_world_chunk_slot(gs, w, slot, ref.eid, chunk_x, chunk_y);
     }
     else
     {

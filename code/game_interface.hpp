@@ -57,6 +57,39 @@ INLINE execution_command create_mesh_resource_command(float32 *vbo)
 }
 
 
+enum debug_time_measure_slot
+{
+    DEBUG_TIME_SLOT_GAME_UPDATE_AND_RENDER,
+    // ------------------
+    DEBUG_TIME_SLOT_COUNT
+};
+
+struct debug_time_measurement
+{
+    uint64 cycle_count;
+    uint64 hit_count;
+};
+
+FORCE_INLINE void add_measurement(debug_time_measurement *measurement, uint64 cycles)
+{
+    measurement->cycle_count += cycles;
+    measurement->hit_count += 1;
+}
+
+#if DEBUG
+#define DEBUG_BEGIN_TIME_MEASUREMENT(NAME) \
+    uint64 debug_begin_time_measurement_##NAME##__ = DEBUG_CYCLE_COUNT()
+
+#define DEBUG_END_TIME_MEASUREMENT(NAME) \
+    do { \
+        uint64 debug_end_time_measurement_##NAME##__ = DEBUG_CYCLE_COUNT(); \
+        add_measurement(context->debug_measurements + DEBUG_TIME_SLOT_##NAME, debug_end_time_measurement_##NAME##__ - debug_begin_time_measurement_##NAME##__); \
+    } while(0)
+#else
+#define DEBUG_BEGIN_TIME_MEASUREMENT(NAME)
+#define DEBUG_END_TIME_MEASUREMENT(NAME)
+#endif
+
 struct execution_context
 {
     execution_command execution_command_queue[32];
@@ -71,6 +104,10 @@ struct execution_context
     memory::allocator renderer_allocator;
     rs::resource_storage resource_storage;
     string_id_storage strid_storage;
+
+#if DEBUG
+    debug_time_measurement debug_measurements[DEBUG_TIME_SLOT_COUNT];
+#endif
 };
 
 

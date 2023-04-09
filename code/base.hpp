@@ -35,11 +35,21 @@ typedef unsigned __int64 uint64;
 typedef float  float32;
 typedef double float64;
 
-#define DEBUG_BREAK __debugbreak
+extern "C" uint64 __rdtsc(void);
+#pragma intrinsic(__rdtsc)
+
 #define FORCE_INLINE __forceinline
 #define DLL_EXPORT __declspec(dllexport)
 
 #define RELEASE_COM(PTR) do { if ((PTR)) { (PTR)->Release(); } (PTR) = NULL; } while(0)
+
+#if DEBUG
+#define DEBUG_BREAK __debugbreak
+#define DEBUG_CYCLE_COUNT __rdtsc
+#else
+#define DEBUG_BREAK
+#define DEBUG_CYCLE_COUNT
+#endif
 
 #endif // COMPILER_MSVC
 
