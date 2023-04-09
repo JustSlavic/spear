@@ -10,144 +10,293 @@
 
 #include <collision.hpp>
 
-//
-// Arguments:
-// - execution_context *context;
-// - memory_block game_memory;
-//
-INITIALIZE_MEMORY_FUNCTION(initialize_memory)
-{
-    using namespace math;
 
-    ASSERT(sizeof(game_state) < game_memory.size);
-    game_state *gs = (game_state *) game_memory.memory;
-    world *w = &gs->world;
-
-    w->chunk_width = 1.0f;
-    w->chunk_height = 1.0f;
-
-    memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
-
-    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 200000);
-    gs->entities_capacity = 200000;
-
-    // @note: let zero-indexed entity be 'null entity' representing lack of entity
-    gs->entity_count = 1;
-
-    gs->camera_position = V3(0, 0, 8);
-
-    float32 vbo_init[] = {
-        -1.0f, -1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
-         1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-    };
-
-    uint32 ibo_init[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0, // second triangle
-    };
-
-    gfx::vertex_buffer_layout vbl = {};
-    gfx::push_layout_element(&vbl, 3);
-
-    auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
-    memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
-
-    auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
-    memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
-
-    gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
-    gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
-    gs->circle_shader = create_shader_resource(&context->resource_storage, STRID("circle.shader"));
-
-#if 0
-    auto *e1 = push_entity(gs);
-    e1->type = ENTITY_CIRCLE;
-    e1->position = V2(0, .3);
-    e1->velocity = V2(.001, -.002) * 10;
-    e1->mass = 1.0f;
-    e1->radius = .05f;
-
-    auto *e2 = push_entity(gs);
-    e2->type = ENTITY_CIRCLE;
-    e2->position = V2(0.3, 0);
-    e2->velocity = V2(-0.001, 0);
-    e2->mass = 100.f;
-    e2->radius = .25f;
+#if DEBUG
+debug_time_measurement *global_debug_measurements;
+uint32 global_debug_call_depth;
 #endif
 
-    entity_ref border1 = push_entity(gs);
-    border1.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border1.entity->position = V2(-4, 0);
-    border1.entity->height = 5.5f;
-    border1.entity->width = 0.1f;
-    border1.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border1);
 
-    entity_ref border2 = push_entity(gs);
-    border2.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border2.entity->position = V2(0, 2.4);
-    border2.entity->height = 0.1f;
-    border2.entity->width = 8.5f;
-    border2.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border2);
+uint32 chunk_hash(uint32 chunk_x, uint32 chunk_y)
+{
+    uint32 result = chunk_x * 2281 + chunk_y * 5023;
+    return result;
+}
 
-    entity_ref border3 = push_entity(gs);
-    border3.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border3.entity->position = V2(0, -2.4);
-    border3.entity->height = 0.1f;
-    border3.entity->width = 8.5f;
-    border3.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border3);
+void get_chunk_coordinates(world *w, math::vector2 p, int32 *chunk_x, int32 *chunk_y)
+{
+    *chunk_x = math::round_to_int32(p.x / w->chunk_width + EPSILON);
+    *chunk_y = math::round_to_int32(p.y / w->chunk_height + EPSILON);
+}
 
-    entity_ref border4 = push_entity(gs);
-    border4.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border4.entity->position = V2(4, 0);
-    border4.entity->height = 5.5f;
-    border4.entity->width = 0.1f;
-    border4.entity->mass = 1000000.f;
-    put_entity_in_chunk(gs, w, border4);
 
-    auto e1 = push_entity(gs);
-    e1.entity->type = ENTITY_CIRCLE;
-    e1.entity->position = V2(-3, 0);
-    e1.entity->velocity = V2(0.1, 0);
-    e1.entity->mass = 5.f;
-    e1.entity->radius = .05f;
-    put_entity_in_chunk(gs, w, e1);
+INLINE entity_ref push_entity(game_state *gs)
+{
+    ASSERT(gs->entity_count < gs->entities_capacity);
+    entity_ref result;
+    result.eid = (uint32) gs->entity_count;
+    result.entity = gs->entities + gs->entity_count++;
+    return result;
+}
 
-    // auto *e2 = push_entity(gs);
-    // e2->type = ENTITY_CIRCLE;
-    // e2->position = V2(0, 0);
-    // e2->velocity = V2(0, 0);
-    // e2->mass = 5.f;
-    // e2->radius = .05f;
+INLINE entity *get_entity(game_state *gs, uint32 eid)
+{
+    ASSERT(eid < gs->entity_count);
 
-    // auto *e3 = push_entity(gs);
-    // e3->type = ENTITY_CIRCLE;
-    // e3->position = V2(0, -1);
-    // e3->velocity = V2(0, 0);
-    // e3->mass = 5.f;
-    // e3->radius = .05f;
+    entity *result = gs->entities + eid;
+    return result;
+}
 
-    for (int y = -15; y < 15; y++)
+world_chunk *get_new_world_chunk(game_state *gs, world *w)
+{
+    world_chunk *result = NULL;
+    if (w->free_list)
     {
-        for (int x = -10; x < 11; x++)
-        {
-            // if (x > -2 && x < 2) continue;
-            // comment to find
-            entity_ref particle = push_entity(gs);
-            particle.entity->type = ENTITY_CIRCLE;
-            particle.entity->position = V2(x + 0.001 * y, y) * 0.201f;
-            particle.entity->velocity = V2(-x, -y) * 0.1f;
-            particle.entity->radius = .025f;
-            particle.entity->mass = 0.05f;
+        result = w->free_list;
+        w->free_list = w->free_list->next;
+        memory::set(result, 0, sizeof(world_chunk));
+    }
+    else
+    {
+        result = ALLOCATE(&gs->game_allocator, world_chunk);
+    }
+    return result;
+}
 
-            put_entity_in_chunk(gs, w, particle);
+void release_world_chunk(world *w, world_chunk *chunk)
+{
+    chunk->next = w->free_list;
+    w->free_list = chunk;
+}
+
+world_chunk **get_world_chunk_slot(game_state *gs, world *w, int32 chunk_x, int32 chunk_y, bool32 create_slot)
+{
+    DEBUG_BEGIN_TIME_MEASUREMENT(get_world_chunk_slot);
+    world_chunk **slot = NULL;
+
+    uint32 hash = chunk_hash(chunk_x, chunk_y);
+    for (uint32 offset = 0; offset < ARRAY_COUNT(w->hash_table); offset++)
+    {
+        uint32 index = (hash + offset) % ARRAY_COUNT(w->hash_table);
+        if (w->hash_table[index] == NULL)
+        {
+            slot = w->hash_table + index;
+            if (create_slot)
+            {
+                auto *new_chunk = get_new_world_chunk(gs, w);
+                new_chunk->x = chunk_x;
+                new_chunk->y = chunk_y;
+
+                *slot = new_chunk;
+            }
+            break;
+        }
+        else if ((w->hash_table[index]->x == chunk_x) && (w->hash_table[index]->y == chunk_y))
+        {
+            slot = w->hash_table + index;
+            break;
         }
     }
+    DEBUG_END_TIME_MEASUREMENT(get_world_chunk_slot);
+    return slot;
 }
+
+
+void push_entity_in_world_chunk_slot(game_state *gs, world *w, world_chunk **slot, uint32 eid, int32 chunk_x, int32 chunk_y)
+{
+    DEBUG_BEGIN_TIME_MEASUREMENT(push_entity_in_world_chunk_slot);
+
+    world_chunk *chunk = *slot;
+
+    bool32 found = false;
+    while (chunk)
+    {
+        for (uint32 entity_index = 0; entity_index < chunk->entity_count; entity_index++)
+        {
+            if (chunk->entities[entity_index] == eid)
+            {
+                // Entity already in this chunk, do nothing.
+                found = true;
+                break;
+            }
+        }
+        if (chunk->next == NULL) break;
+        chunk = chunk->next;
+    }
+
+    if (!found)
+    {
+        if (chunk->entity_count == ARRAY_COUNT(chunk->entities))
+        {
+            world_chunk *next_chunk = get_new_world_chunk(gs, w);
+            next_chunk->x = chunk_x;
+            next_chunk->y = chunk_y;
+
+            chunk->next = next_chunk;
+            chunk = chunk->next;
+        }
+        chunk->entities[chunk->entity_count++] = eid;
+    }
+
+    DEBUG_END_TIME_MEASUREMENT(push_entity_in_world_chunk_slot);
+}
+
+void remove_entity_from_world_chunk_slot(game_state *gs, world *w, world_chunk **slot, uint32 eid, int32 chunk_x, int32 chunk_y)
+{
+    DEBUG_BEGIN_TIME_MEASUREMENT(remove_entity_from_world_chunk_slot);
+
+    world_chunk *chunk = *slot;
+    world_chunk *prev_chunk = NULL;
+
+    while (chunk)
+    {
+        bool32 found = false;
+        for (uint32 index_in_chunk = 0; index_in_chunk < chunk->entity_count; index_in_chunk++)
+        {
+            if (chunk->entities[index_in_chunk] == eid)
+            {
+                found = true;
+
+                // Found entity in this chunk, remove it.
+                if (chunk->entity_count == 1)
+                {
+                    if (prev_chunk)
+                    {
+                        // Store this chunk in the world's free list
+                        prev_chunk->next = chunk->next;
+                    }
+                    else
+                    {
+                        // Remove chunk from hash table
+                        *slot = chunk->next;
+                    }
+
+                    release_world_chunk(w, chunk);
+                }
+                else
+                {
+                    // Replace the current eid with the last eid in this chunk.
+                    chunk->entities[index_in_chunk] = chunk->entities[chunk->entity_count - 1];
+                    chunk->entity_count -= 1;
+                }
+
+                break;
+            }
+        }
+
+        if (not found)
+        {
+            prev_chunk = chunk;
+            chunk = chunk->next;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    DEBUG_END_TIME_MEASUREMENT(remove_entity_from_world_chunk_slot);
+}
+
+
+void put_entity_in_chunk(game_state *gs, world *w, entity_ref ref)
+{
+    DEBUG_BEGIN_TIME_MEASUREMENT(put_entity_in_chunk);
+
+    auto min_corner = get_min(ref.entity->aabb);
+    auto max_corner = get_max(ref.entity->aabb);
+
+    int32 min_chunk_x, min_chunk_y;
+    get_chunk_coordinates(w, min_corner, &min_chunk_x, &min_chunk_y);
+
+    int32 max_chunk_x, max_chunk_y;
+    get_chunk_coordinates(w, max_corner, &max_chunk_x, &max_chunk_y);
+
+    for (int32 chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++)
+    {
+        for (int32 chunk_y = min_chunk_y; chunk_y <= max_chunk_y; chunk_y++)
+        {
+            world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y, true);
+
+            if (slot)
+            {
+                ASSERT(*slot);
+                push_entity_in_world_chunk_slot(gs, w, slot, ref.eid, chunk_x, chunk_y);
+            }
+            else
+            {
+                ASSERT_FAIL(Not enough slots in the hash table);
+            }
+        }
+    }
+
+    DEBUG_END_TIME_MEASUREMENT(put_entity_in_chunk);
+}
+
+
+void move_entity_between_chunks(game_state *gs, world *w, uint32 eid, math::rect2 old_aabb, math::rect2 new_aabb)
+{
+    DEBUG_BEGIN_TIME_MEASUREMENT(move_entity_between_chunks);
+
+    auto old_min_corner = get_min(old_aabb);
+    auto old_max_corner = get_max(old_aabb);
+
+    auto new_min_corner = get_min(new_aabb);
+    auto new_max_corner = get_max(new_aabb);
+
+    int32 old_min_chunk_x, old_min_chunk_y;
+    get_chunk_coordinates(w, old_min_corner, &old_min_chunk_x, &old_min_chunk_y);
+
+    int32 old_max_chunk_x, old_max_chunk_y;
+    get_chunk_coordinates(w, old_max_corner, &old_max_chunk_x, &old_max_chunk_y);
+
+    int32 new_min_chunk_x, new_min_chunk_y;
+    get_chunk_coordinates(w, new_min_corner, &new_min_chunk_x, &new_min_chunk_y);
+
+    int32 new_max_chunk_x, new_max_chunk_y;
+    get_chunk_coordinates(w, new_max_corner, &new_max_chunk_x, &new_max_chunk_y);
+
+    auto min_chunk_x = min_(old_min_chunk_x, new_min_chunk_x);
+    auto min_chunk_y = min_(old_min_chunk_y, new_min_chunk_y);
+
+    auto max_chunk_x = max_(old_max_chunk_x, new_max_chunk_x);
+    auto max_chunk_y = max_(old_max_chunk_y, new_max_chunk_y);
+
+    for (int32 chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++)
+    {
+        for (int32 chunk_y = min_chunk_y; chunk_y <= max_chunk_y; chunk_y++)
+        {
+            bool32 is_inside_old = (old_min_chunk_x <= chunk_x) && (chunk_x <= old_max_chunk_x)
+                                && (old_min_chunk_y <= chunk_y) && (chunk_y <= old_max_chunk_y);
+            bool32 is_inside_new = (new_min_chunk_x <= chunk_x) && (chunk_x <= new_max_chunk_x)
+                                && (new_min_chunk_y <= chunk_y) && (chunk_y <= new_max_chunk_y);
+
+            if ((is_inside_old && is_inside_new) || (not is_inside_old && not is_inside_new))
+                continue;
+            else if (is_inside_old and not is_inside_new)
+            {
+                world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y);
+                remove_entity_from_world_chunk_slot(gs, w, slot, eid, chunk_x, chunk_y);
+            }
+            else if (not is_inside_old and is_inside_new)
+            {
+                world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y, true);
+                ASSERT_MSG(slot, "Not enough slots in the hash table!");
+                if (slot)
+                {
+                    ASSERT_MSG(*slot, "If slot not null, but points to null, probably memory is depleted!");
+                    if (*slot)
+                    {
+                        push_entity_in_world_chunk_slot(gs, w, slot, eid, chunk_x, chunk_y);
+                    }
+                }
+            }
+        }
+    }
+
+    DEBUG_END_TIME_MEASUREMENT(move_entity_between_chunks);
+}
+
 
 math::rectangle2 compute_aabb(entity *e)
 {
@@ -208,6 +357,153 @@ void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 
 // Arguments:
 // - execution_context *context;
 // - memory_block game_memory;
+//
+INITIALIZE_MEMORY_FUNCTION(initialize_memory)
+{
+    using namespace math;
+
+    global_debug_measurements = context->debug_measurements;
+
+    ASSERT(sizeof(game_state) < game_memory.size);
+    game_state *gs = (game_state *) game_memory.memory;
+    world *w = &gs->world;
+
+    w->chunk_width  = .250f;
+    w->chunk_height = .250f;
+
+    memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
+
+    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 200000);
+    gs->entities_capacity = 200000;
+
+    // @note: let zero-indexed entity be 'null entity' representing lack of entity
+    gs->entity_count = 1;
+
+    gs->camera_position = V3(0, 0, 8);
+
+    float32 vbo_init[] = {
+        -1.0f, -1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+    };
+
+    uint32 ibo_init[] = {
+        0, 1, 2, // first triangle
+        2, 3, 0, // second triangle
+    };
+
+    gfx::vertex_buffer_layout vbl = {};
+    gfx::push_layout_element(&vbl, 3);
+
+    auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
+    memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
+
+    auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
+    memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+    gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
+    gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
+    gs->circle_shader = create_shader_resource(&context->resource_storage, STRID("circle.shader"));
+
+#if 0
+    auto *e1 = push_entity(gs);
+    e1->type = ENTITY_CIRCLE;
+    e1->position = V2(0, .3);
+    e1->velocity = V2(.001, -.002) * 10;
+    e1->mass = 1.0f;
+    e1->radius = .05f;
+
+    auto *e2 = push_entity(gs);
+    e2->type = ENTITY_CIRCLE;
+    e2->position = V2(0.3, 0);
+    e2->velocity = V2(-0.001, 0);
+    e2->mass = 100.f;
+    e2->radius = .25f;
+#endif
+
+    entity_ref border1 = push_entity(gs);
+    border1.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border1.entity->position = V2(-4, 0);
+    border1.entity->height = 5.5f;
+    border1.entity->width = 0.1f;
+    border1.entity->mass = 1000000.f;
+    border1.entity->aabb = compute_aabb(border1.entity);
+    put_entity_in_chunk(gs, w, border1);
+
+    entity_ref border2 = push_entity(gs);
+    border2.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border2.entity->position = V2(0, 2.4);
+    border2.entity->height = 0.1f;
+    border2.entity->width = 8.5f;
+    border2.entity->mass = 1000000.f;
+    border2.entity->aabb = compute_aabb(border2.entity);
+    put_entity_in_chunk(gs, w, border2);
+
+    entity_ref border3 = push_entity(gs);
+    border3.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border3.entity->position = V2(0, -2.4);
+    border3.entity->height = 0.1f;
+    border3.entity->width = 8.5f;
+    border3.entity->mass = 1000000.f;
+    border3.entity->aabb = compute_aabb(border3.entity);
+    put_entity_in_chunk(gs, w, border3);
+
+    entity_ref border4 = push_entity(gs);
+    border4.entity->type = ENTITY_ALIGNED_RECTANGLE;
+    border4.entity->position = V2(4, 0);
+    border4.entity->height = 5.5f;
+    border4.entity->width = 0.1f;
+    border4.entity->mass = 1000000.f;
+    border4.entity->aabb = compute_aabb(border4.entity);
+    put_entity_in_chunk(gs, w, border4);
+
+    auto e1 = push_entity(gs);
+    e1.entity->type = ENTITY_CIRCLE;
+    e1.entity->position = V2(-3, 0);
+    e1.entity->velocity = V2(0.1, 0.1) * 10;
+    e1.entity->mass = 5.f;
+    e1.entity->radius = .05f;
+    e1.entity->aabb = compute_aabb(e1.entity);
+    put_entity_in_chunk(gs, w, e1);
+
+    // auto *e2 = push_entity(gs);
+    // e2->type = ENTITY_CIRCLE;
+    // e2->position = V2(0, 0);
+    // e2->velocity = V2(0, 0);
+    // e2->mass = 5.f;
+    // e2->radius = .05f;
+
+    // auto *e3 = push_entity(gs);
+    // e3->type = ENTITY_CIRCLE;
+    // e3->position = V2(0, -1);
+    // e3->velocity = V2(0, 0);
+    // e3->mass = 5.f;
+    // e3->radius = .05f;
+
+    for (int y = -10; y < 10; y++)
+    {
+        for (int x = -45; x < 45; x++)
+        {
+            // if (x > -2 && x < 2) continue;
+            // comment to find
+            entity_ref particle = push_entity(gs);
+            particle.entity->type = ENTITY_CIRCLE;
+            particle.entity->position = V2(x * 0.5 + 0.001 * y, y) * 0.101f;
+            particle.entity->velocity = V2(-x, -y) * 0.01f;
+            particle.entity->radius = .025f;
+            particle.entity->mass = 0.05f;
+            particle.entity->aabb = compute_aabb(particle.entity);
+
+            put_entity_in_chunk(gs, w, particle);
+        }
+    }
+}
+
+//
+// Arguments:
+// - execution_context *context;
+// - memory_block game_memory;
 // - input_devices input;
 // - float32 dt;
 //
@@ -215,7 +511,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {
     using namespace math;
 
-    DEBUG_BEGIN_TIME_MEASUREMENT(GAME_UPDATE_AND_RENDER);
+    global_debug_measurements = context->debug_measurements;
+
+    DEBUG_BEGIN_TIME_MEASUREMENT(update_and_render);
 
     game_state *gs = (game_state *) game_memory.memory;
     world *w = &gs->world;
@@ -243,7 +541,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         camera_velocity.x += 1;
     }
 
-    float32 camera_speed = 0.1f;
+    float32 camera_speed = .5f;
     gs->camera_position += camera_velocity * camera_speed * dt;
 
     // Setup camera
@@ -267,32 +565,32 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     // Grid
     {
-        for (int32 x = -5; x < 5; x++)
+        for (int32 chunk_x = -10; chunk_x <= 10; chunk_x++)
         {
-            float32 x_ = (float32) x + 0.5f;
-            draw_aligned_rectangle(context, gs, x_, 0.f, 0.01f, 3.f, V4(0.9f, 0.9f, 0.9f, 1.0f));
-        }
-        for (int32 y = -5; y < 5; y++)
-        {
-            float32 y_ = (float32) y + 0.5f;
-            draw_aligned_rectangle(context, gs, 0.f, y_, 3.f, 0.01f, V4(0.9f, 0.9f, 0.9f, 1.0f));
+            for (int32 chunk_y = -10; chunk_y <= 10; chunk_y++)
+            {
+                world_chunk **slot = get_world_chunk_slot(gs, w, chunk_x, chunk_y);
+                bool32 have_entities = (slot && (*slot) && (*slot)->entity_count > 0);
+                draw_aligned_rectangle(context, gs,
+                    (float32)chunk_x * w->chunk_width,
+                    (float32)chunk_y * w->chunk_height,
+                    w->chunk_width * 0.5f,
+                    w->chunk_height * 0.5f,
+                    have_entities ? V4(0.8f, 1.f, 0.8f, 1.f) : V4(0.8f, 0.8f, 0.8f, 1.f));
+            }
         }
     }
-
-    for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
-        auto *e = get_entity(gs, eid);
-
-        int32 chunk_x, chunk_y;
-        get_chunk_coordinates(w, e->position, &chunk_x, &chunk_y);
-
-        world_chunk **slot = get_world_chunk_slot(gs, w, 0, 0);
-
-        bool32 inside = false;
-        if (slot && (*slot) && (*slot)->entity_count > 0) inside = true;
-
-        draw_aligned_rectangle(context, gs, 0.f, 0.f, 0.5f, 0.5f,
-            inside ? V4(0.f, 1.f, 0.f, 1.f) : V4(1.f, 0.f, 0.f, 1.f));
+        for (int32 x = -11; x < 11; x++)
+        {
+            float32 x_ = ((float32) x + 0.5f) * w->chunk_width;
+            draw_aligned_rectangle(context, gs, x_, 0.f, 0.01f, 6.f, V4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+        for (int32 y = -11; y < 11; y++)
+        {
+            float32 y_ = ((float32) y + 0.5f) * w->chunk_height;
+            draw_aligned_rectangle(context, gs, 0.f, y_, 6.f, 0.01f, V4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
     }
 
     // Coordinates
@@ -329,9 +627,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             auto old_p = e->position;
             auto new_p = e->position + old_v * dt_;
 
-            math::rectangle2 aabb = compute_aabb(e);
-            e->aabb = aabb;
-
             auto full_distance = 0.f;
             auto direction = normalized(new_p - old_p, &full_distance);
             auto distance = full_distance;
@@ -342,12 +637,12 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             int32 old_chunk_x, old_chunk_y;
             get_chunk_coordinates(w, old_p, &old_chunk_x, &old_chunk_y);
             int32 new_chunk_x, new_chunk_y;
-            get_chunk_coordinates(w, old_p, &new_chunk_x, &new_chunk_y);
+            get_chunk_coordinates(w, new_p, &new_chunk_x, &new_chunk_y);
 
-            int32 min_chunk_x = min_(old_chunk_x, new_chunk_x) - 1;
-            int32 min_chunk_y = min_(old_chunk_y, new_chunk_y) - 1;
-            int32 max_chunk_x = max_(old_chunk_x, new_chunk_x) + 1;
-            int32 max_chunk_y = max_(old_chunk_y, new_chunk_y) + 1;
+            int32 min_chunk_x = min_(old_chunk_x, new_chunk_x);
+            int32 min_chunk_y = min_(old_chunk_y, new_chunk_y);
+            int32 max_chunk_x = max_(old_chunk_x, new_chunk_x);
+            int32 max_chunk_y = max_(old_chunk_y, new_chunk_y);
 
             for (int32 chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++)
             {
@@ -440,7 +735,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             if (collision.t_in_meters < math::infinity)
             {
-                new_p = old_p + collision.t_in_meters * direction + 2.0f * EPSILON * collision.normal;
+                new_p = old_p + collision.t_in_meters * direction;
                 direction = normalized(new_p - old_p, &distance);
 
                 auto m1 = collision.entity1->mass;
@@ -458,8 +753,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 auto proj_p1_ = ((m1 - m2) * proj_p1 + 2.0f * m1 * proj_p2) / (m1 + m2);
                 auto proj_p2_ = (2.0f * m2 * proj_p1 - (m1 - m2) * proj_p2) / (m1 + m2);
 
-                auto p1_ = (0.6f * proj_p1_ * collision.normal + tangent_p1);
-                auto p2_ = (0.6f * proj_p2_ * collision.normal + tangent_p2);
+                auto p1_ = (0.9f * proj_p1_ * collision.normal + tangent_p1);
+                auto p2_ = (0.9f * proj_p2_ * collision.normal + tangent_p2);
 
                 collision.entity1->velocity = p1_ / m1;
                 collision.entity2->velocity = p2_ / m2;
@@ -468,9 +763,14 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 collision.entity2->collided = true;
             }
 
-            move_entity_between_chunks(gs, w, entity_index, old_p, new_p);
-
             e->position = new_p;
+
+            math::rectangle2 old_aabb = e->aabb;
+            math::rectangle2 new_aabb = compute_aabb(e);
+            move_entity_between_chunks(gs, w, entity_index, old_aabb, new_aabb);
+
+            e->aabb = new_aabb;
+
             auto ddt = dt_ * (distance / full_distance);
             dt_ -= ddt;
             if (dt_ < EPSILON) break;
@@ -524,7 +824,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     // printf("energy=%lf\n", gs->energy);
 #endif
 
-    DEBUG_END_TIME_MEASUREMENT(GAME_UPDATE_AND_RENDER);
+    DEBUG_END_TIME_MEASUREMENT(update_and_render);
 }
 
 

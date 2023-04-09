@@ -77,6 +77,18 @@ vector2 bottom_right(rectangle2 rect)
     return result;
 }
 
+vector2 get_min(rectangle2 rect)
+{
+    vector2 result = top_left(rect);
+    return result;
+}
+
+vector2 get_max(rectangle2 rect)
+{
+    vector2 result = bottom_right(rect);
+    return result;
+}
+
 
 float32 width(rectangle2 rect)
 {

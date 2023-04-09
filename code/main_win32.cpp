@@ -338,7 +338,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         memory::reset_allocator(&context.temporary_allocator);
 
 #if DEBUG
-#define DEBUG_PRING_COUNTER(COUNTER) \
+#define DEBUG_PRINT_COUNTER(COUNTER) \
         do { \
             char buffer_[512] = {0}; \
             sprintf(buffer_, STRINGIFY(COUNTER) " took %llu cycles; %llu hits.\n",  \
@@ -347,7 +347,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             OutputDebugStringA(buffer_); \
         } while(0);
 
-        DEBUG_PRING_COUNTER(GAME_UPDATE_AND_RENDER);
+        DEBUG_PRINT_COUNTER(update_and_render);
+        DEBUG_PRINT_COUNTER(get_world_chunk_slot);
+        DEBUG_PRINT_COUNTER(push_entity_in_world_chunk_slot);
+        DEBUG_PRINT_COUNTER(remove_entity_from_world_chunk_slot);
+        DEBUG_PRINT_COUNTER(put_entity_in_chunk);
+        DEBUG_PRINT_COUNTER(move_entity_between_chunks);
+        OutputDebugStringA("===================================\n");
 
         memory::set(context.debug_measurements, 0, sizeof(context.debug_measurements));
 #endif // DEBUG

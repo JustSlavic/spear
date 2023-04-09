@@ -57,9 +57,15 @@ INLINE execution_command create_mesh_resource_command(float32 *vbo)
 }
 
 
+// @todo: move this definition to the game code side of the border
 enum debug_time_measure_slot
 {
-    DEBUG_TIME_SLOT_GAME_UPDATE_AND_RENDER,
+    DEBUG_TIME_SLOT_update_and_render,
+    DEBUG_TIME_SLOT_get_world_chunk_slot,
+    DEBUG_TIME_SLOT_push_entity_in_world_chunk_slot,
+    DEBUG_TIME_SLOT_remove_entity_from_world_chunk_slot,
+    DEBUG_TIME_SLOT_put_entity_in_chunk,
+    DEBUG_TIME_SLOT_move_entity_between_chunks,
     // ------------------
     DEBUG_TIME_SLOT_COUNT
 };
@@ -75,20 +81,6 @@ FORCE_INLINE void add_measurement(debug_time_measurement *measurement, uint64 cy
     measurement->cycle_count += cycles;
     measurement->hit_count += 1;
 }
-
-#if DEBUG
-#define DEBUG_BEGIN_TIME_MEASUREMENT(NAME) \
-    uint64 debug_begin_time_measurement_##NAME##__ = DEBUG_CYCLE_COUNT()
-
-#define DEBUG_END_TIME_MEASUREMENT(NAME) \
-    do { \
-        uint64 debug_end_time_measurement_##NAME##__ = DEBUG_CYCLE_COUNT(); \
-        add_measurement(context->debug_measurements + DEBUG_TIME_SLOT_##NAME, debug_end_time_measurement_##NAME##__ - debug_begin_time_measurement_##NAME##__); \
-    } while(0)
-#else
-#define DEBUG_BEGIN_TIME_MEASUREMENT(NAME)
-#define DEBUG_END_TIME_MEASUREMENT(NAME)
-#endif
 
 struct execution_context
 {
@@ -148,15 +140,6 @@ INLINE void push_draw_background_command(execution_context *context, gfx::render
     gfx::render_command cmd;
     cmd.type = gfx::render_command::command_type::draw_background;
     cmd.draw_background = draw_bg;
-
-    push_render_command(context, cmd);
-}
-
-INLINE void push_draw_mesh_1_command(execution_context *context, gfx::render_command::command_draw_mesh_1 draw_mesh_1)
-{
-    gfx::render_command cmd;
-    cmd.type = gfx::render_command::command_type::draw_mesh_1;
-    cmd.draw_mesh_1 = draw_mesh_1;
 
     push_render_command(context, cmd);
 }
