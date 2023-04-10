@@ -1,9 +1,11 @@
+// Linux
 #include <platform_linux.hpp>
 
+// Project headers
 #include <base.hpp>
-
-#include <game.hpp>
+#include <game_interface.hpp>
 #include <gfx/renderer.hpp>
+#include <input.hpp>
 
 
 
@@ -187,7 +189,7 @@ int main(int argc, char **argv, char **env)
     memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(30));
 
     memory::allocator global_allocator;
-    memory::initialize_memory_arena(&global_allocator, global_memory.memory, global_memory.size);
+    memory::initialize_memory_arena(&global_allocator, global_memory);
 
     memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
@@ -198,10 +200,10 @@ int main(int argc, char **argv, char **env)
     execution_context context = {};
     context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
 
-    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory.memory, scratchpad_memory.size);
-    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory.memory, renderer_memory.size);
-    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory.memory, resource_memory.size);
-    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory.memory, string_id_memory.size);
+    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
+    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
+    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
+    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
 
     context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator, sizeof(gfx::render_command)*3000);
     context.render_command_queue_capacity = 3000;

@@ -87,7 +87,7 @@ struct game_state
 {
     memory::allocator game_allocator;
 
-    world world;
+    world w;
 
     math::vector3 camera_position;
     rs::resource_token rectangle_mesh;
@@ -105,7 +105,7 @@ struct game_state
 
 struct entity_ref
 {
-    entity *entity;
+    entity *e;
     uint32 eid;
 };
 

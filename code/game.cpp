@@ -34,8 +34,8 @@ INLINE entity_ref push_entity(game_state *gs)
 {
     ASSERT(gs->entity_count < gs->entities_capacity);
     entity_ref result;
-    result.eid = (uint32) gs->entity_count;
-    result.entity = gs->entities + gs->entity_count++;
+    result.eid = (uint32) gs->entity_count++;
+    result.e = gs->entities + result.eid;
     return result;
 }
 
@@ -203,8 +203,8 @@ void put_entity_in_chunk(game_state *gs, world *w, entity_ref ref)
 {
     DEBUG_BEGIN_TIME_MEASUREMENT(put_entity_in_chunk);
 
-    auto min_corner = get_min(ref.entity->aabb);
-    auto max_corner = get_max(ref.entity->aabb);
+    auto min_corner = get_min(ref.e->aabb);
+    auto max_corner = get_max(ref.e->aabb);
 
     int32 min_chunk_x, min_chunk_y;
     get_chunk_coordinates(w, min_corner, &min_chunk_x, &min_chunk_y);
@@ -366,7 +366,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     ASSERT(sizeof(game_state) < game_memory.size);
     game_state *gs = (game_state *) game_memory.memory;
-    world *w = &gs->world;
+    world *w = &gs->w;
 
     w->chunk_width  = .250f;
     w->chunk_height = .250f;
@@ -423,48 +423,48 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 #endif
 
     entity_ref border1 = push_entity(gs);
-    border1.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border1.entity->position = V2(-4, 0);
-    border1.entity->height = 5.5f;
-    border1.entity->width = 0.1f;
-    border1.entity->mass = 1000000.f;
-    border1.entity->aabb = compute_aabb(border1.entity);
+    border1.e->type = ENTITY_ALIGNED_RECTANGLE;
+    border1.e->position = V2(-4, 0);
+    border1.e->height = 5.5f;
+    border1.e->width = 0.1f;
+    border1.e->mass = 1000000.f;
+    border1.e->aabb = compute_aabb(border1.e);
     put_entity_in_chunk(gs, w, border1);
 
     entity_ref border2 = push_entity(gs);
-    border2.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border2.entity->position = V2(0, 2.4);
-    border2.entity->height = 0.1f;
-    border2.entity->width = 8.5f;
-    border2.entity->mass = 1000000.f;
-    border2.entity->aabb = compute_aabb(border2.entity);
+    border2.e->type = ENTITY_ALIGNED_RECTANGLE;
+    border2.e->position = V2(0, 2.4);
+    border2.e->height = 0.1f;
+    border2.e->width = 8.5f;
+    border2.e->mass = 1000000.f;
+    border2.e->aabb = compute_aabb(border2.e);
     put_entity_in_chunk(gs, w, border2);
 
     entity_ref border3 = push_entity(gs);
-    border3.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border3.entity->position = V2(0, -2.4);
-    border3.entity->height = 0.1f;
-    border3.entity->width = 8.5f;
-    border3.entity->mass = 1000000.f;
-    border3.entity->aabb = compute_aabb(border3.entity);
+    border3.e->type = ENTITY_ALIGNED_RECTANGLE;
+    border3.e->position = V2(0, -2.4);
+    border3.e->height = 0.1f;
+    border3.e->width = 8.5f;
+    border3.e->mass = 1000000.f;
+    border3.e->aabb = compute_aabb(border3.e);
     put_entity_in_chunk(gs, w, border3);
 
     entity_ref border4 = push_entity(gs);
-    border4.entity->type = ENTITY_ALIGNED_RECTANGLE;
-    border4.entity->position = V2(4, 0);
-    border4.entity->height = 5.5f;
-    border4.entity->width = 0.1f;
-    border4.entity->mass = 1000000.f;
-    border4.entity->aabb = compute_aabb(border4.entity);
+    border4.e->type = ENTITY_ALIGNED_RECTANGLE;
+    border4.e->position = V2(4, 0);
+    border4.e->height = 5.5f;
+    border4.e->width = 0.1f;
+    border4.e->mass = 1000000.f;
+    border4.e->aabb = compute_aabb(border4.e);
     put_entity_in_chunk(gs, w, border4);
 
     auto e1 = push_entity(gs);
-    e1.entity->type = ENTITY_CIRCLE;
-    e1.entity->position = V2(-3, 0);
-    e1.entity->velocity = V2(0.1, 0.1) * 10;
-    e1.entity->mass = 5.f;
-    e1.entity->radius = .05f;
-    e1.entity->aabb = compute_aabb(e1.entity);
+    e1.e->type = ENTITY_CIRCLE;
+    e1.e->position = V2(-3, 0);
+    e1.e->velocity = V2(0.1, 0.1) * 10;
+    e1.e->mass = 5.f;
+    e1.e->radius = .05f;
+    e1.e->aabb = compute_aabb(e1.e);
     put_entity_in_chunk(gs, w, e1);
 
     // auto *e2 = push_entity(gs);
@@ -488,12 +488,12 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
             // if (x > -2 && x < 2) continue;
             // comment to find
             entity_ref particle = push_entity(gs);
-            particle.entity->type = ENTITY_CIRCLE;
-            particle.entity->position = V2(x * 0.5 + 0.001 * y, y) * 0.101f;
-            particle.entity->velocity = V2(-x, -y) * 0.01f;
-            particle.entity->radius = .025f;
-            particle.entity->mass = 0.05f;
-            particle.entity->aabb = compute_aabb(particle.entity);
+            particle.e->type = ENTITY_CIRCLE;
+            particle.e->position = V2(x * 0.5 + 0.001 * y, y) * 0.101f;
+            particle.e->velocity = V2(-x, -y) * 0.01f;
+            particle.e->radius = .025f;
+            particle.e->mass = 0.05f;
+            particle.e->aabb = compute_aabb(particle.e);
 
             put_entity_in_chunk(gs, w, particle);
         }
@@ -516,7 +516,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     DEBUG_BEGIN_TIME_MEASUREMENT(update_and_render);
 
     game_state *gs = (game_state *) game_memory.memory;
-    world *w = &gs->world;
+    world *w = &gs->w;
 
     if (get_press_count(input->keyboard_device[keyboard::esc]))
     {

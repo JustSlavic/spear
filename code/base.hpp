@@ -68,11 +68,18 @@ typedef unsigned long long uint64;
 typedef float  float32;
 typedef double float64;
 
-#define DEBUG_BREAK __builtin_trap
 #define FORCE_INLINE
 #define DLL_EXPORT
 
 #define NULL ((void *) 0)
+
+#if DEBUG
+#define DEBUG_BREAK __builtin_trap
+#define DEBUG_CYCLE_COUNT(...) 0 // @todo
+#else
+#define DEBUG_BREAK
+#define DEBUG_CYCLE_COUNT
+#endif
 
 #endif // COMPILER_GNU
 
