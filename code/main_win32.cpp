@@ -190,8 +190,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // @todo: replace it with
     // context.render_command_queue = ALLOCATE_ARRAY(&context.renderer_allocator, 3000);
-    context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator, sizeof(gfx::render_command)*3000);
-    context.render_command_queue_capacity = 3000;
+    context.render_command_queue_capacity = 6000;
+    context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator,
+                                                                            sizeof(gfx::render_command)*context.render_command_queue_capacity);
 
     // Getting CWD
 

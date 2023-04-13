@@ -298,10 +298,10 @@ void move_entity_between_chunks(game_state *gs, world *w, uint32 eid, math::rect
 }
 
 
-math::rectangle2 compute_aabb(entity *e)
+math::rectangle2 compute_aabb(entity *e, math::vector2 entity_position)
 {
     math::rectangle2 aabb;
-    aabb.center = e->position;
+    aabb.center = entity_position;
 
     if (e->type == ENTITY_CIRCLE)
     {
@@ -315,10 +315,10 @@ math::rectangle2 compute_aabb(entity *e)
     {
         auto transform = math::rotated_z(e->rotation, math::matrix4::identity());
 
-        auto lt = V4(e->position.x - e->width * .5f, e->position.y + e->height * .5f, 0, 1);
-        auto lb = V4(e->position.x - e->width * .5f, e->position.y - e->height * .5f, 0, 1);
-        auto rt = V4(e->position.x + e->width * .5f, e->position.y + e->height * .5f, 0, 1);
-        auto rb = V4(e->position.x + e->width * .5f, e->position.y - e->height * .5f, 0, 1);
+        auto lt = V4(entity_position.x - e->width * .5f, entity_position.y + e->height * .5f, 0, 1);
+        auto lb = V4(entity_position.x - e->width * .5f, entity_position.y - e->height * .5f, 0, 1);
+        auto rt = V4(entity_position.x + e->width * .5f, entity_position.y + e->height * .5f, 0, 1);
+        auto rb = V4(entity_position.x + e->width * .5f, entity_position.y - e->height * .5f, 0, 1);
 
         lt = lt * transform;
         lb = lb * transform;
@@ -427,8 +427,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border1.e->position = V2(-4, 0);
     border1.e->height = 5.5f;
     border1.e->width = 0.1f;
+    // border1.e->position = V2(0);
+    // border1.e->width = 1.0f;
+    // border1.e->height = 1.0f;
     border1.e->mass = 1000000.f;
-    border1.e->aabb = compute_aabb(border1.e);
+    border1.e->aabb = compute_aabb(border1.e, border1.e->position);
     put_entity_in_chunk(gs, w, border1);
 
     entity_ref border2 = push_entity(gs);
@@ -437,7 +440,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border2.e->height = 0.1f;
     border2.e->width = 8.5f;
     border2.e->mass = 1000000.f;
-    border2.e->aabb = compute_aabb(border2.e);
+    border2.e->aabb = compute_aabb(border2.e, border2.e->position);
     put_entity_in_chunk(gs, w, border2);
 
     entity_ref border3 = push_entity(gs);
@@ -446,7 +449,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border3.e->height = 0.1f;
     border3.e->width = 8.5f;
     border3.e->mass = 1000000.f;
-    border3.e->aabb = compute_aabb(border3.e);
+    border3.e->aabb = compute_aabb(border3.e, border3.e->position);
     put_entity_in_chunk(gs, w, border3);
 
     entity_ref border4 = push_entity(gs);
@@ -455,45 +458,50 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     border4.e->height = 5.5f;
     border4.e->width = 0.1f;
     border4.e->mass = 1000000.f;
-    border4.e->aabb = compute_aabb(border4.e);
+    border4.e->aabb = compute_aabb(border4.e, border4.e->position);
     put_entity_in_chunk(gs, w, border4);
 
-    auto e1 = push_entity(gs);
-    e1.e->type = ENTITY_CIRCLE;
-    e1.e->position = V2(-3, 0);
-    e1.e->velocity = V2(0.1, 0.1) * 10;
-    e1.e->mass = 5.f;
-    e1.e->radius = .05f;
-    e1.e->aabb = compute_aabb(e1.e);
-    put_entity_in_chunk(gs, w, e1);
+    // auto e1 = push_entity(gs);
+    // e1.e->type = ENTITY_CIRCLE;
+    // e1.e->position = V2(0, 0);
+    // e1.e->velocity = V2(0, 0);
+    // e1.e->mass = 5.f;
+    // e1.e->radius = .4f;
+    // e1.e->aabb = compute_aabb(e1.e, e1.e->position);
+    // put_entity_in_chunk(gs, w, e1);
 
-    // auto *e2 = push_entity(gs);
-    // e2->type = ENTITY_CIRCLE;
-    // e2->position = V2(0, 0);
-    // e2->velocity = V2(0, 0);
-    // e2->mass = 5.f;
-    // e2->radius = .05f;
+    // auto e2 = push_entity(gs);
+    // e2.e->type = ENTITY_CIRCLE;
+    // e2.e->position = V2(0, 1);
+    // e2.e->velocity = V2(0, 0);
+    // e2.e->mass = 5.f;
+    // e2.e->radius = .4f;
+    // e2.e->aabb = compute_aabb(e2.e, e2.e->position);
+    // put_entity_in_chunk(gs, w, e2);
 
-    // auto *e3 = push_entity(gs);
-    // e3->type = ENTITY_CIRCLE;
-    // e3->position = V2(0, -1);
-    // e3->velocity = V2(0, 0);
-    // e3->mass = 5.f;
-    // e3->radius = .05f;
+    // auto e3 = push_entity(gs);
+    // e3.e->type = ENTITY_CIRCLE;
+    // e3.e->position = V2(0, 2);
+    // e3.e->velocity = V2(0, 0);
+    // e3.e->mass = 5.f;
+    // e3.e->radius = .4f;
+    // e3.e->aabb = compute_aabb(e3.e, e3.e->position);
+    // put_entity_in_chunk(gs, w, e3);
 
-    for (int y = -10; y < 10; y++)
+
+    for (int y = -10; y < 11; y++)
     {
-        for (int x = -45; x < 45; x++)
+        for (int x = -30; x < 31; x++)
         {
             // if (x > -2 && x < 2) continue;
             // comment to find
             entity_ref particle = push_entity(gs);
             particle.e->type = ENTITY_CIRCLE;
-            particle.e->position = V2(x * 0.5 + 0.001 * y, y) * 0.101f;
-            particle.e->velocity = V2(-x, -y) * 0.01f;
+            particle.e->position = V2(x, y) * 0.1f;
+            particle.e->velocity = V2(x, y + 20.) * 0.01f;
             particle.e->radius = .025f;
             particle.e->mass = 0.05f;
-            particle.e->aabb = compute_aabb(particle.e);
+            particle.e->aabb = compute_aabb(particle.e, particle.e->position);
 
             put_entity_in_chunk(gs, w, particle);
         }
@@ -565,7 +573,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     // Grid
     {
-        for (int32 chunk_x = -10; chunk_x <= 10; chunk_x++)
+        for (int32 chunk_x = -20; chunk_x <= 20; chunk_x++)
         {
             for (int32 chunk_y = -10; chunk_y <= 10; chunk_y++)
             {
@@ -581,7 +589,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
     {
-        for (int32 x = -11; x < 11; x++)
+        for (int32 x = -21; x < 21; x++)
         {
             float32 x_ = ((float32) x + 0.5f) * w->chunk_width;
             draw_aligned_rectangle(context, gs, x_, 0.f, 0.01f, 6.f, V4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -634,15 +642,32 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             collision_data collision = no_collision();
 
-            int32 old_chunk_x, old_chunk_y;
-            get_chunk_coordinates(w, old_p, &old_chunk_x, &old_chunk_y);
-            int32 new_chunk_x, new_chunk_y;
-            get_chunk_coordinates(w, new_p, &new_chunk_x, &new_chunk_y);
+            math::rectangle2 old_aabb = e->aabb;
+            math::rectangle2 new_aabb = compute_aabb(e, new_p);
 
-            int32 min_chunk_x = min_(old_chunk_x, new_chunk_x);
-            int32 min_chunk_y = min_(old_chunk_y, new_chunk_y);
-            int32 max_chunk_x = max_(old_chunk_x, new_chunk_x);
-            int32 max_chunk_y = max_(old_chunk_y, new_chunk_y);
+            auto old_min_corner = get_min(old_aabb);
+            auto old_max_corner = get_max(old_aabb);
+
+            auto new_min_corner = get_min(new_aabb);
+            auto new_max_corner = get_max(new_aabb);
+
+            int32 old_min_chunk_x, old_min_chunk_y;
+            get_chunk_coordinates(w, old_min_corner, &old_min_chunk_x, &old_min_chunk_y);
+
+            int32 old_max_chunk_x, old_max_chunk_y;
+            get_chunk_coordinates(w, old_max_corner, &old_max_chunk_x, &old_max_chunk_y);
+
+            int32 new_min_chunk_x, new_min_chunk_y;
+            get_chunk_coordinates(w, new_min_corner, &new_min_chunk_x, &new_min_chunk_y);
+
+            int32 new_max_chunk_x, new_max_chunk_y;
+            get_chunk_coordinates(w, new_max_corner, &new_max_chunk_x, &new_max_chunk_y);
+
+            auto min_chunk_x = min_(old_min_chunk_x, new_min_chunk_x);
+            auto min_chunk_y = min_(old_min_chunk_y, new_min_chunk_y);
+
+            auto max_chunk_x = max_(old_max_chunk_x, new_max_chunk_x);
+            auto max_chunk_y = max_(old_max_chunk_y, new_max_chunk_y);
 
             for (int32 chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++)
             {
@@ -736,6 +761,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             if (collision.t_in_meters < math::infinity)
             {
                 new_p = old_p + collision.t_in_meters * direction;
+                if (collision.entity1->type == ENTITY_CIRCLE && collision.entity2->type == ENTITY_CIRCLE)
+                {
+                    if (length_squared(new_p - collision.entity2->position) < math::square(collision.entity1->radius + collision.entity2->radius))
+                    {
+                        new_p = collision.entity2->position + collision.normal * (collision.entity1->radius + collision.entity2->radius);
+                    }
+                }
                 direction = normalized(new_p - old_p, &distance);
 
                 auto m1 = collision.entity1->mass;
@@ -753,8 +785,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 auto proj_p1_ = ((m1 - m2) * proj_p1 + 2.0f * m1 * proj_p2) / (m1 + m2);
                 auto proj_p2_ = (2.0f * m2 * proj_p1 - (m1 - m2) * proj_p2) / (m1 + m2);
 
-                auto p1_ = (0.9f * proj_p1_ * collision.normal + tangent_p1);
-                auto p2_ = (0.9f * proj_p2_ * collision.normal + tangent_p2);
+                auto p1_ = (0.5f * proj_p1_ * collision.normal + tangent_p1);
+                auto p2_ = (0.5f * proj_p2_ * collision.normal + tangent_p2);
 
                 collision.entity1->velocity = p1_ / m1;
                 collision.entity2->velocity = p2_ / m2;
@@ -765,8 +797,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
             e->position = new_p;
 
-            math::rectangle2 old_aabb = e->aabb;
-            math::rectangle2 new_aabb = compute_aabb(e);
+            new_aabb = compute_aabb(e, new_p);
             move_entity_between_chunks(gs, w, entity_index, old_aabb, new_aabb);
 
             e->aabb = new_aabb;
@@ -790,8 +821,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                         math::matrix4::identity())));
                 // draw_mesh.color = e->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.1f + 0.01f * entity_index, 0.32f, 0.72f, 1.0f);
                 auto c = e->velocity * 100.0f;
-                draw_mesh.color = e->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
-                // draw_mesh.color = V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
+                // draw_mesh.color = e->collided ? V4(1.f, 0.f, 0.f, 1.f) : V4(0.3 * length(c), 0.2, length(c) * 0.9, 1.f);
+                draw_mesh.color = V4(0.3 * length(c), 0.2, length(c) * 0.6, 1.f);
 
                 push_draw_mesh_with_color_command(context, draw_mesh);
             }
