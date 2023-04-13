@@ -379,7 +379,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
-    gs->camera_position = V3(0, 0, 8);
+    gs->main_camera.position = V3(0, 0, 8);
+    gs->current_camera = &gs->main_camera;
 
     float32 vbo_init[] = {
         -1.0f, -1.0f, 0.0f,
@@ -550,13 +551,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     float32 camera_speed = .5f;
-    gs->camera_position += camera_velocity * camera_speed * dt;
+    gs->current_camera->position += camera_velocity * camera_speed * dt;
 
     // Setup camera
     {
         gfx::render_command::command_setup_camera setup_camera;
-        setup_camera.camera_position = gs->camera_position;
-        setup_camera.look_at_position = V3(gs->camera_position.x, gs->camera_position.y, 0);
+        setup_camera.camera_position = gs->current_camera->position;
+        setup_camera.look_at_position = V3(gs->current_camera->position.x, gs->current_camera->position.y, 0);
         setup_camera.camera_up_direction = V3(0, 1, 0);
 
         push_setup_camera_command(context, setup_camera);

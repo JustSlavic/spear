@@ -83,13 +83,25 @@ struct world
 uint32 chunk_hash(uint32 chunk_x, uint32 chunk_y);
 void get_chunk_coordinates(world *w, math::vector2 p, int32 *chunk_x, int32 *chunk_y);
 
+
+namespace game {
+
+struct camera {
+    math::vector3 position;
+};
+
+} // namespace game
+
+
 struct game_state
 {
     memory::allocator game_allocator;
 
     world w;
 
-    math::vector3 camera_position;
+    game::camera main_camera;
+    game::camera *current_camera;
+
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
     rs::resource_token circle_shader;
