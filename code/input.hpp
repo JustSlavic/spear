@@ -63,9 +63,13 @@ struct keyboard
     {
         esc,
         f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
-        q, w, e, r, t, y, u, i, o, p,
-        a, s, d, f, g, h, j, k, l,
-        z, x, c, v, b, n, m,
+        tilda, _1, _2, _3, _4, _5, _6, _7, _8, _9, _0, underscore, equals, backspace,
+        tab, q, w, e, r, t, y, u, i, o, p, bracket_open, bracket_close, backslash,
+        caps_lock, a, s, d, f, g, h, j, k, l, enter,
+        left_shift, z, x, c, v, b, n, m, angle_open, angle_close, slash, right_shift,
+        left_control, left_mod, left_alt, space, right_alt, right_control,
+        num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9, num_0,
+        page_up, page_down, home, end, insert, delete,
         // @note: key_count have to be the last in enum
         key_count,
     };

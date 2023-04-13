@@ -133,6 +133,8 @@ void process_pending_messages(input_devices *inp)
                         break;
                     case 'D': process_button_state(&inp->keyboard_device[keyboard::d], is_down);
                         break;
+                    case 'Y': process_button_state(&inp->keyboard_device[keyboard::y], is_down);
+                        break;
                 }
             }
             break;
