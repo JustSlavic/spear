@@ -69,7 +69,7 @@ struct keyboard
         left_shift, z, x, c, v, b, n, m, angle_open, angle_close, slash, right_shift,
         left_control, left_mod, left_alt, space, right_alt, right_control,
         num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9, num_0,
-        page_up, page_down, home, end, insert, delete,
+        page_up, page_down, home, end, insert, _delete,
         // @note: key_count have to be the last in enum
         key_count,
     };
