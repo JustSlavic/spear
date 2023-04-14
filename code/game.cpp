@@ -29,6 +29,11 @@ void get_chunk_coordinates(world *w, math::vector2 p, int32 *chunk_x, int32 *chu
     *chunk_y = math::round_to_int32(p.y / w->chunk_height + EPSILON);
 }
 
+game::camera *get_current_camera(game_state *gs)
+{
+    game::camera *result = gs->cameras.data + gs->current_camera_index;
+    return result;
+}
 
 INLINE entity_ref push_entity(game_state *gs)
 {
@@ -380,7 +385,9 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     gs->cameras = ALLOCATE_ARRAY(&gs->game_allocator, game::camera, 5);
-    gs->current_camera = push_back(&gs->cameras, {V3(0, 0, 8)});
+    push_back(&gs->cameras, {V3(0, 0, 8)});
+    push_back(&gs->cameras, {V3(0, 0, 12)});
+    gs->current_camera_index = 0;
 
     float32 vbo_init[] = {
         -1.0f, -1.0f, 0.0f,
@@ -532,6 +539,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_execution_command(context, exit_command());
     }
 
+    if (get_press_count(input->keyboard_device[keyboard::y]))
+    {
+        gs->current_camera_index = (gs->current_camera_index + 1) % gs->cameras.size;
+    }
+
+    game::camera *current_camera = get_current_camera(gs);
+
     vector3 camera_velocity = vector3::zero();
     if (get_hold_count(input->keyboard_device[keyboard::w]))
     {
@@ -551,13 +565,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     float32 camera_speed = .5f;
-    gs->current_camera->position += camera_velocity * camera_speed * dt;
+    current_camera->position += camera_velocity * camera_speed * dt;
 
     // Setup camera
     {
         gfx::render_command::command_setup_camera setup_camera;
-        setup_camera.camera_position = gs->current_camera->position;
-        setup_camera.look_at_position = V3(gs->current_camera->position.x, gs->current_camera->position.y, 0);
+        setup_camera.camera_position = current_camera->position;
+        setup_camera.look_at_position = V3(current_camera->position.x, current_camera->position.y, 0);
         setup_camera.camera_up_direction = V3(0, 1, 0);
 
         push_setup_camera_command(context, setup_camera);

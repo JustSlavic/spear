@@ -10,6 +10,11 @@ struct array
     Type *data;
     usize size;
     usize capacity;
+
+    Type& operator[] (int32 index)
+    {
+        return data[index];
+    }
 };
 
 #define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}

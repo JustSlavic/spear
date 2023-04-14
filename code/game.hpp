@@ -102,9 +102,7 @@ struct game_state
     world w;
 
     array<game::camera> cameras;
-
-    game::camera main_camera;
-    game::camera *current_camera;
+    uint32 current_camera_index;
 
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
@@ -117,6 +115,9 @@ struct game_state
     double energy;
     double energy_last_frame;
 };
+
+
+game::camera *get_current_camera(game_state *gs);
 
 
 struct entity_ref
