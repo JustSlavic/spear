@@ -47,6 +47,9 @@ struct resource
     void *render_data;
 };
 
+
+// @todo: move this into cpp file, remove dependency on the renderer, by making variable-size array
+
 struct resource_storage
 {
     memory::allocator heap;

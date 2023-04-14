@@ -1,5 +1,5 @@
-#include <game.hpp>
 #include <game_interface.hpp>
+#include <game.hpp>
 
 #include <math/integer.hpp>
 #include <math/float64.hpp>
@@ -379,8 +379,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
 
-    gs->main_camera.position = V3(0, 0, 8);
-    gs->current_camera = &gs->main_camera;
+    gs->cameras = ALLOCATE_ARRAY(&gs->game_allocator, game::camera, 5);
+    gs->current_camera = push_back(&gs->cameras, {V3(0, 0, 8)});
 
     float32 vbo_init[] = {
         -1.0f, -1.0f, 0.0f,

@@ -2,6 +2,8 @@
 #define GAME_STATE_HPP
 
 #include <base.hpp>
+
+#include <array.hpp>
 #include <math/integer.hpp>
 #include <math/vector2.hpp>
 #include <resource_system.hpp>
@@ -98,6 +100,8 @@ struct game_state
     memory::allocator game_allocator;
 
     world w;
+
+    array<game::camera> cameras;
 
     game::camera main_camera;
     game::camera *current_camera;

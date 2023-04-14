@@ -5,7 +5,6 @@
 
 #include <input.hpp>
 #include <memory/memory.hpp>
-#include <gfx/renderer.hpp> // @todo: abstract it away, replace with renderer queue, but here should not be a renderer
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 #include <resource_system.hpp>
