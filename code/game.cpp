@@ -756,7 +756,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
                                         temp_collision.entity1 = e;
                                         temp_collision.entity2 = test_entity;
-                                        temp_collision.point = ray1 + normalized(ray2 - ray1) * r;
+                                        temp_collision.point = c2;
                                         temp_collision.normal = math::rotated(90_degrees, normalized(cap2 - cap1));
                                         temp_collision.t_in_meters = r;
 
@@ -781,6 +781,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                     if (length_squared(new_p - collision.entity2->position) < math::square(collision.entity1->radius + collision.entity2->radius))
                     {
                         new_p = collision.entity2->position + collision.normal * (collision.entity1->radius + collision.entity2->radius);
+                    }
+                }
+                else if (collision.entity1->type == ENTITY_CIRCLE && collision.entity2->type == ENTITY_ALIGNED_RECTANGLE)
+                {
+                    if (length_squared(new_p - collision.point) < math::square(collision.entity1->radius))
+                    {
+                        new_p = collision.point + collision.normal * collision.entity1->radius;
                     }
                 }
                 direction = normalized(new_p - old_p, &distance);
