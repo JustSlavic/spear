@@ -385,8 +385,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     gs->cameras = ALLOCATE_ARRAY(&gs->game_allocator, game::camera, 5);
-    push_back(&gs->cameras, {V3(0, 0, 8)});
-    push_back(&gs->cameras, {V3(0, 0, 12)});
+    gs->cameras.push_back({V3(0, 0, 8)});
+    gs->cameras.push_back({V3(0, 0, 12)});
     gs->current_camera_index = 0;
 
     float32 vbo_init[] = {

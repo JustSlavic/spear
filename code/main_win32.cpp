@@ -171,11 +171,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // @todo: Allocate the memory and initialize allocators on it
 
-    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(25));
+    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(26));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory);
 
+    memory_block platform_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
@@ -185,10 +186,15 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     execution_context context = {};
     context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
 
+    memory::allocator platform_allocator = {};
+
+    memory::initialize_memory_arena(&platform_allocator, platform_memory);
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
     memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
+
+    context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
 
     // @todo: replace it with
     // context.render_command_queue = ALLOCATE_ARRAY(&context.renderer_allocator, 3000);
@@ -273,7 +279,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-#if 1
+#if 0
             game.update_and_render(&context, game_memory, &input, last_frame_dt);
 #else
 #define FIXED_DT 0.3333f
@@ -282,11 +288,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #endif
         }
 
-        for (usize cmd_index = context.next_execution_command_index;
-             cmd_index < context.execution_command_queue_size;
-             cmd_index = (cmd_index + 1) % ARRAY_COUNT(context.execution_command_queue))
+        for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
         {
-            auto cmd = pop_execution_command(&context);
+            auto cmd = context.execution_commands[cmd_index];
             switch (cmd.type)
             {
                 case execution_command::exit:
@@ -296,6 +300,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 break;
             }
         }
+        context.execution_commands.size = 0;
 
         for (usize cmd_index = 0; cmd_index < context.render_command_queue_size; cmd_index++)
         {

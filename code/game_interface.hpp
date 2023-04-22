@@ -5,6 +5,7 @@
 
 #include <input.hpp>
 #include <memory/memory.hpp>
+#include <array.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 #include <resource_system.hpp>
@@ -83,9 +84,7 @@ FORCE_INLINE void add_measurement(debug_time_measurement *measurement, uint64 cy
 
 struct execution_context
 {
-    execution_command execution_command_queue[32];
-    usize execution_command_queue_size;
-    usize next_execution_command_index;
+    array<execution_command> execution_commands;
 
     gfx::render_command *render_command_queue;
     usize render_command_queue_capacity;
@@ -104,19 +103,10 @@ struct execution_context
 
 INLINE void push_execution_command(execution_context *context, execution_command cmd)
 {
-    ASSERT(context->execution_command_queue_size < ARRAY_COUNT(context->execution_command_queue));
-    context->execution_command_queue[context->execution_command_queue_size] = cmd;
-    context->execution_command_queue_size += 1;
+    ASSERT(context->execution_commands.size < context->execution_commands.capacity);
+    context->execution_commands.push_back(cmd);
 }
 
-INLINE execution_command pop_execution_command(execution_context *context)
-{
-    ASSERT(context->execution_command_queue_size > 0);
-    auto result = context->execution_command_queue[context->next_execution_command_index];
-    context->next_execution_command_index += 1;
-    context->execution_command_queue_size -= 1;
-    return result;
-}
 
 INLINE void push_render_command(execution_context *context, gfx::render_command cmd)
 {

@@ -11,28 +11,26 @@ struct array
     usize size;
     usize capacity;
 
-    Type& operator[] (int32 index)
+    Type& operator[] (usize index)
     {
         return data[index];
+    }
+
+    Type *push_back(Type t)
+    {
+        Type* result = 0;
+        if (size < capacity)
+        {
+            usize index = size++;
+            result = data + index;
+            data[index] = t;
+        }
+        return result;
     }
 };
 
 #define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}
 #define ALLOCATE_ARRAY(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}
-
-
-template <typename Type>
-Type *push_back(array<Type> *a, Type t)
-{
-    Type* result = NULL;
-    if (a->size < a->capacity)
-    {
-        usize index = a->size++;
-        result = a->data + index;
-        a->data[index] = t;
-    }
-    return result;
-}
 
 
 template <typename Type, usize Capacity>
