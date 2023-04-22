@@ -883,3 +883,4 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
+#include <resource_system.cpp>

@@ -377,3 +377,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <gfx/renderer.cpp>
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
+#include <resource_system.cpp>
