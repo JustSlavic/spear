@@ -195,12 +195,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
 
     context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
-
-    // @todo: replace it with
-    // context.render_command_queue = ALLOCATE_ARRAY(&context.renderer_allocator, 3000);
-    context.render_command_queue_capacity = 6000;
-    context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator,
-                                                                            sizeof(gfx::render_command)*context.render_command_queue_capacity);
+    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, gfx::render_command, 1 << 12);
 
     // Getting CWD
 
@@ -302,9 +297,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         context.execution_commands.size = 0;
 
-        for (usize cmd_index = 0; cmd_index < context.render_command_queue_size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.render_commands.size; cmd_index++)
         {
-            auto *cmd = context.render_command_queue + cmd_index;
+            auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
             {
                 case gfx::render_command::command_type::setup_projection_matrix:
@@ -341,11 +336,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 break;
             }
         }
+        context.render_commands.size = 0;
 
-        context.render_command_queue_size = 0;
         memory::reset_allocator(&context.temporary_allocator);
 
 #if DEBUG
+        // @todo: this things should be abstract so no code from the game should appear here
+        // now the names of the functions appear here.
 #define DEBUG_PRINT_COUNTER(COUNTER) \
         do { \
             char buffer_[512] = {0}; \

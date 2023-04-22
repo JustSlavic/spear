@@ -85,10 +85,7 @@ FORCE_INLINE void add_measurement(debug_time_measurement *measurement, uint64 cy
 struct execution_context
 {
     array<execution_command> execution_commands;
-
-    gfx::render_command *render_command_queue;
-    usize render_command_queue_capacity;
-    usize render_command_queue_size;
+    array<gfx::render_command> render_commands;
 
     memory::allocator temporary_allocator;
     memory::allocator renderer_allocator;
@@ -110,9 +107,8 @@ INLINE void push_execution_command(execution_context *context, execution_command
 
 INLINE void push_render_command(execution_context *context, gfx::render_command cmd)
 {
-    ASSERT(context->render_command_queue_size < context->render_command_queue_capacity);
-    context->render_command_queue[context->render_command_queue_size] = cmd;
-    context->render_command_queue_size += 1;
+    ASSERT(context->render_commands.size < context->render_commands.capacity);
+    context->render_commands.push_back(cmd);
 }
 
 INLINE void push_setup_camera_command(execution_context *context, gfx::render_command::command_setup_camera setup_camera)
