@@ -5,6 +5,7 @@
 #include <base.hpp>
 #include <game_interface.hpp>
 #include <gfx/renderer.hpp>
+#include <rs/resource.hpp>
 #include <input.hpp>
 
 
@@ -191,22 +192,26 @@ int main(int argc, char **argv, char **env)
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory);
 
+    memory_block platform_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(4));
     memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
-    execution_context context = {};
-    context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
+    memory::allocator platform_allocator = {};
+    memory::initialize_memory_arena(&platform_allocator, platform_memory);
 
+    execution_context context = {};
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
     memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
 
-    context.render_command_queue = (gfx::render_command *) ALLOCATE_BUFFER_(&context.renderer_allocator, sizeof(gfx::render_command)*3000);
-    context.render_command_queue_capacity = 3000;
+    context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
+    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
+    context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
+    create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     initialize_memory(&context, game_memory);
     gfx::set_clear_color(0, 0, 0, 1);
@@ -233,11 +238,9 @@ int main(int argc, char **argv, char **env)
 
         update_and_render(&context, game_memory, &input, 0.333);
 
-        for (usize cmd_index = context.next_execution_command_index;
-             cmd_index < context.execution_command_queue_size;
-             cmd_index = (cmd_index + 1) % ARRAY_COUNT(context.execution_command_queue))
+        for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
         {
-            auto cmd = pop_execution_command(&context);
+            auto cmd = context.execution_commands[cmd_index];
             switch (cmd.type)
             {
                 case execution_command::exit:
@@ -251,27 +254,27 @@ int main(int argc, char **argv, char **env)
             }
         }
 
-        for (usize cmd_index = 0; cmd_index < context.render_command_queue_size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.render_commands.size; cmd_index++)
         {
-            auto *cmd = context.render_command_queue + cmd_index;
+            auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
             {
-                case gfx::render_command::command_type::setup_projection_matrix:
+                case render_command::command_type::setup_projection_matrix:
                 break;
 
-                case gfx::render_command::command_type::setup_camera:
+                case render_command::command_type::setup_camera:
                 {
                     view = gfx::make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_background:
+                case render_command::command_type::draw_background:
                 {
                     gfx::draw_background(&context, cmd);
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_mesh_1:
+                case render_command::command_type::draw_mesh_1:
                 {
                     gfx::draw_polygon_simple(&context,
                         cmd->draw_mesh_1.mesh_token, cmd->draw_mesh_1.shader_token,
@@ -280,7 +283,7 @@ int main(int argc, char **argv, char **env)
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_mesh_with_color:
+                case render_command::command_type::draw_mesh_with_color:
                 {
                     gfx::draw_polygon_simple(&context,
                         cmd->draw_mesh_with_color.mesh_token, cmd->draw_mesh_with_color.shader_token,
@@ -290,7 +293,7 @@ int main(int argc, char **argv, char **env)
                 break;
             }
         }
-        context.render_command_queue_size = 0;
+        context.render_commands.size = 0;
         memory::reset_allocator(&context.temporary_allocator);
 
         gfx::swap_buffers(&window, &driver);
