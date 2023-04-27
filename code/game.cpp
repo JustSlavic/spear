@@ -1,5 +1,5 @@
-#include <game_interface.hpp>
 #include <game.hpp>
+#include <game_interface.hpp>
 
 #include <math/integer.hpp>
 #include <math/float64.hpp>
@@ -345,7 +345,7 @@ math::rectangle2 compute_aabb(entity *e, math::vector2 entity_position)
 
 void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 x, float32 y, float32 half_width, float32 half_height, math::vector4 color)
 {
-    gfx::render_command::command_draw_mesh_with_color draw_aligned_rectangle;
+    render_command::command_draw_mesh_with_color draw_aligned_rectangle;
     draw_aligned_rectangle.mesh_token = gs->rectangle_mesh;
     draw_aligned_rectangle.shader_token = gs->rectangle_shader;
     draw_aligned_rectangle.model =
@@ -569,7 +569,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     // Setup camera
     {
-        gfx::render_command::command_setup_camera setup_camera;
+        render_command::command_setup_camera setup_camera;
         setup_camera.camera_position = current_camera->position;
         setup_camera.look_at_position = V3(current_camera->position.x, current_camera->position.y, 0);
         setup_camera.camera_up_direction = V3(0, 1, 0);
@@ -579,7 +579,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     // Background
     {
-        gfx::render_command::command_draw_background draw_background;
+        render_command::command_draw_background draw_background;
         draw_background.mesh = gs->rectangle_mesh;
         draw_background.shader = gs->rectangle_shader;
         draw_background.color = math::make_vector4(1.0, 1.0, 1.0, 1.0);
@@ -833,7 +833,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         {
             case ENTITY_CIRCLE:
             {
-                gfx::render_command::command_draw_mesh_with_color draw_mesh;
+                render_command::command_draw_mesh_with_color draw_mesh;
                 draw_mesh.mesh_token = gs->rectangle_mesh;
                 draw_mesh.shader_token = gs->circle_shader;
                 draw_mesh.model =
@@ -883,4 +883,5 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
-#include <resource_system.cpp>
+#include <rs/resource_system.cpp>
+#include <execution_context.cpp>

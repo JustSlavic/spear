@@ -8,7 +8,7 @@
 #include <math/rectangle2.hpp>
 #include <gfx/viewport.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
-#include <resource_system.hpp>
+#include <rs/resource_system.hpp>
 
 
 struct execution_context;
@@ -33,62 +33,7 @@ struct driver
     uint8 data[64];
 };
 
-struct render_command
-{
-    enum class command_type
-    {
-        setup_projection_matrix,
-        setup_camera,
-        draw_background,
-        draw_mesh_1,
-        draw_mesh_with_color,
-    };
-    struct command_setup_projection_matrix
-    {
-        math::matrix4 projection;
-    };
-    struct command_setup_camera
-    {
-        math::vector3 camera_position;
-        math::vector3 look_at_position;
-        math::vector3 camera_up_direction;
-    };
-    struct command_draw_background
-    {
-        rs::resource_token mesh;
-        rs::resource_token shader;
-        math::vector4 color;
-    };
-    struct command_draw_rectangle
-    {
-        math::rectangle2 rect;
-        math::matrix4 model;
-    };
-    struct command_draw_mesh_1
-    {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
-        math::matrix4 model;
-    };
-    struct command_draw_mesh_with_color
-    {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
-        math::matrix4 model;
-        math::vector4 color;
-    };
 
-    command_type type;
-    union
-    {
-        command_setup_projection_matrix setup_projection_matrix;
-        command_setup_camera setup_camera;
-        command_draw_background draw_background;
-        command_draw_rectangle draw_rectangle;
-        command_draw_mesh_1 draw_mesh_1;
-        command_draw_mesh_with_color draw_mesh_with_color;
-    };
-};
 
 bool32 initialize_opengl(void *driver);
 bool32 initialize_dx11(void *window, driver *driver);

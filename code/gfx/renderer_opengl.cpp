@@ -1,13 +1,13 @@
 #include "renderer.hpp"
 #include <gfx/gl.hpp>
+#include <rs/resource.hpp>
 
 #include <math/integer.hpp>
 #include <math/vector4.hpp>
 #include <math/rectangle2.hpp>
 
 
-namespace gfx::gl
-{
+namespace gfx::gl {
 
 GLOBAL char const *vs_source = R"GLSL(
 #version 400
@@ -141,15 +141,6 @@ void setup_camera(render_command *cmd)
 {
 
 }
-
-struct render_with_indices
-{
-    uint32 vbo;
-    uint32 ibo;
-    uint32 ibo_size;
-    uint32 vao;
-};
-
 
 struct render_mesh_data
 {

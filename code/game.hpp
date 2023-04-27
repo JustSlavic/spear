@@ -6,7 +6,9 @@
 #include <array.hpp>
 #include <math/integer.hpp>
 #include <math/vector2.hpp>
-#include <resource_system.hpp>
+#include <math/vector3.hpp>
+#include <math/rectangle2.hpp>
+#include <rs/resource_system.hpp>
 
 // namespace game {
 

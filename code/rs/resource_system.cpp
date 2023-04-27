@@ -1,20 +1,29 @@
-#include <resource_system.hpp>
-#include <resource_token.hpp>
+#include <rs/resource_system.hpp>
+#include <rs/resource_token.hpp>
+#include <rs/resource.hpp>
 
 
 namespace rs {
 
+
 resource_token get_new_resource_token(resource_storage *storage)
 {
-    ASSERT(storage->resource_count < ARRAY_COUNT(storage->resources));
-    resource_token result = {storage->resource_count++};
+    ASSERT(storage->resources.size < storage->resources.capacity);
+    resource_token result = resource_token{(uint32)storage->resources.size};
+    storage->resources.push_back(resource{});
     return result;
 }
 
 resource *get_resource(resource_storage *storage, resource_token token)
 {
-    resource *result = storage->resources + token.id;
+    resource *result = storage->resources.data + token.id;
     return result;
+}
+
+resource_token create_null_resource(resource_storage *storage)
+{
+    resource_token token = get_new_resource_token(storage);
+    return token;
 }
 
 resource_token create_mesh_resource(resource_storage *storage, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl)

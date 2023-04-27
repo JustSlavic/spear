@@ -10,6 +10,7 @@
 #include <gfx/renderer.hpp>
 #include <os/time.hpp>
 #include <input.hpp>
+#include <rs/resource.hpp>
 
 #include <stdio.h>
 
@@ -183,19 +184,19 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
-    execution_context context = {};
-    context.resource_storage.resource_count = 1; // Consider 0 resource being null-resource, indicating the lack of it.
-
     memory::allocator platform_allocator = {};
-
     memory::initialize_memory_arena(&platform_allocator, platform_memory);
+
+    execution_context context = {};
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
     memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
 
     context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
-    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, gfx::render_command, 1 << 12);
+    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
+    context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
+    create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     // Getting CWD
 
@@ -302,22 +303,22 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
             {
-                case gfx::render_command::command_type::setup_projection_matrix:
+                case render_command::command_type::setup_projection_matrix:
                 break;
 
-                case gfx::render_command::command_type::setup_camera:
+                case render_command::command_type::setup_camera:
                 {
                     view = gfx::make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_background:
+                case render_command::command_type::draw_background:
                 {
                     gfx::draw_background(&context, cmd);
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_mesh_1:
+                case render_command::command_type::draw_mesh_1:
                 {
                     gfx::draw_polygon_simple(&context,
                         cmd->draw_mesh_1.mesh_token, cmd->draw_mesh_1.shader_token,
@@ -326,7 +327,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 }
                 break;
 
-                case gfx::render_command::command_type::draw_mesh_with_color:
+                case render_command::command_type::draw_mesh_with_color:
                 {
                     gfx::draw_polygon_simple(&context,
                         cmd->draw_mesh_with_color.mesh_token, cmd->draw_mesh_with_color.shader_token,
@@ -379,4 +380,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <gfx/renderer.cpp>
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
-#include <resource_system.cpp>
+#include <rs/resource_system.cpp>
