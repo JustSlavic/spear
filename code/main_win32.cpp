@@ -151,7 +151,7 @@ void process_pending_messages(input_devices *inp)
 
 int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32 show_code)
 {
-    auto choosen_api = gfx::graphics_api::opengl;
+    auto chosen_api = gfx::graphics_api::opengl;
     win32::window window = {};
     gfx::driver driver = {};
 

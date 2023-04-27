@@ -9,9 +9,19 @@
 #include <input.hpp>
 
 
-
 #define KEYCODE_ESC                  9
+#define KEYCODE_Q                    24
 #define KEYCODE_W                    25
+#define KEYCODE_E                    26
+#define KEYCODE_R                    27
+#define KEYCODE_T                    28
+#define KEYCODE_Y                    29
+#define KEYCODE_U                    30
+#define KEYCODE_I                    31
+#define KEYCODE_O                    32
+#define KEYCODE_P                    33
+#define KEYCODE_BRACKET_OPEN         34
+#define KEYCODE_BRACKET_CLOSE        35
 #define KEYCODE_A                    38
 #define KEYCODE_S                    39
 #define KEYCODE_D                    40
@@ -133,6 +143,8 @@ void process_pending_messages(linux::window *window, input_devices *input)
                     case KEYCODE_S: process_button_state(&input->keyboard_device[keyboard::s], is_down);
                         break;
                     case KEYCODE_D: process_button_state(&input->keyboard_device[keyboard::d], is_down);
+                        break;
+                    case KEYCODE_Y: process_button_state(&input->keyboard_device[keyboard::y], is_down);
                         break;
                 }
             }
