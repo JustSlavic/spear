@@ -261,15 +261,17 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         //   7 6
         //   4 5
         // 0     1
+        float32 border_width = (1.0f / 16.0f) * .1f;
+        float32 border_height = (1.0f / 9.0f) * .1f;
         float32 vbo_[] = {
             -1.0f, -1.0f, 0.0f,
              1.0f, -1.0f, 0.0f,
              1.0f,  1.0f, 0.0f,
             -1.0f,  1.0f, 0.0f,
-            -0.9f, -0.9f, 0.0f,
-             0.9f, -0.9f, 0.0f,
-             0.9f,  0.9f, 0.0f,
-            -0.9f,  0.9f, 0.0f,
+            -1.0f + border_width, -1.0f + border_height, 0.0f,
+             1.0f - border_width, -1.0f + border_height, 0.0f,
+             1.0f - border_width,  1.0f - border_height, 0.0f,
+            -1.0f + border_width,  1.0f - border_height, 0.0f,
         };
 
         auto vbo = ALLOCATE_BLOCK_(&context.temporary_allocator, sizeof(vbo_));
@@ -494,9 +496,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         // if (debug_loop_state == DEBUG_LOOP_RECORDING || debug_loop_state == DEBUG_LOOP_REPLAYING)
         {
+            auto debug_loop_model = math::matrix4::identity();
+            auto debug_loop_view  = math::matrix4::identity();
+            auto debug_loop_projection = math::matrix4::identity();
             gfx::draw_polygon_simple(&context,
                 debug_loop_frame_mesh, debug_loop_frame_shader,
-                math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
+                debug_loop_model, debug_loop_view, debug_loop_projection,
                 debug_loop_frame_color);
         }
 
