@@ -157,12 +157,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     win32::window window = {};
     gfx::driver driver = {};
 
-    if (choosen_api == gfx::graphics_api::opengl)
+    if (chosen_api == gfx::graphics_api::opengl)
     {
         win32::create_opengl_window(instance, 1600, 900, window_callback, &window);
         gfx::initialize_opengl(&driver);
     }
-    else if (choosen_api == gfx::graphics_api::dx11)
+    else if (chosen_api == gfx::graphics_api::dx11)
     {
         win32::create_simple_window(instance, 800, 600, window_callback, &window);
         // gfx::initialize_dx11(&window, &driver);
