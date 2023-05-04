@@ -20,6 +20,12 @@ GLOBAL uint32 current_client_width;
 GLOBAL uint32 current_client_height;
 GLOBAL bool32 viewport_changed;
 
+#if DEBUG
+GLOBAL debug_loop_state debug_loop_state = DEBUG_LOOP_IDLE;
+GLOBAL memory_block debug_loop_initial_game_state;
+GLOBAL array<input> debug_loop_inputs;
+GLOBAL uint32 debug_loop_current_index;
+#endif // DEBUG
 
 struct game_dll
 {
@@ -99,7 +105,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
 }
 
 
-void process_pending_messages(input_devices *inp)
+void process_pending_messages(input *inp)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -138,6 +144,48 @@ void process_pending_messages(input_devices *inp)
                         break;
                     case 'Y': process_button_state(&inp->keyboard_device[keyboard::y], is_down);
                         break;
+                    case 'K':
+                    {
+#if DEBUG
+                        if (!is_down)
+                        {
+                            if ((debug_loop_state == DEBUG_LOOP_IDLE) && (debug_loop_inputs.size > 0))
+                            {
+                                debug_loop_current_index = 0;
+                                debug_loop_state = DEBUG_LOOP_REPLAYING;
+                            }
+                            else if (debug_loop_state == DEBUG_LOOP_REPLAYING)
+                            {
+                                // Nullify keyboard such as nothing is pressed on stoping the playback loop
+                                // because if there's something left pressed, it will stay pressed although nothing is
+                                // pressed on the actual keyboard
+                                memory::set(inp, 0, sizeof(input));
+                                debug_loop_state = DEBUG_LOOP_IDLE;
+                            }
+                        }
+#endif // DEBUG
+                    }
+                    break;
+                    case 'L':
+#if DEBUG
+                        if (!is_down)
+                        {
+                            if (debug_loop_state == DEBUG_LOOP_IDLE) {
+                                debug_loop_inputs.size = 0;
+                                debug_loop_state = DEBUG_LOOP_RECORDING;
+                            } else if (debug_loop_state == DEBUG_LOOP_RECORDING) {
+                                debug_loop_current_index = 0;
+                                debug_loop_state = DEBUG_LOOP_REPLAYING;
+                            } else if (debug_loop_state == DEBUG_LOOP_REPLAYING) {
+                                // Nullify keyboard controller such as nothing is pressed on stoping the playback loop
+                                // because if there's something left pressed, it will stay pressed although nothing is
+                                // pressed on the actual keyboard
+                                *inp = {};
+                                debug_loop_state = DEBUG_LOOP_IDLE;
+                            }
+                        }
+#endif // DEBUG
+                        break;
                 }
             }
             break;
@@ -174,17 +222,17 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // @todo: Allocate the memory and initialize allocators on it
 
-    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(26));
+    memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory);
 
-    memory_block platform_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
+    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
+    memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
-    memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
+    memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
     memory::allocator platform_allocator = {};
     memory::initialize_memory_arena(&platform_allocator, platform_memory);
@@ -199,6 +247,53 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
     context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
     create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
+
+#if DEBUG
+    debug_loop_initial_game_state = ALLOCATE_BLOCK_(&platform_allocator, game_memory.size);
+    debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input, 60*100);
+
+    rs::resource_token debug_loop_frame_mesh = {};
+    rs::resource_token debug_loop_frame_shader = {};
+    {
+        debug_loop_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(&context.strid_storage, "rectangle.shader"));
+
+        // 3     2
+        //   7 6
+        //   4 5
+        // 0     1
+        float32 vbo_[] = {
+            -1.0f, -1.0f, 0.0f,
+             1.0f, -1.0f, 0.0f,
+             1.0f,  1.0f, 0.0f,
+            -1.0f,  1.0f, 0.0f,
+            -0.9f, -0.9f, 0.0f,
+             0.9f, -0.9f, 0.0f,
+             0.9f,  0.9f, 0.0f,
+            -0.9f,  0.9f, 0.0f,
+        };
+
+        auto vbo = ALLOCATE_BLOCK_(&context.temporary_allocator, sizeof(vbo_));
+        memory::copy(vbo.memory, vbo_, sizeof(vbo_));
+
+        uint32 ibo_[] = {
+            0, 4, 3,
+            3, 4, 7,
+            0, 1, 4,
+            4, 1, 5,
+            5, 1, 2,
+            5, 2, 6,
+            7, 6, 2,
+            7, 2, 3,
+        };
+
+        auto ibo = ALLOCATE_BLOCK_(&context.temporary_allocator, sizeof(ibo_));
+        memory::copy(ibo.memory, ibo_, sizeof(ibo_));
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
+        debug_loop_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
+    }
+#endif // DEBUG
 
     // Getting CWD
 
@@ -246,7 +341,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    input_devices input = {};
+    input input = {};
 
     int32 game_update_frequency_hz = monitor_refresh_rate_hz;
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
@@ -274,6 +369,40 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
 
         gfx::clear();
+
+#if DEBUG
+        if (debug_loop_state == DEBUG_LOOP_RECORDING)
+        {
+            if (debug_loop_inputs.size == 0)
+            {
+                // Just started recording, save initial game memory
+                memory::copy(debug_loop_initial_game_state.memory, game_memory.memory, game_memory.size);
+                debug_loop_current_index = 0;
+            }
+
+            if (debug_loop_inputs.size < debug_loop_inputs.capacity)
+            {
+                debug_loop_inputs.push_back(input);
+            }
+            else
+            {
+                ASSERT_FAIL("The space for storing input is ran out. Increase it in code above.");
+            }
+        }
+
+        if (debug_loop_state == DEBUG_LOOP_REPLAYING)
+        {
+            if (debug_loop_current_index == 0)
+            {
+                // The playback loop started over again, copy saved initial game memory back to use.
+                memory::copy(game_memory.memory, debug_loop_initial_game_state.memory, game_memory.size);
+            }
+
+            input = debug_loop_inputs[debug_loop_current_index];
+
+            debug_loop_current_index = (debug_loop_current_index + 1) % debug_loop_inputs.size;
+        }
+#endif // DEBUG
 
         if (game.update_and_render)
         {
@@ -320,15 +449,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 }
                 break;
 
-                case render_command::command_type::draw_mesh_1:
-                {
-                    gfx::draw_polygon_simple(&context,
-                        cmd->draw_mesh_1.mesh_token, cmd->draw_mesh_1.shader_token,
-                        cmd->draw_mesh_1.model, view, projection,
-                        math::vector4::zero());
-                }
-                break;
-
                 case render_command::command_type::draw_mesh_with_color:
                 {
                     gfx::draw_polygon_simple(&context,
@@ -349,9 +469,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #define DEBUG_PRINT_COUNTER(COUNTER) \
         do { \
             char buffer_[512] = {0}; \
-            sprintf(buffer_, STRINGIFY(COUNTER) " took %llu cycles; %llu hits.\n",  \
-                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].cycle_count,  \
-                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].hit_count);   \
+            sprintf(buffer_, STRINGIFY(COUNTER) " took %llu cycles; %llu hits; (%f cycles per hit)\n",  \
+                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].cycle_count, \
+                context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].hit_count, \
+                (float32) context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].cycle_count / (float32) context.debug_measurements[DEBUG_TIME_SLOT_##COUNTER].hit_count \
+                ); \
             OutputDebugStringA(buffer_); \
         } while(0);
 
@@ -364,6 +486,20 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         OutputDebugStringA("===================================\n");
 
         memory::set(context.debug_measurements, 0, sizeof(context.debug_measurements));
+
+        auto debug_loop_frame_color =
+            (debug_loop_state == DEBUG_LOOP_RECORDING) ? V4(1, 1, 0, 1) :
+            (debug_loop_state == DEBUG_LOOP_REPLAYING) ? V4(0, 1, 0, 1) :
+            V4(1, 0, 0, 1);
+
+        // if (debug_loop_state == DEBUG_LOOP_RECORDING || debug_loop_state == DEBUG_LOOP_REPLAYING)
+        {
+            gfx::draw_polygon_simple(&context,
+                debug_loop_frame_mesh, debug_loop_frame_shader,
+                math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
+                debug_loop_frame_color);
+        }
+
 #endif // DEBUG
 
         gfx::swap_buffers(&window, &driver);

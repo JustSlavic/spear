@@ -229,7 +229,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
 
-    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 200000);
+    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 20);
     gs->entities_capacity = 200000;
 
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
@@ -616,7 +616,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                             {
                                 // Collision of the player with the ground
                                 e->collided = true;
-                                new_p = collision.point + collision.normal * 0.1f;
+                                new_p = collision.point + collision.normal * 0.01f;
                                 new_v = new_v - dot(new_v, collision.normal) * collision.normal;
                             }
                         }

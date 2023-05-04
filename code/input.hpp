@@ -97,11 +97,12 @@ void reset_transitions(keyboard *kb)
 }
 
 
-struct input_devices
+struct input
 {
     keyboard keyboard_device;
     // @todo: mouse
     // @todo: gamepads (at least 4)
+    float32 dt;
 };
 
 

@@ -33,6 +33,13 @@ FORCE_INLINE void add_measurement(debug_time_measurement *measurement, uint64 cy
     measurement->cycle_count += cycles;
     measurement->hit_count += 1;
 }
+
+enum debug_loop_state
+{
+    DEBUG_LOOP_IDLE,
+    DEBUG_LOOP_RECORDING,
+    DEBUG_LOOP_REPLAYING,
+};
 #endif // DEBUG
 
 struct execution_command
@@ -114,7 +121,7 @@ struct execution_context
 
 #if DEBUG
     debug_time_measurement debug_measurements[DEBUG_TIME_SLOT_COUNT];
-#endif
+#endif // DEBUG
 };
 
 
