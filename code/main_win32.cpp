@@ -201,6 +201,8 @@ void process_pending_messages(input *inp)
 
 int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32 show_code)
 {
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    
     auto chosen_api = gfx::graphics_api::opengl;
     win32::window window = {};
     gfx::driver driver = {};
