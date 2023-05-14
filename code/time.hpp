@@ -1,59 +1,55 @@
-#ifndef OS_TIME_HPP
-#define OS_TIME_HPP
+#ifndef TIME_HPP
+#define TIME_HPP
 
 #include <base.hpp>
-
-namespace os {
 
 
 struct timepoint
 {
-    uint64 us_from_epoch;
+    uint64 counts;
 };
 
 struct duration
 {
-    uint64 us;
+    uint64 counts;
 };
 
 float32 get_seconds(duration d)
 {
-    float32 result = (float32) d.us / 1000000.0f;
+    float32 result = (float32) d.counts / 1000000.0f;
     return result;
 }
 
 INLINE duration operator - (timepoint t1, timepoint t2)
 {
-    ASSERT(t2.us_from_epoch < t1.us_from_epoch);
-    duration result = { t1.us_from_epoch - t2.us_from_epoch };
+    ASSERT(t2.counts < t1.counts);
+    duration result = { t1.counts - t2.counts };
     return result;
 }
 
 INLINE timepoint operator + (timepoint t, duration d)
 {
-    timepoint result = { t.us_from_epoch + d.us };
+    timepoint result = { t.counts + d.counts };
     return result;
 }
 
 INLINE duration operator + (duration d1, duration d2)
 {
-    duration result = { d1.us + d2.us };
+    duration result = { d1.counts + d2.counts };
     return result;
 }
 
 INLINE duration operator - (duration d1, duration d2)
 {
-    duration result = { d1.us - d2.us };
+    duration result = { d1.counts - d2.counts };
     return result;
 }
 
 INLINE bool32 operator < (duration d1, duration d2)
 {
-    bool32 result = (d1.us < d2.us);
+    bool32 result = (d1.counts < d2.counts);
     return result;
 }
 
 
-} // namespace os
-
-#endif // OS_TIME_HPP
+#endif // TIME_HPP

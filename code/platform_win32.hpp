@@ -4,7 +4,7 @@
 #include <base.hpp>
 #include <platform.hpp>
 #include <memory/memory.hpp>
-#include <os/time.hpp>
+#include <time.hpp>
 
 #include <windows.h>
 
@@ -120,13 +120,21 @@ int64 get_wall_clock_frequency()
 }
 
 [[nodiscard]]
-os::timepoint get_wall_clock()
+timepoint get_wall_clock()
 {
     LARGE_INTEGER PerformanceCounter;
     // @note: this always succeeds on WinXP and higher
     QueryPerformanceCounter(&PerformanceCounter);
     return { (uint64) PerformanceCounter.QuadPart };
 }
+
+
+float64 get_seconds(duration d)
+{
+    float64 result = d.counts / (float64) get_wall_clock_frequency();
+    return result;
+}
+
 
 uint32 get_program_path(HINSTANCE instance, char *buffer, uint32 buffer_size)
 {

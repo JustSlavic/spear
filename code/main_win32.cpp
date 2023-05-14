@@ -8,7 +8,6 @@
 #include <string_id.hpp>
 #include <math/vector3.hpp>
 #include <gfx/renderer.hpp>
-#include <os/time.hpp>
 #include <input.hpp>
 #include <rs/resource.hpp>
 
@@ -202,7 +201,7 @@ void process_pending_messages(input *inp)
 int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int32 show_code)
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    
+
     auto chosen_api = gfx::graphics_api::opengl;
     win32::window window = {};
     gfx::driver driver = {};
@@ -350,7 +349,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     int32 game_update_frequency_hz = monitor_refresh_rate_hz;
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
     float32 last_frame_dt = target_seconds_per_frame;
-    os::timepoint last_timepoint = win32::get_wall_clock();
+    timepoint last_timepoint = win32::get_wall_clock();
 
     running = true;
     while (running)
@@ -410,10 +409,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-#if 0
+#if 1
             game.update_and_render(&context, game_memory, &input, last_frame_dt);
 #else
-#define FIXED_DT 0.3333f
+#define FIXED_DT 0.03333f
             game.update_and_render(&context, game_memory, &input, FIXED_DT);
 #undef FIXED_DT
 #endif
@@ -506,13 +505,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 debug_loop_model, debug_loop_view, debug_loop_projection,
                 debug_loop_frame_color);
         }
-
 #endif // DEBUG
 
         gfx::swap_buffers(&window, &driver);
 
-        os::timepoint end_of_frame = win32::get_wall_clock();
-        last_frame_dt = get_seconds(end_of_frame - last_timepoint);
+        timepoint end_of_frame = win32::get_wall_clock();
+        last_frame_dt = (float32) win32::get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
     }
 
