@@ -47,3 +47,12 @@ void push_draw_mesh_with_color_command(execution_context *context, render_comman
 
     push_render_command(context, cmd);
 }
+
+void push_draw_screen_frame(execution_context *context, render_command::command_draw_screen_frame draw_frame)
+{
+    render_command cmd;
+    cmd.type = render_command::command_type::draw_screen_frame;
+    cmd.draw_screen_frame = draw_frame;
+
+    push_render_command(context, cmd);
+}

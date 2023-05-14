@@ -59,8 +59,8 @@ struct render_command
         setup_projection_matrix,
         setup_camera,
         draw_background,
-        draw_mesh_1,
         draw_mesh_with_color,
+        draw_screen_frame,
     };
     struct command_setup_projection_matrix
     {
@@ -83,17 +83,15 @@ struct render_command
         math::rectangle2 rect;
         math::matrix4 model;
     };
-    struct command_draw_mesh_1
-    {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
-        math::matrix4 model;
-    };
     struct command_draw_mesh_with_color
     {
         rs::resource_token mesh_token;
         rs::resource_token shader_token;
         math::matrix4 model;
+        math::vector4 color;
+    };
+    struct command_draw_screen_frame
+    {
         math::vector4 color;
     };
 
@@ -104,8 +102,8 @@ struct render_command
         command_setup_camera setup_camera;
         command_draw_background draw_background;
         command_draw_rectangle draw_rectangle;
-        command_draw_mesh_1 draw_mesh_1;
         command_draw_mesh_with_color draw_mesh_with_color;
+        command_draw_screen_frame draw_screen_frame;
     };
 };
 
@@ -132,6 +130,7 @@ execution_command exit_command();
 void push_setup_camera_command(execution_context *context, render_command::command_setup_camera setup_camera);
 void push_draw_background_command(execution_context *context, render_command::command_draw_background draw_bg);
 void push_draw_mesh_with_color_command(execution_context *context, render_command::command_draw_mesh_with_color draw_mesh);
+void push_draw_screen_frame(execution_context *context, render_command::command_draw_screen_frame);
 
 
 #endif // EXECUTION_CONTEXT_HPP

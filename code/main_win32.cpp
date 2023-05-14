@@ -252,11 +252,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #if DEBUG
     debug_loop_initial_game_state = ALLOCATE_BLOCK_(&platform_allocator, game_memory.size);
     debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input, 60*100);
+#endif // DEBUG
 
-    rs::resource_token debug_loop_frame_mesh = {};
-    rs::resource_token debug_loop_frame_shader = {};
+    rs::resource_token screen_frame_mesh = {};
+    rs::resource_token screen_frame_shader = {};
     {
-        debug_loop_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(&context.strid_storage, "rectangle.shader"));
+        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(&context.strid_storage, "rectangle.shader"));
 
         // 3     2
         //   7 6
@@ -294,9 +295,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
-        debug_loop_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
+        screen_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
     }
-#endif // DEBUG
 
     // Getting CWD
 
@@ -460,13 +460,22 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                         cmd->draw_mesh_with_color.color);
                 }
                 break;
+
+                case render_command::command_type::draw_screen_frame:
+                {
+                    gfx::draw_polygon_simple(&context,
+                        screen_frame_mesh, screen_frame_shader,
+                        math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
+                        cmd->draw_screen_frame.color);
+                }
+                break;
             }
         }
         context.render_commands.size = 0;
 
         memory::reset_allocator(&context.temporary_allocator);
 
-#if DEBUG
+#if DEBUG & 0
         // @todo: this things should be abstract so no code from the game should appear here
         // now the names of the functions appear here.
 #define DEBUG_PRINT_COUNTER(COUNTER) \
@@ -501,7 +510,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             auto debug_loop_view  = math::matrix4::identity();
             auto debug_loop_projection = math::matrix4::identity();
             gfx::draw_polygon_simple(&context,
-                debug_loop_frame_mesh, debug_loop_frame_shader,
+                screen_frame_mesh, screen_frame_shader,
                 debug_loop_model, debug_loop_view, debug_loop_projection,
                 debug_loop_frame_color);
         }

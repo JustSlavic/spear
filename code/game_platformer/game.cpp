@@ -66,6 +66,14 @@ GLOBAL math::vector4 ground_color = V4(50.0/255.0, 115.0/255.0, 53.0/255.0, 1);
 GLOBAL math::vector4 stones_color = V4(184.0/255.0, 165.0/255.0, 136.0/255.0, 1);
 GLOBAL math::vector4 package_color = V4(255.0/255.0, 255.0/255.0, 0.0/255.0, 1);
 GLOBAL math::vector4 lou_color = V4(247.0/255.0, 180.0/255.0, 54.0/255.0, 1);
+GLOBAL math::vector2 gravity = V2(0, -9.8); // m/s^2
+
+#define NEAR_EXIT_TIME_SECONDS            1.0f
+#define PLAYER_BASE_MOVEMENT_ACCELERATION 50.0f
+#define PLAYER_BASE_JUMP_ACCELERATION     5.0f
+#define PLAYER_BASE_JUMP_CORRECTION_SPEED 0.2f
+#define BASE_FRICTION_COEFFICIENT         10.f
+
 
 INLINE entity_ref push_entity(game_state *gs)
 {
@@ -393,7 +401,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     auto sam_ref = push_entity(gs);
     sam_ref.e->type     = ENTITY_SAM;
     sam_ref.e->flags    = ENTITY_INTERACTABLE | ENTITY_COLLIDABLE;
-    sam_ref.e->position = V2(0);
+    sam_ref.e->position = V2(0, 5.4);
     sam_ref.e->velocity = V2(0);
     sam_ref.e->width    = 0.5f; // meters
     sam_ref.e->height   = 1.85f; // meters
@@ -401,16 +409,16 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->sam = sam_ref.e; // @IMPORTANT!
 
-    auto ground = push_entity(gs);
-    ground.e->type      = ENTITY_GROUND;
-    ground.e->flags     = ENTITY_COLLIDABLE | ENTITY_STATIC;
-    ground.e->position  = V2(0, -5);
-    ground.e->velocity  = V2(0);
-    ground.e->width     = 200.f;
-    ground.e->height    = 4.f;
-    ground.e->mass      = 0.f;
+    // auto ground = push_entity(gs);
+    // ground.e->type      = ENTITY_GROUND;
+    // ground.e->flags     = ENTITY_COLLIDABLE | ENTITY_STATIC;
+    // ground.e->position  = V2(0, -.5);
+    // ground.e->velocity  = V2(0);
+    // ground.e->width     = 200.f;
+    // ground.e->height    = 1.f;
+    // ground.e->mass      = 0.f;
 
-    gs->ground = ground.e; // @IMPORTANT!
+    // gs->ground = ground.e; // @IMPORTANT!
 
     // auto postbox = push_entity(gs);
     // postbox.e->type = ENTITY_POSTBOX;
@@ -418,7 +426,6 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // postbox.e->width = 1.f;
     // postbox.e->height = 2.f;
     // postbox.e->mass = 9000.f;
-    // postbox.e->collidable = true;
 
     // gs->postbox = postbox.e; // @IMPORTANT!
 
@@ -426,22 +433,22 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // {
     //     auto stone = push_entity(gs);
     //     stone.e->type = ENTITY_STONE;
+    //     set(stone.e, ENTITY_STATIC);
     //     float32 x_mean = (i + 2) * 1.83f;
     //     stone.e->width = uniform_real(0.5f, 0.8f);
     //     stone.e->height = ((float32) uniform_int(2, 5)) * 0.1f;
     //     stone.e->position = V2(uniform_real(x_mean - 0.5f, x_mean + 0.5f), -4. + stone.e->height * 0.5f - uniform_real(0.1f, 0.3f));
-    //     stone.e->collidable = true;
     // }
 
     // for (int i = 0; i < 20; i++)
     // {
     //     auto package = push_entity(gs);
     //     package.e->type = ENTITY_PACKAGE;
+    //     set(package.e, ENTITY_COLLIDABLE);
     //     float32 x_mean = (i + 3) * 3.f;
-    //     package.e->position = V2(uniform_real(x_mean - 1.f, x_mean + 1.f), -2);
+    //     package.e->position = V2(i + 1, 1); // V2(uniform_real(x_mean - 1.f, x_mean + 1.f), -2);
     //     package.e->width = package_width;
     //     package.e->height = package_height;
-    //     package.e->collidable = true;
     // }
 }
 
@@ -520,25 +527,48 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     game_state *gs = (game_state *) game_memory.memory;
     sam_move move_data = {};
 
+    if (gs->sam->position.y > 0.f)
+        gs->test_t += dt;
+    osOutputDebugString("test_t = %f\n", gs->test_t);
     if (get_press_count(input->keyboard_device[keyboard::esc]))
     {
-        push_execution_command(context, exit_command());
+        osOutputDebugString("near_exit_time = %f (dt=%f)\n", gs->near_exit_time, dt);
+        if (gs->near_exit_time > 0.f)
+        {
+            push_execution_command(context, exit_command());
+        }
+        else
+        {
+            gs->near_exit_time = NEAR_EXIT_TIME_SECONDS;
+        }
     }
 
-    // Balance
     if (get_hold_count(input->keyboard_device[keyboard::a]))
     {
-        move_data.acceleration.x -= 0.2f;
+        if (is(gs->sam, ENTITY_ON_GROUND))
+        {
+            move_data.acceleration.x -= PLAYER_BASE_MOVEMENT_ACCELERATION;
+        }
+        else
+        {
+            move_data.velocity.x -= PLAYER_BASE_JUMP_CORRECTION_SPEED;
+        }
     }
     if (get_hold_count(input->keyboard_device[keyboard::d]))
     {
-        move_data.acceleration.x += 0.2f;
+        if (is(gs->sam, ENTITY_ON_GROUND))
+        {
+            move_data.acceleration.x += PLAYER_BASE_MOVEMENT_ACCELERATION;
+        }
+        else
+        {
+            move_data.velocity.x += PLAYER_BASE_JUMP_CORRECTION_SPEED;
+        }
     }
 
-    // Move
     if (get_press_count(input->keyboard_device[keyboard::space]))
     {
-        move_data.acceleration.y += (10.5f / (0.1f * gs->carried_packages + 1)) / dt;
+        move_data.acceleration.y += (PLAYER_BASE_JUMP_ACCELERATION / (0.1f * gs->carried_packages + 1)) / dt;
         move_data.jump = true;
     }
 
@@ -568,13 +598,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         // Y axis
         draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
     }
-
-#if 1
-    auto gravity = V2(0, -9.8); // m/s^2
-#else
-    auto gravity = V2(0, 0); // m/s^2
-#endif
-
+    osOutputDebugString("dt=%f\n", dt);
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
         entity *e = get_entity(gs, eid);
@@ -583,12 +607,40 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         if (is_not(e, ENTITY_STATIC))
         {
             float32 dt_ = dt;
-            for (int move = 0; move < 5; move++)
+            for (int move = 0; move < 3; move++)
             {
-                auto acceleration = gravity + move_data.acceleration;
+                auto acceleration = V2(0);
+                if (is_not(e, ENTITY_ON_GROUND))
+                {
+                    acceleration += gravity;
+                }
+                if (is(e, ENTITY_SAM))
+                {
+                    acceleration += move_data.acceleration;
+                    if (is(e, ENTITY_ON_GROUND) && move_data.jump)
+                    {
+                        unset(e, ENTITY_ON_GROUND);
+                    }
+                    else
+                    {
+                        e->velocity += move_data.velocity;
+                    }
+                }
 
                 auto old_v = e->velocity;
                 auto new_v = e->velocity + acceleration * dt_;
+
+                auto friction = V2(0);
+                if (is(e, ENTITY_ON_GROUND))
+                {
+                    // Friction with the ground
+                    friction += (BASE_FRICTION_COEFFICIENT * (-new_v));
+                    e->velocity.y = 0.f;
+                }
+                // @todo: should I consider air resitance?
+
+                acceleration += friction;
+                new_v = e->velocity + acceleration * dt_;
                 e->velocity = new_v;
 
                 auto old_p = e->position;
@@ -612,10 +664,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                         bool32 collided = do_collision(e, e2, old_p, new_p, &collision);
                         if (collided)
                         {
-                            if (is(e, ENTITY_SAM) && is(e2, ENTITY_GROUND))
+                            if (is(e2, ENTITY_COLLIDABLE))
                             {
                                 // Collision of the player with the ground
                                 e->collided = true;
+                                set(e, ENTITY_ON_GROUND);
                                 new_p = collision.point + collision.normal * 0.01f;
                                 new_v = new_v - dot(new_v, collision.normal) * collision.normal;
                             }
@@ -643,7 +696,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                     e->position.x, e->position.y,
                     e->width * 0.5f, e->height * 0.5f,
                     e->collided ? V4(1, 0, 0, 1) :
-                    // e->on_ground ? V4(0, 0, 0, 1) :
+                    is(e, ENTITY_ON_GROUND) ? V4(0, 0.8, 0.5, 1) :
                     porter_color);
 
                 draw_aligned_rectangle(
@@ -764,6 +817,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                     context, gs,
                     e->position.x, e->position.y,
                     e->width * 0.5f, e->height * 0.5f,
+                    is(e, ENTITY_ON_GROUND) ? V4(0.2, 0.9, 0.2, 1.0) :
                     package_color);
             }
             break;
@@ -775,6 +829,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     // Score
+    if (false)
     {
         float32 offset_x = gs->default_camera.position.x - 10.0f;
         float32 offset_y = gs->default_camera.position.y + 5.0f;
@@ -842,6 +897,14 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
+    if (gs->near_exit_time > 0)
+    {
+        render_command::command_draw_screen_frame draw_frame;
+        draw_frame.color = V4(1,0,0,1);
+        push_draw_screen_frame(context, draw_frame);
+    }
+
+    gs->near_exit_time -= dt;
     gs->blink_time -= dt;
 
     DEBUG_END_TIME_MEASUREMENT(update_and_render);

@@ -52,6 +52,7 @@ enum entity_flags
     ENTITY_STATIC       = (1 << 0),
     ENTITY_COLLIDABLE   = (1 << 1),
     ENTITY_INTERACTABLE = (1 << 2),
+    ENTITY_ON_GROUND    = (1 << 3),
 };
 
 struct entity
@@ -76,6 +77,9 @@ bool32 is_not(entity *e, entity_type t) { return e->type != t; }
 bool32 is(entity *e, entity_flags f) { return (e->flags & f) > 0; }
 bool32 is_not(entity *e, entity_flags f) { return (e->flags & f) == 0; }
 
+void set(entity *e, entity_flags f) { e->flags = (e->flags | f); }
+void unset(entity *e, entity_flags f) { e->flags = (e->flags & ~f); }
+
 namespace game {
 
 struct camera {
@@ -87,12 +91,14 @@ struct camera {
 struct sam_move
 {
     math::vector2 acceleration;
+    math::vector2 velocity;
     bool32 jump;
 };
 
 struct game_state
 {
     memory::allocator game_allocator;
+    float32 near_exit_time;
 
     game::camera default_camera;
 
@@ -117,6 +123,8 @@ struct game_state
     entity *entities;
     usize entities_capacity;
     usize entity_count;
+
+    float32 test_t;
 };
 
 
