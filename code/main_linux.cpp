@@ -72,7 +72,7 @@ GLOBAL uint32 current_display_height;
 GLOBAL uint32 display_size_changed;
 
 
-void process_pending_messages(linux::window *window, input_devices *input)
+void process_pending_messages(linux::window *window, input *input)
 {
     XEvent event;
     while (XPending(window->x_display))
@@ -196,8 +196,13 @@ int main(int argc, char **argv, char **env)
     gfx::driver driver = {};
 
     linux::create_opengl_window(display_width, display_height, &window, &driver);
-
     gfx::initialize_opengl(&driver);
+
+    auto monitor = get_monitor_stats(&window);
+
+    gfx::set_clear_color(0, 0, 0, 1);
+    int32 monitor_refresh_rate_hz = monitor.refresh_rate;
+    gfx::vsync(&window, true);
 
     memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(30));
 
@@ -226,14 +231,22 @@ int main(int argc, char **argv, char **env)
     create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     initialize_memory(&context, game_memory);
-    gfx::set_clear_color(0, 0, 0, 1);
 
     auto view = math::matrix4::identity();
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    input_devices input = {};
+    input input = {};
 
+    auto time_resolution = linux::get_wall_clock_frequency();
+    UNUSED(time_resolution);
+
+    int32 game_update_frequency_hz = monitor_refresh_rate_hz;
+    float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
+    float32 last_frame_dt = target_seconds_per_frame;
+    timepoint last_timepoint = linux::get_wall_clock();
+
+    running = true;
     while (running)
     {
         reset_transitions(&input.keyboard_device);
@@ -248,7 +261,7 @@ int main(int argc, char **argv, char **env)
 
         gfx::clear();
 
-        update_and_render(&context, game_memory, &input, 0.333);
+        update_and_render(&context, game_memory, &input, last_frame_dt);
 
         for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
         {
@@ -286,15 +299,6 @@ int main(int argc, char **argv, char **env)
                 }
                 break;
 
-                case render_command::command_type::draw_mesh_1:
-                {
-                    gfx::draw_polygon_simple(&context,
-                        cmd->draw_mesh_1.mesh_token, cmd->draw_mesh_1.shader_token,
-                        cmd->draw_mesh_1.model, view, projection,
-                        math::vector4::zero());
-                }
-                break;
-
                 case render_command::command_type::draw_mesh_with_color:
                 {
                     gfx::draw_polygon_simple(&context,
@@ -303,12 +307,19 @@ int main(int argc, char **argv, char **env)
                         cmd->draw_mesh_with_color.color);
                 }
                 break;
+
+                case render_command::command_type::draw_screen_frame:
+                break;
             }
         }
         context.render_commands.size = 0;
         memory::reset_allocator(&context.temporary_allocator);
 
         gfx::swap_buffers(&window, &driver);
+
+        timepoint end_of_frame = linux::get_wall_clock();
+        last_frame_dt = (float32) linux::get_seconds(end_of_frame - last_timepoint);
+        last_timepoint = end_of_frame;
     }
 
     gfx::destroy_window_and_driver(&window, &driver);
@@ -318,4 +329,4 @@ int main(int argc, char **argv, char **env)
 #include <gfx/renderer.cpp>
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
-#include <game.cpp>
+#include <game_platformer/game.cpp>

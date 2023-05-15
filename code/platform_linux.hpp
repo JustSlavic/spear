@@ -4,8 +4,11 @@
 #include <base.hpp>
 #include <memory/memory.hpp>
 
+#include <time.hpp>
+#include <time.h>
 #include <sys/mman.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
 
 
 namespace gfx::gl {
@@ -28,6 +31,82 @@ struct window
 bool32 create_opengl_window(int32 width, int32 height, void *window, void *driver)
 {
     bool32 result = gfx::gl::create_opengl_window(width, height, window, driver);
+    return result;
+}
+
+
+struct monitor
+{
+    int32 resolution_x;
+    int32 resolution_y;
+    int32 refresh_rate;
+};
+
+
+monitor get_monitor_stats(void *w)
+{
+    auto *linux_window = (window *) w;
+
+    int32 num_sizes = 0;
+    XRRScreenSize *xrrs = XRRSizes(linux_window->x_display, 0, &num_sizes);
+    XRRScreenConfiguration *conf = XRRGetScreenInfo(linux_window->x_display, linux_window->x_window);
+
+    Rotation current_rotation;
+    SizeID current_size_id = XRRConfigCurrentConfiguration(conf, &current_rotation);
+
+    monitor result;
+    result.resolution_x = xrrs[current_size_id].width;
+    result.resolution_y = xrrs[current_size_id].height;
+    result.refresh_rate = XRRConfigCurrentRate(conf);
+
+    return result;
+}
+
+
+[[nodiscard]]
+int64 get_wall_clock_frequency()
+{
+    PERSIST int64 cache;
+    if (cache == 0)
+    {
+        struct timespec ts = {};
+        int ec = clock_getres(CLOCK_MONOTONIC, &ts);
+        if (ec == -1)
+        {
+            // @todo: process the system error, I could not run the game when there's undefined clock resolution
+            return 0;
+        }
+        if (ts.tv_sec > 0)
+        {
+            // @todo: process the error, because I could not run the game when the monotonic clock is so slow
+            return 0;
+        }
+        cache = (int64) 1000000000 / (int64) ts.tv_nsec;
+    }
+    return cache;
+}
+
+
+[[nodiscard]]
+timepoint get_wall_clock()
+{
+    struct timespec ts = {};
+    int ec = clock_gettime(CLOCK_MONOTONIC, &ts);
+    if (ec == -1)
+    {
+        // @todo: process the error, because I could not run the game when the monotonic clock is not ticking
+        return timepoint{};
+    }
+
+    timepoint result;
+    result.counts = ts.tv_sec * 1000000000 + ts.tv_nsec;
+    return result;
+}
+
+
+float64 get_seconds(duration d)
+{
+    float64 result = d.counts / (float64) get_wall_clock_frequency();
     return result;
 }
 

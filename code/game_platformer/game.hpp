@@ -123,8 +123,6 @@ struct game_state
     entity *entities;
     usize entities_capacity;
     usize entity_count;
-
-    float32 test_t;
 };
 
 

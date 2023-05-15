@@ -5,7 +5,7 @@ linux_debug_build() {
     WARNINGS="-Wall -Werror"
     DEFINES="-DDEBUG=1 -DOS_LINUX=1"
     INCLUDES="-I../code"
-    LIBS="-lX11 -lGL -lGLX"
+    LIBS="-lX11 -lGL -lGLX -lXrandr"
 
     g++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_linux.cpp -o spear $LIBS
 }

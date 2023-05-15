@@ -21,14 +21,21 @@
 #include <collision.hpp>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
 #include <stdio.h>
+
+#if OS_WINDOWS
+#include <windows.h>
 #define osOutputDebugString(MSG, ...) \
 {  \
     char OutputBuffer_##__LINE__[256]; \
     sprintf(OutputBuffer_##__LINE__, MSG, __VA_ARGS__); \
     OutputDebugStringA(OutputBuffer_##__LINE__); \
 } void(0)
+#elif OS_LINUX
+#define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
+#endif // OS_WINDOWS
+
+
 float uniform_real(float from, float to)
 {
     ASSERT(to > from);
@@ -175,7 +182,6 @@ void draw_50(execution_context *context, game_state *gs, float32 offset_x, float
 
 void teleport_back(game_state *gs)
 {
-    float32 x = gs->sam->position.x;
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
     {
         auto *e = get_entity(gs, entity_index);
@@ -409,16 +415,16 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->sam = sam_ref.e; // @IMPORTANT!
 
-    // auto ground = push_entity(gs);
-    // ground.e->type      = ENTITY_GROUND;
-    // ground.e->flags     = ENTITY_COLLIDABLE | ENTITY_STATIC;
-    // ground.e->position  = V2(0, -.5);
-    // ground.e->velocity  = V2(0);
-    // ground.e->width     = 200.f;
-    // ground.e->height    = 1.f;
-    // ground.e->mass      = 0.f;
+    auto ground = push_entity(gs);
+    ground.e->type      = ENTITY_GROUND;
+    ground.e->flags     = ENTITY_COLLIDABLE | ENTITY_STATIC;
+    ground.e->position  = V2(0, -.5);
+    ground.e->velocity  = V2(0);
+    ground.e->width     = 200.f;
+    ground.e->height    = 1.f;
+    ground.e->mass      = 0.f;
 
-    // gs->ground = ground.e; // @IMPORTANT!
+    gs->ground = ground.e; // @IMPORTANT!
 
     // auto postbox = push_entity(gs);
     // postbox.e->type = ENTITY_POSTBOX;
@@ -527,12 +533,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     game_state *gs = (game_state *) game_memory.memory;
     sam_move move_data = {};
 
-    if (gs->sam->position.y > 0.f)
-        gs->test_t += dt;
-    osOutputDebugString("test_t = %f\n", gs->test_t);
     if (get_press_count(input->keyboard_device[keyboard::esc]))
     {
-        osOutputDebugString("near_exit_time = %f (dt=%f)\n", gs->near_exit_time, dt);
         if (gs->near_exit_time > 0.f)
         {
             push_execution_command(context, exit_command());

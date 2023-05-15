@@ -20,7 +20,7 @@
                 "shell_cmd": "$folder/build.sh",
                 "working_dir": "$folder/build",
                 "file_regex": "^([\\w\\/\\.]+)\\:(\\d+)\\:(\\d+)\\:(.*)$",
-                "syntax": "Packages/User/gcc_build.sublime-syntax"
+                "syntax": "Packages/User/sublime-setup/polar_build_output_gcc.sublime-syntaxx"
             },
             "osx": {
                 "shell_cmd": "$folder/build.sh tests",
@@ -32,6 +32,10 @@
 
             "windows": {
                 "shell_cmd": "call $folder\\build\\spear.exe",
+                "working_dir": "$folder"
+            },
+            "linux": {
+                "shell_cmd": "$folder/build/spear",
                 "working_dir": "$folder"
             }
         }
