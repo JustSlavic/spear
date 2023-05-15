@@ -43,25 +43,37 @@ struct vector3
 
     static vector3 zero()
     {
-        vector3 result = { 0.0f, 0.0f, 0.0f };
+        vector3 result;
+        result.x = 0.f;
+        result.y = 0.f;
+        result.z = 0.f;
         return result;
     }
 
     static vector3 ex()
     {
-        vector3 result = { 1.0f, 0.0f, 0.0f };
+        vector3 result;
+        result.x = 1.f;
+        result.y = 0.f;
+        result.z = 0.f;
         return result;
     }
 
     static vector3 ey()
     {
-        vector3 result = { 0.0f, 1.0f, 0.0f };
+        vector3 result;
+        result.x = 0.f;
+        result.y = 1.f;
+        result.z = 0.f;
         return result;
     }
 
     static vector3 ez()
     {
-        vector3 result = { 0.0f, 0.0f, 1.0f };
+        vector3 result;
+        result.x = 0.f;
+        result.y = 0.f;
+        result.z = 1.f;
         return result;
     }
 };
@@ -92,37 +104,55 @@ INLINE vector3 &operator *= (vector3 &a, float32 c)
 
 INLINE vector3 operator - (vector3 a)
 {
-    vector3 result = { -a.x, -a.y, -a.z };
+    vector3 result;
+    result.x = -a.x;
+    result.y = -a.y;
+    result.z = -a.z;
     return result;
 }
 
 INLINE vector3 operator + (vector3 a, vector3 b)
 {
-    vector3 result = { a.x + b.x, a.y + b.y, a.z + b.z };
+    vector3 result;
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
+    result.z = a.z + b.z;
     return result;
 }
 
 INLINE vector3 operator - (vector3 a, vector3 b)
 {
-    vector3 result = { a.x - b.x, a.y - b.y, a.z - b.z };
+    vector3 result;
+    result.x = a.x - b.x;
+    result.y = a.y - b.y;
+    result.z = a.z - b.z;
     return result;
 }
 
 INLINE vector3 operator * (vector3 a, float32 c)
 {
-    vector3 result = { c * a.x, c * a.y, c * a.z };
+    vector3 result;
+    result.x = a.x * c;
+    result.y = a.y * c;
+    result.z = a.z * c;
     return result;
 }
 
 INLINE vector3 operator * (float32 c, vector3 a)
 {
-    vector3 result = { c * a.x, c * a.y, c * a.z };
+    vector3 result;
+    result.x = c * a.x;
+    result.y = c * a.y;
+    result.z = c * a.z;
     return result;
 }
 
 INLINE vector3 operator / (vector3 a, float32 c)
 {
-    vector3 result = { a.x / c, a.y / c, a.z / c };
+    vector3 result;
+    result.x = a.x / c;
+    result.y = a.y / c;
+    result.z = a.z / c;
     return result;
 }
 
@@ -146,19 +176,28 @@ INLINE bool operator != (vector3 a, vector3 b)
 
 vector3 make_vector3 (float32 value)
 {
-    vector3 result = { value, value, value };
+    vector3 result;
+    result.x = value;
+    result.y = value;
+    result.z = value;
     return result;
 }
 
 vector3 make_vector3 (float32 x, float32 y, float32 z)
 {
-    vector3 result = { x, y, z };
+    vector3 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
     return result;
 }
 
 vector3 make_vector3 (vector2 xy, float32 z)
 {
-    vector3 result = { xy.x, xy.y, z };
+    vector3 result;
+    result.x = xy.x;
+    result.y = xy.y;
+    result.z = z;
     return result;
 }
 
@@ -170,7 +209,10 @@ INLINE float32 dot(vector3 a, vector3 b)
 
 INLINE vector3 cross(vector3 a, vector3 b)
 {
-    vector3 result = { a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x };
+    vector3 result;
+    result.x = a.y * b.z - a.z * b.y;
+    result.y = a.z * b.x - a.x * b.z;
+    result.z = a.x * b.y - a.y * b.x;
     return result;
 }
 
@@ -188,13 +230,19 @@ INLINE float32 length(vector3 a)
 
 INLINE vector3 coordinate_multiply(vector3 a, vector3 b)
 {
-    vector3 result = { a.x * b.x, a.y * b.y, a.z * b.z };
+    vector3 result;
+    result.x = a.x * b.x;
+    result.y = a.y * b.y;
+    result.z = a.z * b.z;
     return result;
 }
 
 INLINE vector3 coordinate_divide(vector3 a, vector3 b)
 {
-    vector3 result = { a.x / b.x, a.y / b.y, a.z / b.z };
+    vector3 result;
+    result.x = a.x / b.x;
+    result.y = a.y / b.y;
+    result.z = a.z / b.z;
     return result;
 }
 

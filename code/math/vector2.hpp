@@ -38,19 +38,25 @@ struct vector2
 
     static vector2 zero()
     {
-        vector2 result = { 0.0f, 0.0f };
+        vector2 result;
+        result.x = 0.f;
+        result.y = 0.f;
         return result;
     }
 
     static vector2 ex()
     {
-        vector2 result = { 1.0f, 0.0f };
+        vector2 result;
+        result.x = 1.f;
+        result.y = 0.f;
         return result;
     }
 
     static vector2 ey()
     {
-        vector2 result = { 0.0f, 1.0f };
+        vector2 result;
+        result.x = 0.f;
+        result.y = 1.f;
         return result;
     }
 };
@@ -78,37 +84,49 @@ INLINE vector2 &operator *= (vector2 &a, float32 c)
 
 INLINE vector2 operator - (vector2 a)
 {
-    vector2 result = { -a.x, -a.y };
+    vector2 result;
+    result.x = -a.x;
+    result.y = -a.y;
     return result;
 }
 
 INLINE vector2 operator + (vector2 a, vector2 b)
 {
-    vector2 result = { a.x + b.x, a.y + b.y };
+    vector2 result;
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
     return result;
 }
 
 INLINE vector2 operator - (vector2 a, vector2 b)
 {
-    vector2 result = { a.x - b.x, a.y - b.y };
+    vector2 result;
+    result.x = a.x - b.x;
+    result.y = a.y - b.y;
     return result;
 }
 
 INLINE vector2 operator * (vector2 a, float32 c)
 {
-    vector2 result = { c * a.x, c * a.y };
+    vector2 result;
+    result.x = a.x * c;
+    result.y = a.y * c;
     return result;
 }
 
 INLINE vector2 operator * (float32 c, vector2 a)
 {
-    vector2 result = { c * a.x, c * a.y };
+    vector2 result;
+    result.x = c * a.x;
+    result.y = c * a.y;
     return result;
 }
 
 INLINE vector2 operator / (vector2 a, float32 c)
 {
-    vector2 result = { a.x / c, a.y / c };
+    vector2 result;
+    result.x = a.x / c;
+    result.y = a.y / c;
     return result;
 }
 
@@ -131,13 +149,17 @@ INLINE bool operator != (vector2 a, vector2 b)
 
 vector2 make_vector2(float32 value)
 {
-    vector2 result = { value, value };
+    vector2 result;
+    result.x = value;
+    result.y = value;
     return result;
 }
 
 vector2 make_vector2(float32 x, float32 y)
 {
-    vector2 result = { x, y };
+    vector2 result;
+    result.x = x;
+    result.y = y;
     return result;
 }
 
@@ -161,13 +183,17 @@ INLINE float32 length(vector2 a)
 
 INLINE vector2 coordinate_multiply(vector2 a, vector2 b)
 {
-    vector2 result = { a.x * b.x, a.y * b.y };
+    vector2 result;
+    result.x = a.x * b.x;
+    result.y = a.y * b.y;
     return result;
 }
 
 INLINE vector2 coordinate_divide(vector2 a, vector2 b)
 {
-    vector2 result = { a.x / b.x, a.y / b.y };
+    vector2 result;
+    result.x = a.x / b.x;
+    result.y = a.y / b.y;
     return result;
 }
 

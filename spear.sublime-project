@@ -23,7 +23,7 @@
                 "syntax": "Packages/User/gcc_build.sublime-syntax"
             },
             "osx": {
-                "shell_cmd": "$folder/build.sh",
+                "shell_cmd": "$folder/build.sh tests",
                 "working_dir": "$folder",
             }
         },
