@@ -15,6 +15,22 @@ struct complex
         struct { float32 x, y; };
         struct { float32 re, im; };
     };
+
+    static complex r()
+    {
+        complex result;
+        result.re = 1.f;
+        result.im = 0.f;
+        return result;
+    }
+
+    static complex i()
+    {
+        complex result;
+        result.re = 0.f;
+        result.im = 1.f;
+        return result;
+    }
 };
 
 

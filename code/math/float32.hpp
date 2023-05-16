@@ -46,6 +46,12 @@ bool32 near_zero(float32 x)
     return result;
 }
 
+bool32 equal(float32 x, float32 y)
+{
+    bool32 result = near_zero(x - y);
+    return result;
+}
+
 bool32 finite(float32 x)
 {
     bool32 result = (-infinity < x) and (x < infinity);

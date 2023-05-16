@@ -73,6 +73,11 @@ if [[ $os_name == "Linux" ]]; then
         linux_release_build
     elif [[ $command == "tests" ]]; then
         tests_build
+        if [[ $? == 0 ]]; then
+            ./tests
+        fi
+    else
+        echo "Could not recognize the command provided (${command})"
     fi
 elif [[ $os_name == "Darwin" ]]; then
     if [[ $command == "debug" ]]; then
@@ -81,12 +86,13 @@ elif [[ $os_name == "Darwin" ]]; then
         macos_release_build
     elif [[ $command == "tests" ]]; then
         tests_build
-        ./tests
+        if [[ $? == 0 ]]; then
+            ./tests
+        fi
+    else
+        echo "Could not recognize the command provided (${command})"
     fi
-
 else
     echo "Could not recognize the system I'm on! (${os_name})"
     exit 1
 fi
-
-cd ../
