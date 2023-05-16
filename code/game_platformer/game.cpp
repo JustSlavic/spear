@@ -533,7 +533,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     game_state *gs = (game_state *) game_memory.memory;
     sam_move move_data = {};
 
-    if (get_press_count(input->keyboard_device[keyboard::esc]))
+    if (get_press_count(input->keyboard[keyboard_device::esc]))
     {
         if (gs->near_exit_time > 0.f)
         {
@@ -545,7 +545,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    if (get_hold_count(input->keyboard_device[keyboard::a]))
+    if (get_hold_count(input->keyboard[keyboard_device::a]))
     {
         if (is(gs->sam, ENTITY_ON_GROUND))
         {
@@ -556,7 +556,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             move_data.velocity.x -= PLAYER_BASE_JUMP_CORRECTION_SPEED;
         }
     }
-    if (get_hold_count(input->keyboard_device[keyboard::d]))
+    if (get_hold_count(input->keyboard[keyboard_device::d]))
     {
         if (is(gs->sam, ENTITY_ON_GROUND))
         {
@@ -568,7 +568,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    if (get_press_count(input->keyboard_device[keyboard::space]))
+    if (get_press_count(input->keyboard[keyboard_device::space]))
     {
         move_data.acceleration.y += (PLAYER_BASE_JUMP_ACCELERATION / (0.1f * gs->carried_packages + 1)) / dt;
         move_data.jump = true;

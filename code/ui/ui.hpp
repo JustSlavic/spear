@@ -101,7 +101,7 @@ void update_transforms(system *sys)
         element *e = sys->groups.data + i;
         update_transform(e);
     }
-    for (int i = 0; i < sys->shapes.size; i++)
+    for (int i = 0; i < sys->shapes.inputsize; i++)
     {
         element *e = sys->shapes.data + i;
         update_transform(e);

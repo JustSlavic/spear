@@ -26,6 +26,14 @@ struct array
         }
         return result;
     }
+
+    void push(Type t)
+    {
+        if (size < capacity)
+        {
+            data[size++] = t;
+        }
+    }
 };
 
 #define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}

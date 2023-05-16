@@ -134,17 +134,17 @@ void process_pending_messages(linux::window *window, input *input)
                 bool32 is_down = (event.type == KeyPress);
                 switch (event.xkey.keycode)
                 {
-                    case KEYCODE_ESC: process_button_state(&input->keyboard_device[keyboard::esc], is_down);
+                    case KEYCODE_ESC: process_button_state(&input->keyboard[keyboard_device::esc], is_down);
                         break;
-                    case KEYCODE_W: process_button_state(&input->keyboard_device[keyboard::w], is_down);
+                    case KEYCODE_W: process_button_state(&input->keyboard[keyboard_device::w], is_down);
                         break;
-                    case KEYCODE_A: process_button_state(&input->keyboard_device[keyboard::a], is_down);
+                    case KEYCODE_A: process_button_state(&input->keyboard[keyboard_device::a], is_down);
                         break;
-                    case KEYCODE_S: process_button_state(&input->keyboard_device[keyboard::s], is_down);
+                    case KEYCODE_S: process_button_state(&input->keyboard[keyboard_device::s], is_down);
                         break;
-                    case KEYCODE_D: process_button_state(&input->keyboard_device[keyboard::d], is_down);
+                    case KEYCODE_D: process_button_state(&input->keyboard[keyboard_device::d], is_down);
                         break;
-                    case KEYCODE_Y: process_button_state(&input->keyboard_device[keyboard::y], is_down);
+                    case KEYCODE_Y: process_button_state(&input->keyboard[keyboard_device::y], is_down);
                         break;
                 }
             }
@@ -249,7 +249,7 @@ int main(int argc, char **argv, char **env)
     running = true;
     while (running)
     {
-        reset_transitions(&input.keyboard_device);
+        reset_transitions(&input.keyboard);
         process_pending_messages(&window, &input);
 
         if (display_size_changed)

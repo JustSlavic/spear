@@ -10,7 +10,7 @@ resource_token get_new_resource_token(resource_storage *storage)
 {
     ASSERT(storage->resources.size < storage->resources.capacity);
     resource_token result = resource_token{(uint32)storage->resources.size};
-    storage->resources.push_back(resource{});
+    storage->resources.push(resource{});
     return result;
 }
 

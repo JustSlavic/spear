@@ -57,7 +57,7 @@ INLINE void process_button_state(button_state *button, bool32 is_down)
 }
 
 
-struct keyboard
+struct keyboard_device
 {
     enum key
     {
@@ -87,15 +87,15 @@ struct keyboard
     }
 };
 
-void reset_transitions(keyboard *kb)
+void reset_transitions(keyboard_device *kb)
 {
-    for (int key_index = 0; key_index < keyboard::key_count; key_index++)
+    for (int key_index = 0; key_index < keyboard_device::key_count; key_index++)
     {
         kb->buttons[key_index].transition_count = 0;
     }
 }
 
-struct mouse
+struct mouse_device
 {
     enum key
     {
@@ -131,16 +131,16 @@ struct stick_state
     float32 x, y;
 };
 
-struct gamepad
+struct gamepad_device
 {
     enum key
     {
-        start, select,
-        a, b, x, y,
-        dpad_up, dpad_left, dpad_right, dpad_down,
-        left_shoulder, right_shoulder,
-        left_trigger, right_trigger,
-        left_stick, right_stick,
+        Start, Select,
+        A, B, X, Y,
+        DpadUp, DpadLeft, DpadRight, DpadDown,
+        LeftShoulder, RightShoulder,
+        LeftTrigger, RightTrigger,
+        LeftStick, RightStick,
         // @note: key_count have to be the last in enum
         key_count
     };
@@ -161,9 +161,9 @@ struct gamepad
 
 struct input
 {
-    keyboard keyboard;
-    mouse mouse;
-    gamepad gamepads[4];
+    keyboard_device keyboard;
+    mouse_device mouse;
+    gamepad_device gamepads[4];
     float32 dt;
 };
 

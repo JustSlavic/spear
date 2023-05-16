@@ -4,13 +4,13 @@
 void push_execution_command(execution_context *context, execution_command cmd)
 {
     ASSERT(context->execution_commands.size < context->execution_commands.capacity);
-    context->execution_commands.push_back(cmd);
+    context->execution_commands.push(cmd);
 }
 
 void push_render_command(execution_context *context, render_command cmd)
 {
     ASSERT(context->render_commands.size < context->render_commands.capacity);
-    context->render_commands.push_back(cmd);
+    context->render_commands.push(cmd);
 }
 
 execution_command exit_command()
