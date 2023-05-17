@@ -38,23 +38,17 @@ struct matrix4
 
     static matrix4 zero()
     {
-        matrix4 result = {
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-        };
+        matrix4 result = {};
         return result;
     }
 
     static matrix4 identity()
     {
-        matrix4 result = {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-        };
+        matrix4 result = {};
+        result._11 = 1.f;
+        result._22 = 1.f;
+        result._33 = 1.f;
+        result._44 = 1.f;
         return result;
     }
 };
@@ -88,62 +82,56 @@ INLINE matrix4 &operator *= (matrix4 & a, float32 c)
 }
 
 INLINE matrix4 operator - (matrix4 a) {
-    matrix4 result = {
-        -a._11, -a._12, -a._13, -a._14,
-        -a._21, -a._22, -a._23, -a._24,
-        -a._31, -a._32, -a._33, -a._34,
-        -a._41, -a._42, -a._43, -a._44,
-    };
+    matrix4 result;
+    result._11 = -a._11; result._12 = -a._12; result._13 = -a._13; result._14 = -a._14;
+    result._21 = -a._21; result._22 = -a._22; result._23 = -a._23; result._24 = -a._24;
+    result._31 = -a._31; result._32 = -a._32; result._33 = -a._33; result._34 = -a._34;
+    result._41 = -a._41; result._42 = -a._42; result._43 = -a._43; result._44 = -a._44;
     return result;
 }
 
 INLINE matrix4 operator + (matrix4 a, matrix4 b) {
-    matrix4 result = {
-        a._11 + b._11, a._12 + b._12, a._13 + b._13, a._14 + b._14,
-        a._21 + b._21, a._22 + b._22, a._23 + b._23, a._24 + b._24,
-        a._31 + b._31, a._32 + b._32, a._33 + b._33, a._34 + b._34,
-        a._41 + b._41, a._42 + b._42, a._43 + b._43, a._44 + b._44,
-    };
+    matrix4 result;
+    result._11 = a._11 + b._11; result._12 = a._12 + b._12; result._13 = a._13 + b._13; result._14 = a._14 + b._14;
+    result._21 = a._21 + b._21; result._22 = a._22 + b._22; result._23 = a._23 + b._23; result._24 = a._24 + b._24;
+    result._31 = a._31 + b._31; result._32 = a._32 + b._32; result._33 = a._33 + b._33; result._34 = a._34 + b._34;
+    result._41 = a._41 + b._41; result._42 = a._42 + b._42; result._43 = a._43 + b._43; result._44 = a._44 + b._44;
     return result;
 }
 
 INLINE matrix4 operator - (matrix4 a, matrix4 b) {
-    matrix4 result = {
-        a._11 - b._11, a._12 - b._12, a._13 - b._13, a._14 - b._14,
-        a._21 - b._21, a._22 - b._22, a._23 - b._23, a._24 - b._24,
-        a._31 - b._31, a._32 - b._32, a._33 - b._33, a._34 - b._34,
-        a._41 - b._41, a._42 - b._42, a._43 - b._43, a._44 - b._44,
-    };
+    matrix4 result;
+    result._11 = a._11 - b._11; result._12 = a._12 - b._12; result._13 = a._13 - b._13; result._14 = a._14 - b._14;
+    result._21 = a._21 - b._21; result._22 = a._22 - b._22; result._23 = a._23 - b._23; result._24 = a._24 - b._24;
+    result._31 = a._31 - b._31; result._32 = a._32 - b._32; result._33 = a._33 - b._33; result._34 = a._34 - b._34;
+    result._41 = a._41 - b._41; result._42 = a._42 - b._42; result._43 = a._43 - b._43; result._44 = a._44 - b._44;
     return result;
 }
 
 INLINE matrix4 operator * (matrix4 a, float32 c) {
-    matrix4 result = {
-        a._11 * c, a._12 * c, a._13 * c, a._14 * c,
-        a._21 * c, a._22 * c, a._23 * c, a._24 * c,
-        a._31 * c, a._32 * c, a._33 * c, a._34 * c,
-        a._41 * c, a._42 * c, a._43 * c, a._44 * c,
-    };
+    matrix4 result;
+    result._11 = a._11 * c; result._12 = a._12 * c; result._13 = a._13 * c; result._14 = a._14 * c;
+    result._21 = a._21 * c; result._22 = a._22 * c; result._23 = a._23 * c; result._24 = a._24 * c;
+    result._31 = a._31 * c; result._32 = a._32 * c; result._33 = a._33 * c; result._34 = a._34 * c;
+    result._41 = a._41 * c; result._42 = a._42 * c; result._43 = a._43 * c; result._44 = a._44 * c;
     return result;
 }
 
 INLINE matrix4 operator * (float32 c, matrix4 a) {
-    matrix4 result = {
-        a._11 * c, a._12 * c, a._13 * c, a._14 * c,
-        a._21 * c, a._22 * c, a._23 * c, a._24 * c,
-        a._31 * c, a._32 * c, a._33 * c, a._34 * c,
-        a._41 * c, a._42 * c, a._43 * c, a._44 * c,
-    };
+    matrix4 result;
+    result._11 = c * a._11; result._12 = c * a._12; result._13 = c * a._13; result._14 = c * a._14;
+    result._21 = c * a._21; result._22 = c * a._22; result._23 = c * a._23; result._24 = c * a._24;
+    result._31 = c * a._31; result._32 = c * a._32; result._33 = c * a._33; result._34 = c * a._34;
+    result._41 = c * a._41; result._42 = c * a._42; result._43 = c * a._43; result._44 = c * a._44;
     return result;
 }
 
 INLINE matrix4 operator / (matrix4 a, float32 c) {
-    matrix4 result = {
-        a._11 / c, a._12 / c, a._13 / c, a._14 / c,
-        a._21 / c, a._22 / c, a._23 / c, a._24 / c,
-        a._31 / c, a._32 / c, a._33 / c, a._34 / c,
-        a._41 / c, a._42 / c, a._43 / c, a._44 / c,
-    };
+    matrix4 result;
+    result._11 = a._11 / c; result._12 = a._12 / c; result._13 = a._13 / c; result._14 = a._14 / c;
+    result._21 = a._21 / c; result._22 = a._22 / c; result._23 = a._23 / c; result._24 = a._24 / c;
+    result._31 = a._31 / c; result._32 = a._32 / c; result._33 = a._33 / c; result._34 = a._34 / c;
+    result._41 = a._41 / c; result._42 = a._42 / c; result._43 = a._43 / c; result._44 = a._44 / c;
     return result;
 }
 
@@ -163,12 +151,11 @@ INLINE bool operator != (matrix4 a, matrix4 b) {
 template <typename T>
 matrix4 make_matrix4 (T t)
 {
-    matrix4 result = {
-        t, t, t, t,
-        t, t, t, t,
-        t, t, t, t,
-        t, t, t, t,
-    };
+    matrix4 result;
+    result._11 = t; result._12 = t; result._13 = t; result._14 = t;
+    result._21 = t; result._22 = t; result._23 = t; result._24 = t;
+    result._31 = t; result._32 = t; result._33 = t; result._34 = t;
+    result._41 = t; result._42 = t; result._43 = t; result._44 = t;
     return result;
 }
 
@@ -177,12 +164,11 @@ INLINE matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
                              float32 t31, float32 t32, float32 t33, float32 t34,
                              float32 t41, float32 t42, float32 t43, float32 t44)
 {
-    matrix4 result = {
-        t11, t12, t13, t14,
-        t21, t22, t23, t24,
-        t31, t32, t33, t34,
-        t41, t42, t43, t44,
-    };
+    matrix4 result;
+    result._11 = t11; result._12 = t12; result._13 = t13; result._14 = t14;
+    result._21 = t21; result._22 = t22; result._23 = t23; result._24 = t24;
+    result._31 = t31; result._32 = t32; result._33 = t33; result._34 = t34;
+    result._41 = t41; result._42 = t42; result._43 = t43; result._44 = t44;
     return result;
 }
 
@@ -190,24 +176,20 @@ INLINE matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
 INLINE vector4 operator * (matrix4 a, vector4 v)
 {
     vector4 result;
-
     result.x = a._11*v._1 + a._12*v._2 + a._13*v._3 + a._14*v._4;
     result.y = a._21*v._1 + a._22*v._2 + a._23*v._3 + a._24*v._4;
     result.z = a._31*v._1 + a._32*v._2 + a._33*v._3 + a._34*v._4;
     result.w = a._41*v._1 + a._42*v._2 + a._43*v._3 + a._44*v._4;
-
     return result;
 }
 
 INLINE vector4 operator * (vector4 v, matrix4 a)
 {
     vector4 result;
-
     result.x = a._11*v._1 + a._21*v._2 + a._31*v._3 + a._41*v._4;
     result.y = a._12*v._1 + a._22*v._2 + a._32*v._3 + a._42*v._4;
     result.z = a._13*v._1 + a._23*v._2 + a._33*v._3 + a._43*v._4;
     result.w = a._14*v._1 + a._24*v._2 + a._34*v._3 + a._44*v._4;
-
     return result;
 }
 

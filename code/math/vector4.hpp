@@ -45,31 +45,51 @@ struct vector4
 
     static vector4 zero()
     {
-        vector4 result = { 0.0f, 0.0f, 0.0f, 0.0f };
+        vector4 result;
+        result.x = 0.f;
+        result.y = 0.f;
+        result.z = 0.f;
+        result.w = 0.f;
         return result;
     }
 
     static vector4 ex()
     {
-        vector4 result = { 1.0f, 0.0f, 0.0f, 0.0f };
+        vector4 result;
+        result.x = 1.f;
+        result.y = 0.f;
+        result.z = 0.f;
+        result.w = 0.f;
         return result;
     }
 
     static vector4 ey()
     {
-        vector4 result = { 0.0f, 1.0f, 0.0f, 0.0f };
+        vector4 result;
+        result.x = 0.f;
+        result.y = 1.f;
+        result.z = 0.f;
+        result.w = 0.f;
         return result;
     }
 
     static vector4 ez()
     {
-        vector4 result = { 0.0f, 0.0f, 1.0f, 0.0f };
+        vector4 result;
+        result.x = 0.f;
+        result.y = 0.f;
+        result.z = 1.f;
+        result.w = 0.f;
         return result;
     }
 
     static vector4 ew()
     {
-        vector4 result = { 0.0f, 0.0f, 0.0f, 1.0f };
+        vector4 result;
+        result.x = 0.f;
+        result.y = 0.f;
+        result.z = 0.f;
+        result.w = 1.f;
         return result;
     }
 };
@@ -103,37 +123,61 @@ INLINE vector4 &operator *= (vector4 &a, float32 c)
 
 INLINE vector4 operator - (vector4 a)
 {
-    vector4 result = { -a.x, -a.y, -a.z, -a.w };
+    vector4 result;
+    result.x = -a.x;
+    result.y = -a.y;
+    result.z = -a.z;
+    result.w = -a.w;
     return result;
 }
 
 INLINE vector4 operator + (vector4 a, vector4 b)
 {
-    vector4 result = { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+    vector4 result;
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
+    result.z = a.z + b.z;
+    result.w = a.w + b.w;
     return result;
 }
 
 INLINE vector4 operator - (vector4 a, vector4 b)
 {
-    vector4 result = { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+    vector4 result;
+    result.x = a.x - b.x;
+    result.y = a.y - b.y;
+    result.z = a.z - b.z;
+    result.w = a.w - b.w;
     return result;
 }
 
 INLINE vector4 operator * (vector4 a, float32 c)
 {
-    vector4 result = { c * a.x, c * a.y, c * a.z, c * a.w };
+    vector4 result;
+    result.x = a.x * c;
+    result.y = a.y * c;
+    result.z = a.z * c;
+    result.w = a.w * c;
     return result;
 }
 
 INLINE vector4 operator * (float32 c, vector4 a)
 {
-    vector4 result = { c * a.x, c * a.y, c * a.z, c * a.w };
+    vector4 result;
+    result.x = c * a.x;
+    result.y = c * a.y;
+    result.z = c * a.z;
+    result.w = c * a.w;
     return result;
 }
 
 INLINE vector4 operator / (vector4 a, float32 c)
 {
-    vector4 result = { a.x / c, a.y / c, a.z / c, a.w / c };
+    vector4 result;
+    result.x = a.x / c;
+    result.y = a.y / c;
+    result.z = a.z / c;
+    result.w = a.w / c;
     return result;
 }
 
@@ -158,25 +202,41 @@ INLINE bool operator != (vector4 a, vector4 b)
 
 vector4 make_vector4 (float32 value)
 {
-    vector4 result = { value, value, value, value };
+    vector4 result;
+    result.x = value;
+    result.y = value;
+    result.z = value;
+    result.w = value;
     return result;
 }
 
 vector4 make_vector4 (float32 x, float32 y, float32 z, float32 w)
 {
-    vector4 result = { x, y, z, w };
+    vector4 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    result.w = w;
     return result;
 }
 
 vector4 make_vector4 (vector2 xy, float32 z, float32 w)
 {
-    vector4 result = { xy.x, xy.y, z, w };
+    vector4 result;
+    result.x = xy.x;
+    result.y = xy.y;
+    result.z = z;
+    result.w = w;
     return result;
 }
 
 vector4 make_vector4 (vector3 xyz, float32 w)
 {
-    vector4 result = { xyz.x, xyz.y, xyz.z, w };
+    vector4 result;
+    result.x = xyz.x;
+    result.y = xyz.y;
+    result.z = xyz.z;
+    result.w = w;
     return result;
 }
 
@@ -200,13 +260,21 @@ INLINE float32 length(vector4 a)
 
 INLINE vector4 coordinate_multiply(vector4 a, vector4 b)
 {
-    vector4 result = { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
+    vector4 result;
+    result.x = a.x * b.x;
+    result.y = a.y * b.y;
+    result.z = a.z * b.z;
+    result.w = a.w * b.w;
     return result;
 }
 
 INLINE vector4 coordinate_divide(vector4 a, vector4 b)
 {
-    vector4 result = { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
+    vector4 result;
+    result.x = a.x / b.x;
+    result.y = a.y / b.y;
+    result.z = a.z / b.z;
+    result.w = a.w / b.w;
     return result;
 }
 

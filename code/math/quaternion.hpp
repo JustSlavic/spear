@@ -95,16 +95,6 @@ quaternion make_quaternion(vector3 axis_of_rotation, float32 radians)
     return result;
 }
 
-quaternion conjugate(quaternion q)
-{
-    quaternion result;
-    result.a =  q.a;
-    result.b = -q.b;
-    result.c = -q.c;
-    result.d = -q.d;
-    return result;
-}
-
 quaternion operator + (quaternion q1, quaternion q2)
 {
     quaternion result;
@@ -112,6 +102,46 @@ quaternion operator + (quaternion q1, quaternion q2)
     result.b = q1.b + q2.b;
     result.c = q1.c + q2.c;
     result.d = q1.d + q2.d;
+    return result;
+}
+
+quaternion operator - (quaternion q1, quaternion q2)
+{
+    quaternion result;
+    result.a = q1.a - q2.a;
+    result.b = q1.b - q2.b;
+    result.c = q1.c - q2.c;
+    result.d = q1.d - q2.d;
+    return result;
+}
+
+quaternion operator * (quaternion q, float32 c)
+{
+    quaternion result;
+    result.a = q.a * c;
+    result.b = q.b * c;
+    result.c = q.c * c;
+    result.d = q.d * c;
+    return result;
+}
+
+quaternion operator * (float32 c, quaternion q)
+{
+    quaternion result;
+    result.a = c * q.a;
+    result.b = c * q.b;
+    result.c = c * q.c;
+    result.d = c * q.d;
+    return result;
+}
+
+quaternion operator / (quaternion q, float32 c)
+{
+    quaternion result;
+    result.a = q.a / c;
+    result.b = q.b / c;
+    result.c = q.c / c;
+    result.d = q.d / c;
     return result;
 }
 
@@ -123,6 +153,34 @@ quaternion operator * (quaternion q1, quaternion q2)
     result.c = q1.a * q2.c - q1.b * q2.d + q1.c * q2.a + q1.d * q2.b;
     result.d = q1.a * q2.d + q1.b * q2.c - q1.c * q2.b + q1.d * q2.a;
     return result;
+}
+
+INLINE float32 squared_length(quaternion q)
+{
+    float32 result = q.a * q.a + q.b * q.b + q.c * q.c + q.d * q.d;
+    return result;
+}
+
+INLINE float32 length(quaternion q)
+{
+    float32 result = square_root(squared_length(q));
+    return result;
+}
+
+quaternion conjugate(quaternion q)
+{
+    quaternion result;
+    result.a =  q.a;
+    result.b = -q.b;
+    result.c = -q.c;
+    result.d = -q.d;
+    return result;
+}
+
+quaternion inverse(quaternion q)
+{
+	quaternion result = conjugate(q) / squared_length(q);
+	return result;
 }
 
 vector3 rotate_by_quaternion(quaternion q, vector3 v)
