@@ -4,6 +4,8 @@
 
 #include <math/complex.hpp>
 #include <math/quaternion.hpp>
+#include <math/unitary2.hpp>
+#include <ui/ui.hpp>
 
 
 // @todo:
@@ -71,27 +73,31 @@
         } \
     } while (0)
 
+
+// ----------------------------------------------
+
+
 TEST(ComplexNumbers)
 {
     {
-        auto a = C(0, -1);
-        auto b = C(1, 1);
+        auto a = -1_i;
+        auto b = 1 + 1_i;
 
         auto c = a * b;
         TEST_ASSERT_FLOAT_EQ(c.re,  1.f);
         TEST_ASSERT_FLOAT_EQ(c.im, -1.f);
     }
     {
-        auto a = C(5, 0);
-        auto b = C(3, 0);
+        auto a = 5 + 2_i;
+        auto b = 3 + 0.5_i;
 
         auto c = a * b;
-        TEST_ASSERT_FLOAT_EQ(c.re, 15.f);
-        TEST_ASSERT_FLOAT_EQ(c.im, 0.f);
+        TEST_ASSERT_FLOAT_EQ(c.re, 14.f);
+        TEST_ASSERT_FLOAT_EQ(c.im, 8.5f);
     }
     {
-        auto a = math::complex::r();
-        auto b = math::complex::i();
+        auto a = 1.f;
+        auto b = 1_i;
 
         auto c = a * b;
         TEST_ASSERT_FLOAT_EQ(c.re, 0.f);
@@ -129,12 +135,103 @@ TEST(Quaternions)
     }
 }
 
+TEST(SpecialUnitaryMatrices2)
+{
+    // Test that sigma_x * sigma_x is identity matrix
+    {
+        auto sigma_x = math::unitary2::sigma_x();
+        auto squared = sigma_x * sigma_x;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(1, 0));
+    }
+    // Test that sigma_y * sigma_y is identity matrix
+    {
+        auto sigma_y = math::unitary2::sigma_y();
+        auto squared = sigma_y * sigma_y;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(1, 0));
+    }
+    // Test that sigma_z * sigma_z is identity matrix
+    {
+        auto sigma_z = math::unitary2::sigma_z();
+        auto squared = sigma_z * sigma_z;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C(0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(1, 0));
+    }
+    // Test that (sigma_x * sigma_y) squared is negatie identity
+    {
+        auto sigma_x = math::unitary2::sigma_x();
+        auto sigma_y = math::unitary2::sigma_y();
+        auto sigma_xy = sigma_x * sigma_y;
+        auto squared = sigma_xy * sigma_xy;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(-1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(-1, 0));
+    }
+    // Test that (sigma_y * sigma_z) squared is negatie identity
+    {
+        auto sigma_y = math::unitary2::sigma_y();
+        auto sigma_z = math::unitary2::sigma_z();
+        auto sigma_yz = sigma_y * sigma_z;
+        auto squared = sigma_yz * sigma_yz;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(-1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(-1, 0));
+    }
+    // Test that (sigma_z * sigma_x) squared is negatie identity
+    {
+        auto sigma_z = math::unitary2::sigma_z();
+        auto sigma_x = math::unitary2::sigma_x();
+        auto sigma_zx = sigma_z * sigma_x;
+        auto squared = sigma_zx * sigma_zx;
+
+        TEST_ASSERT_FLOAT_EQ(squared._11, C(-1, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._12, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._21, C( 0, 0));
+        TEST_ASSERT_FLOAT_EQ(squared._22, C(-1, 0));
+    }
+    // Right hand rule:
+    // Ox -> to the right
+    // Oy  ^ to up
+    // Oz  . to your face
+    // Then rotation around Oy counter-clockwise (as it is the natural rotation)
+    // means rotating a vector in the XZ plane, which is denoted by `sigma_z * sigma_x`
+    // V3(1, 0, 0) => V3(0, 0, -1)
+    {
+        auto plane_of_rotation = math::unitary2::sigma_z() * math::unitary2::sigma_x();
+        auto v = V3(1, 0, 0);
+        auto w = math::rotate_by_unitary2(plane_of_rotation, math::to_radians(90), v);
+
+        TEST_ASSERT_FLOAT_EQ(w.x,  0.f);
+        TEST_ASSERT_FLOAT_EQ(w.y,  0.f);
+        TEST_ASSERT_FLOAT_EQ(w.z, -1.f);
+    }
+}
+
+
+// ----------------------------------------------
+
+
 int32 main(int32 argc, char **argv, char **env)
 {
     TEST_BEGIN();
 
     TEST_RUN(ComplexNumbers);
     TEST_RUN(Quaternions);
+    TEST_RUN(SpecialUnitaryMatrices2);
 
     TEST_END();
     return 0;
