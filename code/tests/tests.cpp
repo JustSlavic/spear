@@ -1,6 +1,7 @@
 #include <base.hpp>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <math/complex.hpp>
 #include <math/quaternion.hpp>
@@ -221,6 +222,32 @@ TEST(SpecialUnitaryMatrices2)
     }
 }
 
+TEST(Ui)
+{
+    usize memory_size = MEGABYTES(1);
+    void *memory = malloc(memory_size);
+    TEST_ASSERT(memory);
+
+    auto ui_system = ui::system{};
+    memory::initialize_memory_arena(&ui_system.ui_allocator, memory_block{memory, memory_size});
+
+    ui_system.root = ui::create_root(&ui_system);
+
+    TEST_ASSERT(ui_system.root);
+
+    auto group_1 = ui::create_child_group(&ui_system, ui_system.root);
+    auto shape_1 = ui::create_child_shape(&ui_system, group_1);
+
+    auto group_2 = ui::create_child_group(&ui_system, ui_system.root);
+    auto shape_2 = ui::create_child_shape(&ui_system, group_2);
+
+    TEST_ASSERT(group_1);
+    TEST_ASSERT(shape_1);
+
+    TEST_ASSERT(group_2);
+    TEST_ASSERT(shape_2);
+}
+
 
 // ----------------------------------------------
 
@@ -232,7 +259,11 @@ int32 main(int32 argc, char **argv, char **env)
     TEST_RUN(ComplexNumbers);
     TEST_RUN(Quaternions);
     TEST_RUN(SpecialUnitaryMatrices2);
+    TEST_RUN(Ui);
 
     TEST_END();
     return 0;
 }
+
+
+#include <memory/allocator.cpp>

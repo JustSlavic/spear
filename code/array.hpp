@@ -16,14 +16,13 @@ struct array
         return data[index];
     }
 
-    Type *push_back(Type t)
+    Type *push()
     {
         Type* result = 0;
         if (size < capacity)
         {
             usize index = size++;
             result = data + index;
-            data[index] = t;
         }
         return result;
     }
@@ -38,20 +37,29 @@ struct static_array
 {
     Type data[Capacity];
     usize size;
-};
 
+    usize capacity() { return Capacity; }
 
-template <typename Type, usize Capacity>
-Type *push_back(static_array<Type, Capacity> *a, Type t)
-{
-    Type *result = NULL;
-    if (a->size < Capacity)
+    Type *push()
     {
-        usize index = a->size++;
-        result = a->data + index;
-        a->data[index] = t;
+        Type* result = 0;
+        if (size < Capacity)
+        {
+            usize index = size++;
+            result = data + index;
+        }
+        return result;
     }
-}
+
+    void push(Type t)
+    {
+        if (size < Capacity)
+        {
+            usize index = size++;
+            data[index] = t;
+        }
+    }
+};
 
 
 #endif // ARRAY_HPP
