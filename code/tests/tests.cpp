@@ -6,6 +6,7 @@
 #include <math/complex.hpp>
 #include <math/quaternion.hpp>
 #include <math/unitary2.hpp>
+#include <math/transform.hpp>
 #include <ui/ui.hpp>
 
 
@@ -231,21 +232,39 @@ TEST(Ui)
     auto ui_system = ui::system{};
     memory::initialize_memory_arena(&ui_system.ui_allocator, memory_block{memory, memory_size});
 
-    ui_system.root = ui::create_root(&ui_system);
+    ui::create_root(&ui_system);
 
-    TEST_ASSERT(ui_system.root);
-
-    auto group_1 = ui::create_child_group(&ui_system, ui_system.root);
+    auto group_1 = ui::create_child_group(&ui_system, &ui_system.root);
+    group_1->position.xy = V2(100, 100);
     auto shape_1 = ui::create_child_shape(&ui_system, group_1);
+    shape_1->position.xy = V2(100, 100);
 
-    auto group_2 = ui::create_child_group(&ui_system, ui_system.root);
+    auto group_2 = ui::create_child_group(&ui_system, &ui_system.root);
     auto shape_2 = ui::create_child_shape(&ui_system, group_2);
+
+    // @note: This should be applied each frame after update phase, right?
+    update_transforms(&ui_system);
+    update_transforms_to_root(&ui_system);
 
     TEST_ASSERT(group_1);
     TEST_ASSERT(shape_1);
 
     TEST_ASSERT(group_2);
     TEST_ASSERT(shape_2);
+
+    TEST_ASSERT_FLOAT_EQ(shape_1->transform.e[3][0], 100.f);
+    TEST_ASSERT_FLOAT_EQ(shape_1->transform.e[3][1], 100.f);
+
+    math::vector3 root_of_shape_1 = shape_1->transform * V3(0);
+    math::vector3 root_of_shape_1_in_screen_coords = shape_1->transform_to_root * V3(0);
+
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1.x, 100.f);
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1.y, 100.f);
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1.z, 0.f);
+
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1_in_screen_coords.x, 200.f);
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1_in_screen_coords.y, 200.f);
+    TEST_ASSERT_FLOAT_EQ(root_of_shape_1_in_screen_coords.z, 0.f);
 }
 
 

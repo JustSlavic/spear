@@ -14,13 +14,13 @@ struct vector3
     union
     {
         struct { float32 x, y, z; };
-        struct { float32 u, v, w; };
+        struct { float32 u, v, pad_1; };
         struct { float32 r, g, b; };
         struct { float32 _1, _2, _3; };
         float32 e[3];
 
-        struct { vector2 xy; float32 pad_1; };
-        struct { vector2 rg; float32 pad_2; };
+        struct { vector2 xy; float32 pad_2; };
+        struct { vector2 rg; float32 pad_3; };
     };
 
     float32 & operator [] (uint32 index)
