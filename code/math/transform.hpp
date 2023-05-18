@@ -43,26 +43,18 @@ struct transform
         vector3 s[4];
     };
 
+    static transform zero()
+    {
+        transform result = {};
+        return result;
+    }
+
     static transform identity()
     {
-        transform result;
-
+        transform result = {};
         result._11 = 1.f;
-        result._12 = 0.f;
-        result._13 = 0.f;
-
-        result._21 = 0.f;
         result._22 = 1.f;
-        result._23 = 0.f;
-
-        result._31 = 0.f;
-        result._32 = 0.f;
         result._33 = 1.f;
-
-        result._41 = 0.f;
-        result._42 = 0.f;
-        result._43 = 0.f;
-
         return result;
     }
 };
@@ -205,6 +197,35 @@ transform rotated_x(float32 radians, transform tm)
 {
     rotate_x(tm, radians);
     return tm;
+}
+
+float32 determinant(transform tm)
+{
+    float32 result = determinant(tm.matrix);
+    return result;
+}
+
+transform inverse(transform tm)
+{
+    transform result = transform::zero();
+
+    float32 det = determinant(tm.matrix);
+    if (!near_zero(det))
+    {
+        result.matrix = (1.0f / det) * adjoint(tm.matrix);
+
+        float32 m_32_43_33_42 = (tm._32 * tm._43 - tm._33 * tm._42);
+        float32 m_31_43_33_41 = (tm._31 * tm._43 - tm._33 * tm._41);
+        float32 m_31_42_32_41 = (tm._31 * tm._42 - tm._32 * tm._41);
+        float32 m_12_23_13_22 = (tm._12 * tm._23 - tm._13 * tm._22);
+        float32 m_11_23_13_21 = (tm._11 * tm._23 - tm._13 * tm._21);
+        float32 m_11_22_12_21 = (tm._11 * tm._22 - tm._12 * tm._21);
+
+        result._41 = (- tm._21 * m_32_43_33_42 + tm._22 * m_31_43_33_41 - tm._23 * m_31_42_32_41) / det;
+        result._42 = (  tm._11 * m_32_43_33_42 - tm._12 * m_31_43_33_41 + tm._13 * m_31_42_32_41) / det;
+        result._43 = (- tm._41 * m_12_23_13_22 + tm._42 * m_11_23_13_21 - tm._43 * m_11_22_12_21) / det;
+    }
+    return result;
 }
 
 

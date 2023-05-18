@@ -199,6 +199,50 @@ TEST(Matrix4)
     }
 }
 
+TEST(Transform)
+{
+    auto m = math::make_matrix4(1,   2,  1, 0,
+                                3,   2,  2, 0,
+                                1,   1,  2, 0,
+                                10, 10, -2, 1);
+    TEST_ASSERT_FLOAT_NEQ(determinant(m), 0.f);
+
+    auto tm = math::make_transform(1, 2, 1,
+                                   3, 2, 2,
+                                   1, 1, 2,
+                                   10, 10, -2);
+    // The transform does exactly as the matrix4
+    {
+        auto v = V4(4, 1, -8, 1);
+
+        auto w = v * m;
+        auto u = tm * v.xyz;
+
+        TEST_ASSERT_FLOAT_EQ(w.x, u.x);
+        TEST_ASSERT_FLOAT_EQ(w.y, u.y);
+        TEST_ASSERT_FLOAT_EQ(w.z, u.z);
+        TEST_ASSERT_FLOAT_EQ(w.w, 1.f);
+    }
+    // Inverse is correct
+    {
+        auto inv_m = inverse(m);
+        auto inv_tm = inverse(tm);
+
+        UNUSED(inv_m);
+        UNUSED(inv_tm);
+
+        auto v = V4(4, 1, -8, 1);
+
+        auto w = v * inv_m;
+        auto u = inv_tm * v.xyz;
+
+        TEST_ASSERT_FLOAT_EQ(w.x, u.x);
+        TEST_ASSERT_FLOAT_EQ(w.y, u.y);
+        TEST_ASSERT_FLOAT_EQ(w.z, u.z);
+        TEST_ASSERT_FLOAT_EQ(w.w, 1.f);
+    }
+}
+
 TEST(ComplexNumbers)
 {
     {
@@ -398,6 +442,7 @@ int32 main(int32 argc, char **argv, char **env)
     TEST_RUN(Matrix2);
     TEST_RUN(Matrix3);
     TEST_RUN(Matrix4);
+    TEST_RUN(Transform);
     TEST_RUN(ComplexNumbers);
     TEST_RUN(Quaternions);
     TEST_RUN(SpecialUnitaryMatrices2);
