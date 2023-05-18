@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <math/matrix2.hpp>
+#include <math/matrix3.hpp>
+#include <math/matrix4.hpp>
+
 #include <math/complex.hpp>
 #include <math/quaternion.hpp>
 #include <math/unitary2.hpp>
@@ -66,6 +70,15 @@
         } \
     } while(0)
 
+#define TEST_ASSERT_NEQ(A, B) \
+    do { \
+        if (A != B) { } else { \
+            printf("\n%s:%d FAIL (%s == %s)\n", __FILE__, __LINE__, STRINGIFY(A), STRINGIFY(B)); \
+            *success = false; \
+            return; \
+        } \
+    } while(0)
+
 #define TEST_ASSERT_FLOAT_EQ(A, B) \
     do { \
         if (::math::equal(A, B)) { } else { \
@@ -75,9 +88,116 @@
         } \
     } while (0)
 
+#define TEST_ASSERT_FLOAT_NEQ(A, B) \
+    do { \
+        if (!::math::equal(A, B)) { } else { \
+            printf("\n%s:%d FAIL (%s == %s)\n", __FILE__, __LINE__, STRINGIFY(A), STRINGIFY(B)); \
+            *success = false; \
+            return; \
+        } \
+    } while (0)
+
 
 // ----------------------------------------------
 
+
+TEST(Matrix2)
+{
+    // Determinant
+    {
+        auto m1 = math::make_matrix2(1, 0,
+                                     0, 1);
+        auto det1 = determinant(m1);
+        TEST_ASSERT_FLOAT_EQ(det1, 1.f);
+
+        auto m2 = math::make_matrix2(2, 0,
+                                     0, 2);
+        auto det2 = determinant(m2);
+        TEST_ASSERT_FLOAT_EQ(det2, 4.f);
+
+        auto m3 = math::make_matrix2(1, 0,
+                                     9, 1);
+        auto det3 = determinant(m3);
+        TEST_ASSERT_FLOAT_EQ(det3, 1.f);
+    }
+    // Inverse
+    {
+        auto m = math::make_matrix2(1, 2,
+                                    100, 1);
+
+        TEST_ASSERT_FLOAT_NEQ(determinant(m), 0.f);
+
+        auto inversed = inverse(m);
+        auto id = m * inversed;
+
+        TEST_ASSERT_FLOAT_EQ(id, math::matrix2::identity());
+    }
+}
+
+TEST(Matrix3)
+{
+    // Determinant
+    {
+        auto m1 = math::make_matrix3(1, 0, 0,
+                                     0, 1, 0,
+                                     0, 0, 1);
+        auto det1 = determinant(m1);
+        TEST_ASSERT_FLOAT_EQ(det1, 1.f);
+
+        auto m2 = math::make_matrix3(2, 0, 0,
+                                     0, 2, 0,
+                                     0, 0, 2);
+        auto det2 = determinant(m2);
+        TEST_ASSERT_FLOAT_EQ(det2, 8.f);
+
+        auto m3 = math::make_matrix3(1, 0, 0,
+                                     9, 2, 0,
+                                     9, 9, 2);
+        auto det3 = determinant(m3);
+        TEST_ASSERT_FLOAT_EQ(det3, 4.f);
+
+        auto m4 = math::make_matrix3(2, 5, 3,
+                                     6, 1, 4,
+                                     7, 8, 9);
+        auto det4 = determinant(m4);
+        TEST_ASSERT_FLOAT_EQ(det4, -53.f);
+    }
+    // Inverse
+    {
+        auto m = math::make_matrix3(2, 5, 9,
+                                    6, 1, 4,
+                                    7, 8, 3);
+        TEST_ASSERT_FLOAT_NEQ(determinant(m), 0.f);
+
+        auto inversed = inverse(m);
+        auto id = m * inversed;
+        TEST_ASSERT_FLOAT_EQ(id, math::matrix3::identity());
+    }
+}
+
+TEST(Matrix4)
+{
+    // Determinant
+    {
+        auto m = math::make_matrix4(1, 1, 1, 7,
+                                    1, 5, 9, 1,
+                                    0, 4, 5, 5,
+                                    9, 1, 1, 2);
+        TEST_ASSERT_FLOAT_EQ(determinant(m), 524.f);
+    }
+    // Inverse
+    {
+        auto m = math::make_matrix4(1, 1, 1, 7,
+                                    1, 5, 9, 1,
+                                    0, 4, 5, 5,
+                                    9, 1, 1, 2);
+        TEST_ASSERT_FLOAT_NEQ(determinant(m), 0.f);
+
+        auto inversed = inverse(m);
+        auto id = m * inversed;
+        TEST_ASSERT_FLOAT_EQ(id, math::matrix4::identity());
+    }
+}
 
 TEST(ComplexNumbers)
 {
@@ -275,6 +395,9 @@ int32 main(int32 argc, char **argv, char **env)
 {
     TEST_BEGIN();
 
+    TEST_RUN(Matrix2);
+    TEST_RUN(Matrix3);
+    TEST_RUN(Matrix4);
     TEST_RUN(ComplexNumbers);
     TEST_RUN(Quaternions);
     TEST_RUN(SpecialUnitaryMatrices2);

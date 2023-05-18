@@ -139,6 +139,15 @@ matrix2 make_matrix2 (T11 t11, T12 t12,
     return result;
 }
 
+bool32 equal(matrix2 a, matrix2 b)
+{
+    bool32 result = equal(a._11, b._11)
+                 && equal(a._12, b._12)
+                 && equal(a._21, b._21)
+                 && equal(a._22, b._22);
+    return result;
+}
+
 vector2 operator * (matrix2 a, vector2 v)
 {
     vector2 result;

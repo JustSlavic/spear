@@ -172,6 +172,26 @@ INLINE matrix4 make_matrix4 (float32 t11, float32 t12, float32 t13, float32 t14,
     return result;
 }
 
+INLINE bool32 equal(matrix4 a, matrix4 b)
+{
+    bool32 result = equal(a._11, b._11)
+                 && equal(a._12, b._12)
+                 && equal(a._13, b._13)
+                 && equal(a._14, b._14)
+                 && equal(a._21, b._21)
+                 && equal(a._22, b._22)
+                 && equal(a._23, b._23)
+                 && equal(a._24, b._24)
+                 && equal(a._31, b._31)
+                 && equal(a._32, b._32)
+                 && equal(a._33, b._33)
+                 && equal(a._34, b._34)
+                 && equal(a._41, b._41)
+                 && equal(a._42, b._42)
+                 && equal(a._43, b._43)
+                 && equal(a._44, b._44);
+    return result;
+}
 
 INLINE vector4 operator * (matrix4 a, vector4 v)
 {
@@ -339,8 +359,61 @@ float32 determinant(matrix4 const& m)
     return result;
 }
 
+matrix4 adjoint(matrix4 const& m)
+{
+    float32 m_13_24_14_23 = (m._13 * m._24 - m._14 * m._23);
+    float32 m_12_24_14_22 = (m._12 * m._24 - m._14 * m._22);
+    float32 m_12_23_13_22 = (m._12 * m._23 - m._13 * m._22);
+    float32 m_11_24_14_21 = (m._11 * m._24 - m._14 * m._21);
+    float32 m_11_23_13_21 = (m._11 * m._23 - m._13 * m._21);
+    float32 m_11_22_12_21 = (m._11 * m._22 - m._12 * m._21);
+
+    float32 m_33_44_34_43 = (m._33 * m._44 - m._34 * m._43);
+    float32 m_32_43_33_42 = (m._32 * m._43 - m._33 * m._42);
+    float32 m_32_44_34_42 = (m._32 * m._44 - m._34 * m._42);
+    float32 m_31_42_32_41 = (m._31 * m._42 - m._32 * m._41);
+    float32 m_31_43_33_41 = (m._31 * m._43 - m._33 * m._41);
+    float32 m_31_44_34_41 = (m._31 * m._44 - m._34 * m._41);
+
+    matrix4 result;
+
+    result._11 =   m._22 * m_33_44_34_43 - m._23 * m_32_44_34_42 + m._24 * m_32_43_33_42;
+    result._12 = - m._12 * m_33_44_34_43 + m._13 * m_32_44_34_42 - m._14 * m_32_43_33_42;
+    result._13 =   m._42 * m_13_24_14_23 - m._43 * m_12_24_14_22 + m._44 * m_12_23_13_22;
+    result._14 = - m._32 * m_13_24_14_23 + m._33 * m_12_24_14_22 - m._34 * m_12_23_13_22;
+
+    result._21 = - m._21 * m_33_44_34_43 + m._23 * m_31_44_34_41 - m._24 * m_31_43_33_41;
+    result._22 =   m._11 * m_33_44_34_43 - m._13 * m_31_44_34_41 + m._14 * m_31_43_33_41;
+    result._23 = - m._41 * m_13_24_14_23 + m._43 * m_11_24_14_21 - m._44 * m_11_23_13_21;
+    result._24 =   m._31 * m_13_24_14_23 - m._33 * m_11_24_14_21 + m._34 * m_11_23_13_21;
+
+    result._31 =   m._21 * m_32_44_34_42 - m._22 * m_31_44_34_41 + m._24 * m_31_42_32_41;
+    result._32 = - m._11 * m_32_44_34_42 + m._12 * m_31_44_34_41 - m._14 * m_31_42_32_41;
+    result._33 =   m._41 * m_12_24_14_22 - m._42 * m_11_24_14_21 + m._44 * m_11_22_12_21;
+    result._34 = - m._31 * m_12_24_14_22 + m._32 * m_11_24_14_21 - m._34 * m_11_22_12_21;
+
+    result._41 = - m._21 * m_32_43_33_42 + m._22 * m_31_43_33_41 - m._23 * m_31_42_32_41;
+    result._42 =   m._11 * m_32_43_33_42 - m._12 * m_31_43_33_41 + m._13 * m_31_42_32_41;
+    result._43 = - m._41 * m_12_23_13_22 + m._42 * m_11_23_13_21 - m._43 * m_11_22_12_21;
+    result._44 =   m._31 * m_12_23_13_22 - m._32 * m_11_23_13_21 + m._33 * m_11_22_12_21;
+
+    return result;
+}
+
+matrix4 inverse(matrix4 const& m)
+{
+    matrix4 result = matrix4::zero();
+
+    float32 det = determinant(m);
+    if (!near_zero(det))
+    {
+        result = (1.0f / det) * adjoint(m);
+    }
+
+    return result;
+}
+
 
 } // namespace math
-
 
 #endif // MATH_MATRIX4_HPP

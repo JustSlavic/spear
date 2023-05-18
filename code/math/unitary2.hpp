@@ -7,6 +7,7 @@
 namespace math {
 
 
+// @todo: rename it to pauli2
 struct unitary2
 {
     union

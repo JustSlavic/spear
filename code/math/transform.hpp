@@ -3,6 +3,7 @@
 
 #include <base.hpp>
 #include <math/vector3.hpp>
+#include <math/matrix3.hpp>
 
 namespace math {
 
@@ -21,6 +22,11 @@ struct transform
             float32 _21, _22, _23;
             float32 _31, _32, _33;
             float32 _41, _42, _43;
+        };
+        struct
+        {
+            matrix3 matrix;
+            vector3 displacement;
         };
         struct
         {
@@ -84,6 +90,9 @@ INLINE transform make_transform (float32 t11, float32 t12, float32 t13,
     result._41 = t41; result._42 = t42; result._43 = t43;
     return result;
 }
+
+// This operator is deleted on pupose
+vector3 operator * (vector3 v, transform tm) = delete;
 
 vector3 operator * (transform tm, vector3 v)
 {

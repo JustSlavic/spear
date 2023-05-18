@@ -12,11 +12,11 @@
 //                 |  |
 // Pulse press: |--+  +-------|------------|
 //
-//               +------------+
-//               |            |
-// Hold:      |--+         |  +---------|
-//                            ^
-//                            second "press" on second frame which I want not to happen
+//                 +-------------+
+//                 |             |
+// Hold:        |--+          |  +---------|
+//                               ^
+//                               second "press" on second frame which I want not to happen
 //
 // In the example #1: frame 1 { 1 press, 1 hold, 1 release }; frame 2 { 0 press, 0 hold, 0 release }.
 // In the example #2: frame 1 { 1 press, 1 hold, 0 release }; frame 2 { 0 press, 1 hold, 1 release }.
@@ -71,7 +71,7 @@ struct keyboard
         num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9, num_0,
         page_up, page_down, home, end, insert, _delete,
         // @note: key_count have to be the last in enum
-        key_count,
+        key_count
     };
 
     button_state buttons[key_count];
@@ -87,7 +87,6 @@ struct keyboard
     }
 };
 
-
 void reset_transitions(keyboard *kb)
 {
     for (int key_index = 0; key_index < keyboard::key_count; key_index++)
@@ -96,12 +95,75 @@ void reset_transitions(keyboard *kb)
     }
 }
 
+struct mouse
+{
+    enum key
+    {
+        lmb, mmb, rmb,
+        // @note: key_count have to be the last in enum
+        key_count
+    };
+
+    button_state buttons[key_count];
+    int32 x, y;
+
+    button_state& operator [] (key k)
+    {
+        return buttons[k];
+    }
+
+    button_state const& operator [] (key k) const
+    {
+        return buttons[k];
+    }
+};
+
+struct stick_state
+{
+    //        1
+    //        |
+    //        |
+    // -1 ----0---- 1
+    //        |
+    //        |
+    //       -1
+    float32 previous_x, previous_y;
+    float32 x, y;
+};
+
+struct gamepad
+{
+    enum key
+    {
+        start, select,
+        a, b, x, y,
+        dpad_up, dpad_left, dpad_right, dpad_down,
+        left_shoulder, right_shoulder,
+        left_trigger, right_trigger,
+        left_stick, right_stick,
+        // @note: key_count have to be the last in enum
+        key_count
+    };
+
+    button_state buttons[key_count];
+    stick_state left_stick, right_stick;
+
+    button_state& operator [] (key k)
+    {
+        return buttons[k];
+    }
+
+    button_state const& operator [] (key k) const
+    {
+        return buttons[k];
+    }
+};
 
 struct input
 {
-    keyboard keyboard_device;
-    // @todo: mouse
-    // @todo: gamepads (at least 4)
+    keyboard keyboard;
+    mouse mouse;
+    gamepad gamepads[4];
     float32 dt;
 };
 

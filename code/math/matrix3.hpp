@@ -37,21 +37,16 @@ struct matrix3
 
     static matrix3 zero()
     {
-        matrix3 result = {
-            0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f,
-        };
+        matrix3 result = {};
         return result;
     }
 
     static matrix3 identity()
     {
-        matrix3 result = {
-            1.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 1.0f,
-        };
+        matrix3 result = {};
+        result._11 = 1.f;
+        result._22 = 1.f;
+        result._33 = 1.f;
         return result;
     }
 };
@@ -82,56 +77,50 @@ INLINE matrix3 &operator *= (matrix3 &a, float32 c)
 }
 
 INLINE matrix3 operator - (matrix3 a) {
-    matrix3 result = {
-        -a._11, -a._12, -a._13,
-        -a._21, -a._22, -a._23,
-        -a._31, -a._32, -a._33,
-    };
+    matrix3 result;
+    result._11 = -a._11; result._12 = -a._12; result._13 = -a._13;
+    result._21 = -a._21; result._22 = -a._22; result._23 = -a._23;
+    result._31 = -a._31; result._32 = -a._32; result._33 = -a._33;
     return result;
 }
 
 INLINE matrix3 operator + (matrix3 a, matrix3 b) {
-    matrix3 result = {
-        a._11 + b._11, a._12 + b._12, a._13 + b._13,
-        a._21 + b._21, a._22 + b._22, a._23 + b._23,
-        a._31 + b._31, a._32 + b._32, a._33 + b._33,
-    };
+    matrix3 result;
+    result._11 = a._11 + b._11; result._12 = a._12 + b._12; result._13 = a._13 + b._13;
+    result._21 = a._21 + b._21; result._22 = a._22 + b._22; result._23 = a._23 + b._23;
+    result._31 = a._31 + b._31; result._32 = a._32 + b._32; result._33 = a._33 + b._33;
     return result;
 }
 
 INLINE matrix3 operator - (matrix3 a, matrix3 b) {
-    matrix3 result = {
-        a._11 - b._11, a._12 - b._12, a._13 - b._13,
-        a._21 - b._21, a._22 - b._22, a._23 - b._23,
-        a._31 - b._31, a._32 - b._32, a._33 - b._33,
-    };
+    matrix3 result;
+    result._11 = a._11 - b._11; result._12 = a._12 - b._12; result._13 = a._13 - b._13;
+    result._21 = a._21 - b._21; result._22 = a._22 - b._22; result._23 = a._23 - b._23;
+    result._31 = a._31 - b._31; result._32 = a._32 - b._32; result._33 = a._33 - b._33;
     return result;
 }
 
-INLINE matrix3 operator * (matrix3 a, f32 c) {
-    matrix3 result = {
-        a._11 * c, a._12 * c, a._13 * c,
-        a._21 * c, a._22 * c, a._23 * c,
-        a._31 * c, a._32 * c, a._33 * c,
-    };
+INLINE matrix3 operator * (matrix3 a, float32 c) {
+    matrix3 result;
+    result._11 = a._11 * c; result._12 = a._12 * c; result._13 = a._13 * c;
+    result._21 = a._21 * c; result._22 = a._22 * c; result._23 = a._23 * c;
+    result._31 = a._31 * c; result._32 = a._32 * c; result._33 = a._33 * c;
     return result;
 }
 
-INLINE matrix3 operator * (f32 c, matrix3 a) {
-    matrix3 result = {
-        a._11 * c, a._12 * c, a._13 * c,
-        a._21 * c, a._22 * c, a._23 * c,
-        a._31 * c, a._32 * c, a._33 * c,
-    };
+INLINE matrix3 operator * (float32 c, matrix3 a) {
+    matrix3 result;
+    result._11 = c * a._11; result._12 = c * a._12; result._13 = c * a._13;
+    result._21 = c * a._21; result._22 = c * a._22; result._23 = c * a._23;
+    result._31 = c * a._31; result._32 = c * a._32; result._33 = c * a._33;
     return result;
 }
 
-INLINE matrix3 operator / (matrix3 a, f32 c) {
-    matrix3 result = {
-        a._11 / c, a._12 / c, a._13 / c,
-        a._21 / c, a._22 / c, a._23 / c,
-        a._31 / c, a._32 / c, a._33 / c,
-    };
+INLINE matrix3 operator / (matrix3 a, float32 c) {
+    matrix3 result;
+    result._11 = a._11 / c; result._12 = a._12 / c; result._13 = a._13 / c;
+    result._21 = a._21 / c; result._22 = a._22 / c; result._23 = a._23 / c;
+    result._31 = a._31 / c; result._32 = a._32 / c; result._33 = a._33 / c;
     return result;
 }
 
@@ -150,11 +139,10 @@ INLINE bool operator != (matrix3 a, matrix3 b) {
 template <typename T>
 matrix3 make_matrix3 (T t)
 {
-    matrix3 result = {
-        t, t, t,
-        t, t, t,
-        t, t, t,
-    };
+    matrix3 result;
+    result._11 = t; result._12 = t; result._13 = t;
+    result._21 = t; result._22 = t; result._23 = t;
+    result._31 = t; result._32 = t; result._33 = t;
     return result;
 }
 
@@ -165,11 +153,24 @@ matrix3 make_matrix3 (T11 t11, T12 t12, T13 t13,
                       T21 t21, T22 t22, T23 t23,
                       T31 t31, T32 t32, T33 t33)
 {
-    matrix3 result = {
-        (float32) t11, (float32) t12, (float32) t13,
-        (float32) t21, (float32) t22, (float32) t23,
-        (float32) t31, (float32) t32, (float32) t33,
-    };
+    matrix3 result;
+    result._11 = (float32) t11; result._12 = (float32) t12; result._13 = (float32) t13;
+    result._21 = (float32) t21; result._22 = (float32) t22; result._23 = (float32) t23;
+    result._31 = (float32) t31; result._32 = (float32) t32; result._33 = (float32) t33;
+    return result;
+}
+
+bool32 equal(matrix3 a, matrix3 b)
+{
+    bool32 result = equal(a._11, b._11)
+                 && equal(a._12, b._12)
+                 && equal(a._13, b._13)
+                 && equal(a._21, b._21)
+                 && equal(a._22, b._22)
+                 && equal(a._23, b._23)
+                 && equal(a._31, b._31)
+                 && equal(a._32, b._32)
+                 && equal(a._33, b._33);
     return result;
 }
 
@@ -231,26 +232,35 @@ float32 determinant(matrix3 const& m)
 {
     float32 result = m._11 * (m._22 * m._33 - m._23 * m._32)
                    - m._12 * (m._21 * m._33 - m._23 * m._31)
-                   + m._13 * (m._21 * m._32 - m._23 * m._31);
-}
-
-
-matrix2 adjoint(matrix2 const& m)
-{
-    matrix2 result = {
-        m._22*m._33 - m._23*n._32, m._13*m._32 - m._12*m._33, m._12*m._23 - m._13*m._22,
-        m._23*m._31 - m._21*m._33, m._11*m._33 - m._13*m._31, m._13*m._21 - m._11*m._23,
-        m._21*m._32 - m._22*m._31, m._12*m._31 - m._11*m._32, m._11*m._22 - m._12*m._21,
-    };
+                   + m._13 * (m._21 * m._32 - m._22 * m._31);
     return result;
 }
 
-matrix2 inverse(matrix2 const& m)
+matrix3 adjoint(matrix3 const& m)
 {
-    matrix2 result = matrix2::zero();
+    matrix3 result;
+
+    result._11 =  m._22 * m._33 - m._23 * m._32;
+    result._12 = -m._12 * m._33 + m._13 * m._32;
+    result._13 =  m._12 * m._23 - m._13 * m._22;
+
+    result._21 = -m._21 * m._33 + m._23 * m._31;
+    result._22 =  m._11 * m._33 - m._13 * m._31;
+    result._23 = -m._11 * m._23 + m._13 * m._21;
+
+    result._31 =  m._21 * m._32 - m._22 * m._31;
+    result._32 = -m._11 * m._32 + m._12 * m._31;
+    result._33 =  m._11 * m._22 - m._12 * m._21;
+
+    return result;
+}
+
+matrix3 inverse(matrix3 const& m)
+{
+    matrix3 result = matrix3::zero();
 
     float32 det = determinant(m);
-    if (!is_zero(det))
+    if (not near_zero(det))
     {
         result = (1.0f / det) * adjoint(m);
     }
