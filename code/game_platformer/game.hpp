@@ -127,6 +127,7 @@ struct game_state
     usize entity_count;
 
     ui::system ui;
+    float32 *rotation_z;
 };
 
 

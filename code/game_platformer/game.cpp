@@ -254,13 +254,17 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     auto group_1 = ui::create_child_group(&gs->ui, &gs->ui.root);
     auto shape_1 = ui::create_child_shape(&gs->ui, group_1);
-    shape_1->width = 200.f;
-    shape_1->height = 250.f;
-    shape_1->position.xy = V2(200, 200);
-    shape_1->color = V4(0.8, 0.4, 0.2, 1.0);
+    shape_1->position.xy = V2(500, 600);
+    shape_1->rotation.z = 20.f;
+    shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
+
+    gs->rotation_z = &shape_1->rotation.z;
 
     auto group_2 = ui::create_child_group(&gs->ui, &gs->ui.root);
     auto shape_2 = ui::create_child_shape(&gs->ui, group_2);
+    shape_2->position.xy = V2(400, 200);
+    shape_2->scale.xy = V2(2, 2);
+    shape_2->rotation.z = 45.f;
     shape_2->color = V4(0.3, 0.3, 0.8, 1.0);
 
     // @note: This should be applied each frame after update phase, right?
@@ -940,6 +944,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 #else // UI_EDITOR_ENABLED
     ui::update(&gs->ui, input);
+    // @note: This should be applied each frame after update phase, right?
+    update_transforms(&gs->ui);
+    update_transforms_to_root(&gs->ui);
     ui::draw(context, &gs->ui);
 #endif // UI_EDITOR_ENABLED
 
@@ -952,6 +959,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     gs->near_exit_time -= dt;
     gs->blink_time -= dt;
+    *gs->rotation_z = (*gs->rotation_z + 10.f * dt);
 
     DEBUG_END_TIME_MEASUREMENT(update_and_render);
 }

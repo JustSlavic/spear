@@ -24,17 +24,21 @@ struct element
 
     element_type  type;
 
-    math::vector3 position;  // position of origin (pivot) in parent coordinates
+    // These are for transform properties
+    math::vector3 position;
     math::vector3 scale;
-    math::vector4 color;
+    float32 rotation;
 
-    // @note: width and height are only for shapes
+    // @note: width, height, and color are only for shapes
     float32 width;
     float32 height;
+    math::vector4 color;
 
+    // Parent-child relations
     element *parent;
     static_array<element *, 10> children; // @todo: make it grow if needed? bucket_array?
 
+    // Cache
     math::transform transform; // transform * vector_in_child => vector_in_parent
     math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
 };
@@ -103,11 +107,11 @@ element *create_child_shape(system *sys, element *parent)
 
 void update_transform(element *e)
 {
-    // @todo: make rotations
     auto transform =
+        math::rotated_z(math::to_radians(e->rotation.z),
         math::scaled(e->scale,
         math::translated(e->position,
-        math::transform::identity()));
+        math::transform::identity())));
     e->transform = transform;
 }
 
