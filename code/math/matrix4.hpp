@@ -265,9 +265,11 @@ matrix4 translated(vector3 v, matrix4 m)
 
 void scale(matrix4 & m, vector3 v)
 {
-    m._11 *= v.x;
-    m._22 *= v.y;
-    m._33 *= v.z;
+    auto w = V4(v, 1);
+    m._1 = coordinate_multiply(m._1, w);
+    m._2 = coordinate_multiply(m._2, w);
+    m._3 = coordinate_multiply(m._3, w);
+    m._4 = coordinate_multiply(m._4, w);
 }
 
 matrix4 scaled(vector3 v, matrix4 m)

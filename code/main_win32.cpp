@@ -129,19 +129,19 @@ void process_pending_messages(input *inp)
 
                 switch (virtual_key_code)
                 {
-                    case VK_ESCAPE: process_button_state(&inp->keyboard_device[keyboard::esc], is_down);
+                    case VK_ESCAPE: process_button_state(&inp->keyboard[keyboard_device::esc], is_down);
                         break;
-                    case VK_SPACE: process_button_state(&inp->keyboard_device[keyboard::space], is_down);
+                    case VK_SPACE: process_button_state(&inp->keyboard[keyboard_device::space], is_down);
                         break;
-                    case 'W': process_button_state(&inp->keyboard_device[keyboard::w], is_down);
+                    case 'W': process_button_state(&inp->keyboard[keyboard_device::w], is_down);
                         break;
-                    case 'A': process_button_state(&inp->keyboard_device[keyboard::a], is_down);
+                    case 'A': process_button_state(&inp->keyboard[keyboard_device::a], is_down);
                         break;
-                    case 'S': process_button_state(&inp->keyboard_device[keyboard::s], is_down);
+                    case 'S': process_button_state(&inp->keyboard[keyboard_device::s], is_down);
                         break;
-                    case 'D': process_button_state(&inp->keyboard_device[keyboard::d], is_down);
+                    case 'D': process_button_state(&inp->keyboard[keyboard_device::d], is_down);
                         break;
-                    case 'Y': process_button_state(&inp->keyboard_device[keyboard::y], is_down);
+                    case 'Y': process_button_state(&inp->keyboard[keyboard_device::y], is_down);
                         break;
                     case 'K':
                     {
@@ -228,7 +228,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory);
 
-    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
+    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
     memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
@@ -354,7 +354,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
-        reset_transitions(&input.keyboard_device);
+        reset_transitions(&input.keyboard);
         process_pending_messages(&input);
 
         uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
@@ -369,6 +369,16 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             auto viewport = gfx::make_viewport(current_client_width, current_client_height, aspect_ratio);
             gfx::set_viewport(viewport);
             viewport_changed = false;
+
+            // @todo
+            context.screen_width = 0;
+            context.screen_height = 0;
+
+            context.window_width = current_client_width;
+            context.window_height = current_client_height;
+
+            context.letterbox_width = viewport.width;
+            context.letterbox_height = viewport.height;
         }
 
         gfx::clear();
@@ -385,7 +395,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
             if (debug_loop_inputs.size < debug_loop_inputs.capacity)
             {
-                debug_loop_inputs.push_back(input);
+                debug_loop_inputs.push(input);
             }
             else
             {
@@ -467,6 +477,15 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                         screen_frame_mesh, screen_frame_shader,
                         math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
                         cmd->draw_screen_frame.color);
+                }
+                break;
+
+                case render_command::command_type::draw_ui:
+                {
+                    gfx::draw_polygon_simple(&context,
+                        cmd->draw_ui.mesh_token, cmd->draw_ui.shader_token,
+                        cmd->draw_ui.model, cmd->draw_ui.view, cmd->draw_ui.projection,
+                        cmd->draw_ui.color);
                 }
                 break;
             }

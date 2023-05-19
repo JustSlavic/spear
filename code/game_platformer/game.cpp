@@ -253,15 +253,15 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     ui::create_root(&gs->ui);
 
     auto group_1 = ui::create_child_group(&gs->ui, &gs->ui.root);
-    group_1->position.xy = V2(100, 100);
-
     auto shape_1 = ui::create_child_shape(&gs->ui, group_1);
-    shape_1->position.xy = V2(100, 100);
+    shape_1->width = 200.f;
+    shape_1->height = 250.f;
+    shape_1->position.xy = V2(200, 200);
+    shape_1->color = V4(0.8, 0.4, 0.2, 1.0);
 
     auto group_2 = ui::create_child_group(&gs->ui, &gs->ui.root);
     auto shape_2 = ui::create_child_shape(&gs->ui, group_2);
-    UNUSED(group_2);
-    UNUSED(shape_2);
+    shape_2->color = V4(0.3, 0.3, 0.8, 1.0);
 
     // @note: This should be applied each frame after update phase, right?
     update_transforms(&gs->ui);

@@ -3,6 +3,7 @@
 
 #include <base.hpp>
 #include <memory/allocator.hpp>
+#include <execution_context.hpp>
 #include <math/vector2.hpp>
 #include <math/vector4.hpp>
 #include <math/transform.hpp>
@@ -22,14 +23,19 @@ struct element
     };
 
     element_type  type;
-    math::transform transform; // transform * vector_in_child => vector_in_parent
-    math::vector3 position;  // in parent coordinates
+
+    math::vector3 position;  // position of origin (pivot) in parent coordinates
+    math::vector3 scale;
+    math::vector4 color;
+
+    // @note: width and height are only for shapes
+    float32 width;
+    float32 height;
 
     element *parent;
-    // @todo: make it grow if needed? bucket_array?
-    static_array<element *, 10> children;
+    static_array<element *, 10> children; // @todo: make it grow if needed? bucket_array?
 
-    math::vector4 color; // shape's color
+    math::transform transform; // transform * vector_in_child => vector_in_parent
     math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
 };
 
@@ -65,7 +71,9 @@ element *create_child_group(system *sys, element *parent)
         result = sys->groups.push();
         memory::set(result, 0, sizeof(element));
         result->type = element::group;
+        result->scale = V3(1);
         result->transform = math::transform::identity();
+        result->transform_to_root = math::transform::identity();
 
         result->parent = parent;
         parent->children.push(result);
@@ -81,6 +89,9 @@ element *create_child_shape(system *sys, element *parent)
         result = sys->shapes.push();
         memory::set(result, 0, sizeof(element));
         result->type = element::shape;
+        result->width = 100.f;
+        result->height = 100.f;
+        result->scale = V3(1);
         result->transform = math::transform::identity();
         result->transform_to_root = math::transform::identity();
 
@@ -92,10 +103,11 @@ element *create_child_shape(system *sys, element *parent)
 
 void update_transform(element *e)
 {
-    // @todo: make rotations and scales too
-    auto transform = math::transform::identity();
-    translate(transform, e->position);
-
+    // @todo: make rotations
+    auto transform =
+        math::scaled(e->scale,
+        math::translated(e->position,
+        math::transform::identity()));
     e->transform = transform;
 }
 
@@ -119,12 +131,12 @@ void update_transforms_to_root(system *sys)
     for (usize i = 0; i < sys->groups.size; i++)
     {
         element *e = sys->groups.data + i;
-        e->transform_to_root = e->transform * e->parent->transform_to_root;
+        e->transform_to_root = e->parent->transform_to_root * e->transform;
     }
     for (usize i = 0; i < sys->shapes.size; i++)
     {
         element *e = sys->shapes.data + i;
-        e->transform_to_root = e->transform * e->parent->transform_to_root;
+        e->transform_to_root = e->parent->transform_to_root * e->transform;
     }
 }
 
@@ -145,34 +157,29 @@ void update(system *sys, input *inp)
 
 void draw(execution_context *context, system *sys)
 {
+    auto projection =
+        math::translated(V3(-1, 1, 0),
+        math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
+        math::matrix4::identity()));
+
     for (usize i = 0; i < sys->shapes.size; i++)
     {
         element *e = sys->shapes.data + i;
-        // Let's say all shapes are squares 100x100 for now
-        auto tl = e->transform_to_root * V3(-50, -50, 0);
-        auto tr = e->transform_to_root * V3( 50, -50, 0);
-        auto bl = e->transform_to_root * V3(-50,  50, 0);
-        auto br = e->transform_to_root * V3( 50,  50, 0);
-
-        auto center = (tl + br) * 0.5f;
-        auto half_width  = center.x - tl.x;
-        auto half_height = center.y - tl.y;
-
-        UNUSED(tl);
-        UNUSED(tr);
-        UNUSED(bl);
-        UNUSED(br);
+        auto m = math::scaled(V3(0.5f * e->width, 0.5f * e->height, 1), math::to_matrix4(e->transform_to_root));
 
         render_command::command_draw_ui command_draw_ui;
         command_draw_ui.mesh_token = sys->rectangle_mesh;
         command_draw_ui.shader_token = sys->rectangle_shader;
-        command_draw_ui.model =
-            math::translated(V3(center.x, center.y, 0),
-            math::scaled(V3(half_width, half_height, 1),
-                math::matrix4::identity()));
+        command_draw_ui.model = math::transposed(m); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
         command_draw_ui.view = math::matrix4::identity();
-        command_draw_ui.projection = math::scaled(V3(1.0/1280.0, 1.0/890.0, 1), math::matrix4::identity());
-        command_draw_ui.color = V4(1, 0, 0, 1);
+        command_draw_ui.projection = projection;
+        command_draw_ui.color = e->color;
+
+        render_command cmd;
+        cmd.type = render_command::command_type::draw_ui;
+        cmd.draw_ui = command_draw_ui;
+
+        push_render_command(context, cmd);
     }
 }
 

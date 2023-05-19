@@ -4,6 +4,7 @@
 #include <base.hpp>
 #include <math/vector3.hpp>
 #include <math/matrix3.hpp>
+#include <math/matrix4.hpp>
 
 namespace math {
 
@@ -83,6 +84,17 @@ INLINE transform make_transform (float32 t11, float32 t12, float32 t13,
     return result;
 }
 
+matrix4 to_matrix4(transform tm)
+{
+    matrix4 result;
+    result._1 = V4(tm._1, 0);
+    result._2 = V4(tm._2, 0);
+    result._3 = V4(tm._3, 0);
+    result._4 = V4(tm._4, 1);
+    transpose(result);
+    return result;
+}
+
 // This operator is deleted on pupose
 vector3 operator * (vector3 v, transform tm) = delete;
 
@@ -127,7 +139,14 @@ INLINE transform& operator *= (transform& tm1, transform const& tm2)
 
 void translate(transform& tm, vector3 v)
 {
-    tm._4 += v;
+    // 1 0 0 0     11 12 13 14                       11                    12                    13  14=0
+    // 0 1 0 0  *  21 22 23 24  =                    21                    22                    23  24=0
+    // 0 0 1 0     31 32 33 34                       31                    32                    33  34=0
+    // x y z 1     41 42 43 44     11x + 21y + 31z + 41, 12x + 22y + 32z + 42, 13x + 23y + 33z + 43, 44=1
+
+    tm._41 = tm._11*v.x + tm._21*v.y + tm._31*v.z + tm._41;
+    tm._42 = tm._12*v.x + tm._22*v.y + tm._32*v.z + tm._42;
+    tm._43 = tm._13*v.x + tm._23*v.y + tm._33*v.z + tm._43;
 }
 
 transform translated(vector3 v, transform tm)
@@ -139,6 +158,9 @@ transform translated(vector3 v, transform tm)
 void scale_x(transform& tm, float32 sx)
 {
     tm._11 *= sx;
+    tm._21 *= sx;
+    tm._31 *= sx;
+    tm._41 *= sx;
 }
 
 transform scaled_x(transform tm, float32 sx)
@@ -149,7 +171,10 @@ transform scaled_x(transform tm, float32 sx)
 
 void scale_y(transform& tm, float32 sy)
 {
+    tm._12 *= sy;
     tm._22 *= sy;
+    tm._32 *= sy;
+    tm._42 *= sy;
 }
 
 transform scaled_y(transform tm, float32 sy)
@@ -160,7 +185,10 @@ transform scaled_y(transform tm, float32 sy)
 
 void scale_z(transform& tm, float32 sz)
 {
+    tm._13 *= sz;
+    tm._23 *= sz;
     tm._33 *= sz;
+    tm._43 *= sz;
 }
 
 transform scaled_z(transform tm, float32 sz)
@@ -171,9 +199,14 @@ transform scaled_z(transform tm, float32 sz)
 
 void scale(transform & tm, vector3 v)
 {
-    tm._11 *= v.x;
-    tm._22 *= v.y;
-    tm._33 *= v.z;
+    // sx  0  0  0     11 12 13 14     sx*11 sx*12 sx*13 sx*14=0
+    //  0 sy  0  0  *  21 22 23 24  =  sy*21 sy*22 sy*23 sy*24=0
+    //  0  0 sz  0     31 32 33 34     sz*31 sz*32 sz*33 sz*34=0
+    //  0  0  0  1     41 42 43 44        41    42    43    44=1
+
+    tm._1 = tm._1 * v.x;
+    tm._2 = tm._2 * v.y;
+    tm._3 = tm._3 * v.z;
 }
 
 transform scaled(vector3 v, transform tm)
