@@ -245,9 +245,28 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 20);
     gs->entities_capacity = 200000;
-
     // @note: let zero-indexed entity be 'null entity' representing lack of entity
     gs->entity_count = 1;
+
+    auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
+    memory::initialize_memory_arena(&gs->ui.ui_allocator, ui_memory);
+    ui::create_root(&gs->ui);
+
+    auto group_1 = ui::create_child_group(&gs->ui, &gs->ui.root);
+    group_1->position.xy = V2(100, 100);
+
+    auto shape_1 = ui::create_child_shape(&gs->ui, group_1);
+    shape_1->position.xy = V2(100, 100);
+
+    auto group_2 = ui::create_child_group(&gs->ui, &gs->ui.root);
+    auto shape_2 = ui::create_child_shape(&gs->ui, group_2);
+    UNUSED(group_2);
+    UNUSED(shape_2);
+
+    // @note: This should be applied each frame after update phase, right?
+    update_transforms(&gs->ui);
+    update_transforms_to_root(&gs->ui);
+
     gs->default_camera.position = V3(0, 0, 20);
 
     float32 vbo_init[] = {
@@ -273,6 +292,9 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
     gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
+
+    gs->ui.rectangle_mesh = gs->rectangle_mesh;
+    gs->ui.rectangle_shader = gs->rectangle_shader;
 
     gs->blink_freq = 2.0f;
 
@@ -600,7 +622,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         // Y axis
         draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
     }
-    osOutputDebugString("dt=%f\n", dt);
+
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
         entity *e = get_entity(gs, eid);
@@ -898,6 +920,28 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             }
         }
     }
+
+#if UI_EDITOR_ENABLED
+    if (gs->ui_editor_enabled)
+    {
+        ui_update_editor(gs->ui_editor, gs->ui, input);
+
+        // @note: reset hovered element in the UI, so in editor it would not stuck in hovered state.
+        gs->ui->hovered_element = NULL;
+    }
+    else
+    {
+        ui_update_scene(gs->ui, input);
+    }
+    ui_draw_scene(gs->ui, Buffer);
+    if (gs->ui_editor_enabled)
+    {
+        ui_draw_editor(gs->ui, gs->ui_editor, Buffer);
+    }
+#else // UI_EDITOR_ENABLED
+    ui::update(&gs->ui, input);
+    ui::draw(context, &gs->ui);
+#endif // UI_EDITOR_ENABLED
 
     if (gs->near_exit_time > 0)
     {

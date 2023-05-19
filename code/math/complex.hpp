@@ -32,12 +32,11 @@ struct complex
         return result;
     }
 
-    complex & operator = (complex b)
-    {
-        re = b.re;
-        im = b.im;
-        return *this;
-    }
+    complex() = default;
+    constexpr complex(complex const&) = default;
+    constexpr complex(complex&&) = default;
+    constexpr complex& operator = (complex&) = default;
+    constexpr complex& operator = (complex&&) = default;
 
     complex & operator = (float32 b)
     {
@@ -57,7 +56,7 @@ INLINE complex make_complex(float32 value)
 {
     complex result;
     result.re = value;
-    result.im = value;
+    result.im = 0.f;
     return result;
 }
 

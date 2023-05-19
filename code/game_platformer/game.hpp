@@ -9,6 +9,8 @@
 #include <math/vector3.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
+#include <ui/ui.hpp>
+
 
 // namespace game {
 
@@ -123,6 +125,8 @@ struct game_state
     entity *entities;
     usize entities_capacity;
     usize entity_count;
+
+    ui::system ui;
 };
 
 

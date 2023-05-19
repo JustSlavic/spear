@@ -75,8 +75,8 @@ void initialize_memory_heap(allocator *a, void *memory, usize size)
     *heap->first_guard = 0;
     *heap->last_guard = 0;
 
-    uintptr_t first_header_address = (uintptr_t) ((byte *) heap->first_guard + sizeof(memory_heap::guard));
-    usize offset = (uintptr_t) last_guard_address - first_header_address;
+    uintptr first_header_address = (uintptr) ((byte *) heap->first_guard + sizeof(memory_heap::guard));
+    usize offset = (uintptr) last_guard_address - first_header_address;
 
     heap->first_header = (memory_heap::header *) first_header_address;
     memory_heap::set_occupied(heap->first_header, false);

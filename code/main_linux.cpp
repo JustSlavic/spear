@@ -310,6 +310,13 @@ int main(int argc, char **argv, char **env)
 
                 case render_command::command_type::draw_screen_frame:
                 break;
+
+                case render_command::command_type::draw_ui:
+                    gfx::draw_polygon_simple(&context,
+                        cmd->draw_ui.mesh_token, cmd->draw_ui.shader_token,
+                        cmd->draw_ui.model, cmd->draw_ui.view, cmd->draw_ui.projection,
+                        cmd->draw_ui.color);
+                break;
             }
         }
         context.render_commands.size = 0;
