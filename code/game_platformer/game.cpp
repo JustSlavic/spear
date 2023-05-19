@@ -79,7 +79,7 @@ GLOBAL math::vector2 gravity = V2(0, -9.8); // m/s^2
 #define PLAYER_BASE_MOVEMENT_ACCELERATION 50.0f
 #define PLAYER_BASE_JUMP_ACCELERATION     5.0f
 #define PLAYER_BASE_JUMP_CORRECTION_SPEED 0.2f
-#define BASE_FRICTION_COEFFICIENT         10.f
+#define BASE_FRICTION_COEFFICIENT         5.f
 
 
 INLINE entity_ref push_entity(game_state *gs)
@@ -531,7 +531,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     auto sam_ref = push_entity(gs);
     sam_ref.e->type     = ENTITY_SAM;
     sam_ref.e->flags    = ENTITY_INTERACTABLE | ENTITY_COLLIDABLE;
-    sam_ref.e->position = V2(0, 5.4);
+    sam_ref.e->position = V2(0, 1);
     sam_ref.e->velocity = V2(0);
     sam_ref.e->width    = 0.5f; // meters
     sam_ref.e->height   = 1.85f; // meters
@@ -696,8 +696,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     if (get_press_count(input->keyboard[keyboard_device::SPACE]))
     {
-        move_data.acceleration.y += (PLAYER_BASE_JUMP_ACCELERATION / (0.1f * gs->carried_packages + 1)) / dt;
-        move_data.jump = true;
+        if (is(gs->sam, ENTITY_ON_GROUND))
+        {
+            move_data.acceleration.y += (PLAYER_BASE_JUMP_ACCELERATION / (0.1f * gs->carried_packages + 1)) / dt;
+            move_data.jump = true;
+        }
     }
 
     // Setup camera
@@ -711,46 +714,37 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     // Background
-    // {
-    //     render_command::command_draw_background draw_background;
-    //     draw_background.mesh = gs->rectangle_mesh;
-    //     draw_background.shader = gs->rectangle_shader;
-    //     draw_background.color = sky_color;
-    //     push_draw_background_command(context, draw_background);
-    // }
+    {
+        render_command::command_draw_background draw_background;
+        draw_background.mesh = gs->rectangle_mesh;
+        draw_background.shader = gs->rectangle_shader;
+        draw_background.color = sky_color;
+        push_draw_background_command(context, draw_background);
+    }
 
-    // if (ui::button(&gs->ui, STRID("Hello, Nikita!")))
-    // {
-    //     osOutputDebugString("HOVERED: TRUE\n");
-    // }
-    // else
-    // {
-    //     osOutputDebugString("HOVERED: FALSE\n");
-    // }
-
-    // // Coordinates
-    // {
-    //     // X axis
-    //     draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
-    //     // Y axis
-    //     draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
-    // }
+    // Coordinates
+    {
+        // X axis
+        draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
+        // Y axis
+        draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    }
 
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
         entity *e = get_entity(gs, eid);
+
         e->collided = false;
 
         if (is_not(e, ENTITY_STATIC))
         {
             float32 dt_ = dt;
-            for (int move = 0; move < 3; move++)
+            for (int move = 0; move < 1; move++)
             {
-                auto acceleration = V2(0);
-                if (is_not(e, ENTITY_ON_GROUND))
-                {
-                    acceleration += gravity;
-                }
+                auto old_v = e->velocity;
+                auto old_p = e->position;
+
+                auto acceleration = gravity;
                 if (is(e, ENTITY_SAM))
                 {
                     acceleration += move_data.acceleration;
@@ -764,29 +758,23 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                     }
                 }
 
-                auto old_v = e->velocity;
-                auto new_v = e->velocity + acceleration * dt_;
-
-                auto friction = V2(0);
+                // @todo: should I consider air resitance?
                 if (is(e, ENTITY_ON_GROUND))
                 {
                     // Friction with the ground
-                    friction += (BASE_FRICTION_COEFFICIENT * (-new_v));
-                    e->velocity.y = 0.f;
+                    auto normal_force = e->mass * math::length(gravity);
+                    auto friction = (BASE_FRICTION_COEFFICIENT * (-old_v));
+                    acceleration += friction;
                 }
-                // @todo: should I consider air resitance?
 
-                acceleration += friction;
-                new_v = e->velocity + acceleration * dt_;
-                e->velocity = new_v;
-
-                auto old_p = e->position;
-                auto new_p = e->position + old_v * dt_;
+                auto new_v = e->velocity + acceleration * dt_;
+                auto new_p = e->position + 0.5f * (old_v + new_v) * dt_;
 
                 auto full_distance = math::length(new_p - old_p);
                 auto distance = full_distance;
                 if (distance < EPSILON) break;
 
+                unset(e, ENTITY_ON_GROUND);
                 if (is(e, ENTITY_COLLIDABLE) || is(e, ENTITY_INTERACTABLE))
                 {
                     for (uint32 test_eid = 1; test_eid < gs->entity_count; test_eid++)
