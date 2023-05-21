@@ -98,7 +98,14 @@ bool32 create_simple_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientH
     return true;
 }
 
-
+void get_mouse_pos(window *wnd, int32 *x, int32 *y)
+{
+    POINT pos;
+    GetCursorPos(&pos);
+    ScreenToClient(wnd->handle, &pos);
+    *x = pos.x;
+    *y = pos.y;
+}
 
 uint64 get_processor_cycles()
 {

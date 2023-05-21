@@ -87,11 +87,11 @@ struct keyboard_device
     }
 };
 
-void reset_transitions(keyboard_device *kb)
+void reset_transitions(button_state *buttons, usize key_count)
 {
-    for (int key_index = 0; key_index < keyboard_device::key_count; key_index++)
+    for (int key_index = 0; key_index < key_count; key_index++)
     {
-        kb->buttons[key_index].transition_count = 0;
+        buttons[key_index].transition_count = 0;
     }
 }
 

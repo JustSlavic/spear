@@ -249,27 +249,89 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
-    memory::initialize_memory_arena(&gs->ui.ui_allocator, ui_memory);
-    ui::create_root(&gs->ui);
+    ui::initialize(&gs->ui, ui_memory);
 
-    auto group_1 = ui::create_child_group(&gs->ui, &gs->ui.root);
-    auto shape_1 = ui::create_child_shape(&gs->ui, group_1);
-    shape_1->position.xy = V2(500, 600);
-    shape_1->rotation.z = 20.f;
-    shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
+    auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
+    auto shape_1 = ui::make_shape(&gs->ui, group_1);
+    shape_1->position.xy = V2(200, 200);
+    shape_1->rotation = 20.f;
+    shape_1->color = V4(0.4, 0.7, 0.2, 1.0);
 
-    gs->rotation_z = &shape_1->rotation.z;
+    auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
+    hoverable_1->on_enter = [] (ui::element *e)
+    {
+        e->color = V4(1, 0, 0, 1);
+    };
+    hoverable_1->on_leave = [] (ui::element *e)
+    {
+        e->color = V4(0.4, 0.7, 0.2, 1.0);
+    };
 
-    auto group_2 = ui::create_child_group(&gs->ui, &gs->ui.root);
-    auto shape_2 = ui::create_child_shape(&gs->ui, group_2);
-    shape_2->position.xy = V2(400, 200);
-    shape_2->scale.xy = V2(2, 2);
-    shape_2->rotation.z = 45.f;
-    shape_2->color = V4(0.3, 0.3, 0.8, 1.0);
+    auto clickable_1 = ui::make_clickable(&gs->ui, shape_1);
+    clickable_1->on_press = [] (ui::element *e)
+    {
+        e->color = V4(0, 1, 0, 1);
+    };
+    clickable_1->on_release = [] (ui::element *e)
+    {
+        e->color = V4(0.4, 0.7, 0.2, 1.0);
+    };
+
+    auto shape_2 = ui::make_shape(&gs->ui, group_1);
+    shape_2->position.xy = V2(300, 600);
+    shape_2->width = 300.f;
+    shape_2->height = 20.f;
+    shape_2->rotation = 45.f;
+    shape_2->color = V4(0.3, 0.6, 0.4, 1.0);
+
+    auto hoverable_2 = ui::make_hoverable(&gs->ui, shape_2);
+    hoverable_2->on_enter = [] (ui::element *e)
+    {
+        e->color = V4(1, 0, 0, 1);
+    };
+    hoverable_2->on_leave = [] (ui::element *e)
+    {
+        e->color = V4(0.3, 0.6, 0.4, 1.0);
+    };
+
+    auto clickable_2 = ui::make_clickable(&gs->ui, shape_2);
+    clickable_2->on_press = [] (ui::element *e)
+    {
+        e->color = V4(0, 1, 0, 1);
+    };
+    clickable_2->on_release = [] (ui::element *e)
+    {
+        e->color = V4(0.3, 0.6, 0.4, 1.0);
+    };
+
+    auto shape_3 = ui::make_shape(&gs->ui, &gs->ui.root);
+    shape_3->position.xy = V2(400, 200);
+    shape_3->scale.xy = V2(5, 5);
+    shape_3->rotation = 70.f;
+    shape_3->color = V4(0.3, 0.3, 0.8, 1.0);
+
+    auto hoverable_3 = ui::make_hoverable(&gs->ui, shape_3);
+    hoverable_3->on_enter = [] (ui::element *e)
+    {
+        e->color = V4(1, 0, 0, 1);
+    };
+    hoverable_3->on_leave = [] (ui::element *e)
+    {
+        e->color = V4(0.3, 0.3, 0.8, 1.0);
+    };
+    
+    auto clickable_3 = ui::make_clickable(&gs->ui, shape_3);
+    clickable_3->on_press = [] (ui::element *e)
+    {
+        e->color = V4(0, 1, 0, 1);
+    };
+    clickable_3->on_release = [] (ui::element *e)
+    {
+        e->color = V4(0.3, 0.3, 0.8, 1.0);
+    };
 
     // @note: This should be applied each frame after update phase, right?
     update_transforms(&gs->ui);
-    update_transforms_to_root(&gs->ui);
 
     gs->default_camera.position = V3(0, 0, 20);
 
@@ -554,6 +616,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     global_debug_measurements = context->debug_measurements;
 
+    // osOutputDebugString("mouse_p = {%d, %d}\n", input->mouse.x, input->mouse.y);
+
     DEBUG_BEGIN_TIME_MEASUREMENT(update_and_render);
 
     game_state *gs = (game_state *) game_memory.memory;
@@ -619,13 +683,13 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_draw_background_command(context, draw_background);
     }
 
-    // Coordinates
-    {
-        // X axis
-        draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
-        // Y axis
-        draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
-    }
+    // // Coordinates
+    // {
+    //     // X axis
+    //     draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
+    //     // Y axis
+    //     draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    // }
 
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
@@ -712,6 +776,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             }
         }
 
+        continue;
         switch (e->type)
         {
             case ENTITY_SAM:
@@ -944,9 +1009,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 #else // UI_EDITOR_ENABLED
     ui::update(&gs->ui, input);
-    // @note: This should be applied each frame after update phase, right?
-    update_transforms(&gs->ui);
-    update_transforms_to_root(&gs->ui);
     ui::draw(context, &gs->ui);
 #endif // UI_EDITOR_ENABLED
 
@@ -959,7 +1021,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     gs->near_exit_time -= dt;
     gs->blink_time -= dt;
-    *gs->rotation_z = (*gs->rotation_z + 10.f * dt);
 
     DEBUG_END_TIME_MEASUREMENT(update_and_render);
 }

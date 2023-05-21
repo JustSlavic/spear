@@ -117,6 +117,19 @@ void process_pending_messages(input *inp)
             case WM_MOUSEMOVE:
             break;
 
+            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::lmb], true);
+                break;
+            case WM_LBUTTONUP: process_button_state(&inp->mouse[mouse_device::lmb], false);
+                break;
+            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::mmb], true);
+                break;
+            case WM_MBUTTONUP: process_button_state(&inp->mouse[mouse_device::mmb], false);
+                break;
+            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::rmb], true);
+                break;
+            case WM_RBUTTONUP: process_button_state(&inp->mouse[mouse_device::rmb], false);
+                break;
+
             case WM_SYSKEYDOWN:
             case WM_SYSKEYUP:
             case WM_KEYDOWN:
@@ -354,8 +367,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
-        reset_transitions(&input.keyboard);
+        reset_transitions(input.keyboard.buttons, keyboard_device::key_count);
+        reset_transitions(input.mouse.buttons, mouse_device::key_count);
         process_pending_messages(&input);
+        win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
 
         uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
         if (dll_file_time > game.dll.timestamp)

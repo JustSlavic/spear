@@ -35,6 +35,7 @@ bool32 operator == (string_id id1, string_id id2)
 string_id make_string_id(string_id_storage *, char const *string, usize size);
 string_id make_string_id(string_id_storage *, char const *string);
 char const *get_cstring_by_id(string_id_storage *, string_id id);
+FORCE_INLINE uint64 hash(string_id id) { return id.id; }
 
 #define STRID(CSTR) make_string_id(&context->strid_storage, CSTR)
 

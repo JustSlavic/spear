@@ -103,6 +103,13 @@ float height(rectangle2 rect)
     return result;
 }
 
+bool32 is_inside(rectangle2 a, vector2 p)
+{
+    bool32 result = ((a.center.x - a.radii.x) <= p.x && p.x <= (a.center.x + a.radii.x)) &&
+                     (a.center.y - a.radii.y) <= p.y && p.y <= (a.center.y + a.radii.y);
+    return result;
+}
+
 bool32 is_intersecting(rectangle2 a, rectangle2 b)
 {
     if (math::absolute(a.center.x - b.center.x) > (a.radii.x + b.radii.x)) return false;

@@ -16,6 +16,11 @@ struct array
         return data[index];
     }
 
+    Type const& operator[] (usize index) const
+    {
+        return data[index];
+    }
+
     Type *push()
     {
         Type* result = 0;
