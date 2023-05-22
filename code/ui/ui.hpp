@@ -23,16 +23,21 @@
 #define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
 #endif // OS_WINDOWS
 
+
+struct game_state;
+
+
 namespace ui {
 
 
+struct system;
 struct element;
 struct hover_behaviour;
 struct click_behaviour;
 
 
-typedef void callback(element *);
-void callback_stub(element *) {}
+typedef void callback(system *, element *);
+void callback_stub(system *, element *) {}
 
 
 struct element
@@ -61,15 +66,6 @@ struct element
     math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
 };
 
-struct click_behaviour
-{
-    element *owner;
-    math::rectangle2 click_area;
-
-    callback *on_press;
-    callback *on_release;
-};
-
 struct hover_behaviour
 {
     element *owner;
@@ -77,11 +73,28 @@ struct hover_behaviour
 
     callback *on_enter;
     callback *on_leave;
+
+    callback *on_enter_internal;
+    callback *on_leave_internal;
+};
+
+struct click_behaviour
+{
+    element *owner;
+    math::rectangle2 click_area;
+
+    callback *on_press;
+    callback *on_release;
+
+    callback *on_press_internal;
+    callback *on_release_internal;
 };
 
 struct system
 {
     memory::allocator ui_allocator;
+    game_state *gs;
+
     // @todo: expand it to grow in needed?
     static_array<element, 10> groups;
     static_array<element, 10> shapes;
@@ -96,10 +109,12 @@ struct system
     rs::resource_token rectangle_shader;
 };
 
-void initialize(system *sys, memory_block ui_memory)
+void initialize(game_state *gs, system *sys, memory_block ui_memory)
 {
     memory::set(sys, 0, sizeof(system));
     memory::initialize_memory_arena(&sys->ui_allocator, ui_memory);
+
+    sys->gs = gs;
 
     sys->root.transform = math::transform::identity();
     sys->root.transform_to_root = math::transform::identity();
@@ -145,6 +160,8 @@ hover_behaviour *make_hoverable(system *sys, element *e)
         result->hover_area = math::rectangle2::from_center_size(V2(0), 100, 100);
         result->on_enter = callback_stub;
         result->on_leave = callback_stub;
+        result->on_enter_internal = callback_stub;
+        result->on_leave_internal = callback_stub;
 
         e->hoverable = result;
     }
@@ -161,6 +178,8 @@ click_behaviour *make_clickable(system *sys, element *e)
         result->click_area = math::rectangle2::from_center_size(V2(0), 100, 100);
         result->on_press = callback_stub;
         result->on_release = callback_stub;
+        result->on_press_internal = callback_stub;
+        result->on_release_internal = callback_stub;
 
         e->clickable = result;
     }
@@ -206,14 +225,16 @@ void update_order_index(element *e, uint32& order_index)
 
 void make_cold(system *sys, element *e)
 {
-    sys->hot->hoverable->on_leave(sys->hot);
+    sys->hot->hoverable->on_leave_internal(sys, sys->hot);
+    sys->hot->hoverable->on_leave(sys, sys->hot);
     sys->hot = NULL;
 }
 
 void make_hot(system *sys, element *e)
 {
     sys->hot = e;
-    sys->hot->hoverable->on_enter(sys->hot);
+    sys->hot->hoverable->on_enter(sys, sys->hot);
+    sys->hot->hoverable->on_enter_internal(sys, sys->hot);
 }
 
 void update(system *sys, input *inp)
@@ -289,11 +310,12 @@ void update(system *sys, input *inp)
         sys->active = sys->hot;
         if (sys->active)
         {
-            if (sys->active == sys->hot)
+            if (sys->active->clickable)
             {
-                if (sys->active->clickable)
+                if (sys->active == sys->hot)
                 {
-                    sys->active->clickable->on_press(sys->active);
+                    sys->active->clickable->on_press_internal(sys, sys->active);
+                    sys->active->clickable->on_press(sys, sys->active);
                 }
             }
         }
@@ -303,15 +325,16 @@ void update(system *sys, input *inp)
     {
         if (sys->active)
         {
-            if (sys->active == sys->hot)
+            if (sys->active->clickable)
             {
-                if (sys->active->clickable)
+                if (sys->active == sys->hot)
                 {
-                    sys->active->clickable->on_release(sys->active);
+                    sys->active->clickable->on_release(sys, sys->active);
                 }
+                sys->active->clickable->on_release_internal(sys, sys->active);
             }
+            sys->active = NULL;
         }
-        sys->active = NULL;
     }
 
     // @note: This should be applied each frame after update phase, right?

@@ -249,7 +249,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
-    ui::initialize(&gs->ui, ui_memory);
+    ui::initialize(gs, &gs->ui, ui_memory);
 
     auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
     auto shape_1 = ui::make_shape(&gs->ui, group_1);
@@ -258,23 +258,26 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     shape_1->color = V4(0.4, 0.7, 0.2, 1.0);
 
     auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
-    hoverable_1->on_enter = [] (ui::element *e)
+    hoverable_1->on_enter_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(1, 0, 0, 1);
     };
-    hoverable_1->on_leave = [] (ui::element *e)
+    hoverable_1->on_leave_internal = [] (ui::system *s, ui::element *e)
     {
-        e->color = V4(0.4, 0.7, 0.2, 1.0);
+        if (s->active != e)
+            e->color = V4(0.4, 0.7, 0.2, 1.0);
     };
 
     auto clickable_1 = ui::make_clickable(&gs->ui, shape_1);
-    clickable_1->on_press = [] (ui::element *e)
+    clickable_1->on_press_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0, 1, 0, 1);
     };
-    clickable_1->on_release = [] (ui::element *e)
+    clickable_1->on_release_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0.4, 0.7, 0.2, 1.0);
+        if (s->hot)
+            s->hot->hoverable->on_enter_internal(s, s->hot);
     };
 
     auto shape_2 = ui::make_shape(&gs->ui, group_1);
@@ -285,23 +288,26 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     shape_2->color = V4(0.3, 0.6, 0.4, 1.0);
 
     auto hoverable_2 = ui::make_hoverable(&gs->ui, shape_2);
-    hoverable_2->on_enter = [] (ui::element *e)
+    hoverable_2->on_enter_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(1, 0, 0, 1);
     };
-    hoverable_2->on_leave = [] (ui::element *e)
+    hoverable_2->on_leave_internal = [] (ui::system *s, ui::element *e)
     {
-        e->color = V4(0.3, 0.6, 0.4, 1.0);
+        if (s->active != e)
+            e->color = V4(0.3, 0.6, 0.4, 1.0);
     };
 
     auto clickable_2 = ui::make_clickable(&gs->ui, shape_2);
-    clickable_2->on_press = [] (ui::element *e)
+    clickable_2->on_press_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0, 1, 0, 1);
     };
-    clickable_2->on_release = [] (ui::element *e)
+    clickable_2->on_release_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0.3, 0.6, 0.4, 1.0);
+        if (s->hot)
+            s->hot->hoverable->on_enter_internal(s, s->hot);
     };
 
     auto shape_3 = ui::make_shape(&gs->ui, &gs->ui.root);
@@ -311,23 +317,26 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     shape_3->color = V4(0.3, 0.3, 0.8, 1.0);
 
     auto hoverable_3 = ui::make_hoverable(&gs->ui, shape_3);
-    hoverable_3->on_enter = [] (ui::element *e)
+    hoverable_3->on_enter_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(1, 0, 0, 1);
     };
-    hoverable_3->on_leave = [] (ui::element *e)
+    hoverable_3->on_leave_internal = [] (ui::system *s, ui::element *e)
     {
-        e->color = V4(0.3, 0.3, 0.8, 1.0);
+        if (e != s->active)
+            e->color = V4(0.3, 0.3, 0.8, 1.0);
     };
-    
+
     auto clickable_3 = ui::make_clickable(&gs->ui, shape_3);
-    clickable_3->on_press = [] (ui::element *e)
+    clickable_3->on_press_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0, 1, 0, 1);
     };
-    clickable_3->on_release = [] (ui::element *e)
+    clickable_3->on_release_internal = [] (ui::system *s, ui::element *e)
     {
         e->color = V4(0.3, 0.3, 0.8, 1.0);
+        if (s->hot)
+            s->hot->hoverable->on_enter_internal(s, s->hot);
     };
 
     // @note: This should be applied each frame after update phase, right?
