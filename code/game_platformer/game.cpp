@@ -257,6 +257,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     shape_1->rotation = 20.f;
     shape_1->color = V4(0.4, 0.7, 0.2, 1.0);
 
+    ui::give_name(&gs->ui, shape_1, STRID("Hello, Nikita!"));
+
     auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
     hoverable_1->on_enter_internal = [] (ui::system *s, ui::element *e)
     {
@@ -690,6 +692,15 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_background.shader = gs->rectangle_shader;
         draw_background.color = sky_color;
         push_draw_background_command(context, draw_background);
+    }
+
+    if (ui::button(&gs->ui, STRID("Hello, Nikita!")))
+    {
+        osOutputDebugString("HOVERED: TRUE\n");
+    }
+    else
+    {
+        osOutputDebugString("HOVERED: FALSE\n");
     }
 
     // // Coordinates

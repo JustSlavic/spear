@@ -55,7 +55,7 @@ string_id make_string_id(string_id_storage *storage, char const *cstr, usize siz
         memory::copy(string_in_buffer, cstr, size);
         string_in_buffer[size] = 0; // null-terminator just in case I have to pass this buffer to a function, which expects c-string
 
-        uint32 offset = usize_to_uint32((intptr) string_in_buffer - (intptr) storage->arena.memory);
+        uint32 offset = truncate_to_uint32((intptr) string_in_buffer - (intptr) storage->arena.memory);
         storage->hash_table_offsets[index] = offset;
         result.id = offset;
     }

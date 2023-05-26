@@ -8,6 +8,7 @@
 #include <math/vector4.hpp>
 #include <math/transform.hpp>
 #include <array.hpp>
+#include <string_id.hpp>
 #include <input.hpp>
 
 #if OS_WINDOWS
@@ -40,8 +41,53 @@ typedef void callback(system *, element *);
 void callback_stub(system *, element *) {}
 
 
+enum class array_of
+{
+    // 0 is "none", so ui_id with all bits set
+    // to 0 represents "null" reference
+    none = 0,
+    groups,
+    shapes,
+    hoverables,
+    clickables,
+};
+
+
+struct ui_id
+{
+
+    // 8 bits array_of
+    // 24 bits index in that array
+    uint32 id;
+};
+
+
+ui_id make_ui_id(array_of a, uint32 index)
+{
+    ui_id result;
+    result.id = ((((uint32) a) << 24) | (index & 0x00ffffff));
+    return result;
+}
+
+
+array_of which_array(ui_id id)
+{
+    auto result = (array_of) (id.id >> 24);
+    return result;
+}
+
+
+uint32 get_index(ui_id id)
+{
+    uint32 result = (id.id & 0x00ffffff);
+    return result;
+}
+
+
 struct element
 {
+    ui_id id;
+
     // These are for transform properties
     math::vector3 position;
     math::vector3 scale;
@@ -68,6 +114,9 @@ struct element
 
 struct hover_behaviour
 {
+    ui_id id;
+    bool32 hovered;
+
     element *owner;
     math::rectangle2 hover_area;
 
@@ -107,6 +156,9 @@ struct system
 
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
+
+    string_id hash_table_strids[32]; // Keys
+    ui_id     hash_table_ids[32];    // Values
 };
 
 void initialize(game_state *gs, system *sys, memory_block ui_memory)
@@ -120,10 +172,74 @@ void initialize(game_state *gs, system *sys, memory_block ui_memory)
     sys->root.transform_to_root = math::transform::identity();
 }
 
+void give_name(system *s, element *e, string_id strid)
+{
+    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    {
+        uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
+
+        if (s->hash_table_strids[index].id == 0)
+        {
+            s->hash_table_strids[index] = strid;
+            s->hash_table_ids[index] = e->id;
+            break;
+        }
+    }
+}
+
+element *get_element_by_id(system *s, ui_id id)
+{
+    element *result = NULL;
+
+    uint32 index = get_index(id);
+    switch (which_array(id))
+    {
+        case array_of::groups:
+        {
+            result = s->groups.data + index;
+        }
+        break;
+
+        case array_of::shapes:
+        {
+            result = s->shapes.data + index;
+        }
+        break;
+    }
+
+    return result;
+}
+
+element *get_element_by_name(system *s, string_id strid)
+{
+    ui_id id = {};
+
+    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    {
+        uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
+
+        if (s->hash_table_strids[index] == strid)
+        {
+            id = s->hash_table_ids[index];
+            break;
+        }
+        else if (s->hash_table_strids[index].id == 0)
+        {
+            break;
+        }
+    }
+
+    element *result = get_element_by_id(s, id);
+    return result;
+}
+
 element *make_group(system *sys, element *parent)
 {
+    ui_id id = make_ui_id(array_of::groups, truncate_to_uint32(sys->groups.size));
+
     element *result = sys->groups.push();
     memory::set(result, 0, sizeof(element));
+    result->id = id;
     result->scale = V3(1);
     result->transform = math::transform::identity();
     result->transform_to_root = math::transform::identity();
@@ -136,8 +252,11 @@ element *make_group(system *sys, element *parent)
 
 element *make_shape(system *sys, element *parent)
 {
+    ui_id id = make_ui_id(array_of::shapes, truncate_to_uint32(sys->shapes.size));
+
     element *result = sys->shapes.push();
     memory::set(result, 0, sizeof(element));
+    result->id = id;
     result->width = 100.f;
     result->height = 100.f;
     result->scale = V3(1);
@@ -155,7 +274,11 @@ hover_behaviour *make_hoverable(system *sys, element *e)
     hover_behaviour *result = NULL;
     if (e->hoverable == NULL)
     {
+        ui_id id = make_ui_id(array_of::hoverables, truncate_to_uint32(sys->hoverables.size));
+
         result = sys->hoverables.push();
+        result->id = id;
+        result->hovered = false;
         result->owner = e;
         result->hover_area = math::rectangle2::from_center_size(V2(0), 100, 100);
         result->on_enter = callback_stub;
@@ -227,12 +350,14 @@ void make_cold(system *sys, element *e)
 {
     sys->hot->hoverable->on_leave_internal(sys, sys->hot);
     sys->hot->hoverable->on_leave(sys, sys->hot);
+    sys->hot->hoverable->hovered = false;
     sys->hot = NULL;
 }
 
 void make_hot(system *sys, element *e)
 {
     sys->hot = e;
+    sys->hot->hoverable->hovered = true;
     sys->hot->hoverable->on_enter(sys, sys->hot);
     sys->hot->hoverable->on_enter_internal(sys, sys->hot);
 }
@@ -370,6 +495,14 @@ void draw(execution_context *context, system *sys)
 
         push_render_command(context, cmd);
     }
+}
+
+
+bool32 button(system *s, string_id id)
+{
+    element *e = get_element_by_name(s, id);
+    bool32 result = (e && e->hoverable && e->hoverable->hovered);
+    return result;
 }
 
 

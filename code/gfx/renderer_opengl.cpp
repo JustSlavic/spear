@@ -253,7 +253,7 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, usize_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
 }
 
 
