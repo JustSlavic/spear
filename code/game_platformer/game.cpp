@@ -253,93 +253,118 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
     auto shape_1 = ui::make_shape(&gs->ui, group_1);
-    shape_1->position.xy = V2(200, 200);
+    shape_1->position.xy = V2(500, 600);
     shape_1->rotation = 20.f;
-    shape_1->color = V4(0.4, 0.7, 0.2, 1.0);
-
-    ui::give_name(&gs->ui, shape_1, STRID("Hello, Nikita!"));
+    shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
 
     auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
-    hoverable_1->on_enter_internal = [] (ui::system *s, ui::element *e)
+    hoverable_1->on_enter_internal = [](ui::system *s, ui::element *e)
     {
         e->color = V4(1, 0, 0, 1);
     };
-    hoverable_1->on_leave_internal = [] (ui::system *s, ui::element *e)
+    hoverable_1->on_leave_internal = [](ui::system *s, ui::element *e)
     {
-        if (s->active != e)
-            e->color = V4(0.4, 0.7, 0.2, 1.0);
+        e->color = V4(0.9, 0.4, 0.2, 1.0);
     };
 
-    auto clickable_1 = ui::make_clickable(&gs->ui, shape_1);
-    clickable_1->on_press_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0, 1, 0, 1);
-    };
-    clickable_1->on_release_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0.4, 0.7, 0.2, 1.0);
-        if (s->hot)
-            s->hot->hoverable->on_enter_internal(s, s->hot);
-    };
+    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::POSITION_X, 60, 500, 600);
+    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_R, 30, 0, 1);
+    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_G, 30, 0, 1);
+    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_B, 30, 0, 1);
 
-    auto shape_2 = ui::make_shape(&gs->ui, group_1);
-    shape_2->position.xy = V2(300, 600);
-    shape_2->width = 300.f;
-    shape_2->height = 20.f;
-    shape_2->rotation = 45.f;
-    shape_2->color = V4(0.3, 0.6, 0.4, 1.0);
+    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::WIDTH, 120, 100, 200);
 
-    auto hoverable_2 = ui::make_hoverable(&gs->ui, shape_2);
-    hoverable_2->on_enter_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(1, 0, 0, 1);
-    };
-    hoverable_2->on_leave_internal = [] (ui::system *s, ui::element *e)
-    {
-        if (s->active != e)
-            e->color = V4(0.3, 0.6, 0.4, 1.0);
-    };
+    // auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
+    // auto shape_1 = ui::make_shape(&gs->ui, group_1);
+    // shape_1->position.xy = V2(200, 200);
+    // shape_1->rotation = 20.f;
+    // shape_1->color = V4(0.4, 0.7, 0.2, 1.0);
 
-    auto clickable_2 = ui::make_clickable(&gs->ui, shape_2);
-    clickable_2->on_press_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0, 1, 0, 1);
-    };
-    clickable_2->on_release_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0.3, 0.6, 0.4, 1.0);
-        if (s->hot)
-            s->hot->hoverable->on_enter_internal(s, s->hot);
-    };
+    // ui::give_name(&gs->ui, shape_1, STRID("Hello, Nikita!"));
 
-    auto shape_3 = ui::make_shape(&gs->ui, &gs->ui.root);
-    shape_3->position.xy = V2(400, 200);
-    shape_3->scale.xy = V2(5, 5);
-    shape_3->rotation = 70.f;
-    shape_3->color = V4(0.3, 0.3, 0.8, 1.0);
+    // auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
+    // hoverable_1->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(1, 0, 0, 1);
+    // };
+    // hoverable_1->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     if (s->active != e)
+    //         e->color = V4(0.4, 0.7, 0.2, 1.0);
+    // };
 
-    auto hoverable_3 = ui::make_hoverable(&gs->ui, shape_3);
-    hoverable_3->on_enter_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(1, 0, 0, 1);
-    };
-    hoverable_3->on_leave_internal = [] (ui::system *s, ui::element *e)
-    {
-        if (e != s->active)
-            e->color = V4(0.3, 0.3, 0.8, 1.0);
-    };
+    // auto clickable_1 = ui::make_clickable(&gs->ui, shape_1);
+    // clickable_1->on_press_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0, 1, 0, 1);
+    // };
+    // clickable_1->on_release_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0.4, 0.7, 0.2, 1.0);
+    //     if (s->hot)
+    //         s->hot->hoverable->on_enter_internal(s, s->hot);
+    // };
 
-    auto clickable_3 = ui::make_clickable(&gs->ui, shape_3);
-    clickable_3->on_press_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0, 1, 0, 1);
-    };
-    clickable_3->on_release_internal = [] (ui::system *s, ui::element *e)
-    {
-        e->color = V4(0.3, 0.3, 0.8, 1.0);
-        if (s->hot)
-            s->hot->hoverable->on_enter_internal(s, s->hot);
-    };
+    // auto shape_2 = ui::make_shape(&gs->ui, group_1);
+    // shape_2->position.xy = V2(300, 600);
+    // shape_2->width = 300.f;
+    // shape_2->height = 20.f;
+    // shape_2->rotation = 45.f;
+    // shape_2->color = V4(0.3, 0.6, 0.4, 1.0);
+
+    // auto hoverable_2 = ui::make_hoverable(&gs->ui, shape_2);
+    // hoverable_2->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(1, 0, 0, 1);
+    // };
+    // hoverable_2->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     if (s->active != e)
+    //         e->color = V4(0.3, 0.6, 0.4, 1.0);
+    // };
+
+    // auto clickable_2 = ui::make_clickable(&gs->ui, shape_2);
+    // clickable_2->on_press_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0, 1, 0, 1);
+    // };
+    // clickable_2->on_release_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0.3, 0.6, 0.4, 1.0);
+    //     if (s->hot)
+    //         s->hot->hoverable->on_enter_internal(s, s->hot);
+    // };
+
+    // auto shape_3 = ui::make_shape(&gs->ui, &gs->ui.root);
+    // shape_3->position.xy = V2(400, 200);
+    // shape_3->scale.xy = V2(5, 5);
+    // shape_3->rotation = 70.f;
+    // shape_3->color = V4(0.3, 0.3, 0.8, 1.0);
+
+    // ui::animate_normal(&gs->ui, shape_3, ui::animation::POSITION_X, 60, 0, 100);
+
+    // auto hoverable_3 = ui::make_hoverable(&gs->ui, shape_3);
+    // hoverable_3->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(1, 0, 0, 1);
+    // };
+    // hoverable_3->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     if (e != s->active)
+    //         e->color = V4(0.3, 0.3, 0.8, 1.0);
+    // };
+
+    // auto clickable_3 = ui::make_clickable(&gs->ui, shape_3);
+    // clickable_3->on_press_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0, 1, 0, 1);
+    // };
+    // clickable_3->on_release_internal = [] (ui::system *s, ui::element *e)
+    // {
+    //     e->color = V4(0.3, 0.3, 0.8, 1.0);
+    //     if (s->hot)
+    //         s->hot->hoverable->on_enter_internal(s, s->hot);
+    // };
 
     // @note: This should be applied each frame after update phase, right?
     update_transforms(&gs->ui);
@@ -619,12 +644,12 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
 // - execution_context *context;
 // - memory_block game_memory;
 // - input_devices input;
-// - float32 dt;
 //
 UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {
     using namespace math;
 
+    float32 dt = input->dt;
     global_debug_measurements = context->debug_measurements;
 
     // osOutputDebugString("mouse_p = {%d, %d}\n", input->mouse.x, input->mouse.y);

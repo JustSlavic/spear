@@ -10,7 +10,7 @@
 #define INITIALIZE_MEMORY_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION(initialize_memory_t);
 
-#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory, input *input, float32 dt)
+#define UPDATE_AND_RENDER_FUNCTION(NAME) void NAME(execution_context *context, memory_block game_memory, input *input)
 typedef UPDATE_AND_RENDER_FUNCTION(update_and_render_t);
 
 extern "C"

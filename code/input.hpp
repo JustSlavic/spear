@@ -165,6 +165,7 @@ struct input
     mouse_device mouse;
     gamepad_device gamepads[4];
     float32 dt;
+    float32 time;
 };
 
 

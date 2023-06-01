@@ -65,6 +65,12 @@ float32 clamp(float32 x, float32 a, float32 b)
     return x;
 }
 
+float32 lerp(float32 a, float32 b, float32 t)
+{
+    float32 result = (1.f - t) * a + t * b;
+    return result;
+}
+
 float32 square(float32 x)
 {
     float32 result = x * x;

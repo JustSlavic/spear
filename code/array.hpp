@@ -53,6 +53,16 @@ struct static_array
 
     usize capacity() { return Capacity; }
 
+    Type& operator[] (usize index)
+    {
+        return data[index];
+    }
+
+    Type const& operator[] (usize index) const
+    {
+        return data[index];
+    }
+
     Type *push()
     {
         Type* result = 0;
@@ -70,6 +80,15 @@ struct static_array
         {
             usize index = size++;
             data[index] = t;
+        }
+    }
+
+    void erase_not_sorted(usize index)
+    {
+        if (index < size)
+        {
+            data[index] = data[size - 1];
+            size -= 1;
         }
     }
 };

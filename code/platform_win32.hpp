@@ -136,6 +136,13 @@ timepoint get_wall_clock()
 }
 
 
+float64 get_seconds(timepoint t)
+{
+    float64 result = t.counts / (float64) get_wall_clock_frequency();
+    return result;
+}
+
+
 float64 get_seconds(duration d)
 {
     float64 result = d.counts / (float64) get_wall_clock_frequency();

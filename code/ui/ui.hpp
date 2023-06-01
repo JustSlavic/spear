@@ -100,7 +100,7 @@ struct element
 
     // Parent-child relations
     element *parent;
-    static_array<element *, 10> children; // @todo: make it grow if needed? bucket_array?
+    static_array<ui_id, 10> children; // @todo: make it grow if needed? bucket_array?
     uint32 order_index;
 
     // Optional slots
@@ -139,6 +139,59 @@ struct click_behaviour
     callback *on_release_internal;
 };
 
+
+struct animation
+{
+    enum property
+    {
+        POSITION_X,
+        POSITION_Y,
+        ROTATION,
+        WIDTH,
+        HEIGHT,
+        COLOR_R,
+        COLOR_G,
+        COLOR_B,
+        COLOR_A,
+
+        PROPERTY_COUNT
+    };
+
+    enum function
+    {
+        LINEAR,
+    };
+
+    enum kind
+    {
+        NORMAL, // Goes forward and stops
+        NORMAL_LOOP, // Goes forward and loops from the start
+        PING_PONG, // Goes forward and then backwards closing the loop
+        // UI_ANIMATION_REVERSE,
+        // UI_ANIMATION_ALTERNATE,
+        // UI_ANIMATION_ALTERNATE_REVERSE,
+    };
+
+    enum direction : int32
+    {
+        FORWARD  =  1,
+        BACKWARD = -1,
+    };
+
+    ui_id element_id;
+
+    property p;
+    kind type;
+
+    float32 start_value;
+    float32 final_value;
+
+    // Assume begin time be 0s
+    float32 duration_seconds; // the same as end time
+    float32 current_time;
+    direction is_forward;
+};
+
 struct system
 {
     memory::allocator ui_allocator;
@@ -149,6 +202,7 @@ struct system
     static_array<element, 10> shapes;
     static_array<hover_behaviour, 10> hoverables;
     static_array<click_behaviour, 10> clickables;
+    static_array<animation, 10> animations;
 
     element root;
     element *hot;    // The element is about to be interacted with (mouse over or focused)
@@ -245,7 +299,7 @@ element *make_group(system *sys, element *parent)
     result->transform_to_root = math::transform::identity();
 
     result->parent = parent;
-    parent->children.push(result);
+    parent->children.push(id);
 
     return result;
 }
@@ -264,7 +318,7 @@ element *make_shape(system *sys, element *parent)
     result->transform_to_root = math::transform::identity();
 
     result->parent = parent;
-    parent->children.push(result);
+    parent->children.push(id);
 
     return result;
 }
@@ -336,13 +390,14 @@ void update_transforms(system *sys)
     }
 }
 
-void update_order_index(element *e, uint32& order_index)
+void update_order_index(system *sys, element *e, uint32& order_index)
 {
     e->order_index = order_index++;
     for (usize child_index = 0; child_index < e->children.size; child_index++)
     {
-        element *child = e->children.data[child_index];
-        update_order_index(child, order_index);
+        ui_id child_id = e->children.data[child_index];
+        element *child = get_element_by_id(sys, child_id);
+        update_order_index(sys, child, order_index);
     }
 }
 
@@ -362,12 +417,92 @@ void make_hot(system *sys, element *e)
     sys->hot->hoverable->on_enter_internal(sys, sys->hot);
 }
 
+void update_animations(system *sys, input *inp)
+{
+    for (uint32 i = 0; i < sys->animations.size;)
+    {
+        animation& a = sys->animations[i];
+        element *e = get_element_by_id(sys, a.element_id);
+        a.current_time += ((float32) a.is_forward) * inp->dt;
+
+        if (a.current_time > a.duration_seconds)
+        {
+            if (a.type == animation::NORMAL)
+            {
+
+            }
+            if (a.type == animation::NORMAL_LOOP)
+            {
+                a.current_time -= a.duration_seconds;
+            }
+            if (a.type == animation::PING_PONG)
+            {
+                a.current_time = a.duration_seconds;
+                a.is_forward = animation::BACKWARD;
+            }
+        }
+        if (a.current_time < 0)
+        {
+            if (a.type == animation::NORMAL)
+            {
+                a.current_time = 0.f;
+            }
+            if (a.type == animation::NORMAL_LOOP)
+            {
+                a.current_time = 0.f;
+            }
+            if (a.type == animation::PING_PONG)
+            {
+                a.current_time = 0.f;
+                a.is_forward = animation::FORWARD;
+            }
+        }
+
+        // @note: assumes only LINEAR function for now
+        // @todo: generalize this function stuff
+        float32 new_value = math::lerp(a.start_value, a.final_value, a.current_time / a.duration_seconds);
+
+        switch (a.p)
+        {
+            case animation::POSITION_X: e->position.x = new_value;
+                break;
+            case animation::POSITION_Y: e->position.y = new_value;
+                break;
+            case animation::ROTATION: e->rotation = new_value;
+                break;
+            case animation::WIDTH: e->width = new_value;
+                break;
+            case animation::HEIGHT: e->height = new_value;
+                break;
+            case animation::COLOR_R: e->color.r = new_value;
+                break;
+            case animation::COLOR_G: e->color.g = new_value;
+                break;
+            case animation::COLOR_B: e->color.b = new_value;
+                break;
+            case animation::COLOR_A: e->color.a = new_value;
+                break;
+        }
+
+        if (a.current_time > a.duration_seconds)
+        {
+            sys->animations.erase_not_sorted(i);
+        }
+        else
+        {
+            i += 1;
+        }
+    }
+}
+
 void update(system *sys, input *inp)
 {
     auto mouse_position = V3(inp->mouse.x, inp->mouse.y, 0);
 
     uint32 order_index = 0;
-    update_order_index(&sys->root, order_index);
+    update_order_index(sys, &sys->root, order_index);
+
+    update_animations(sys, inp);
 
     hover_behaviour *hovered = NULL;
 
@@ -495,6 +630,43 @@ void draw(execution_context *context, system *sys)
 
         push_render_command(context, cmd);
     }
+}
+
+
+void animate(system *s, element *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animation a;
+    a.element_id = e->id;
+    a.p = property;
+    a.type = type;
+
+    a.start_value = start_value;
+    a.final_value = final_value;
+
+    // @note: assume all animations are 60 frames per second
+    a.duration_seconds = (float32) length_in_frames / 60.f;
+    a.current_time = 0.f;
+    a.is_forward = animation::FORWARD;
+
+    s->animations.push(a);
+}
+
+
+void animate_normal(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::NORMAL, length_in_frames, start_value, final_value);
+}
+
+
+void animate_normal_loop(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::NORMAL_LOOP, length_in_frames, start_value, final_value);
+}
+
+
+void animate_ping_pong(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::PING_PONG, length_in_frames, start_value, final_value);
 }
 
 
