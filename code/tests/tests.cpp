@@ -7,23 +7,23 @@
 #include <math/matrix3.hpp>
 #include <math/matrix4.hpp>
 
+#include <math/predicates.hpp>
+
 #include <math/complex.hpp>
 #include <math/quaternion.hpp>
 #include <math/unitary2.hpp>
 #include <math/transform.hpp>
-#include <ui/ui.hpp>
-
+#include <math/clifford2.hpp>
+#include <math/clifford3.hpp>
 
 // @todo:
-// - make so that test_##NAME function do not return bool32, it is confusing
-// - go through all the test suites even if some are failed
-// - collect statistics, how many tests passed, how many failed, how failed ones were called
 // - color the failed and passed words in terminal
 
 #define TEST_BEGIN(...) \
     int32 passed_tests_count = 0; \
     int32 failed_tests_count = 0; \
     (void)0
+
 #define TEST_END(...) \
     printf("--------------------\n"); \
     printf("Tests passed: %d\n", passed_tests_count); \
@@ -39,6 +39,7 @@
         printf("Ok.\n"); \
         already_printed_result_##NAME = true; \
     } (void)0
+
 #define TEST_RUN(NAME) \
     do { \
         printf("TEST %s... ", STRINGIFY(NAME)); \
@@ -280,21 +281,44 @@ TEST(Quaternions)
     // Then rotation around Oy counter clockwise (as it is the natural rotation)
     // V3(1, 0, 0) => V3(0, 0, -1)
     {
-        auto q = Q(V3(0, 1, 0), math::to_radians(90));
+        auto q = Q(V3(0, 1, 0), 90_degrees);
         auto v = V3(1, 0, 0);
 
-        auto w = math::rotate_by_quaternion(q, v);
+        auto w = math::rotate_by_unit_quaternion(q, v);
 
         TEST_ASSERT_FLOAT_EQ(w.x,  0.f);
         TEST_ASSERT_FLOAT_EQ(w.y,  0.f);
         TEST_ASSERT_FLOAT_EQ(w.z, -1.f);
     }
     {
-        auto q = Q(V3(0, 1, 0), math::to_radians(90));
+        auto q = Q(V3(0, 1, 0), 90_degrees);
+        auto v = V3(1, 0, 0);
+
+        auto w = math::rotate_by_unit_quaternion2(q, v);
+
+        TEST_ASSERT_FLOAT_EQ(w.x,  0.f);
+        TEST_ASSERT_FLOAT_EQ(w.y,  0.f);
+        TEST_ASSERT_FLOAT_EQ(w.z, -1.f);
+    }
+
+    // Pure unit quaternions are representing a rotation 180_degrees around their respective axis
+    {
+        auto q = Q(1, 0, 0, 0);
         auto v = V3(1, 0, 0);
 
         auto w = math::rotate_by_unit_quaternion(q, v);
+        TEST_ASSERT_FLOAT_EQ(w.x, 1.f);
+        TEST_ASSERT_FLOAT_EQ(w.y, 0.f);
+        TEST_ASSERT_FLOAT_EQ(w.z, 0.f);
 
+        v = V3(0, 1, 0);
+        w = math::rotate_by_unit_quaternion(q, v);
+        TEST_ASSERT_FLOAT_EQ(w.x,  0.f);
+        TEST_ASSERT_FLOAT_EQ(w.y, -1.f);
+        TEST_ASSERT_FLOAT_EQ(w.z,  0.f);
+
+        v = V3(0, 0, 1);
+        w = math::rotate_by_unit_quaternion(q, v);
         TEST_ASSERT_FLOAT_EQ(w.x,  0.f);
         TEST_ASSERT_FLOAT_EQ(w.y,  0.f);
         TEST_ASSERT_FLOAT_EQ(w.z, -1.f);
@@ -387,28 +411,32 @@ TEST(SpecialUnitaryMatrices2)
     }
 }
 
+
+#if 0
+
+
+struct game_state {};
+
 TEST(Ui)
 {
     usize memory_size = MEGABYTES(1);
     void *memory = malloc(memory_size);
     TEST_ASSERT(memory);
 
+    game_state gs = {};
     auto ui_system = ui::system{};
-    memory::initialize_memory_arena(&ui_system.ui_allocator, memory_block{memory, memory_size});
+    ui::initialize(&gs, &ui_system, memory_block{memory, memory_size});
 
-    ui::create_root(&ui_system);
-
-    auto group_1 = ui::create_child_group(&ui_system, &ui_system.root);
+    auto group_1 = ui::make_group(&ui_system, &ui_system.root);
     group_1->position.xy = V2(100, 100);
-    auto shape_1 = ui::create_child_shape(&ui_system, group_1);
+    auto shape_1 = ui::make_shape(&ui_system, group_1);
     shape_1->position.xy = V2(100, 100);
 
-    auto group_2 = ui::create_child_group(&ui_system, &ui_system.root);
-    auto shape_2 = ui::create_child_shape(&ui_system, group_2);
+    auto group_2 = ui::make_group(&ui_system, &ui_system.root);
+    auto shape_2 = ui::make_shape(&ui_system, group_2);
 
     // @note: This should be applied each frame after update phase, right?
     update_transforms(&ui_system);
-    update_transforms_to_root(&ui_system);
 
     TEST_ASSERT(group_1);
     TEST_ASSERT(shape_1);
@@ -430,7 +458,252 @@ TEST(Ui)
     TEST_ASSERT_FLOAT_EQ(root_of_shape_1_in_screen_coords.y, 200.f);
     TEST_ASSERT_FLOAT_EQ(root_of_shape_1_in_screen_coords.z, 0.f);
 }
+#endif
 
+TEST(CliffordG2)
+{
+    using namespace math::ga;
+
+    // Geometric product e1*e2 = inner(e1, e2) + outer(e1, e2)
+    // Because e1 and e2 are orthogonal, inner(e1, e2) = 0
+    {
+        auto r = g2::e1 * g2::e2;
+
+        TEST_ASSERT_FLOAT_EQ(r._0, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._3, 1.f);
+    }
+
+    // Complex numbers are represented as Z = X + Y*e1e2 in the G2 algebra,
+    // while vectors are represented as V = v1*e1 + v2*e2.
+    // Let's check that e1Z is a vector V = X*e1 + Y*e2.
+    {
+        auto z = 3.f + 5.f * g2::I;  // 3 + 0*e1 + 0*e2 + 5*e1e2
+        auto v = g2::e1 * z;         // 0 + 3*e1 + 5*e2 + 0*e1e2
+
+        TEST_ASSERT_FLOAT_EQ(v._0, 0.f);
+        TEST_ASSERT_FLOAT_EQ(v._1, 3.f);
+        TEST_ASSERT_FLOAT_EQ(v._2, 5.f);
+        TEST_ASSERT_FLOAT_EQ(v._3, 0.f);
+    }
+}
+
+TEST(CliffordG3)
+{
+    using namespace math::ga;
+
+    // Test that B1B2B3 == 1
+    {
+        auto r = g3::B1 * g3::B2 * g3::B3;
+
+        TEST_ASSERT_FLOAT_EQ(r._0, 1.f);
+        TEST_ASSERT_FLOAT_EQ(r._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._3, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._4, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._5, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(r._7, 0.f);
+    }
+    // Antisymmetry of orthogonal bivectors
+    {
+        auto a = g3::B1 * g3::B2;
+        auto b = g3::B2 * g3::B1;
+
+        TEST_ASSERT_FLOAT_EQ(a._0, -b._0);
+        TEST_ASSERT_FLOAT_EQ(a._1, -b._1);
+        TEST_ASSERT_FLOAT_EQ(a._2, -b._2);
+        TEST_ASSERT_FLOAT_EQ(a._3, -b._3);
+        TEST_ASSERT_FLOAT_EQ(a._4, -b._4);
+        TEST_ASSERT_FLOAT_EQ(a._5, -b._5);
+        TEST_ASSERT_FLOAT_EQ(a._6, -b._6);
+        TEST_ASSERT_FLOAT_EQ(a._7, -b._7);
+    }
+    // Finding the perpendicular plane for any vector can be by
+    // applying a "duality transformation", aI or Ia (it commutes).
+    // Let's test it on basis vectors: e1, e2, and e3
+    {
+        auto plane_e1 = g3::e1 * g3::I;
+
+        TEST_ASSERT_FLOAT_EQ(plane_e1._0, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._3, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._4, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._5, 1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._7, 0.f);
+
+        auto plane_e2 = g3::e2 * g3::I;
+
+        TEST_ASSERT_FLOAT_EQ(plane_e2._0, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._3, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._4, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._5, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._6, -1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._7, 0.f);
+
+        auto plane_e3 = g3::e3 * g3::I;
+
+        TEST_ASSERT_FLOAT_EQ(plane_e3._0, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._3, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._4, 1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._5, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._7, 0.f);
+    }
+
+    // The I should also square to -1
+    {
+        auto sq = g3::I * g3::I;
+
+        TEST_ASSERT_FLOAT_EQ(sq, -1.f);
+    }
+
+    // Let's say we have vector A, and vector N,
+    // we can get part of the vector A parallel to N,
+    // and at the same time the perpendicular to N.
+    {
+        auto a = V3(1, 0, 1);
+        auto n = V3(1, 0, 0); // @note: n have to be normalized
+
+        auto P = n * inner(n, a); // projection
+        auto R = n * outer(n, a); // "rejection"
+
+        TEST_ASSERT_FLOAT_EQ(P._1, 1.f);
+        TEST_ASSERT_FLOAT_EQ(P._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(P._3, 0.f);
+
+        TEST_ASSERT_FLOAT_EQ(R._1, 0.f);
+        TEST_ASSERT_FLOAT_EQ(R._2, 0.f);
+        TEST_ASSERT_FLOAT_EQ(R._3, 1.f);
+    }
+
+    // Check that vector * g3 works just as (0, v1, v2, v3, 0, 0, 0, 0) * g3
+    {
+        auto v = V3(4, 1, 5);
+        auto g = 1.f + 1.f * g3::e2 + 1.f * g3::e1e2 + 3.f * g3::e3e1;
+
+        auto a = v * g;
+        auto b = (v._1 * g3::e1 + v._2 * g3::e2 + v._3 * g3::e3) * g;
+        auto c = geometric(v._1 * g3::e1 + v._2 * g3::e2 + v._3 * g3::e3, g);
+
+        TEST_ASSERT_FLOAT_EQ(a._0, 1.f);
+        TEST_ASSERT_FLOAT_EQ(a._1, 18.f);
+        TEST_ASSERT_FLOAT_EQ(a._2, 5.f);
+        TEST_ASSERT_FLOAT_EQ(a._3, -7.f);
+        TEST_ASSERT_FLOAT_EQ(a._4, 4.f);
+        TEST_ASSERT_FLOAT_EQ(a._5, -5.f);
+        TEST_ASSERT_FLOAT_EQ(a._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(a._7, 8.f);
+
+        TEST_ASSERT_FLOAT_EQ(b._0, 1.f);
+        TEST_ASSERT_FLOAT_EQ(b._1, 18.f);
+        TEST_ASSERT_FLOAT_EQ(b._2, 5.f);
+        TEST_ASSERT_FLOAT_EQ(b._3, -7.f);
+        TEST_ASSERT_FLOAT_EQ(b._4, 4.f);
+        TEST_ASSERT_FLOAT_EQ(b._5, -5.f);
+        TEST_ASSERT_FLOAT_EQ(b._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(b._7, 8.f);
+
+        TEST_ASSERT_FLOAT_EQ(c._0, 1.f);
+        TEST_ASSERT_FLOAT_EQ(c._1, 18.f);
+        TEST_ASSERT_FLOAT_EQ(c._2, 5.f);
+        TEST_ASSERT_FLOAT_EQ(c._3, -7.f);
+        TEST_ASSERT_FLOAT_EQ(c._4, 4.f);
+        TEST_ASSERT_FLOAT_EQ(c._5, -5.f);
+        TEST_ASSERT_FLOAT_EQ(c._6, 0.f);
+        TEST_ASSERT_FLOAT_EQ(c._7, 8.f);
+    }
+    // Reflections could be obtained as -nan, where a is the vector,
+    // and n is the normal to the reflective plane
+    {
+        auto n = V3(0, 1, 0);
+        auto a = V3(3, 4, 5);
+        auto b = V3(4, 3, 1);
+
+        auto ra = to_vector3(-n*a*n);
+        auto rb = to_vector3(-n*b*n);
+
+        TEST_ASSERT_FLOAT_EQ(ra._1,  3.f);
+        TEST_ASSERT_FLOAT_EQ(ra._2, -4.f);
+        TEST_ASSERT_FLOAT_EQ(ra._3,  5.f);
+
+        TEST_ASSERT_FLOAT_EQ(rb._1,  4.f);
+        TEST_ASSERT_FLOAT_EQ(rb._2, -3.f);
+        TEST_ASSERT_FLOAT_EQ(rb._3,  1.f);
+
+        // check that angles are the same
+        TEST_ASSERT_FLOAT_EQ(inner(a, b), inner(ra, rb));
+    }
+    // We can reflect bivectors too with the same formula! Except bivectors do not require a minus sign.
+    // B' = nBn
+    {
+        auto b1 = 1.f * g3::e1e2 + 0.f * g3::e2e3 + 0.f * g3::e3e1;
+        auto n = V3(0, 1, 0); // Length 1 means rotation pi radians
+
+        auto b2 = n*b1*n;
+
+        TEST_ASSERT_FLOAT_EQ(b1._0, -b2._0);
+        TEST_ASSERT_FLOAT_EQ(b1._1, -b2._1);
+        TEST_ASSERT_FLOAT_EQ(b1._2, -b2._2);
+        TEST_ASSERT_FLOAT_EQ(b1._3, -b2._3);
+        TEST_ASSERT_FLOAT_EQ(b1._4, -b2._4);
+        TEST_ASSERT_FLOAT_EQ(b1._5, -b2._5);
+        TEST_ASSERT_FLOAT_EQ(b1._6, -b2._6);
+        TEST_ASSERT_FLOAT_EQ(b1._7, -b2._7);
+
+        // printf("b2 = [%f, {%f, %f, %f}, {%f, %f, %f}, %f]\n",
+        //     b2._0, b2._1, b2._2, b2._3, b2._4, b2._5, b2._6, b2._7);
+    }
+    // Rotations are performed by the double-sided transformation
+    {
+g        // Angle between vectors is 90 degrees, so rotation will be in 180 degrees!
+        auto n = V3(1, 0, 0);
+        auto m = V3(0, 1, 0);
+
+        auto v = V3(2, 2, 0);
+
+        auto rotor = m*n; // In that order!
+
+        auto r = rotor * v * conjugate(rotor);
+        auto w = to_vector3(r);
+
+        TEST_ASSERT_FLOAT_EQ(v.x, -w.x);
+        TEST_ASSERT_FLOAT_EQ(v.y, -w.y);
+        TEST_ASSERT_FLOAT_EQ(v.z, -w.z);
+    }
+    // Let's try to rotate vectors by 90 degrees
+    {
+        // For that we construct two vectors 45 degrees apart in the XY plane
+        auto n = V3(1, 0, 0);
+        auto m = normalized(V3(1, 1, 0));
+
+        auto v = V3(2, 2, 0);
+        //    v = (2, 2)
+        // . /
+        // ./
+        // o. .
+
+        auto rotor = m*n; // In that order!
+
+        auto r = rotor * v * conjugate(rotor);
+        auto w = to_vector3(r);
+        // w = (-2, 2)
+        // \ .
+        //  \.
+        //   o. .
+
+        TEST_ASSERT_FLOAT_EQ(w.x, -2.f);
+        TEST_ASSERT_FLOAT_EQ(w.y,  2.f);
+        TEST_ASSERT_FLOAT_EQ(w.z,  0.f);
+    }
+}
 
 // ----------------------------------------------
 
@@ -446,7 +719,9 @@ int32 main(int32 argc, char **argv, char **env)
     TEST_RUN(ComplexNumbers);
     TEST_RUN(Quaternions);
     TEST_RUN(SpecialUnitaryMatrices2);
-    TEST_RUN(Ui);
+    // TEST_RUN(Ui);
+    TEST_RUN(CliffordG2);
+    TEST_RUN(CliffordG3);
 
     TEST_END();
     return 0;

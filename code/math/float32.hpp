@@ -118,27 +118,6 @@ struct angle
     float32 radians;
 };
 
-angle operator ""_degrees (uint64 degrees)
-{
-    angle result;
-    result.radians = to_radians((float32)degrees);
-    return result;
-}
-
-angle operator ""_degrees (long double degrees)
-{
-    angle result;
-    result.radians = to_radians((float32)degrees);
-    return result;
-}
-
-angle operator ""_radians (uint64 radians)
-{
-    angle result;
-    result.radians = (float32) radians;
-    return result;
-}
-
 float32 sin(angle a)
 {
     float32 result = sinf(a.radians);
@@ -159,6 +138,28 @@ float32 tan(angle a)
 
 
 } // namespace math
+
+
+math::angle operator ""_degrees (uint64 degrees)
+{
+    math::angle result;
+    result.radians = math::to_radians((float32)degrees);
+    return result;
+}
+
+math::angle operator ""_degrees (long double degrees)
+{
+    math::angle result;
+    result.radians = math::to_radians((float32)degrees);
+    return result;
+}
+
+math::angle operator ""_radians (uint64 radians)
+{
+    math::angle result;
+    result.radians = (float32) radians;
+    return result;
+}
 
 
 #endif // MATH_FLOAT32_HPP

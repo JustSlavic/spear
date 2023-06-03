@@ -55,7 +55,7 @@ float32 in_circle2d(vector2 a, vector2 b, vector2 c, vector2 p)
 {
     matrix3 m = make_matrix3(a.x - p.x, a.y - p.y, square(a.x - p.x) + square(a.y - p.y),
                              b.x - p.x, b.y - p.y, square(b.x - p.x) + square(b.y - p.y),
-                             c.x - p.x, c.y - p.y, square(c.x - p.x) + square(c.y - p.y))
+                             c.x - p.x, c.y - p.y, square(c.x - p.x) + square(c.y - p.y));
     float32 result = determinant(m);
     return result;
 }
@@ -72,7 +72,7 @@ float32 in_sphere3d(vector3 a, vector3 b, vector3 c, vector3 d, vector3 p)
     matrix4 m = make_matrix4(a.x - p.x, a.y - p.y, a.z - p.z, square(a.x - p.x) + square(a.y - p.y) + square(a.z - p.z),
                              b.x - p.x, b.y - p.y, b.z - p.z, square(b.x - p.x) + square(b.y - p.y) + square(b.z - p.z),
                              c.x - p.x, c.y - p.y, c.z - p.z, square(c.x - p.x) + square(c.y - p.y) + square(c.z - p.z),
-                             d.x - p.x, d.y - p.y, d.z - p.z, square(d.x - p.x) + square(d.y - p.y) + square(d.z - p.z))
+                             d.x - p.x, d.y - p.y, d.z - p.z, square(d.x - p.x) + square(d.y - p.y) + square(d.z - p.z));
     float32 result = determinant(m);
     return result;
 }

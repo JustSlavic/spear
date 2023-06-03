@@ -43,37 +43,33 @@ using rect2 = rectangle2;
 
 vector2 top_left(rectangle2 rect)
 {
-    vector2 result = {
-        rect.center.x - rect.radii.x,
-        rect.center.y - rect.radii.y,
-    };
+    vector2 result;
+    result.x = rect.center.x - rect.radii.x;
+    result.y = rect.center.y - rect.radii.y;
     return result;
 }
 
 vector2 top_right(rectangle2 rect)
 {
-    vector2 result = {
-        rect.center.x + rect.radii.x,
-        rect.center.y - rect.radii.y,
-    };
+    vector2 result;
+    result.x = rect.center.x + rect.radii.x;
+    result.y = rect.center.y - rect.radii.y;
     return result;
 }
 
 vector2 bottom_left(rectangle2 rect)
 {
-    vector2 result = {
-        rect.center.x - rect.radii.x,
-        rect.center.y + rect.radii.y,
-    };
+    vector2 result;
+    result.x = rect.center.x - rect.radii.x;
+    result.y = rect.center.y + rect.radii.y;
     return result;
 }
 
 vector2 bottom_right(rectangle2 rect)
 {
-    vector2 result = {
-        rect.center.x + rect.radii.x,
-        rect.center.y + rect.radii.y,
-    };
+    vector2 result;
+    result.x = rect.center.x + rect.radii.x;
+    result.y = rect.center.y + rect.radii.y;
     return result;
 }
 

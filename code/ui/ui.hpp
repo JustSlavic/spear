@@ -504,7 +504,7 @@ void update(system *sys, input *inp)
 
     update_animations(sys, inp);
 
-    hover_behaviour *hovered = NULL;
+    element *hovered = NULL;
 
     for (usize i = 0; i < sys->hoverables.size; i++)
     {
@@ -517,11 +517,11 @@ void update(system *sys, input *inp)
         {
             if (hovered == NULL)
             {
-                hovered = hoverable;
+                hovered = hoverable->owner;
             }
-            else if (hoverable->owner->order_index < hovered->owner->order_index)
+            else if (hoverable->owner->order_index < hovered->order_index)
             {
-                hovered = hoverable;
+                hovered = hoverable->owner;
             }
         }
     }
@@ -534,7 +534,7 @@ void update(system *sys, input *inp)
             if (sys->hot != NULL)
             {
                 // There's something hot already, check if it's what I found.
-                if (sys->hot == hovered->owner)
+                if (sys->hot == hovered)
                 {
                     // The element I found under the mouse is exactly what I have hot. I will do nothing then.
                 }
@@ -542,13 +542,13 @@ void update(system *sys, input *inp)
                 {
                     // This is new element! Remove hot from old one and make hot a new one!
                     make_cold(sys, sys->hot);
-                    make_hot(sys, hovered->owner);
+                    make_hot(sys, hovered);
                 }
             }
             else
             {
                 // There's nothing hot yet, let's make our element hot.
-                make_hot(sys, hovered->owner);
+                make_hot(sys, hovered);
             }
         }
         else

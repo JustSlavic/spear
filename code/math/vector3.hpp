@@ -207,6 +207,11 @@ INLINE float32 dot(vector3 a, vector3 b)
     return result;
 }
 
+FORCE_INLINE float32 inner(vector3 a, vector3 b)
+{
+    return dot(a, b);
+}
+
 INLINE vector3 cross(vector3 a, vector3 b)
 {
     vector3 result;
