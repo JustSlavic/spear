@@ -4,7 +4,6 @@
 #include <base.hpp>
 #include <GL/gl.h>
 
-
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 #define GL_UNSIGNED_INT_8_8_8_8           0x8035
 #define GL_MULTISAMPLE                    0x809D
@@ -41,39 +40,39 @@
 #define GL_FRAMEBUFFER                    0x8D40
 #define GL_TEXTURE_2D_MULTISAMPLE         0x9100
 
-typedef void glGenFramebuffersType(GLsizei n, GLuint *ids);
-typedef void glBindFramebufferType(GLenum target, GLuint framebuffer);
-typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-typedef void glBlitFramebufferType(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-typedef void glClearBufferivType(GLenum buffer, GLint drawbuffer, GLint const *value);
-typedef void glGenBuffersType(GLsizei n, GLuint *buffers);
-typedef void glBindBufferType(GLenum target, GLuint buffer);
-typedef void glBufferDataType(GLenum target, intptr_t size, const void *data, GLenum usage);
-typedef void glGenVertexArraysType(GLsizei n, GLuint *arrays);
-typedef void glBindVertexArrayType(GLuint array);
-typedef void glVertexAttribPointerType(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
-typedef void glEnableVertexAttribArrayType(GLuint index);
-typedef GLuint glCreateShaderType(GLenum shaderType);
-typedef void glShaderSourceType(GLuint shader, GLsizei count, char const **string, GLint const *length);
-typedef void glCompileShaderType(GLuint shader);
-typedef GLuint glCreateProgramType(void);
-typedef void glAttachShaderType(GLuint program, GLuint shader);
-typedef void glDetachShaderType(GLuint program, GLuint shader);
-typedef void glLinkProgramType(GLuint program);
-typedef void glUseProgramType(GLuint program);
-typedef void glGetShaderivType(GLuint shader, GLenum pname, GLint *params);
-typedef void glGetShaderInfoLogType(GLuint shader, GLsizei maxLength, GLsizei *length, char *infoLog);
-typedef void glDeleteShaderType(GLuint shader);
-typedef void glValidateProgramType(GLuint program);
-typedef void glGetProgramivType(GLuint program, GLenum pname, GLint *params);
-typedef GLint glGetUniformLocationType(GLuint program, char const *uniform_name);
-typedef void glUniform1iType(GLint location, GLint v0);
-typedef void glUniform1fType(GLint location, GLfloat v0);
-typedef void glUniform2fType(GLint location, GLfloat v0, GLfloat v1);
-typedef void glUniform3fType(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-typedef void glUniform4fType(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+typedef void glGenFramebuffersType(isize n, uint32 *ids);
+typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
+typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
+typedef void glBlitFramebufferType(int32 srcX0, int32 srcY0, int32 srcX1, int32 srcY1, int32 dstX0, int32 dstY0, int32 dstX1, int32 dstY1, GLbitfield mask, GLenum filter);
+typedef void glClearBufferivType(GLenum buffer, int32 drawbuffer, int32 const *value);
+typedef void glGenBuffersType(isize n, uint32 *buffers);
+typedef void glBindBufferType(GLenum target, uint32 buffer);
+typedef void glBufferDataType(GLenum target, intptr size, const void *data, GLenum usage);
+typedef void glGenVertexArraysType(isize n, uint32 *arrays);
+typedef void glBindVertexArrayType(uint32 array);
+typedef void glVertexAttribPointerType(uint32 index, int32 size, GLenum type, GLboolean normalized, isize stride, const void *pointer);
+typedef void glEnableVertexAttribArrayType(uint32 index);
+typedef uint32 glCreateShaderType(GLenum shaderType);
+typedef void glShaderSourceType(uint32 shader, isize count, char const **string, int32 const *length);
+typedef void glCompileShaderType(uint32 shader);
+typedef uint32 glCreateProgramType(void);
+typedef void glAttachShaderType(uint32 program, uint32 shader);
+typedef void glDetachShaderType(uint32 program, uint32 shader);
+typedef void glLinkProgramType(uint32 program);
+typedef void glUseProgramType(uint32 program);
+typedef void glGetShaderivType(uint32 shader, GLenum pname, int32 *params);
+typedef void glGetShaderInfoLogType(uint32 shader, isize maxLength, isize *length, char *infoLog);
+typedef void glDeleteShaderType(uint32 shader);
+typedef void glValidateProgramType(uint32 program);
+typedef void glGetProgramivType(uint32 program, GLenum pname, int32 *params);
+typedef int32 glGetUniformLocationType(uint32 program, char const *uniform_name);
+typedef void glUniform1iType(int32 location, int32 v0);
+typedef void glUniform1fType(int32 location, float32 v0);
+typedef void glUniform2fType(int32 location, float32 v0, float32 v1);
+typedef void glUniform3fType(int32 location, float32 v0, float32 v1, float32 v2);
+typedef void glUniform4fType(int32 location, float32 v0, float32 v1, float32 v2, float32 v3);
 typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose, float32 const *value);
-typedef void glTexImage2DMultisampleType(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
+typedef void glTexImage2DMultisampleType(GLenum target, isize samples, GLenum internalformat, isize width, isize height, GLboolean fixedsamplelocations);
 
 GLOBAL glGenFramebuffersType *glGenFramebuffers;
 GLOBAL glBindFramebufferType *glBindFramebuffer;
@@ -181,8 +180,8 @@ uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
     glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
     if (successful == GL_FALSE)
     {
-        int32 length;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        int64 length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int32 *) &length);
 
         // @todo: use transient memory for that
         char* message = new char[length + 1];
