@@ -134,17 +134,17 @@ void process_pending_messages(linux::window *window, input *input)
                 bool32 is_down = (event.type == KeyPress);
                 switch (event.xkey.keycode)
                 {
-                    case KEYCODE_ESC: process_button_state(&input->keyboard[keyboard_device::esc], is_down);
+                    case KEYCODE_ESC: process_button_state(&input->keyboard[keyboard_device::ESC], is_down);
                         break;
-                    case KEYCODE_W: process_button_state(&input->keyboard[keyboard_device::w], is_down);
+                    case KEYCODE_W: process_button_state(&input->keyboard[keyboard_device::W], is_down);
                         break;
-                    case KEYCODE_A: process_button_state(&input->keyboard[keyboard_device::a], is_down);
+                    case KEYCODE_A: process_button_state(&input->keyboard[keyboard_device::A], is_down);
                         break;
-                    case KEYCODE_S: process_button_state(&input->keyboard[keyboard_device::s], is_down);
+                    case KEYCODE_S: process_button_state(&input->keyboard[keyboard_device::S], is_down);
                         break;
-                    case KEYCODE_D: process_button_state(&input->keyboard[keyboard_device::d], is_down);
+                    case KEYCODE_D: process_button_state(&input->keyboard[keyboard_device::D], is_down);
                         break;
-                    case KEYCODE_Y: process_button_state(&input->keyboard[keyboard_device::y], is_down);
+                    case KEYCODE_Y: process_button_state(&input->keyboard[keyboard_device::Y], is_down);
                         break;
                 }
             }
@@ -249,7 +249,7 @@ int main(int argc, char **argv, char **env)
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, keyboard_device::key_count);
+        reset_transitions(input.keyboard.buttons, keyboard_device::KEY_COUNT);
         process_pending_messages(&window, &input);
         input.dt = last_frame_dt;
 
@@ -258,6 +258,15 @@ int main(int argc, char **argv, char **env)
             auto viewport = gfx::make_viewport(current_display_width, current_display_height, aspect_ratio);
             gfx::set_viewport(viewport);
             display_size_changed = false;
+
+            context.screen_width = 0;
+            context.screen_height = 0;
+
+            context.window_width = current_display_width;
+            context.window_height = current_display_height;
+
+            context.letterbox_width = viewport.width;
+            context.letterbox_height = viewport.height;
         }
 
         gfx::clear();

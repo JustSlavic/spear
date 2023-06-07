@@ -61,20 +61,20 @@ struct keyboard_device
 {
     enum key
     {
-        esc,
-        f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
-        tilda, _1, _2, _3, _4, _5, _6, _7, _8, _9, _0, underscore, equals, backspace,
-        tab, q, w, e, r, t, y, u, i, o, p, bracket_open, bracket_close, backslash,
-        caps_lock, a, s, d, f, g, h, j, k, l, enter,
-        left_shift, z, x, c, v, b, n, m, angle_open, angle_close, slash, right_shift,
-        left_control, left_mod, left_alt, space, right_alt, right_control,
-        num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9, num_0,
-        page_up, page_down, home, end, insert, _delete,
+        ESC,
+        F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+        TILDA, _1, _2, _3, _4, _5, _6, _7, _8, _9, _0, underscore, equals, backspace,
+        TAB, Q, W, E, R, T, Y, U, I, O, P, BRACKET_OPEN, BRACKET_CLOSE, BACKSLASH,
+        CAPS_LOCK, A, S, D, F, G, H, J, K, L, ENTER,
+        SHIFT_LEFT, Z, X, C, V, B, N, M, LESS, MORE, SLASH, SHIFT_RIGHT,
+        CONTROL_LEFT, MOD_LEFT, ALT_LEFT, SPACE, ALT_RIGHT, CONTROL_RIGHT,
+        NUM1, NUM2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM0,
+        PAGE_UP, PAGE_DOWN, HOME, END, INSERT, DELETE,
         // @note: key_count have to be the last in enum
-        key_count
+        KEY_COUNT
     };
 
-    button_state buttons[key_count];
+    button_state buttons[KEY_COUNT];
 
     button_state & operator [] (key k)
     {
@@ -99,12 +99,12 @@ struct mouse_device
 {
     enum key
     {
-        lmb, mmb, rmb,
+        LMB, MMB, RMB,
         // @note: key_count have to be the last in enum
-        key_count
+        KEY_COUNT
     };
 
-    button_state buttons[key_count];
+    button_state buttons[KEY_COUNT];
     int32 x, y;
 
     button_state& operator [] (key k)
@@ -135,17 +135,17 @@ struct gamepad_device
 {
     enum key
     {
-        Start, Select,
+        START, SELECT,
         A, B, X, Y,
-        DpadUp, DpadLeft, DpadRight, DpadDown,
-        LeftShoulder, RightShoulder,
-        LeftTrigger, RightTrigger,
-        LeftStick, RightStick,
+        DPAD_UP, DPAD_LEFT, DPAD_RIGHT, DPAD_DOWN,
+        LEFT_SHOULDER, RIGHT_SHOULDER,
+        LEFT_TRIGGER, RIGHT_TRIGGER,
+        LEFT_STICK, RIGHT_STICK,
         // @note: key_count have to be the last in enum
-        key_count
+        KEY_COUNT
     };
 
-    button_state buttons[key_count];
+    button_state buttons[KEY_COUNT];
     stick_state left_stick, right_stick;
 
     button_state& operator [] (key k)
