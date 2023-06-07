@@ -249,8 +249,9 @@ int main(int argc, char **argv, char **env)
     running = true;
     while (running)
     {
-        reset_transitions(&input.keyboard);
+        reset_transitions(input.keyboard.buttons, keyboard_device::key_count);
         process_pending_messages(&window, &input);
+        input.dt = last_frame_dt;
 
         if (display_size_changed)
         {
@@ -261,7 +262,7 @@ int main(int argc, char **argv, char **env)
 
         gfx::clear();
 
-        update_and_render(&context, game_memory, &input, last_frame_dt);
+        update_and_render(&context, game_memory, &input);
 
         for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
         {

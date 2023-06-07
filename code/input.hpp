@@ -89,7 +89,7 @@ struct keyboard_device
 
 void reset_transitions(button_state *buttons, usize key_count)
 {
-    for (int key_index = 0; key_index < key_count; key_index++)
+    for (usize key_index = 0; key_index < key_count; key_index++)
     {
         buttons[key_index].transition_count = 0;
     }

@@ -21,7 +21,7 @@
     OutputDebugStringA(OutputBuffer_##__LINE__); \
 } void(0)
 #elif OS_LINUX
-#define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
+#define osOutputDebugString(MSG, ...) printf(MSG, ##__VA_ARGS__)
 #endif // OS_WINDOWS
 
 
@@ -228,7 +228,7 @@ void initialize(game_state *gs, system *sys, memory_block ui_memory)
 
 void give_name(system *s, element *e, string_id strid)
 {
-    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
     {
         uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
 
@@ -259,6 +259,11 @@ element *get_element_by_id(system *s, ui_id id)
             result = s->shapes.data + index;
         }
         break;
+
+        case array_of::none:
+        case array_of::hoverables:
+        case array_of::clickables:
+        break;
     }
 
     return result;
@@ -268,7 +273,7 @@ element *get_element_by_name(system *s, string_id strid)
 {
     ui_id id = {};
 
-    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
     {
         uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
 
@@ -481,6 +486,9 @@ void update_animations(system *sys, input *inp)
             case animation::COLOR_B: e->color.b = new_value;
                 break;
             case animation::COLOR_A: e->color.a = new_value;
+                break;
+
+            case animation::PROPERTY_COUNT:
                 break;
         }
 

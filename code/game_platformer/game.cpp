@@ -32,7 +32,7 @@
     OutputDebugStringA(OutputBuffer_##__LINE__); \
 } void(0)
 #elif OS_LINUX
-#define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
+// #define osOutputDebugString(MSG, ...) printf(MSG, ##__VA_ARGS__)
 #endif // OS_WINDOWS
 
 
@@ -710,23 +710,26 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         push_setup_camera_command(context, setup_camera);
     }
 
-    // Background
-    {
-        render_command::command_draw_background draw_background;
-        draw_background.mesh = gs->rectangle_mesh;
-        draw_background.shader = gs->rectangle_shader;
-        draw_background.color = sky_color;
-        push_draw_background_command(context, draw_background);
-    }
+    osOutputDebugString("GL_UNSIGNED_INT = %x\n", GL_UNSIGNED_INT);
 
-    if (ui::button(&gs->ui, STRID("Hello, Nikita!")))
-    {
-        osOutputDebugString("HOVERED: TRUE\n");
-    }
-    else
-    {
-        osOutputDebugString("HOVERED: FALSE\n");
-    }
+
+    // Background
+    // {
+    //     render_command::command_draw_background draw_background;
+    //     draw_background.mesh = gs->rectangle_mesh;
+    //     draw_background.shader = gs->rectangle_shader;
+    //     draw_background.color = sky_color;
+    //     push_draw_background_command(context, draw_background);
+    // }
+
+    // if (ui::button(&gs->ui, STRID("Hello, Nikita!")))
+    // {
+    //     osOutputDebugString("HOVERED: TRUE\n");
+    // }
+    // else
+    // {
+    //     osOutputDebugString("HOVERED: FALSE\n");
+    // }
 
     // // Coordinates
     // {
