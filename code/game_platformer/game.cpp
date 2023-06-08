@@ -249,30 +249,55 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
-    ui::initialize(gs, &gs->ui, ui_memory);
+    ui::initialize(&gs->ui, ui_memory);
 
-    auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
-    auto shape_1 = ui::make_shape(&gs->ui, group_1);
-    shape_1->position.xy = V2(500, 600);
-    shape_1->rotation = 20.f;
+    auto button_1 = ui::make_group(&gs->ui, &gs->ui.root);
+    button_1->position.xy = V2(500, 600);
+    button_1->rotation = 20.f;
+    auto shape_1 = ui::make_shape(&gs->ui, button_1);
     shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
 
-    auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
-    hoverable_1->on_enter_internal = [](ui::system *s, ui::element *e)
+    auto hoverable_1 = ui::make_hoverable(&gs->ui, button_1);
+    hoverable_1->on_enter_internal = [](ui::system *s, ui::group *e)
     {
-        e->color = V4(1, 0, 0, 1);
+        auto shape_id = e->children[0];
+        auto *shape = ui::get_shape(s, shape_id);
+        ui::animate_ping_pong(s, shape, ui::animation::COLOR_G, 40, 0.4f, 0.6f);
     };
-    hoverable_1->on_leave_internal = [](ui::system *s, ui::element *e)
+    hoverable_1->on_leave_internal = [](ui::system *s, ui::group *e)
     {
-        e->color = V4(0.9, 0.4, 0.2, 1.0);
+        auto shape_id = e->children[0];
+        auto *shape = ui::get_shape(s, shape_id);
+        // ui::delete_animation(s, shape->blink_animation_id);
+        ui::animate_normal(s, shape, ui::animation::COLOR_G, 40, 0.6f, 0.4f);
     };
 
-    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::POSITION_X, 60, 500, 600);
-    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_R, 30, 0, 1);
-    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_G, 30, 0, 1);
-    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_B, 30, 0, 1);
+    auto clickable_1 = ui::make_clickable(&gs->ui, button_1);
+    clickable_1->on_press_internal = [](ui::system *s, ui::group *e)
+    {
+        auto shape_id = e->children[0];
+        auto *shape = ui::get_shape(s, shape_id);
+        ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 0, 5);
+        ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 0, 5);
+        ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 0, 360);
+    };
+    clickable_1->on_release_internal = [](ui::system *s, ui::group *e)
+    {
+        auto shape_id = e->children[0];
+        auto *shape = ui::get_shape(s, shape_id);
+        ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 5, 0);
+        ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 5, 0);
+        ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 360, 0);
+    };
 
-    ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::WIDTH, 120, 100, 200);
+    ui::push_to_hash_table(&gs->ui, STRID("Button1").id, button_1->id);
+
+    // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::POSITION_X, 60, 500, 600);
+    // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_R, 30, 0, 1);
+    // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_G, 30, 0, 1);
+    // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_B, 30, 0, 1);
+
+    // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::WIDTH, 120, 100, 200);
 
     // auto group_1 = ui::make_group(&gs->ui, &gs->ui.root);
     // auto shape_1 = ui::make_shape(&gs->ui, group_1);
@@ -283,22 +308,22 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // ui::give_name(&gs->ui, shape_1, STRID("Hello, Nikita!"));
 
     // auto hoverable_1 = ui::make_hoverable(&gs->ui, shape_1);
-    // hoverable_1->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_1->on_enter_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(1, 0, 0, 1);
     // };
-    // hoverable_1->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_1->on_leave_internal = [] (ui::system *s, ui::group *e)
     // {
     //     if (s->active != e)
     //         e->color = V4(0.4, 0.7, 0.2, 1.0);
     // };
 
     // auto clickable_1 = ui::make_clickable(&gs->ui, shape_1);
-    // clickable_1->on_press_internal = [] (ui::system *s, ui::element *e)
+    // clickable_1->on_press_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0, 1, 0, 1);
     // };
-    // clickable_1->on_release_internal = [] (ui::system *s, ui::element *e)
+    // clickable_1->on_release_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0.4, 0.7, 0.2, 1.0);
     //     if (s->hot)
@@ -313,22 +338,22 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // shape_2->color = V4(0.3, 0.6, 0.4, 1.0);
 
     // auto hoverable_2 = ui::make_hoverable(&gs->ui, shape_2);
-    // hoverable_2->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_2->on_enter_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(1, 0, 0, 1);
     // };
-    // hoverable_2->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_2->on_leave_internal = [] (ui::system *s, ui::group *e)
     // {
     //     if (s->active != e)
     //         e->color = V4(0.3, 0.6, 0.4, 1.0);
     // };
 
     // auto clickable_2 = ui::make_clickable(&gs->ui, shape_2);
-    // clickable_2->on_press_internal = [] (ui::system *s, ui::element *e)
+    // clickable_2->on_press_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0, 1, 0, 1);
     // };
-    // clickable_2->on_release_internal = [] (ui::system *s, ui::element *e)
+    // clickable_2->on_release_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0.3, 0.6, 0.4, 1.0);
     //     if (s->hot)
@@ -344,22 +369,22 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // ui::animate_normal(&gs->ui, shape_3, ui::animation::POSITION_X, 60, 0, 100);
 
     // auto hoverable_3 = ui::make_hoverable(&gs->ui, shape_3);
-    // hoverable_3->on_enter_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_3->on_enter_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(1, 0, 0, 1);
     // };
-    // hoverable_3->on_leave_internal = [] (ui::system *s, ui::element *e)
+    // hoverable_3->on_leave_internal = [] (ui::system *s, ui::group *e)
     // {
     //     if (e != s->active)
     //         e->color = V4(0.3, 0.3, 0.8, 1.0);
     // };
 
     // auto clickable_3 = ui::make_clickable(&gs->ui, shape_3);
-    // clickable_3->on_press_internal = [] (ui::system *s, ui::element *e)
+    // clickable_3->on_press_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0, 1, 0, 1);
     // };
-    // clickable_3->on_release_internal = [] (ui::system *s, ui::element *e)
+    // clickable_3->on_release_internal = [] (ui::system *s, ui::group *e)
     // {
     //     e->color = V4(0.3, 0.3, 0.8, 1.0);
     //     if (s->hot)
@@ -728,6 +753,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
         // Y axis
         draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    }
+
+    if (ui::button(&gs->ui, STRID("Button1").id))
+    {
+        osOutputDebugString("PRESSED!!!\n");
     }
 
     for (uint32 eid = 1; eid < gs->entity_count; eid++)

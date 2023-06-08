@@ -21,77 +21,117 @@
     OutputDebugStringA(OutputBuffer_##__LINE__); \
 } void(0)
 #elif OS_LINUX
-#define osOutputDebugString(MSG, ...) printf(MSG, ##__VA_ARGS__)
+#define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
 #endif // OS_WINDOWS
-
-
-struct game_state;
 
 
 namespace ui {
 
 
 struct system;
-struct element;
+struct group;
+struct shape;
 struct hover_behaviour;
 struct click_behaviour;
 
 
-typedef void callback(system *, element *);
-void callback_stub(system *, element *) {}
+typedef void callback(system *, group *);
+void callback_stub(system *, group *) {}
 
 
-enum class array_of
+enum class array_of : uint8
 {
-    // 0 is "none", so ui_id with all bits set
+    // 0 is "none", so handle with all bits set
     // to 0 represents "null" reference
-    none = 0,
-    groups,
-    shapes,
-    hoverables,
-    clickables,
+    NONE = 0,
+    GROUPS,
+    SHAPES,
 };
 
 
-struct ui_id
+struct handle
 {
 
     // 8 bits array_of
     // 24 bits index in that array
     uint32 id;
+
+    operator bool32 () { return (id != 0); }
 };
 
-
-ui_id make_ui_id(array_of a, uint32 index)
+bool32 operator == (handle a, handle b)
 {
-    ui_id result;
+    bool32 result = (a.id == b.id);
+    return result;
+}
+
+bool32 operator != (handle a, handle b)
+{
+    bool32 result = (a.id != b.id);
+    return result;
+}
+
+handle null_handle()
+{
+    handle result = {};
+    return result;
+}
+
+handle make_handle(array_of a, uint32 index)
+{
+    handle result;
     result.id = ((((uint32) a) << 24) | (index & 0x00ffffff));
     return result;
 }
 
-
-array_of which_array(ui_id id)
+array_of which_array(handle id)
 {
     auto result = (array_of) (id.id >> 24);
     return result;
 }
 
-
-uint32 get_index(ui_id id)
+uint32 get_index(handle id)
 {
     uint32 result = (id.id & 0x00ffffff);
     return result;
 }
 
 
-struct element
+struct group
 {
-    ui_id id;
+    handle id;
+    uint32 order_index;
 
     // These are for transform properties
     math::vector3 position;
     math::vector3 scale;
     float32 rotation;
+    // Cache
+    math::transform transform; // transform * vector_in_child => vector_in_parent
+    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
+
+    // Parent-child relations
+    group *parent;
+    static_array<handle, 10> children; // @todo: make it grow if needed? bucket_array?
+
+    // Optional slots
+    hover_behaviour *hoverable;
+    click_behaviour *clickable;
+};
+
+
+struct shape
+{
+    handle id;
+    uint32 order_index;
+
+    // These are for transform properties
+    math::vector3 position;
+    math::vector3 scale;
+    float32 rotation;
+    // Cache
+    math::transform transform; // transform * vector_in_child => vector_in_parent
+    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
 
     // @note: width, height, and color are only for shapes
     float32 width;
@@ -99,25 +139,15 @@ struct element
     math::vector4 color;
 
     // Parent-child relations
-    element *parent;
-    static_array<ui_id, 10> children; // @todo: make it grow if needed? bucket_array?
-    uint32 order_index;
-
-    // Optional slots
-    hover_behaviour *hoverable;
-    click_behaviour *clickable;
-
-    // Cache
-    math::transform transform; // transform * vector_in_child => vector_in_parent
-    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
+    group *parent;
 };
+
 
 struct hover_behaviour
 {
-    ui_id id;
     bool32 hovered;
 
-    element *owner;
+    group *owner;
     math::rectangle2 hover_area;
 
     callback *on_enter;
@@ -129,7 +159,7 @@ struct hover_behaviour
 
 struct click_behaviour
 {
-    element *owner;
+    group *owner;
     math::rectangle2 click_area;
 
     callback *on_press;
@@ -164,12 +194,9 @@ struct animation
 
     enum kind
     {
-        NORMAL, // Goes forward and stops
+        NORMAL,      // Goes forward and stops
         NORMAL_LOOP, // Goes forward and loops from the start
-        PING_PONG, // Goes forward and then backwards closing the loop
-        // UI_ANIMATION_REVERSE,
-        // UI_ANIMATION_ALTERNATE,
-        // UI_ANIMATION_ALTERNATE_REVERSE,
+        PING_PONG,   // Goes forward and then backwards closing the loop
     };
 
     enum direction : int32
@@ -178,7 +205,7 @@ struct animation
         BACKWARD = -1,
     };
 
-    ui_id element_id;
+    handle element_id;
 
     property p;
     kind type;
@@ -195,109 +222,105 @@ struct animation
 struct system
 {
     memory::allocator ui_allocator;
-    game_state *gs;
 
     // @todo: expand it to grow in needed?
-    static_array<element, 10> groups;
-    static_array<element, 10> shapes;
+    static_array<group, 10> groups;
+    static_array<shape, 10> shapes;
     static_array<hover_behaviour, 10> hoverables;
     static_array<click_behaviour, 10> clickables;
     static_array<animation, 10> animations;
 
-    element root;
-    element *hot;    // The element is about to be interacted with (mouse over or focused)
-    element *active; // The element is being interacted with right now (mouse is down)
+    group root;
+    handle hot;     // The element is about to be interacted with (mouse over or focused)
+    handle active;  // The element is being interacted with right now (mouse is down)
+    handle pressed; // The element is clicked, and action is performed (one frame only!)
 
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
 
-    string_id hash_table_strids[32]; // Keys
-    ui_id     hash_table_ids[32];    // Values
+    uint64 hash_table_keys[32];
+    handle hash_table_values[32];
 };
 
-void initialize(game_state *gs, system *sys, memory_block ui_memory)
+void initialize(system *s, memory_block ui_memory)
 {
-    memory::set(sys, 0, sizeof(system));
-    memory::initialize_memory_arena(&sys->ui_allocator, ui_memory);
+    memory::set(s, 0, sizeof(system));
+    memory::initialize_memory_arena(&s->ui_allocator, ui_memory);
 
-    sys->gs = gs;
-
-    sys->root.transform = math::transform::identity();
-    sys->root.transform_to_root = math::transform::identity();
+    s->root.transform = math::transform::identity();
+    s->root.transform_to_root = math::transform::identity();
 }
 
-void give_name(system *s, element *e, string_id strid)
+void push_to_hash_table(system *s, uint64 key, handle value)
 {
-    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_keys); offset++)
     {
-        uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
-
-        if (s->hash_table_strids[index].id == 0)
+        usize index = (key + offset) % ARRAY_COUNT(s->hash_table_keys);
+        if (s->hash_table_values[index].id == 0) // @note: a valid handle cannot be 0
         {
-            s->hash_table_strids[index] = strid;
-            s->hash_table_ids[index] = e->id;
+            s->hash_table_keys[index] = key;
+            s->hash_table_values[index] = value;
             break;
         }
     }
 }
 
-element *get_element_by_id(system *s, ui_id id)
+handle get_handle_from_hash_table(system *s, uint64 key)
 {
-    element *result = NULL;
+    handle result = {};
 
-    uint32 index = get_index(id);
-    switch (which_array(id))
+    for (int offset = 0; offset < ARRAY_COUNT(s->hash_table_keys); offset++)
     {
-        case array_of::groups:
+        uint32 index = (key + offset) % ARRAY_COUNT(s->hash_table_keys);
+        if (s->hash_table_keys[index] == key)
         {
-            result = s->groups.data + index;
+            result = s->hash_table_values[index];
+            break; // Successfully found a value
         }
-        break;
-
-        case array_of::shapes:
+        if (s->hash_table_values[index].id == 0)
         {
-            result = s->shapes.data + index;
+            break; // Didn't find a value
         }
-        break;
-
-        case array_of::none:
-        case array_of::hoverables:
-        case array_of::clickables:
-        break;
     }
 
     return result;
 }
 
-element *get_element_by_name(system *s, string_id strid)
+
+group *get_group(system *s, handle h)
 {
-    ui_id id = {};
+    group *result = NULL;
 
-    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_strids); offset++)
+    uint32 index = get_index(h);
+    if (which_array(h) == array_of::GROUPS)
     {
-        uint32 index = (strid.id + offset) % ARRAY_COUNT(s->hash_table_strids);
-
-        if (s->hash_table_strids[index] == strid)
-        {
-            id = s->hash_table_ids[index];
-            break;
-        }
-        else if (s->hash_table_strids[index].id == 0)
-        {
-            break;
-        }
+        result = s->groups.data + index;
     }
 
-    element *result = get_element_by_id(s, id);
     return result;
 }
 
-element *make_group(system *sys, element *parent)
-{
-    ui_id id = make_ui_id(array_of::groups, truncate_to_uint32(sys->groups.size));
 
-    element *result = sys->groups.push();
-    memory::set(result, 0, sizeof(element));
+shape *get_shape(system *s, handle h)
+{
+    shape *result = NULL;
+
+    uint32 index = get_index(h);
+    if (which_array(h) == array_of::SHAPES)
+    {
+        result = s->shapes.data + index;
+    }
+
+    return result;
+}
+
+
+group *make_group(system *s, group *parent)
+{
+    handle id = make_handle(array_of::GROUPS, truncate_to_uint32(s->groups.size));
+
+    group *result = s->groups.push();
+    memory::set(result, 0, sizeof(group));
     result->id = id;
     result->scale = V3(1);
     result->transform = math::transform::identity();
@@ -309,12 +332,12 @@ element *make_group(system *sys, element *parent)
     return result;
 }
 
-element *make_shape(system *sys, element *parent)
+shape *make_shape(system *s, group *parent)
 {
-    ui_id id = make_ui_id(array_of::shapes, truncate_to_uint32(sys->shapes.size));
+    handle id = make_handle(array_of::SHAPES, truncate_to_uint32(s->shapes.size));
 
-    element *result = sys->shapes.push();
-    memory::set(result, 0, sizeof(element));
+    shape *result = s->shapes.push();
+    memory::set(result, 0, sizeof(shape));
     result->id = id;
     result->width = 100.f;
     result->height = 100.f;
@@ -328,15 +351,12 @@ element *make_shape(system *sys, element *parent)
     return result;
 }
 
-hover_behaviour *make_hoverable(system *sys, element *e)
+hover_behaviour *make_hoverable(system *s, group *e)
 {
     hover_behaviour *result = NULL;
     if (e->hoverable == NULL)
     {
-        ui_id id = make_ui_id(array_of::hoverables, truncate_to_uint32(sys->hoverables.size));
-
-        result = sys->hoverables.push();
-        result->id = id;
+        result = s->hoverables.push();
         result->hovered = false;
         result->owner = e;
         result->hover_area = math::rectangle2::from_center_size(V2(0), 100, 100);
@@ -350,12 +370,12 @@ hover_behaviour *make_hoverable(system *sys, element *e)
     return result;
 }
 
-click_behaviour *make_clickable(system *sys, element *e)
+click_behaviour *make_clickable(system *s, group *e)
 {
     click_behaviour *result = NULL;
     if (e->clickable == NULL)
     {
-        result = sys->clickables.push();
+        result = s->clickables.push();
         result->owner = e;
         result->click_area = math::rectangle2::from_center_size(V2(0), 100, 100);
         result->on_press = callback_stub;
@@ -368,7 +388,7 @@ click_behaviour *make_clickable(system *sys, element *e)
     return result;
 }
 
-void update_transform(element *e)
+void update_transform_for_group(group *e)
 {
     auto transform =
         math::rotated_z(math::to_radians(e->rotation),
@@ -378,63 +398,88 @@ void update_transform(element *e)
     e->transform = transform;
 }
 
-void update_transforms(system *sys)
+
+void update_transform_for_shape(shape *e)
+{
+    auto transform =
+        math::rotated_z(math::to_radians(e->rotation),
+        math::scaled(e->scale,
+        math::translated(e->position,
+        math::transform::identity())));
+    e->transform = transform;
+}
+
+void update_transforms(system *s)
 {
     // @todo: make BFS here (where to allocate queue? scratchpad memory?)
-    for (usize i = 0; i < sys->groups.size; i++)
+    for (usize i = 0; i < s->groups.size; i++)
     {
-        element *e = sys->groups.data + i;
-        update_transform(e);
+        group *e = s->groups.data + i;
+        update_transform_for_group(e);
         e->transform_to_root = e->parent->transform_to_root * e->transform;
     }
-    for (usize i = 0; i < sys->shapes.size; i++)
+    for (usize i = 0; i < s->shapes.size; i++)
     {
-        element *e = sys->shapes.data + i;
-        update_transform(e);
+        shape *e = s->shapes.data + i;
+        update_transform_for_shape(e);
         e->transform_to_root = e->parent->transform_to_root * e->transform;
     }
 }
 
-void update_order_index(system *sys, element *e, uint32& order_index)
+void update_order_index_for_group(system *s, group *e, uint32& order_index)
 {
     e->order_index = order_index++;
     for (usize child_index = 0; child_index < e->children.size; child_index++)
     {
-        ui_id child_id = e->children.data[child_index];
-        element *child = get_element_by_id(sys, child_id);
-        update_order_index(sys, child, order_index);
+        handle child_handle = e->children.data[child_index];
+        switch (which_array(child_handle))
+        {
+            case array_of::GROUPS:
+            {
+                group *child = get_group(s, child_handle);
+                update_order_index_for_group(s, child, order_index);
+            }
+            break;
+
+            case array_of::SHAPES:
+            {
+                shape *child = get_shape(s, child_handle);
+                child->order_index = order_index++;
+            }
+            break;
+        }
     }
 }
 
-void make_cold(system *sys, element *e)
+void make_cold(system *s, handle h)
 {
-    sys->hot->hoverable->on_leave_internal(sys, sys->hot);
-    sys->hot->hoverable->on_leave(sys, sys->hot);
-    sys->hot->hoverable->hovered = false;
-    sys->hot = NULL;
+    auto *e = get_group(s, h);
+    e->hoverable->on_leave_internal(s, e);
+    e->hoverable->on_leave(s, e);
+    e->hoverable->hovered = false;
+    s->hot = null_handle();
 }
 
-void make_hot(system *sys, element *e)
+void make_hot(system *s, group *e)
 {
-    sys->hot = e;
-    sys->hot->hoverable->hovered = true;
-    sys->hot->hoverable->on_enter(sys, sys->hot);
-    sys->hot->hoverable->on_enter_internal(sys, sys->hot);
+    s->hot = e->id;
+    e->hoverable->hovered = true;
+    e->hoverable->on_enter(s, e);
+    e->hoverable->on_enter_internal(s, e);
 }
 
-void update_animations(system *sys, input *inp)
+void update_animations(system *s, input *inp)
 {
-    for (uint32 i = 0; i < sys->animations.size;)
+    for (uint32 i = 0; i < s->animations.size;)
     {
-        animation& a = sys->animations[i];
-        element *e = get_element_by_id(sys, a.element_id);
+        animation& a = s->animations[i];
         a.current_time += ((float32) a.is_forward) * inp->dt;
 
         if (a.current_time > a.duration_seconds)
         {
             if (a.type == animation::NORMAL)
             {
-
+                a.current_time = a.duration_seconds;
             }
             if (a.type == animation::NORMAL_LOOP)
             {
@@ -446,6 +491,7 @@ void update_animations(system *sys, input *inp)
                 a.is_forward = animation::BACKWARD;
             }
         }
+
         if (a.current_time < 0)
         {
             if (a.type == animation::NORMAL)
@@ -467,34 +513,54 @@ void update_animations(system *sys, input *inp)
         // @todo: generalize this function stuff
         float32 new_value = math::lerp(a.start_value, a.final_value, a.current_time / a.duration_seconds);
 
-        switch (a.p)
+        auto wa = which_array(a.element_id);
+        if (wa == array_of::GROUPS)
         {
-            case animation::POSITION_X: e->position.x = new_value;
-                break;
-            case animation::POSITION_Y: e->position.y = new_value;
-                break;
-            case animation::ROTATION: e->rotation = new_value;
-                break;
-            case animation::WIDTH: e->width = new_value;
-                break;
-            case animation::HEIGHT: e->height = new_value;
-                break;
-            case animation::COLOR_R: e->color.r = new_value;
-                break;
-            case animation::COLOR_G: e->color.g = new_value;
-                break;
-            case animation::COLOR_B: e->color.b = new_value;
-                break;
-            case animation::COLOR_A: e->color.a = new_value;
-                break;
-
-            case animation::PROPERTY_COUNT:
-                break;
+            group *owner = get_group(s, a.element_id);
+            switch (a.p)
+            {
+                case animation::POSITION_X: owner->position.x = new_value;
+                    break;
+                case animation::POSITION_Y: owner->position.y = new_value;
+                    break;
+                case animation::ROTATION: owner->rotation = new_value;
+                    break;
+                default:
+                    ASSERT_FAIL();
+            }
+        }
+        if (wa == array_of::SHAPES)
+        {
+            shape *owner = get_shape(s, a.element_id);
+            switch (a.p)
+            {
+                case animation::POSITION_X: owner->position.x = new_value;
+                    break;
+                case animation::POSITION_Y: owner->position.y = new_value;
+                    break;
+                case animation::ROTATION: owner->rotation = new_value;
+                    break;
+                case animation::WIDTH: owner->width = new_value;
+                    break;
+                case animation::HEIGHT: owner->height = new_value;
+                    break;
+                case animation::COLOR_R: owner->color.r = new_value;
+                    break;
+                case animation::COLOR_G: owner->color.g = new_value;
+                    break;
+                case animation::COLOR_B: owner->color.b = new_value;
+                    break;
+                case animation::COLOR_A: owner->color.a = new_value;
+                    break;
+                default:
+                    ASSERT_FAIL();
+            }
         }
 
-        if (a.current_time > a.duration_seconds)
+
+        if (a.current_time >= a.duration_seconds)
         {
-            sys->animations.erase_not_sorted(i);
+            s->animations.erase_not_sorted(i);
         }
         else
         {
@@ -503,20 +569,21 @@ void update_animations(system *sys, input *inp)
     }
 }
 
-void update(system *sys, input *inp)
+void update(system *s, input *inp)
 {
     auto mouse_position = V3(inp->mouse.x, inp->mouse.y, 0);
+    s->pressed = null_handle();
 
     uint32 order_index = 0;
-    update_order_index(sys, &sys->root, order_index);
+    update_order_index_for_group(s, &s->root, order_index);
 
-    update_animations(sys, inp);
+    update_animations(s, inp);
 
-    element *hovered = NULL;
+    hover_behaviour *hovered = NULL;
 
-    for (usize i = 0; i < sys->hoverables.size; i++)
+    for (usize i = 0; i < s->hoverables.size; i++)
     {
-        hover_behaviour *hoverable = sys->hoverables.data + i;
+        hover_behaviour *hoverable = s->hoverables.data + i;
 
         auto inverse_transform = inverse(hoverable->owner->transform_to_root);
         auto mouse_position_local = inverse_transform * mouse_position;
@@ -525,38 +592,38 @@ void update(system *sys, input *inp)
         {
             if (hovered == NULL)
             {
-                hovered = hoverable->owner;
+                hovered = hoverable;
             }
-            else if (hoverable->owner->order_index < hovered->order_index)
+            else if (hoverable->owner->order_index < hovered->owner->order_index)
             {
-                hovered = hoverable->owner;
+                hovered = hoverable;
             }
         }
     }
 
     if (hovered)
     {
-        if (sys->active == NULL)
+        if (s->active == null_handle())
         {
             // I found element under mouse, and no element is active! That's good, I can set myself as hot.
-            if (sys->hot != NULL)
+            if (s->hot != null_handle())
             {
                 // There's something hot already, check if it's what I found.
-                if (sys->hot == hovered)
+                if (s->hot == hovered->owner->id)
                 {
                     // The element I found under the mouse is exactly what I have hot. I will do nothing then.
                 }
                 else
                 {
                     // This is new element! Remove hot from old one and make hot a new one!
-                    make_cold(sys, sys->hot);
-                    make_hot(sys, hovered);
+                    make_cold(s, s->hot);
+                    make_hot(s, hovered->owner);
                 }
             }
             else
             {
                 // There's nothing hot yet, let's make our element hot.
-                make_hot(sys, hovered);
+                make_hot(s, hovered->owner);
             }
         }
         else
@@ -566,67 +633,72 @@ void update(system *sys, input *inp)
     }
     else
     {
-        if (sys->hot)
+        if (s->hot != null_handle())
         {
             // I didn't find anything under the mouse, but I have a hot element? Make it cold again.
-            make_cold(sys, sys->hot);
+            make_cold(s, s->hot);
         }
     }
 
-    if (get_press_count(inp->mouse[mouse_device::LMB]))
+    if (get_press_count(inp->mouse[mouse_device::lmb]))
     {
-        sys->active = sys->hot;
-        if (sys->active)
+        s->active = s->hot;
+        if (s->active)
         {
-            if (sys->active->clickable)
+            ASSERT(which_array(s->active) == array_of::GROUPS);
+            group *active = get_group(s, s->active);
+            if (active->clickable)
             {
-                if (sys->active == sys->hot)
+                if (s->active == s->hot)
                 {
-                    sys->active->clickable->on_press_internal(sys, sys->active);
-                    sys->active->clickable->on_press(sys, sys->active);
+                    active->clickable->on_press_internal(s, active);
+                    active->clickable->on_press(s, active);
                 }
             }
         }
     }
 
-    if (get_release_count(inp->mouse[mouse_device::LMB]))
+    if (get_release_count(inp->mouse[mouse_device::lmb]))
     {
-        if (sys->active)
+        if (s->active)
         {
-            if (sys->active->clickable)
+            ASSERT(which_array(s->active) == array_of::GROUPS);
+            group *active = get_group(s, s->active);
+            if (active->clickable)
             {
-                if (sys->active == sys->hot)
+                if (s->active == s->hot)
                 {
-                    sys->active->clickable->on_release(sys, sys->active);
+                    active->clickable->on_release(s, active);
+                    s->pressed = s->active;
                 }
-                sys->active->clickable->on_release_internal(sys, sys->active);
+                active->clickable->on_release_internal(s, active);
             }
-            sys->active = NULL;
+            s->active = null_handle();
         }
     }
 
     // @note: This should be applied each frame after update phase, right?
-    update_transforms(sys);
+    update_transforms(s);
 }
 
-void draw(execution_context *context, system *sys)
+void draw(execution_context *context, system *s)
 {
     auto projection =
         math::translated(V3(-1, 1, 0),
         math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    for (usize i = sys->shapes.size - 1; i < sys->shapes.size; i--)
+    for (usize i = s->shapes.size - 1; i < s->shapes.size; i--)
     {
-        element *e = sys->shapes.data + i;
+        shape *e = s->shapes.data + i;
 
         auto model =
             math::scaled(V3(0.5f * e->width, 0.5f * e->height, 1),
             math::to_matrix4(e->transform_to_root));
 
         render_command::command_draw_ui command_draw_ui;
-        command_draw_ui.mesh_token = sys->rectangle_mesh;
-        command_draw_ui.shader_token = sys->rectangle_shader;
+        command_draw_ui.mesh_token = s->rectangle_mesh;
+        command_draw_ui.shader_token = s->rectangle_shader;
         command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
         command_draw_ui.view = math::matrix4::identity();
         command_draw_ui.projection = projection;
@@ -640,8 +712,7 @@ void draw(execution_context *context, system *sys)
     }
 }
 
-
-void animate(system *s, element *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate(system *s, group *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animation a;
     a.element_id = e->id;
@@ -660,28 +731,76 @@ void animate(system *s, element *e, animation::property property, animation::kin
 }
 
 
-void animate_normal(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL, length_in_frames, start_value, final_value);
 }
 
 
-void animate_normal_loop(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal_loop(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL_LOOP, length_in_frames, start_value, final_value);
 }
 
 
-void animate_ping_pong(system *s, element *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_ping_pong(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::PING_PONG, length_in_frames, start_value, final_value);
+}
+
+void animate(system *s, shape *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animation a;
+    a.element_id = e->id;
+    a.p = property;
+    a.type = type;
+
+    a.start_value = start_value;
+    a.final_value = final_value;
+
+    // @note: assume all animations are 60 frames per second
+    a.duration_seconds = (float32) length_in_frames / 60.f;
+    a.current_time = 0.f;
+    a.is_forward = animation::FORWARD;
+
+    s->animations.push(a);
+}
+
+
+void animate_normal(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::NORMAL, length_in_frames, start_value, final_value);
+}
+
+
+void animate_normal_loop(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+{
+    animate(s, e, property, animation::NORMAL_LOOP, length_in_frames, start_value, final_value);
+}
+
+
+void animate_ping_pong(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::PING_PONG, length_in_frames, start_value, final_value);
 }
 
 
-bool32 button(system *s, string_id id)
+void delete_animation(system *s, uint32& index)
 {
-    element *e = get_element_by_name(s, id);
-    bool32 result = (e && e->hoverable && e->hoverable->hovered);
+    if (index < s->animations.size)
+        s->animations.erase_not_sorted(index);
+    index = (uint32) -1;
+}
+
+
+bool32 button(system *s, uint64 id)
+{
+    bool32 result = false;
+    handle h = get_handle_from_hash_table(s, id);
+    if (which_array(h) == array_of::GROUPS)
+    {
+        result = (h == s->pressed);
+    }
     return result;
 }
 
