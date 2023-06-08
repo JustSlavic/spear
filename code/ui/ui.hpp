@@ -640,7 +640,7 @@ void update(system *s, input *inp)
         }
     }
 
-    if (get_press_count(inp->mouse[mouse_device::lmb]))
+    if (get_press_count(inp->mouse[mouse_device::LMB]))
     {
         s->active = s->hot;
         if (s->active)
@@ -658,7 +658,7 @@ void update(system *s, input *inp)
         }
     }
 
-    if (get_release_count(inp->mouse[mouse_device::lmb]))
+    if (get_release_count(inp->mouse[mouse_device::LMB]))
     {
         if (s->active)
         {

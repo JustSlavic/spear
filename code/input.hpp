@@ -67,9 +67,13 @@ struct keyboard_device
         TAB, Q, W, E, R, T, Y, U, I, O, P, BRACKET_OPEN, BRACKET_CLOSE, BACKSLASH,
         CAPS_LOCK, A, S, D, F, G, H, J, K, L, ENTER,
         SHIFT_LEFT, Z, X, C, V, B, N, M, LESS, MORE, SLASH, SHIFT_RIGHT,
-        CONTROL_LEFT, MOD_LEFT, ALT_LEFT, SPACE, ALT_RIGHT, CONTROL_RIGHT,
-        NUM1, NUM2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM0,
-        PAGE_UP, PAGE_DOWN, HOME, END, INSERT, DELETE,
+        CONTROL_LEFT,
+        SUPER_LEFT,
+        ALT_LEFT,
+        SPACE,
+        ALT_RIGHT, CONTROL_RIGHT,
+        // NUM1, NUM2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM0,
+        // PAGE_UP, PAGE_DOWN, HOME, END, INSERT, DELETE,
         // @note: key_count have to be the last in enum
         KEY_COUNT
     };

@@ -117,17 +117,17 @@ void process_pending_messages(input *inp)
             case WM_MOUSEMOVE:
             break;
 
-            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::lmb], true);
+            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::LMB], true);
                 break;
-            case WM_LBUTTONUP: process_button_state(&inp->mouse[mouse_device::lmb], false);
+            case WM_LBUTTONUP: process_button_state(&inp->mouse[mouse_device::LMB], false);
                 break;
-            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::mmb], true);
+            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::MMB], true);
                 break;
-            case WM_MBUTTONUP: process_button_state(&inp->mouse[mouse_device::mmb], false);
+            case WM_MBUTTONUP: process_button_state(&inp->mouse[mouse_device::MMB], false);
                 break;
-            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::rmb], true);
+            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::RMB], true);
                 break;
-            case WM_RBUTTONUP: process_button_state(&inp->mouse[mouse_device::rmb], false);
+            case WM_RBUTTONUP: process_button_state(&inp->mouse[mouse_device::RMB], false);
                 break;
 
             case WM_SYSKEYDOWN:
@@ -142,19 +142,19 @@ void process_pending_messages(input *inp)
 
                 switch (virtual_key_code)
                 {
-                    case VK_ESCAPE: process_button_state(&inp->keyboard[keyboard_device::esc], is_down);
+                    case VK_ESCAPE: process_button_state(&inp->keyboard[keyboard_device::ESC], is_down);
                         break;
-                    case VK_SPACE: process_button_state(&inp->keyboard[keyboard_device::space], is_down);
+                    case VK_SPACE: process_button_state(&inp->keyboard[keyboard_device::SPACE], is_down);
                         break;
-                    case 'W': process_button_state(&inp->keyboard[keyboard_device::w], is_down);
+                    case 'W': process_button_state(&inp->keyboard[keyboard_device::W], is_down);
                         break;
-                    case 'A': process_button_state(&inp->keyboard[keyboard_device::a], is_down);
+                    case 'A': process_button_state(&inp->keyboard[keyboard_device::A], is_down);
                         break;
-                    case 'S': process_button_state(&inp->keyboard[keyboard_device::s], is_down);
+                    case 'S': process_button_state(&inp->keyboard[keyboard_device::S], is_down);
                         break;
-                    case 'D': process_button_state(&inp->keyboard[keyboard_device::d], is_down);
+                    case 'D': process_button_state(&inp->keyboard[keyboard_device::D], is_down);
                         break;
-                    case 'Y': process_button_state(&inp->keyboard[keyboard_device::y], is_down);
+                    case 'Y': process_button_state(&inp->keyboard[keyboard_device::Y], is_down);
                         break;
                     case 'K':
                     {
@@ -367,8 +367,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, keyboard_device::key_count);
-        reset_transitions(input.mouse.buttons, mouse_device::key_count);
+        reset_transitions(input.keyboard.buttons, keyboard_device::KEY_COUNT);
+        reset_transitions(input.mouse.buttons, mouse_device::KEY_COUNT);
         process_pending_messages(&input);
         win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
         input.dt = last_frame_dt;
