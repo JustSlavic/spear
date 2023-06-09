@@ -684,7 +684,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     game_state *gs = (game_state *) game_memory.memory;
     sam_move move_data = {};
 
-    if (get_press_count(input->keyboard[keyboard_device::ESC]))
+    if (get_press_count(input->keyboard[KB_ESC]))
     {
         if (gs->near_exit_time > 0.f)
         {
@@ -696,7 +696,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    if (get_hold_count(input->keyboard[keyboard_device::A]))
+    if (get_hold_count(input->keyboard[KB_A]))
     {
         if (is(gs->sam, ENTITY_ON_GROUND))
         {
@@ -707,7 +707,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             move_data.velocity.x -= PLAYER_BASE_JUMP_CORRECTION_SPEED;
         }
     }
-    if (get_hold_count(input->keyboard[keyboard_device::D]))
+    if (get_hold_count(input->keyboard[KB_D]))
     {
         if (is(gs->sam, ENTITY_ON_GROUND))
         {
@@ -719,7 +719,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    if (get_press_count(input->keyboard[keyboard_device::SPACE]))
+    if (get_press_count(input->keyboard[KB_SPACE]))
     {
         if (is(gs->sam, ENTITY_ON_GROUND))
         {

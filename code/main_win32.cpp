@@ -142,19 +142,19 @@ void process_pending_messages(input *inp)
 
                 switch (virtual_key_code)
                 {
-                    case VK_ESCAPE: process_button_state(&inp->keyboard[keyboard_device::ESC], is_down);
+                    case VK_ESCAPE: process_button_state(&inp->keyboard[KB_ESC], is_down);
                         break;
-                    case VK_SPACE: process_button_state(&inp->keyboard[keyboard_device::SPACE], is_down);
+                    case VK_SPACE: process_button_state(&inp->keyboard[KB_SPACE], is_down);
                         break;
-                    case 'W': process_button_state(&inp->keyboard[keyboard_device::W], is_down);
+                    case 'W': process_button_state(&inp->keyboard[KB_W], is_down);
                         break;
-                    case 'A': process_button_state(&inp->keyboard[keyboard_device::A], is_down);
+                    case 'A': process_button_state(&inp->keyboard[KB_A], is_down);
                         break;
-                    case 'S': process_button_state(&inp->keyboard[keyboard_device::S], is_down);
+                    case 'S': process_button_state(&inp->keyboard[KB_S], is_down);
                         break;
-                    case 'D': process_button_state(&inp->keyboard[keyboard_device::D], is_down);
+                    case 'D': process_button_state(&inp->keyboard[KB_D], is_down);
                         break;
-                    case 'Y': process_button_state(&inp->keyboard[keyboard_device::Y], is_down);
+                    case 'Y': process_button_state(&inp->keyboard[KB_Y], is_down);
                         break;
                     case 'K':
                     {
@@ -367,7 +367,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, keyboard_device::KEY_COUNT);
+        reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, mouse_device::KEY_COUNT);
         process_pending_messages(&input);
         win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);

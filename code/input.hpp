@@ -56,36 +56,31 @@ INLINE void process_button_state(button_state *button, bool32 is_down)
     }
 }
 
+enum keyboard_key
+{
+    KB_ESC, KB_F1, KB_F2, KB_F3, KB_F4, KB_F5, KB_F6, KB_F7, KB_F8, KB_F9, KB_F10, KB_F11, KB_F12,
+    KB_TILDA, KB_1, KB_2, KB_3, KB_4, KB_5, KB_6, KB_7, KB_8, KB_9, KB_0, KB_UNDERSCORE, KB_EQUALS, KB_BACKSPACE,
+    KB_TAB, KB_Q, KB_W, KB_E, KB_R, KB_T, KB_Y, KB_U, KB_I, KB_O, KB_P, KB_BRACKET_OPEN, KB_BRACKET_CLOSE, KB_BACKSLASH,
+    KB_CAPS_LOCK, KB_A, KB_S, KB_D, KB_F, KB_G, KB_H, KB_J, KB_K, KB_L, KB_ENTER,
+    KB_SHIFT_LEFT, KB_Z, KB_X, KB_C, KB_V, KB_B, KB_N, KB_M, KB_ANGLE_OPEN, KB_ANGLE_CLOSE, KB_SLASH, KB_SHIFT_RIGHT,
+    KB_CONTROL_LEFT, KB_SUPER_LEFT, KB_ALT_LEFT, KB_SPACE, KB_ALT_RIGHT, KB_CONTROL_RIGHT,
+    KB_NUM1, KB_NUM2, KB_NUM3, KB_NUM4, KB_NUM5, KB_NUM6, KB_NUM7, KB_NUM8, KB_NUM9, KB_NUM0,
+    KB_PAGE_UP, KB_PAGE_DOWN, KB_HOME, KB_END,KB_INSERT, KB_DELETE,
+    // @note: key_count have to be the last in enum
+    KB_KEY_COUNT
+};
 
 struct keyboard_device
 {
-    enum key
-    {
-        ESC,
-        F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
-        TILDA, _1, _2, _3, _4, _5, _6, _7, _8, _9, _0, underscore, equals, backspace,
-        TAB, Q, W, E, R, T, Y, U, I, O, P, BRACKET_OPEN, BRACKET_CLOSE, BACKSLASH,
-        CAPS_LOCK, A, S, D, F, G, H, J, K, L, ENTER,
-        SHIFT_LEFT, Z, X, C, V, B, N, M, LESS, MORE, SLASH, SHIFT_RIGHT,
-        CONTROL_LEFT,
-        SUPER_LEFT,
-        ALT_LEFT,
-        SPACE,
-        ALT_RIGHT, CONTROL_RIGHT,
-        // NUM1, NUM2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM0,
-        // PAGE_UP, PAGE_DOWN, HOME, END, INSERT, DELETE,
-        // @note: key_count have to be the last in enum
-        KEY_COUNT
-    };
 
-    button_state buttons[KEY_COUNT];
+    button_state buttons[KB_KEY_COUNT];
 
-    button_state & operator [] (key k)
+    button_state & operator [] (keyboard_key k)
     {
         return buttons[k];
     }
 
-    button_state const & operator [] (key k) const
+    button_state const & operator [] (keyboard_key k) const
     {
         return buttons[k];
     }
