@@ -252,8 +252,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     ui::initialize(&gs->ui, ui_memory);
 
     auto button_1 = ui::make_group(&gs->ui, &gs->ui.root);
-    button_1->position.xy = V2(500, 600);
-    button_1->rotation = 20.f;
+    button_1->transform->position.xy = V2(500, 600);
+    button_1->transform->rotation = 20.f;
     auto shape_1 = ui::make_shape(&gs->ui, button_1);
     shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
 

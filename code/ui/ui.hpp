@@ -31,6 +31,7 @@ namespace ui {
 struct system;
 struct group;
 struct shape;
+struct space_behaviour;
 struct hover_behaviour;
 struct click_behaviour;
 
@@ -44,10 +45,11 @@ enum class array_of : uint8
     // 0 is "none", so handle with all bits set
     // to 0 represents "null" reference
     NONE = 0,
-    GROUPS,
-    SHAPES,
+    ROOT = 1,
+    GROUPS = 2,
+    SHAPES = 3,
+    TRANSFORMS = 32,
 };
-
 
 struct handle
 {
@@ -96,44 +98,36 @@ uint32 get_index(handle id)
     return result;
 }
 
+// Unique identifier assigned to each element, so other elements could have references to it
+struct ref
+{
+    uint32 id;
+};
 
 struct group
 {
     handle id;
     uint32 order_index;
 
-    // These are for transform properties
-    math::vector3 position;
-    math::vector3 scale;
-    float32 rotation;
-    // Cache
-    math::transform transform; // transform * vector_in_child => vector_in_parent
-    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
-
     // Parent-child relations
     group *parent;
     static_array<handle, 10> children; // @todo: make it grow if needed? bucket_array?
 
+    // Required slots
+    space_behaviour *transform;
     // Optional slots
     hover_behaviour *hoverable;
     click_behaviour *clickable;
 };
-
 
 struct shape
 {
     handle id;
     uint32 order_index;
 
-    // These are for transform properties
-    math::vector3 position;
-    math::vector3 scale;
-    float32 rotation;
-    // Cache
-    math::transform transform; // transform * vector_in_child => vector_in_parent
-    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
+    //Required slots
+    space_behaviour *transform;
 
-    // @note: width, height, and color are only for shapes
     float32 width;
     float32 height;
     math::vector4 color;
@@ -142,6 +136,18 @@ struct shape
     group *parent;
 };
 
+struct space_behaviour
+{
+    handle owner;
+
+    // These are for transform properties
+    math::vector3 position;
+    math::vector3 scale;
+    float32 rotation;
+    // Cache
+    math::transform transform; // transform * vector_in_child => vector_in_parent
+    math::transform transform_to_root; // Cached matrix to transform vectors from child space to root's
+};
 
 struct hover_behaviour
 {
@@ -172,11 +178,18 @@ struct click_behaviour
 
 struct animation
 {
-    enum property
+    enum anim_property
     {
+        NONE = 0,
+
+        // Transform properties
         POSITION_X,
         POSITION_Y,
+        SCALE_X,
+        SCALE_Y,
         ROTATION,
+
+        // Shape properties
         WIDTH,
         HEIGHT,
         COLOR_R,
@@ -184,22 +197,23 @@ struct animation
         COLOR_B,
         COLOR_A,
 
-        PROPERTY_COUNT
+        PROPERTY_TRANSFORM = 0x01000000,
+        PROPERTY_SHAPE     = 0x02000000,
     };
 
-    enum function
+    enum anim_function
     {
         LINEAR,
     };
 
-    enum kind
+    enum anim_type
     {
         NORMAL,      // Goes forward and stops
         NORMAL_LOOP, // Goes forward and loops from the start
         PING_PONG,   // Goes forward and then backwards closing the loop
     };
 
-    enum direction : int32
+    enum anim_direction : int32
     {
         FORWARD  =  1,
         BACKWARD = -1,
@@ -207,8 +221,9 @@ struct animation
 
     handle element_id;
 
-    property p;
-    kind type;
+    anim_property  property;
+    anim_type      type;
+    anim_direction is_forward;
 
     float32 start_value;
     float32 final_value;
@@ -216,7 +231,6 @@ struct animation
     // Assume begin time be 0s
     float32 duration_seconds; // the same as end time
     float32 current_time;
-    direction is_forward;
 };
 
 struct system
@@ -226,11 +240,14 @@ struct system
     // @todo: expand it to grow in needed?
     static_array<group, 10> groups;
     static_array<shape, 10> shapes;
+    static_array<space_behaviour, 10> transforms;
     static_array<hover_behaviour, 10> hoverables;
     static_array<click_behaviour, 10> clickables;
     static_array<animation, 10> animations;
 
     group root;
+    space_behaviour root_transform;
+
     handle hot;     // The element is about to be interacted with (mouse over or focused)
     handle active;  // The element is being interacted with right now (mouse is down)
     handle pressed; // The element is clicked, and action is performed (one frame only!)
@@ -242,13 +259,29 @@ struct system
     handle hash_table_values[32];
 };
 
+space_behaviour *push_identity_transform(system *s)
+{
+    space_behaviour *result = NULL;
+    ASSERT(s->transforms.size < s->transforms.capacity());
+    {
+        result = s->transforms.push();
+        result->scale = V3(1);
+        result->transform = math::transform::identity();
+        result->transform_to_root = math::transform::identity();
+    }
+    return result;
+}
+
 void initialize(system *s, memory_block ui_memory)
 {
     memory::set(s, 0, sizeof(system));
     memory::initialize_memory_arena(&s->ui_allocator, ui_memory);
 
-    s->root.transform = math::transform::identity();
-    s->root.transform_to_root = math::transform::identity();
+    space_behaviour* tm = s->transforms.push();
+    tm->transform = math::transform::identity();
+    tm->transform_to_root = math::transform::identity();
+
+    s->root.transform = tm;
 }
 
 void push_to_hash_table(system *s, uint64 key, handle value)
@@ -322,10 +355,8 @@ group *make_group(system *s, group *parent)
     group *result = s->groups.push();
     memory::set(result, 0, sizeof(group));
     result->id = id;
-    result->scale = V3(1);
-    result->transform = math::transform::identity();
-    result->transform_to_root = math::transform::identity();
-
+    result->transform = push_identity_transform(s);
+    result->transform->owner = id;
     result->parent = parent;
     parent->children.push(id);
 
@@ -341,9 +372,8 @@ shape *make_shape(system *s, group *parent)
     result->id = id;
     result->width = 100.f;
     result->height = 100.f;
-    result->scale = V3(1);
-    result->transform = math::transform::identity();
-    result->transform_to_root = math::transform::identity();
+    result->transform = push_identity_transform(s);
+    result->transform->owner = id;
 
     result->parent = parent;
     parent->children.push(id);
@@ -388,41 +418,36 @@ click_behaviour *make_clickable(system *s, group *e)
     return result;
 }
 
-void update_transform_for_group(group *e)
+void update_transform(space_behaviour *tm)
 {
     auto transform =
-        math::rotated_z(math::to_radians(e->rotation),
-        math::scaled(e->scale,
-        math::translated(e->position,
+        math::rotated_z(math::to_radians(tm->rotation),
+        math::scaled(tm->scale,
+        math::translated(tm->position,
         math::transform::identity())));
-    e->transform = transform;
-}
-
-
-void update_transform_for_shape(shape *e)
-{
-    auto transform =
-        math::rotated_z(math::to_radians(e->rotation),
-        math::scaled(e->scale,
-        math::translated(e->position,
-        math::transform::identity())));
-    e->transform = transform;
+    tm->transform = transform;
 }
 
 void update_transforms(system *s)
 {
     // @todo: make BFS here (where to allocate queue? scratchpad memory?)
-    for (usize i = 0; i < s->groups.size; i++)
+    for (usize i = 0; i < s->transforms.size; i++)
     {
-        group *e = s->groups.data + i;
-        update_transform_for_group(e);
-        e->transform_to_root = e->parent->transform_to_root * e->transform;
-    }
-    for (usize i = 0; i < s->shapes.size; i++)
-    {
-        shape *e = s->shapes.data + i;
-        update_transform_for_shape(e);
-        e->transform_to_root = e->parent->transform_to_root * e->transform;
+        space_behaviour *tm = s->transforms.data + i;
+        update_transform(tm);
+
+        auto index = get_index(tm->owner);
+        auto where = which_array(tm->owner);
+        if (where == array_of::GROUPS)
+        {
+            group *e = s->groups.data + index;
+            tm->transform_to_root = e->parent->transform->transform_to_root * tm->transform;
+        }
+        else if (where == array_of::SHAPES)
+        {
+            shape *e = s->shapes.data + index;
+            tm->transform_to_root = e->parent->transform->transform_to_root * tm->transform;
+        }
     }
 }
 
@@ -513,50 +538,62 @@ void update_animations(system *s, input *inp)
         // @todo: generalize this function stuff
         float32 new_value = math::lerp(a.start_value, a.final_value, a.current_time / a.duration_seconds);
 
-        auto wa = which_array(a.element_id);
-        if (wa == array_of::GROUPS)
-        {
-            group *owner = get_group(s, a.element_id);
-            switch (a.p)
-            {
-                case animation::POSITION_X: owner->position.x = new_value;
-                    break;
-                case animation::POSITION_Y: owner->position.y = new_value;
-                    break;
-                case animation::ROTATION: owner->rotation = new_value;
-                    break;
-                default:
-                    ASSERT_FAIL();
-            }
-        }
-        if (wa == array_of::SHAPES)
-        {
-            shape *owner = get_shape(s, a.element_id);
-            switch (a.p)
-            {
-                case animation::POSITION_X: owner->position.x = new_value;
-                    break;
-                case animation::POSITION_Y: owner->position.y = new_value;
-                    break;
-                case animation::ROTATION: owner->rotation = new_value;
-                    break;
-                case animation::WIDTH: owner->width = new_value;
-                    break;
-                case animation::HEIGHT: owner->height = new_value;
-                    break;
-                case animation::COLOR_R: owner->color.r = new_value;
-                    break;
-                case animation::COLOR_G: owner->color.g = new_value;
-                    break;
-                case animation::COLOR_B: owner->color.b = new_value;
-                    break;
-                case animation::COLOR_A: owner->color.a = new_value;
-                    break;
-                default:
-                    ASSERT_FAIL();
-            }
-        }
+        auto index = get_index(a.element_id);
+        auto where = which_array(a.element_id);
 
+        if ((a.property == animation::POSITION_X) ||
+            (a.property == animation::POSITION_Y) ||
+            (a.property == animation::SCALE_X) ||
+            (a.property == animation::SCALE_Y) ||
+            (a.property == animation::ROTATION))
+        {
+            space_behaviour *tm = NULL;
+            if (where == array_of::SHAPES)
+            {
+                auto *e = s->shapes.data + index;
+                tm = e->transform;
+            }
+            else if (where == array_of::GROUPS)
+            {
+                auto *e = s->groups.data + index;
+                tm = e->transform;
+            }
+            switch (a.property)
+            {
+                case animation::POSITION_X: tm->position.x = new_value;
+                    break;
+                case animation::POSITION_Y: tm->position.y = new_value;
+                    break;
+                case animation::SCALE_X:
+                case animation::SCALE_Y:
+                    break;
+                case animation::ROTATION: tm->rotation = new_value;
+                    break;
+                default:
+                    ASSERT_FAIL();
+            }
+        }
+        else if (where == array_of::SHAPES)
+        {
+            shape *e = s->shapes.data + index;
+            switch (a.property)
+            {
+                case animation::WIDTH: e->width = new_value;
+                    break;
+                case animation::HEIGHT: e->height = new_value;
+                    break;
+                case animation::COLOR_R: e->color.r = new_value;
+                    break;
+                case animation::COLOR_G: e->color.g = new_value;
+                    break;
+                case animation::COLOR_B: e->color.b = new_value;
+                    break;
+                case animation::COLOR_A: e->color.a = new_value;
+                    break;
+                default:
+                    ASSERT_FAIL();
+            }
+        }
 
         if (a.current_time >= a.duration_seconds)
         {
@@ -585,7 +622,7 @@ void update(system *s, input *inp)
     {
         hover_behaviour *hoverable = s->hoverables.data + i;
 
-        auto inverse_transform = inverse(hoverable->owner->transform_to_root);
+        auto inverse_transform = inverse(hoverable->owner->transform->transform_to_root);
         auto mouse_position_local = inverse_transform * mouse_position;
 
         if (math::is_inside(hoverable->hover_area, mouse_position_local.xy))
@@ -694,11 +731,12 @@ void draw(execution_context *context, system *s)
 
         auto model =
             math::scaled(V3(0.5f * e->width, 0.5f * e->height, 1),
-            math::to_matrix4(e->transform_to_root));
+            math::to_matrix4(e->transform->transform_to_root));
 
         render_command::command_draw_ui command_draw_ui;
         command_draw_ui.mesh_token = s->rectangle_mesh;
         command_draw_ui.shader_token = s->rectangle_shader;
+
         command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
         command_draw_ui.view = math::matrix4::identity();
         command_draw_ui.projection = projection;
@@ -712,11 +750,11 @@ void draw(execution_context *context, system *s)
     }
 }
 
-void animate(system *s, group *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate(system *s, group *e, animation::anim_property property, animation::anim_type type, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animation a;
     a.element_id = e->id;
-    a.p = property;
+    a.property = property;
     a.type = type;
 
     a.start_value = start_value;
@@ -731,28 +769,28 @@ void animate(system *s, group *e, animation::property property, animation::kind 
 }
 
 
-void animate_normal(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal(system *s, group *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL, length_in_frames, start_value, final_value);
 }
 
 
-void animate_normal_loop(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal_loop(system *s, group *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL_LOOP, length_in_frames, start_value, final_value);
 }
 
 
-void animate_ping_pong(system *s, group *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_ping_pong(system *s, group *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::PING_PONG, length_in_frames, start_value, final_value);
 }
 
-void animate(system *s, shape *e, animation::property property, animation::kind type, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate(system *s, shape *e, animation::anim_property property, animation::anim_type type, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animation a;
     a.element_id = e->id;
-    a.p = property;
+    a.property = property;
     a.type = type;
 
     a.start_value = start_value;
@@ -767,19 +805,19 @@ void animate(system *s, shape *e, animation::property property, animation::kind 
 }
 
 
-void animate_normal(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal(system *s, shape *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL, length_in_frames, start_value, final_value);
 }
 
 
-void animate_normal_loop(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_normal_loop(system *s, shape *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::NORMAL_LOOP, length_in_frames, start_value, final_value);
 }
 
 
-void animate_ping_pong(system *s, shape *e, animation::property property, uint32 length_in_frames, float32 start_value, float32 final_value)
+void animate_ping_pong(system *s, shape *e, animation::anim_property property, uint32 length_in_frames, float32 start_value, float32 final_value)
 {
     animate(s, e, property, animation::PING_PONG, length_in_frames, start_value, final_value);
 }
