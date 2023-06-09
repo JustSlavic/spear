@@ -117,17 +117,17 @@ void process_pending_messages(input *inp)
             case WM_MOUSEMOVE:
             break;
 
-            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::LMB], true);
+            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_LEFT], true);
                 break;
-            case WM_LBUTTONUP: process_button_state(&inp->mouse[mouse_device::LMB], false);
+            case WM_LBUTTONUP: process_button_state(&inp->mouse[MOUSE_LEFT], false);
                 break;
-            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::MMB], true);
+            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_MIDDLE], true);
                 break;
-            case WM_MBUTTONUP: process_button_state(&inp->mouse[mouse_device::MMB], false);
+            case WM_MBUTTONUP: process_button_state(&inp->mouse[MOUSE_MIDDLE], false);
                 break;
-            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[mouse_device::RMB], true);
+            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_RIGHT], true);
                 break;
-            case WM_RBUTTONUP: process_button_state(&inp->mouse[mouse_device::RMB], false);
+            case WM_RBUTTONUP: process_button_state(&inp->mouse[MOUSE_RIGHT], false);
                 break;
 
             case WM_SYSKEYDOWN:
@@ -368,7 +368,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     while (running)
     {
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
-        reset_transitions(input.mouse.buttons, mouse_device::KEY_COUNT);
+        reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         process_pending_messages(&input);
         win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
         input.dt = last_frame_dt;

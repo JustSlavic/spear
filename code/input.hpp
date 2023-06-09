@@ -94,24 +94,25 @@ void reset_transitions(button_state *buttons, usize key_count)
     }
 }
 
+enum mouse_key
+{
+    MOUSE_LEFT, MOUSE_MIDDLE, MOUSE_RIGHT,
+    // @note: key_count have to be the last in enum
+    MOUSE_KEY_COUNT
+};
+
 struct mouse_device
 {
-    enum key
-    {
-        LMB, MMB, RMB,
-        // @note: key_count have to be the last in enum
-        KEY_COUNT
-    };
 
-    button_state buttons[KEY_COUNT];
+    button_state buttons[MOUSE_KEY_COUNT];
     int32 x, y;
 
-    button_state& operator [] (key k)
+    button_state& operator [] (mouse_key k)
     {
         return buttons[k];
     }
 
-    button_state const& operator [] (key k) const
+    button_state const& operator [] (mouse_key k) const
     {
         return buttons[k];
     }
@@ -130,29 +131,30 @@ struct stick_state
     float32 x, y;
 };
 
+enum gamepad_key
+{
+    GP_START, GP_SELECT,
+    GP_A, GP_B, GP_X, GP_Y,
+    GP_DPAD_UP, GP_DPAD_LEFT, GP_DPAD_RIGHT, GP_DPAD_DOWN,
+    GP_LEFT_SHOULDER, GP_RIGHT_SHOULDER,
+    GP_LEFT_TRIGGER, GP_RIGHT_TRIGGER,
+    GP_LEFT_STICK, GP_RIGHT_STICK,
+    // @note: key_count have to be the last in enum
+    GP_KEY_COUNT
+};
+
 struct gamepad_device
 {
-    enum key
-    {
-        START, SELECT,
-        A, B, X, Y,
-        DPAD_UP, DPAD_LEFT, DPAD_RIGHT, DPAD_DOWN,
-        LEFT_SHOULDER, RIGHT_SHOULDER,
-        LEFT_TRIGGER, RIGHT_TRIGGER,
-        LEFT_STICK, RIGHT_STICK,
-        // @note: key_count have to be the last in enum
-        KEY_COUNT
-    };
 
-    button_state buttons[KEY_COUNT];
+    button_state buttons[GP_KEY_COUNT];
     stick_state left_stick, right_stick;
 
-    button_state& operator [] (key k)
+    button_state& operator [] (gamepad_key k)
     {
         return buttons[k];
     }
 
-    button_state const& operator [] (key k) const
+    button_state const& operator [] (gamepad_key k) const
     {
         return buttons[k];
     }
