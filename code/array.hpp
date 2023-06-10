@@ -7,36 +7,42 @@
 template <typename Type>
 struct array
 {
-    Type *data;
-    usize size;
-    usize capacity;
+    Type *data_;
+    usize size_;
+    usize capacity_;
+
+    Type *data() { return data_; }
+    usize size() { return size_; }
+    usize capacity() { return capacity_; }
+    void clear() { size_ = 0; }
+    bool empty() { return (size_ == 0); }
 
     Type& operator[] (usize index)
     {
-        return data[index];
+        return data_[index];
     }
 
     Type const& operator[] (usize index) const
     {
-        return data[index];
+        return data_[index];
     }
 
     Type *push()
     {
         Type* result = 0;
-        if (size < capacity)
+        if (size_ < capacity_)
         {
-            usize index = size++;
-            result = data + index;
+            usize index = size_++;
+            result = data_ + index;
         }
         return result;
     }
 
     void push(Type t)
     {
-        if (size < capacity)
+        if (size_ < capacity_)
         {
-            data[size++] = t;
+            data_[size_++] = t;
         }
     }
 };
@@ -48,14 +54,18 @@ struct array
 template <typename Type, usize Capacity>
 struct static_array
 {
-    Type data[Capacity];
-    usize size;
+    Type data_[Capacity];
+    usize size_;
 
+    Type *data() { return data_; }
+    usize size() { return size_; }
     usize capacity() { return Capacity; }
+    void reset() { size_ = 0; }
+    bool empty() { return (size_ == 0); }
 
     Type& operator[] (usize index)
     {
-        return data[index];
+        return data_[index];
     }
 
     Type const& operator[] (usize index) const
@@ -66,29 +76,29 @@ struct static_array
     Type *push()
     {
         Type* result = 0;
-        if (size < Capacity)
+        if (size_ < Capacity)
         {
-            usize index = size++;
-            result = data + index;
+            usize index = size_++;
+            result = data_ + index;
         }
         return result;
     }
 
     void push(Type t)
     {
-        if (size < Capacity)
+        if (size_ < Capacity)
         {
-            usize index = size++;
-            data[index] = t;
+            usize index = size_++;
+            data_[index] = t;
         }
     }
 
     void erase_not_sorted(usize index)
     {
-        if (index < size)
+        if (index < size_)
         {
-            data[index] = data[size - 1];
-            size -= 1;
+            data_[index] = data_[size_ - 1];
+            size_ -= 1;
         }
     }
 };

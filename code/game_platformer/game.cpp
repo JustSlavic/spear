@@ -1093,3 +1093,4 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <execution_context.cpp>
+#include <ui/ui.cpp>

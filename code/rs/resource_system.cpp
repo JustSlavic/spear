@@ -8,15 +8,15 @@ namespace rs {
 
 resource_token get_new_resource_token(resource_storage *storage)
 {
-    ASSERT(storage->resources.size < storage->resources.capacity);
-    resource_token result = resource_token{(uint32)storage->resources.size};
+    ASSERT(storage->resources.size() < storage->resources.capacity());
+    resource_token result = resource_token{(uint32)storage->resources.size()};
     storage->resources.push(resource{});
     return result;
 }
 
 resource *get_resource(resource_storage *storage, resource_token token)
 {
-    resource *result = storage->resources.data + token.id;
+    resource *result = storage->resources.data() + token.id;
     return result;
 }
 

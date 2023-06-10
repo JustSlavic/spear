@@ -161,7 +161,7 @@ void process_pending_messages(input *inp)
 #if DEBUG
                         if (!is_down)
                         {
-                            if ((debug_loop_state == DEBUG_LOOP_IDLE) && (debug_loop_inputs.size > 0))
+                            if ((debug_loop_state == DEBUG_LOOP_IDLE) && (debug_loop_inputs.size() > 0))
                             {
                                 debug_loop_current_index = 0;
                                 debug_loop_state = DEBUG_LOOP_REPLAYING;
@@ -183,7 +183,7 @@ void process_pending_messages(input *inp)
                         if (!is_down)
                         {
                             if (debug_loop_state == DEBUG_LOOP_IDLE) {
-                                debug_loop_inputs.size = 0;
+                                debug_loop_inputs.clear();
                                 debug_loop_state = DEBUG_LOOP_RECORDING;
                             } else if (debug_loop_state == DEBUG_LOOP_RECORDING) {
                                 debug_loop_current_index = 0;
@@ -403,14 +403,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #if DEBUG
         if (debug_loop_state == DEBUG_LOOP_RECORDING)
         {
-            if (debug_loop_inputs.size == 0)
+            if (debug_loop_inputs.empty())
             {
                 // Just started recording, save initial game memory
                 memory::copy(debug_loop_initial_game_state.memory, game_memory.memory, game_memory.size);
                 debug_loop_current_index = 0;
             }
 
-            if (debug_loop_inputs.size < debug_loop_inputs.capacity)
+            if (debug_loop_inputs.size() < debug_loop_inputs.capacity())
             {
                 debug_loop_inputs.push(input);
             }
@@ -430,7 +430,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
             input = debug_loop_inputs[debug_loop_current_index];
 
-            debug_loop_current_index = (debug_loop_current_index + 1) % debug_loop_inputs.size;
+            debug_loop_current_index = (debug_loop_current_index + 1) % debug_loop_inputs.size();
         }
 #endif // DEBUG
 
@@ -445,7 +445,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #endif
         }
 
-        for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.execution_commands.size(); cmd_index++)
         {
             auto cmd = context.execution_commands[cmd_index];
             switch (cmd.type)
@@ -457,9 +457,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 break;
             }
         }
-        context.execution_commands.size = 0;
+        context.execution_commands.clear();
 
-        for (usize cmd_index = 0; cmd_index < context.render_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.render_commands.size(); cmd_index++)
         {
             auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
@@ -507,7 +507,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 break;
             }
         }
-        context.render_commands.size = 0;
+        context.render_commands.clear();
 
         memory::reset_allocator(&context.temporary_allocator);
 

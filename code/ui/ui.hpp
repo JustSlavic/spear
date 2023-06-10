@@ -99,10 +99,7 @@ uint32 get_index(handle id)
 }
 
 // Unique identifier assigned to each element, so other elements could have references to it
-struct ref
-{
-    uint32 id;
-};
+typedef uint32 ref;
 
 struct group
 {
@@ -257,12 +254,52 @@ struct system
 
     uint64 hash_table_keys[32];
     handle hash_table_values[32];
+
+    uint32 unique_id_counter;
+    uint32 ht_k[32];
+    handle ht_v[32];
 };
+
+
+void push_to_ht(system *s, uint32 k, handle v)
+{
+    for (int offset = 0; offset < ARRAY_COUNT(s->ht_k); offset++)
+    {
+        usize index = (k + offset) % ARRAY_COUNT(s->ht_k);
+        if (s->ht_v[index].id == 0) // @note: a valid handle cannot be 0
+        {
+            s->ht_k[index] = k;
+            s->ht_v[index] = v;
+            break;
+        }
+    }
+}
+
+
+handle get_from_ht(system *s, uint32 k)
+{
+    handle result = {};
+    for (int offset = 0; offset < ARRAY_COUNT(s->ht_k); offset++)
+    {
+        usize index = (k + offset) % ARRAY_COUNT(s->ht_k);
+        if (s->ht_k[index] == k)
+        {
+            result = s->ht_v[index];
+            break;
+        }
+        else if (s->ht_v[index].id == 0) // @note: a valid handle cannot be 0
+        {
+            break;
+        }
+    }
+
+    return result;
+}
 
 space_behaviour *push_identity_transform(system *s)
 {
     space_behaviour *result = NULL;
-    ASSERT(s->transforms.size < s->transforms.capacity());
+    ASSERT(s->transforms.size() < s->transforms.capacity());
     {
         result = s->transforms.push();
         result->scale = V3(1);
@@ -271,6 +308,23 @@ space_behaviour *push_identity_transform(system *s)
     }
     return result;
 }
+
+
+group *make_group(system *s, group *parent)
+{
+    handle id = make_handle(array_of::GROUPS, truncate_to_uint32(s->groups.size()));
+
+    group *result = s->groups.push();
+    memory::set(result, 0, sizeof(group));
+    result->id = id;
+    result->transform = push_identity_transform(s);
+    result->transform->owner = id;
+    result->parent = parent;
+    parent->children.push(id);
+
+    return result;
+}
+
 
 void initialize(system *s, memory_block ui_memory)
 {
@@ -327,7 +381,7 @@ group *get_group(system *s, handle h)
     uint32 index = get_index(h);
     if (which_array(h) == array_of::GROUPS)
     {
-        result = s->groups.data + index;
+        result = s->groups.data() + index;
     }
 
     return result;
@@ -341,31 +395,15 @@ shape *get_shape(system *s, handle h)
     uint32 index = get_index(h);
     if (which_array(h) == array_of::SHAPES)
     {
-        result = s->shapes.data + index;
+        result = s->shapes.data() + index;
     }
-
-    return result;
-}
-
-
-group *make_group(system *s, group *parent)
-{
-    handle id = make_handle(array_of::GROUPS, truncate_to_uint32(s->groups.size));
-
-    group *result = s->groups.push();
-    memory::set(result, 0, sizeof(group));
-    result->id = id;
-    result->transform = push_identity_transform(s);
-    result->transform->owner = id;
-    result->parent = parent;
-    parent->children.push(id);
 
     return result;
 }
 
 shape *make_shape(system *s, group *parent)
 {
-    handle id = make_handle(array_of::SHAPES, truncate_to_uint32(s->shapes.size));
+    handle id = make_handle(array_of::SHAPES, truncate_to_uint32(s->shapes.size()));
 
     shape *result = s->shapes.push();
     memory::set(result, 0, sizeof(shape));
@@ -431,21 +469,21 @@ void update_transform(space_behaviour *tm)
 void update_transforms(system *s)
 {
     // @todo: make BFS here (where to allocate queue? scratchpad memory?)
-    for (usize i = 0; i < s->transforms.size; i++)
+    for (usize i = 0; i < s->transforms.size(); i++)
     {
-        space_behaviour *tm = s->transforms.data + i;
+        space_behaviour *tm = s->transforms.data() + i;
         update_transform(tm);
 
         auto index = get_index(tm->owner);
         auto where = which_array(tm->owner);
         if (where == array_of::GROUPS)
         {
-            group *e = s->groups.data + index;
+            group *e = s->groups.data() + index;
             tm->transform_to_root = e->parent->transform->transform_to_root * tm->transform;
         }
         else if (where == array_of::SHAPES)
         {
-            shape *e = s->shapes.data + index;
+            shape *e = s->shapes.data() + index;
             tm->transform_to_root = e->parent->transform->transform_to_root * tm->transform;
         }
     }
@@ -454,9 +492,9 @@ void update_transforms(system *s)
 void update_order_index_for_group(system *s, group *e, uint32& order_index)
 {
     e->order_index = order_index++;
-    for (usize child_index = 0; child_index < e->children.size; child_index++)
+    for (usize child_index = 0; child_index < e->children.size(); child_index++)
     {
-        handle child_handle = e->children.data[child_index];
+        handle child_handle = e->children[child_index];
         switch (which_array(child_handle))
         {
             case array_of::GROUPS:
@@ -495,7 +533,7 @@ void make_hot(system *s, group *e)
 
 void update_animations(system *s, input *inp)
 {
-    for (uint32 i = 0; i < s->animations.size;)
+    for (uint32 i = 0; i < s->animations.size();)
     {
         animation& a = s->animations[i];
         a.current_time += ((float32) a.is_forward) * inp->dt;
@@ -550,12 +588,12 @@ void update_animations(system *s, input *inp)
             space_behaviour *tm = NULL;
             if (where == array_of::SHAPES)
             {
-                auto *e = s->shapes.data + index;
+                auto *e = s->shapes.data() + index;
                 tm = e->transform;
             }
             else if (where == array_of::GROUPS)
             {
-                auto *e = s->groups.data + index;
+                auto *e = s->groups.data() + index;
                 tm = e->transform;
             }
             switch (a.property)
@@ -575,7 +613,7 @@ void update_animations(system *s, input *inp)
         }
         else if (where == array_of::SHAPES)
         {
-            shape *e = s->shapes.data + index;
+            shape *e = s->shapes.data() + index;
             switch (a.property)
             {
                 case animation::WIDTH: e->width = new_value;
@@ -618,9 +656,9 @@ void update(system *s, input *inp)
 
     hover_behaviour *hovered = NULL;
 
-    for (usize i = 0; i < s->hoverables.size; i++)
+    for (usize i = 0; i < s->hoverables.size(); i++)
     {
-        hover_behaviour *hoverable = s->hoverables.data + i;
+        hover_behaviour *hoverable = s->hoverables.data() + i;
 
         auto inverse_transform = inverse(hoverable->owner->transform->transform_to_root);
         auto mouse_position_local = inverse_transform * mouse_position;
@@ -725,9 +763,9 @@ void draw(execution_context *context, system *s)
         math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    for (usize i = s->shapes.size - 1; i < s->shapes.size; i--)
+    for (usize i = s->shapes.size() - 1; i < s->shapes.size(); i--)
     {
-        shape *e = s->shapes.data + i;
+        shape *e = s->shapes.data() + i;
 
         auto model =
             math::scaled(V3(0.5f * e->width, 0.5f * e->height, 1),
@@ -823,24 +861,15 @@ void animate_ping_pong(system *s, shape *e, animation::anim_property property, u
 }
 
 
-void delete_animation(system *s, uint32& index)
-{
-    if (index < s->animations.size)
-        s->animations.erase_not_sorted(index);
-    index = (uint32) -1;
-}
+// void delete_animation(system *s, uint32& index)
+// {
+//     if (index < s->animations.size)
+//         s->animations.erase_not_sorted(index);
+//     index = (uint32) -1;
+// }
 
 
-bool32 button(system *s, uint64 id)
-{
-    bool32 result = false;
-    handle h = get_handle_from_hash_table(s, id);
-    if (which_array(h) == array_of::GROUPS)
-    {
-        result = (h == s->pressed);
-    }
-    return result;
-}
+bool32 button(system *s, uint64 id);
 
 
 } // namespace ui
