@@ -61,6 +61,8 @@ enum anim_t
     UI_ANIM_SCALE_X,
     UI_ANIM_SCALE_Y,
     UI_ANIM_ROTATION,
+    UI_ANIM_WIDTH,
+    UI_ANIM_HEIGHT,
     UI_ANIM_COLOR_R,
     UI_ANIM_COLOR_G,
     UI_ANIM_COLOR_B,
@@ -164,6 +166,8 @@ void set_color(system *s, handle h, math::vector4 color);
 void animate(system *s, handle h, string_id id, uint32 a, uint32 duration_frames, float32 start_value, float32 final_value);
 void play_animation(system *s, char const *cstr);
 void play_animation(system *s, string_id id);
+void stop_animation(system *s, char const *cstr);
+void stop_animation(system *s, string_id id);
 
 } // namespace ui
 

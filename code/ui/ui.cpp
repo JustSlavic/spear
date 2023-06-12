@@ -91,7 +91,7 @@ struct system
     static_array<shape, 10> shapes;
     static_array<hoverable, 10> hoverables;
     static_array<clickable, 10> clickables;
-    static_array<animation, 10> animations;
+    static_array<animation, 32> animations;
 
     // Hash table for fetching all attachables of an element
     handle hash_table_k[32];
@@ -463,6 +463,38 @@ void update_animations(system *s, float32 dt)
                 {
                     auto *p = s->elements.data() + a->owner.index;
                     p->rotation = value;
+                }
+            }
+            break;
+
+            case UI_ANIM_WIDTH:
+            {
+                if (a->owner.type == UI_ELEMENT)
+                {
+                    for (auto h : iterate_attaches(s, a->owner))
+                    {
+                        if (h.type == UI_SHAPE)
+                        {
+                            auto *p = s->shapes.data() + h.index;
+                            p->width = value;
+                        }
+                    }
+                }
+            }
+            break;
+
+            case UI_ANIM_HEIGHT:
+            {
+                if (a->owner.type == UI_ELEMENT)
+                {
+                    for (auto h : iterate_attaches(s, a->owner))
+                    {
+                        if (h.type == UI_SHAPE)
+                        {
+                            auto *p = s->shapes.data() + h.index;
+                            p->height = value;
+                        }
+                    }
                 }
             }
             break;
@@ -899,6 +931,24 @@ void play_animation(system *s, string_id id)
             a->is_dormant = false;
             a->current_time = 0.f;
 
+            break;
+        }
+    }
+}
+
+void stop_animation(system *s, char const *cstr)
+{
+    stop_animation(s, make_string_id(s->strid_storage, cstr));
+}
+
+void stop_animation(system *s, string_id id)
+{
+    for (usize i = 0; i < s->animations.size(); i++)
+    {
+        auto *a = s->animations.data() + i;
+        if (a->id == id)
+        {
+            a->is_dormant = true;
             break;
         }
     }
