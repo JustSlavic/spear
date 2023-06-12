@@ -126,7 +126,7 @@ struct execution_context
     memory::allocator temporary_allocator;
     memory::allocator renderer_allocator;
     rs::resource_storage resource_storage;
-    string_id_storage strid_storage;
+    string_id_storage *strid_storage;
 
     uint32 screen_width;
     uint32 screen_height;

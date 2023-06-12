@@ -5,6 +5,27 @@
 #include <string.hpp>
 
 
+struct string_id_storage
+{
+    memory::allocator arena;
+
+    #define HASH_TABLE_SIZE 1024
+    uint32 hash_table_hashes[HASH_TABLE_SIZE];
+    uint32 hash_table_offsets[HASH_TABLE_SIZE];
+    #undef HASH_TABLE_SIZE
+};
+
+string_id_storage *initialize_string_id_storage(memory_block block)
+{
+    memory::allocator arena;
+    memory::initialize_memory_arena(&arena, block);
+
+    string_id_storage *storage = ALLOCATE(&arena, string_id_storage);
+    storage->arena = arena;
+
+    return storage;
+}
+
 int32 get_index_in_hash_table(string_id_storage *storage, uint32 hash)
 {
     int32 result = -1;

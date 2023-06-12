@@ -249,48 +249,48 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->entity_count = 1;
 
     auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
-    ui::initialize(&gs->ui, ui_memory);
+    gs->hud = ui::initialize(ui_memory);
 
-    auto button_1 = ui::make_group(&gs->ui, &gs->ui.root);
-    button_1->transform->position.xy = V2(500, 600);
-    button_1->transform->rotation = 20.f;
-    auto shape_1 = ui::make_shape(&gs->ui, button_1);
-    shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
+    // auto button_1 = ui::make_group(&gs->ui, &gs->ui.root);
+    // button_1->transform->position.xy = V2(500, 600);
+    // button_1->transform->rotation = 20.f;
+    // auto shape_1 = ui::make_shape(&gs->ui, button_1);
+    // shape_1->color = V4(0.9, 0.4, 0.2, 1.0);
 
-    auto hoverable_1 = ui::make_hoverable(&gs->ui, button_1);
-    hoverable_1->on_enter_internal = [](ui::system *s, ui::group *e)
-    {
-        auto shape_id = e->children[0];
-        auto *shape = ui::get_shape(s, shape_id);
-        ui::animate_ping_pong(s, shape, ui::animation::COLOR_G, 40, 0.4f, 0.6f);
-    };
-    hoverable_1->on_leave_internal = [](ui::system *s, ui::group *e)
-    {
-        auto shape_id = e->children[0];
-        auto *shape = ui::get_shape(s, shape_id);
-        // ui::delete_animation(s, shape->blink_animation_id);
-        ui::animate_normal(s, shape, ui::animation::COLOR_G, 40, 0.6f, 0.4f);
-    };
+    // auto hoverable_1 = ui::make_hoverable(&gs->ui, button_1);
+    // hoverable_1->on_enter_internal = [](ui::system *s, ui::group *e)
+    // {
+    //     auto shape_id = e->children[0];
+    //     auto *shape = ui::get_shape(s, shape_id);
+    //     ui::animate_ping_pong(s, shape, ui::animation::COLOR_G, 40, 0.4f, 0.6f);
+    // };
+    // hoverable_1->on_leave_internal = [](ui::system *s, ui::group *e)
+    // {
+    //     auto shape_id = e->children[0];
+    //     auto *shape = ui::get_shape(s, shape_id);
+    //     // ui::delete_animation(s, shape->blink_animation_id);
+    //     ui::animate_normal(s, shape, ui::animation::COLOR_G, 40, 0.6f, 0.4f);
+    // };
 
-    auto clickable_1 = ui::make_clickable(&gs->ui, button_1);
-    clickable_1->on_press_internal = [](ui::system *s, ui::group *e)
-    {
-        auto shape_id = e->children[0];
-        auto *shape = ui::get_shape(s, shape_id);
-        ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 0, 5);
-        ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 0, 5);
-        ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 0, 360);
-    };
-    clickable_1->on_release_internal = [](ui::system *s, ui::group *e)
-    {
-        auto shape_id = e->children[0];
-        auto *shape = ui::get_shape(s, shape_id);
-        ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 5, 0);
-        ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 5, 0);
-        ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 360, 0);
-    };
+    // auto clickable_1 = ui::make_clickable(&gs->ui, button_1);
+    // clickable_1->on_press_internal = [](ui::system *s, ui::group *e)
+    // {
+    //     auto shape_id = e->children[0];
+    //     auto *shape = ui::get_shape(s, shape_id);
+    //     ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 0, 5);
+    //     ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 0, 5);
+    //     ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 0, 360);
+    // };
+    // clickable_1->on_release_internal = [](ui::system *s, ui::group *e)
+    // {
+    //     auto shape_id = e->children[0];
+    //     auto *shape = ui::get_shape(s, shape_id);
+    //     ui::animate_normal(s, shape, ui::animation::POSITION_X, 3, 5, 0);
+    //     ui::animate_normal(s, shape, ui::animation::POSITION_Y, 3, 5, 0);
+    //     ui::animate_normal(s, shape, ui::animation::ROTATION, 3, 360, 0);
+    // };
 
-    ui::push_to_hash_table(&gs->ui, STRID("Button1").id, button_1->id);
+    // ui::push_to_hash_table(&gs->ui, STRID("Button1").id, button_1->id);
 
     // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::POSITION_X, 60, 500, 600);
     // ui::animate_ping_pong(&gs->ui, shape_1, ui::animation::COLOR_R, 30, 0, 1);
@@ -392,7 +392,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     // };
 
     // @note: This should be applied each frame after update phase, right?
-    update_transforms(&gs->ui);
+    // update_transforms(&gs->ui);
 
     gs->default_camera.position = V3(0, 0, 20);
 
@@ -420,10 +420,47 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
     gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
 
-    gs->ui.rectangle_mesh = gs->rectangle_mesh;
-    gs->ui.rectangle_shader = gs->rectangle_shader;
+    ui::set_string_id_storage(gs->hud, context->strid_storage);
+    ui::set_resource_rectangle_mesh(gs->hud, gs->rectangle_mesh);
+    ui::set_resource_rectangle_shader(gs->hud, gs->rectangle_shader);
 
-    gs->blink_freq = 2.0f;
+    auto gr1 = ui::make_group(gs->hud);
+    auto sh1 = ui::make_shape(gs->hud, gr1);
+    auto hover_callbacks1 = ui::make_hoverable(gs->hud, gr1);
+    auto click_callbacks1 = ui::make_clickable(gs->hud, gr1);
+
+    hover_callbacks1->on_enter_internal = [](ui::system *s, ui::handle h)
+    {
+        ui::play_animation(s, "HoverOver");
+    };
+
+    hover_callbacks1->on_leave_internal = [](ui::system *s, ui::handle h)
+    {
+        ui::play_animation(s, "HoverAway");
+    };
+
+    click_callbacks1->on_press_internal = [](ui::system *s, ui::handle h)
+    {
+        ui::play_animation(s, "GoForward");
+    };
+
+    click_callbacks1->on_release_internal = [](ui::system *s, ui::handle h)
+    {
+        ui::play_animation(s, "GoBack");
+    };
+
+    ui::set_position(gs->hud, gr1, V2(100, 100));
+    ui::set_color(gs->hud, sh1, V4(1, 0, 0, 1));
+
+    ui::animate(gs->hud, gr1, STRID("GoForward"), UI_ANIM_ROTATION, 5, 0.f, 30.f);
+    ui::animate(gs->hud, gr1, STRID("GoBack"), UI_ANIM_ROTATION, 5, 30.f, 0.f);
+    ui::animate(gs->hud, sh1, STRID("HoverOver"), UI_ANIM_COLOR_R, 5, 1.f, 0.5f);
+    ui::animate(gs->hud, sh1, STRID("HoverAway"), UI_ANIM_COLOR_R, 5, 0.5f, 1.f);
+
+    for (auto h : ui::iterate_attaches(gs->hud, gr1))
+    {
+        osOutputDebugString("(%d, %d)\n", h.type, h.index);
+    }
 
     // Mesh for letter V
     {
@@ -755,10 +792,10 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
     }
 
-    if (ui::button(&gs->ui, STRID("Button1").id))
-    {
-        osOutputDebugString("PRESSED!!!\n");
-    }
+    // if (ui::button(&gs->ui, STRID("Button1").id))
+    // {
+    //     osOutputDebugString("PRESSED!!!\n");
+    // }
 
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
     {
@@ -1071,8 +1108,8 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         ui_draw_editor(gs->ui, gs->ui_editor, Buffer);
     }
 #else // UI_EDITOR_ENABLED
-    ui::update(&gs->ui, input);
-    ui::draw(context, &gs->ui);
+    ui::update(gs->hud, input);
+    ui::render(context, gs->hud);
 #endif // UI_EDITOR_ENABLED
 
     if (gs->near_exit_time > 0)

@@ -218,20 +218,20 @@ transform scaled(vector3 v, transform tm)
 void rotate_x(transform& tm, float32 radians)
 {
     //  1  0  0  0     11 12 13 14           11         12         13         14  = 0
-    //  0  c  s  0  *  21 22 23 24  =  21c + 31s  22c + 32s  23c + 33s  24c + 34s = 0
-    //  0 -s  c  0     31 32 33 34    -21s + 31c -22s + 32c -23s + 33c -24s + 34c = 0
+    //  0  c -s  0  *  21 22 23 24  =  21c - 31s  22c - 32s  23c - 33s  24c - 34s = 0
+    //  0  s  c  0     31 32 33 34     21s + 31c  22s + 32c  23s + 33c  24s + 34c = 0
     //  0  0  0  1     41 42 43 44           41         42         43         44  = 1
 
     auto c = math::cos(radians);
     auto s = math::sin(radians);
 
-    auto tm_21 = tm._21 * c + tm._31 * s;
-    auto tm_22 = tm._22 * c + tm._32 * s;
-    auto tm_23 = tm._23 * c + tm._33 * s;
+    auto tm_21 = tm._21 * c - tm._31 * s;
+    auto tm_22 = tm._22 * c - tm._32 * s;
+    auto tm_23 = tm._23 * c - tm._33 * s;
 
-    auto tm_31 = tm._31 * c - tm._21 * s;
-    auto tm_32 = tm._32 * c - tm._22 * s;
-    auto tm_33 = tm._33 * c - tm._23 * s;
+    auto tm_31 = tm._31 * c + tm._21 * s;
+    auto tm_32 = tm._32 * c + tm._22 * s;
+    auto tm_33 = tm._33 * c + tm._23 * s;
 
     tm._21 = tm_21;
     tm._22 = tm_22;
@@ -250,21 +250,21 @@ transform rotated_x(float32 radians, transform tm)
 
 void rotate_y(transform& tm, float32 radians)
 {
-    //  c  0  s  0     11 12 13 14     11c + 31s  12c + 32s  13c + 33s  14c + 24s = 0
+    //  c  0 -s  0     11 12 13 14     11c - 31s  12c - 32s  13c - 33s  14c - 24s = 0
     //  0  1  0  0  *  21 22 23 24  =        21         22         23         24  = 0
-    // -s  0  c  0     31 32 33 34    -11s + 31c -12s + 32c -13s + 33c -14s + 34c = 0
+    //  s  0  c  0     31 32 33 34     11s + 31c  12s + 32c  13s + 33c  14s + 34c = 0
     //  0  0  0  1     41 42 43 44           41         42         43         44  = 1
 
     auto c = math::cos(radians);
     auto s = math::sin(radians);
 
-    auto tm_11 = tm._11 * c + tm._31 * s;
-    auto tm_12 = tm._12 * c + tm._32 * s;
-    auto tm_13 = tm._13 * c + tm._33 * s;
+    auto tm_11 = tm._11 * c - tm._31 * s;
+    auto tm_12 = tm._12 * c - tm._32 * s;
+    auto tm_13 = tm._13 * c - tm._33 * s;
 
-    auto tm_31 = tm._31 * c - tm._11 * s;
-    auto tm_32 = tm._32 * c - tm._12 * s;
-    auto tm_33 = tm._33 * c - tm._13 * s;
+    auto tm_31 = tm._31 * c + tm._11 * s;
+    auto tm_32 = tm._32 * c + tm._12 * s;
+    auto tm_33 = tm._33 * c + tm._13 * s;
 
     tm._11 = tm_11;
     tm._12 = tm_12;
@@ -283,21 +283,21 @@ transform rotated_y(float32 radians, transform tm)
 
 void rotate_z(transform & tm, float32 radians)
 {
-    //  c  s  0  0     11 12 13 14     11c + 21s  12c + 22s  13c + 23s  14c + 24s = 0
-    // -s  c  0  0  *  21 22 23 24  = -11s + 21c -12s + 22c -13s + 23c -14s + 24c = 0
+    //  c -s  0  0     11 12 13 14     11c - 21s  12c - 22s  13c - 23s  14c - 24s = 0
+    //  s  c  0  0  *  21 22 23 24  =  11s + 21c  12s + 22c  13s + 23c  14s + 24c = 0
     //  0  0  1  0     31 32 33 34           31         32         33         34  = 0
     //  0  0  0  1     41 42 43 44           41         42         43         44  = 1
 
     auto c = math::cos(radians);
     auto s = math::sin(radians);
 
-    auto tm_11 = tm._11 * c + tm._21 * s;
-    auto tm_12 = tm._12 * c + tm._22 * s;
-    auto tm_13 = tm._13 * c + tm._23 * s;
+    auto tm_11 = tm._11 * c - tm._21 * s;
+    auto tm_12 = tm._12 * c - tm._22 * s;
+    auto tm_13 = tm._13 * c - tm._23 * s;
 
-    auto tm_21 = tm._21 * c - tm._11 * s;
-    auto tm_22 = tm._22 * c - tm._12 * s;
-    auto tm_23 = tm._23 * c - tm._13 * s;
+    auto tm_21 = tm._21 * c + tm._11 * s;
+    auto tm_22 = tm._22 * c + tm._12 * s;
+    auto tm_23 = tm._23 * c + tm._13 * s;
 
     tm._11 = tm_11;
     tm._12 = tm_12;

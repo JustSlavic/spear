@@ -255,7 +255,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
+
+    context.strid_storage = initialize_string_id_storage(string_id_memory);
 
     context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
     context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
@@ -270,7 +271,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     rs::resource_token screen_frame_mesh = {};
     rs::resource_token screen_frame_shader = {};
     {
-        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(&context.strid_storage, "rectangle.shader"));
+        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "rectangle.shader"));
 
         // 3     2
         //   7 6
