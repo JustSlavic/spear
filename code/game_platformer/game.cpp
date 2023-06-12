@@ -374,11 +374,6 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         ui::set_color(s, h, V4(0.3, 0.3, 0.8, 1.0));
     };
 
-    for (auto h : ui::iterate_attaches(gs->hud, button_1))
-    {
-        osOutputDebugString("(%d, %d)\n", h.type, h.index);
-    }
-
     // Mesh for letter V
     {
         float32 V_vbo[] = {
