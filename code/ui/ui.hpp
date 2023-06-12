@@ -10,6 +10,48 @@
 #include <math/transform.hpp>
 #include <input.hpp>
 
+//
+// @todo
+// - Ellipse
+// - Gradients
+// - Textures
+//   - Stretch to size
+//   - Original size with transparent background
+//   - Repeat
+//   - Reflect
+//   - Repeat last pixel mode
+// - Text
+//   - Fonts
+//   - Size
+//   - Alignment (Left, Right, Center)
+// - Filters
+//   - Gaussian blur
+//   - Glow
+//   - Shadow
+// - Alpha masks
+// - Stencil masks
+// - Animation functions
+//   - Exp(-x)
+//   - Sin/Cos
+//   - Arbitrary functions
+//   - Bezier curves
+// - Render targets
+//   - MainUI render target
+//   - Additional render targets
+// - Blending modes
+//   - Add
+//   - Multiply
+//   - Overlay
+// - 9-Scale
+// - Bezier curves (Paths)
+// - Serializer/deserializer from a text-based file
+// - Editor
+//   - Moving elements around
+//   - Adding/removing/reordering children
+//   - Adding/removing filters
+//   - Saving/loading from file
+//   - Moving in and out from editor mode so you could test the UI right away
+//
 
 enum anim_t
 {
