@@ -626,8 +626,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     float32 dt = input->dt;
     global_debug_measurements = context->debug_measurements;
 
-    // osOutputDebugString("mouse_p = {%d, %d}\n", input->mouse.x, input->mouse.y);
-
     DEBUG_BEGIN_TIME_MEASUREMENT(update_and_render);
 
     game_state *gs = (game_state *) game_memory.memory;
@@ -643,6 +641,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         {
             gs->near_exit_time = NEAR_EXIT_TIME_SECONDS;
         }
+    }
+
+    if (get_press_count(input->keyboard[KB_F1]))
+    {
+        TOGGLE(gs->ui_editor_enabled);
     }
 
     if (get_hold_count(input->keyboard[KB_A]))
@@ -1005,19 +1008,23 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #if UI_EDITOR_ENABLED
     if (gs->ui_editor_enabled)
     {
-        ui_update_editor(gs->ui_editor, gs->ui, input);
-
-        // @note: reset hovered element in the UI, so in editor it would not stuck in hovered state.
-        gs->ui->hovered_element = NULL;
+        ui::update_editor(gs->hud, gs->ui_editor, input);
+        // Reset s-> hot, active, pressed
     }
     else
     {
-        ui_update_scene(gs->ui, input);
+        ui::update(gs->hud, input);
     }
-    ui_draw_scene(gs->ui, Buffer);
+    ui::render(context, gs->hud);
     if (gs->ui_editor_enabled)
     {
-        ui_draw_editor(gs->ui, gs->ui_editor, Buffer);
+        ui::render_editor(context, gs->hud, gs->ui_editor);
+
+        {
+            render_command::command_draw_screen_frame draw_frame;
+            draw_frame.color = V4(0,0,0,1);
+            push_draw_screen_frame(context, draw_frame);
+        }
     }
 #else // UI_EDITOR_ENABLED
     ui::update(gs->hud, input);
@@ -1043,3 +1050,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #include <rs/resource_system.cpp>
 #include <execution_context.cpp>
 #include <ui/ui.cpp>
+#if UI_EDITOR_ENABLED
+#include <ui/ui_editor.cpp>
+#endif

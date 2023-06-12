@@ -10,6 +10,9 @@
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 #include <ui/ui.hpp>
+#if UI_EDITOR_ENABLED
+#include <ui/ui_editor.hpp>
+#endif
 
 
 // namespace game {
@@ -127,6 +130,10 @@ struct game_state
     usize entity_count;
 
     ui::system *hud;
+#if UI_EDITOR_ENABLED
+    ui::editor *ui_editor;
+    bool32 ui_editor_enabled;
+#endif
 };
 
 

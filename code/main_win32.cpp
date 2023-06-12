@@ -144,6 +144,8 @@ void process_pending_messages(input *inp)
                 {
                     case VK_ESCAPE: process_button_state(&inp->keyboard[KB_ESC], is_down);
                         break;
+                    case VK_F1: process_button_state(&inp->keyboard[KB_F1], is_down);
+                        break;
                     case VK_SPACE: process_button_state(&inp->keyboard[KB_SPACE], is_down);
                         break;
                     case 'W': process_button_state(&inp->keyboard[KB_W], is_down);
