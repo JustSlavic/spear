@@ -113,73 +113,6 @@ void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 
     push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
 }
 
-
-void draw_0(execution_context *context, game_state *gs, float32 offset_x, float32 offset_y)
-{
-    render_command::command_draw_mesh_with_color cmd;
-    cmd.mesh_token = gs->zero_mesh;
-    cmd.shader_token = gs->rectangle_shader;
-    cmd.model =
-        math::translated(V3(offset_x, offset_y, 0),
-        math::scaled(V3(letter_width, letter_height, 1),
-            math::matrix4::identity()));
-    cmd.color = package_color;
-
-    push_draw_mesh_with_color_command(context, cmd);
-}
-
-void draw_1(execution_context *context, game_state *gs, float32 offset_x, float32 offset_y)
-{
-    draw_aligned_rectangle(context, gs,
-        offset_x,
-        offset_y,
-        letter_width * 0.25f, letter_height,
-        package_color);
-}
-
-void draw_5(execution_context *context, game_state *gs, float32 offset_x, float32 offset_y)
-{
-    render_command::command_draw_mesh_with_color cmd;
-    cmd.mesh_token = gs->five_mesh;
-    cmd.shader_token = gs->rectangle_shader;
-    cmd.model =
-        math::translated(V3(offset_x, offset_y, 0),
-        math::scaled(V3(letter_width, letter_height, 1),
-            math::matrix4::identity()));
-    cmd.color = package_color;
-
-    push_draw_mesh_with_color_command(context, cmd);
-}
-
-void draw_10(execution_context *context, game_state *gs, float32 offset_x, float32 offset_y)
-{
-    render_command::command_draw_mesh_with_color cmd;
-    cmd.mesh_token = gs->ten_mesh;
-    cmd.shader_token = gs->rectangle_shader;
-    cmd.model =
-        math::translated(V3(offset_x, offset_y, 0),
-        math::scaled(V3(letter_width, letter_height, 1),
-            math::matrix4::identity()));
-    cmd.color = package_color;
-
-    push_draw_mesh_with_color_command(context, cmd);
-}
-
-void draw_50(execution_context *context, game_state *gs, float32 offset_x, float32 offset_y)
-{
-    render_command::command_draw_mesh_with_color cmd;
-    cmd.mesh_token = gs->fifty_mesh;
-    cmd.shader_token = gs->rectangle_shader;
-    cmd.model =
-        math::translated(V3(offset_x, offset_y, 0),
-        math::scaled(V3(letter_width, letter_height, 1),
-            math::matrix4::identity()));
-    cmd.color = package_color;
-
-    push_draw_mesh_with_color_command(context, cmd);
-}
-
-
 void teleport_back(game_state *gs)
 {
     for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
@@ -243,317 +176,180 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
 
-    gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 20);
-    gs->entities_capacity = 200000;
-    // @note: let zero-indexed entity be 'null entity' representing lack of entity
-    gs->entity_count = 1;
-
-    auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
-    gs->hud = ui::initialize(ui_memory);
+    // Entities
+    {
+        gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 20);
+        gs->entities_capacity = 200000;
+        // @note: let zero-indexed entity be 'null entity' representing lack of entity
+        gs->entity_count = 1;
+    }
 
     gs->default_camera.position = V3(0, 0, 20);
 
-    float32 vbo_init[] = {
-        -1.0f, -1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
-         1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-    };
-
-    uint32 ibo_init[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0, // second triangle
-    };
-
-    gfx::vertex_buffer_layout vbl = {};
-    gfx::push_layout_element(&vbl, 3);
-
-    auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
-    memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
-
-    auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
-    memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
-
-    gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
-    gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
-
-    ui::set_string_id_storage(gs->hud, context->strid_storage);
-    ui::set_resource_rectangle_mesh(gs->hud, gs->rectangle_mesh);
-    ui::set_resource_rectangle_shader(gs->hud, gs->rectangle_shader);
-
-    auto button_1 = ui::make_group(gs->hud);
-    auto shape_1 = ui::make_shape(gs->hud, button_1);
-    auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1);
-    auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1);
-
-    hover_callbacks_1->on_enter_internal = [](ui::system *s, ui::handle h)
+    // Init rectangle mesh
     {
-        ui::play_animation(s, "shape_1.on_hover.color.r");
-        ui::play_animation(s, "shape_1.on_hover.color.g");
-    };
-
-    hover_callbacks_1->on_leave_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "shape_1.on_leave.color.r");
-        ui::play_animation(s, "shape_1.on_leave.color.g");
-    };
-
-    click_callbacks_1->on_press_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "button_1.on_click.rotation");
-    };
-
-    click_callbacks_1->on_release_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "button_1.on_release.rotation");
-    };
-
-    ui::set_position(gs->hud, button_1, V2(100, 100));
-    ui::set_color(gs->hud, shape_1, V4(1, 0, 0, 1));
-
-    ui::animate(gs->hud, button_1, STRID("button_1.on_click.rotation"), UI_ANIM_ROTATION, 5, 0.f, 30.f);
-    ui::animate(gs->hud, button_1, STRID("button_1.on_release.rotation"), UI_ANIM_ROTATION, 5, 30.f, 0.f);
-
-    ui::animate(gs->hud, shape_1, STRID("shape_1.on_hover.color.r"), UI_ANIM_COLOR_R, 20, 1.f, 0.5f);
-    ui::animate(gs->hud, shape_1, STRID("shape_1.on_hover.color.g"), UI_ANIM_COLOR_G, 10, 0.f, 0.8f);
-    ui::animate(gs->hud, shape_1, STRID("shape_1.on_leave.color.r"), UI_ANIM_COLOR_R, 20, 0.5f, 1.f);
-    ui::animate(gs->hud, shape_1, STRID("shape_1.on_leave.color.g"), UI_ANIM_COLOR_G, 10, 0.8f, 0.f);
-
-    auto button_2 = ui::make_group(gs->hud);
-    ui::set_position(gs->hud, button_2, V2(500, 600));
-    ui::set_rotation(gs->hud, button_2, 20.f);
-
-    auto shape_2 = ui::make_shape(gs->hud, button_2);
-    ui::set_color(gs->hud, shape_2, V4(0.9, 0.4, 0.2, 1.0));
-    auto hover_callbacks_2 = ui::make_hoverable(gs->hud, button_2);
-    auto click_callbacks_2 = ui::make_clickable(gs->hud, button_2);
-
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_enter.color.g"), UI_ANIM_COLOR_G | UI_ANIM_PPONG, 40, 0.4f, 0.6f);
-    hover_callbacks_2->on_enter_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "shape_2.on_enter.color.g");
-    };
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_leave.color.g"), UI_ANIM_COLOR_G, 40, 0.6f, 0.4f);
-    hover_callbacks_2->on_leave_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::stop_animation(s, "shape_2.on_enter.color.g");
-        ui::play_animation(s, "shape_2.on_leave.color.g");
-    };
-
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_press.position.x"), UI_ANIM_POSITION_X, 3, 0, 5);
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_press.position.y"), UI_ANIM_POSITION_Y, 3, 0, 5);
-    click_callbacks_2->on_press_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "shape_2.on_press.position.x");
-        ui::play_animation(s, "shape_2.on_press.position.y");
-    };
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_release.position.x"), UI_ANIM_POSITION_X, 3, 5, 0);
-    ui::animate(gs->hud, shape_2, STRID("shape_2.on_release.position.y"), UI_ANIM_POSITION_Y, 3, 5, 0);
-    click_callbacks_2->on_release_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::play_animation(s, "shape_2.on_release.position.x");
-        ui::play_animation(s, "shape_2.on_release.position.y");
-    };
-
-    auto shape_3 = ui::make_shape(gs->hud);
-    ui::set_position(gs->hud, shape_3, V2(400, 200));
-    ui::set_scale(gs->hud, shape_3, V2(5, 5));
-    ui::set_rotation(gs->hud, shape_3, 70.f);
-    ui::set_color(gs->hud, shape_3, V4(0.3, 0.3, 0.8, 1.0));
-
-    ui::animate(gs->hud, shape_3, STRID("shape_3.ppong.position.x"), UI_ANIM_POSITION_X | UI_ANIM_PPONG, 120, 0, 100);
-    ui::play_animation(gs->hud, "shape_3.ppong.position.x");
-
-    auto hover_callbacks_3 = ui::make_hoverable(gs->hud, shape_3);
-    hover_callbacks_3->on_enter_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::set_color(s, h, V4(1, 0, 0, 0));
-    };
-    hover_callbacks_3->on_leave_internal = [](ui::system *s, ui::handle h)
-    {
-        ui::set_color(s, h, V4(0.3, 0.3, 0.8, 1.0));
-    };
-
-    // Mesh for letter V
-    {
-        float32 V_vbo[] = {
-            -1.0f,  1.0f, 0.0f,
-            -0.3f, -1.0f, 0.0f,
-             0.3f, -1.0f, 0.0f,
-             1.0f,  1.0f, 0.0f,
-             0.6f,  1.0f, 0.0f,
-             0.0f, -0.7f, 0.0f,
-            -0.6f,  1.0f, 0.0f,
-        };
-
-        auto _V_vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(V_vbo));
-        memory::copy(_V_vbo.memory, V_vbo, sizeof(V_vbo));
-
-        uint32 V_ibo[] = {
-            0, 1, 6,
-            1, 5, 6,
-            5, 2, 3,
-            5, 3, 4,
-            1, 2, 5,
-        };
-
-        auto _V_ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(V_ibo));
-        memory::copy(_V_ibo.memory, V_ibo, sizeof(V_ibo));
-
-        gs->five_mesh = create_mesh_resource(&context->resource_storage, _V_vbo, _V_ibo, vbl);
-    }
-
-    // Mesh for letter L
-    {
-        float32 L_vbo[] = {
-            -1.0f, -1.0f, 0.0f,
-             1.0f, -1.0f, 0.0f,
-             1.0f, -0.7f, 0.0f,
-            -0.6f, -0.7f, 0.0f,
-            -0.6f,  1.0f, 0.0f,
-            -1.0f,  1.0f, 0.0f,
-        };
-
-        auto _L_vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(L_vbo));
-        memory::copy(_L_vbo.memory, L_vbo, sizeof(L_vbo));
-
-        uint32 L_ibo[] = {
-            0, 1, 2,
-            0, 2, 3,
-            0, 3, 4,
-            0, 4, 5,
-        };
-
-        auto _L_ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(L_ibo));
-        memory::copy(_L_ibo.memory, L_ibo, sizeof(L_ibo));
-
-        gs->fifty_mesh = create_mesh_resource(&context->resource_storage, _L_vbo, _L_ibo, vbl);
-    }
-
-    // Mesh for letter O
-    {
-        float32 O_vbo[] = {
-            -1.0f,  1.0f, 0.0f,
+        float32 vbo_init[] = {
             -1.0f, -1.0f, 0.0f,
              1.0f, -1.0f, 0.0f,
              1.0f,  1.0f, 0.0f,
-            -0.5f,  0.6f, 0.0f,
-            -0.5f, -0.6f, 0.0f,
-             0.5f, -0.6f, 0.0f,
-             0.5f,  0.6f, 0.0f,
-        };
-
-        auto _O_vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(O_vbo));
-        memory::copy(_O_vbo.memory, O_vbo, sizeof(O_vbo));
-
-        uint32 O_ibo[] = {
-            0, 1, 4,
-            1, 5, 4,
-            1, 2, 5,
-            2, 6, 5,
-            6, 2, 3,
-            3, 7, 6,
-            0, 4, 7,
-            7, 3, 0,
-        };
-
-        auto _O_ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(O_ibo));
-        memory::copy(_O_ibo.memory, O_ibo, sizeof(O_ibo));
-
-        gs->zero_mesh = create_mesh_resource(&context->resource_storage, _O_vbo, _O_ibo, vbl);
-    }
-
-    // Mesh for letter X
-    {
-        float32 X_vbo[] = {
-            -1.0f, -1.0f, 0.0f,
-            -0.5f, -1.0f, 0.0f,
-             0.0f, -0.3f, 0.0f,
-             0.5f, -1.0f, 0.0f,
-             1.0f, -1.0f, 0.0f,
-             0.3f,  0.0f, 0.0f,
-             1.0f,  1.0f, 0.0f,
-             0.5f,  1.0f, 0.0f,
-             0.0f,  0.3f, 0.0f,
-            -0.5f,  1.0f, 0.0f,
             -1.0f,  1.0f, 0.0f,
-            -0.3f,  0.0f, 0.0f,
         };
 
-        auto _X_vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(X_vbo));
-        memory::copy(_X_vbo.memory, X_vbo, sizeof(X_vbo));
-
-        uint32 X_ibo[] = {
-            0, 1, 11,
-            1, 2, 11,
-            2, 3, 4,
-            4, 5, 2,
-            2, 5, 11,
-            11, 5, 8,
-            5, 6, 7,
-            5, 7, 8,
-            8, 9, 10,
-            10, 11, 8,
+        uint32 ibo_init[] = {
+            0, 1, 2, // first triangle
+            2, 3, 0, // second triangle
         };
 
-        auto _X_ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(X_ibo));
-        memory::copy(_X_ibo.memory, X_ibo, sizeof(X_ibo));
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
 
-        gs->ten_mesh = create_mesh_resource(&context->resource_storage, _X_vbo, _X_ibo, vbl);
+        auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
+        memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
+
+        auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
+        memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+        gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
+        gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
     }
 
-    auto sam_ref = push_entity(gs);
-    sam_ref.e->type     = ENTITY_SAM;
-    sam_ref.e->flags    = ENTITY_INTERACTABLE | ENTITY_COLLIDABLE;
-    sam_ref.e->position = V2(0, 1);
-    sam_ref.e->velocity = V2(0);
-    sam_ref.e->width    = 0.5f; // meters
-    sam_ref.e->height   = 1.85f; // meters
-    sam_ref.e->mass     = 80.0f; // kg
+    // Rectangle with UV
+    {
+        float32 vbo_init[] = {
+            -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
+             1.0f, -1.0f, 0.0f,   1.0f, 0.0f,
+             1.0f,  1.0f, 0.0f,   1.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,
+        };
 
-    gs->sam = sam_ref.e; // @IMPORTANT!
+        uint32 ibo_init[] =
+        {
+            0, 1, 2, // first triangle
+            2, 3, 0, // second triangle
+        };
 
-    auto ground = push_entity(gs);
-    ground.e->type      = ENTITY_GROUND;
-    ground.e->flags     = ENTITY_COLLIDABLE | ENTITY_STATIC;
-    ground.e->position  = V2(0, -.5);
-    ground.e->velocity  = V2(0);
-    ground.e->width     = 200.f;
-    ground.e->height    = 1.f;
-    ground.e->mass      = 0.f;
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3); // XYZ
+        gfx::push_layout_element(&vbl, 2); // UV
 
-    gs->ground = ground.e; // @IMPORTANT!
+        auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
+        memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
 
-    // auto postbox = push_entity(gs);
-    // postbox.e->type = ENTITY_POSTBOX;
-    // postbox.e->position = V2(100, -3);
-    // postbox.e->width = 1.f;
-    // postbox.e->height = 2.f;
-    // postbox.e->mass = 9000.f;
+        auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
+        memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
-    // gs->postbox = postbox.e; // @IMPORTANT!
+        gs->rectangle_mesh_uv   = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
+        gs->rectangle_shader_uv = create_shader_resource(&context->resource_storage, STRID("rectangle_uv.shader"));
+    }
 
-    // for (int i = 0; i < 50; i++)
-    // {
-    //     auto stone = push_entity(gs);
-    //     stone.e->type = ENTITY_STONE;
-    //     set(stone.e, ENTITY_STATIC);
-    //     float32 x_mean = (i + 2) * 1.83f;
-    //     stone.e->width = uniform_real(0.5f, 0.8f);
-    //     stone.e->height = ((float32) uniform_int(2, 5)) * 0.1f;
-    //     stone.e->position = V2(uniform_real(x_mean - 0.5f, x_mean + 0.5f), -4. + stone.e->height * 0.5f - uniform_real(0.1f, 0.3f));
-    // }
+    // Load texture
+    {
+        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "IMG_1308.bmp");
+        gs->reference_texture = rs::create_texture_resource(&context->resource_storage, file_content);
+    }
 
-    // for (int i = 0; i < 20; i++)
-    // {
-    //     auto package = push_entity(gs);
-    //     package.e->type = ENTITY_PACKAGE;
-    //     set(package.e, ENTITY_COLLIDABLE);
-    //     float32 x_mean = (i + 3) * 3.f;
-    //     package.e->position = V2(i + 1, 1); // V2(uniform_real(x_mean - 1.f, x_mean + 1.f), -2);
-    //     package.e->width = package_width;
-    //     package.e->height = package_height;
-    // }
+    // UI
+    {
+        auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
+        gs->hud = ui::initialize(ui_memory);
+
+        ui::set_string_id_storage(gs->hud, context->strid_storage);
+        ui::set_resource_rectangle_mesh(gs->hud, gs->rectangle_mesh);
+        ui::set_resource_rectangle_shader(gs->hud, gs->rectangle_shader);
+
+        auto button_1 = ui::make_group(gs->hud);
+        auto shape_1 = ui::make_shape(gs->hud, button_1);
+        auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1);
+        auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1);
+
+        hover_callbacks_1->on_enter_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "shape_1.on_hover.color.r");
+            ui::play_animation(s, "shape_1.on_hover.color.g");
+        };
+
+        hover_callbacks_1->on_leave_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "shape_1.on_leave.color.r");
+            ui::play_animation(s, "shape_1.on_leave.color.g");
+        };
+
+        click_callbacks_1->on_press_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "button_1.on_click.rotation");
+        };
+
+        click_callbacks_1->on_release_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "button_1.on_release.rotation");
+        };
+
+        ui::set_position(gs->hud, button_1, V2(100, 100));
+        ui::set_color(gs->hud, shape_1, V4(1, 0, 0, 1));
+
+        ui::animate(gs->hud, button_1, STRID("button_1.on_click.rotation"), UI_ANIM_ROTATION, 5, 0.f, 30.f);
+        ui::animate(gs->hud, button_1, STRID("button_1.on_release.rotation"), UI_ANIM_ROTATION, 5, 30.f, 0.f);
+
+        ui::animate(gs->hud, shape_1, STRID("shape_1.on_hover.color.r"), UI_ANIM_COLOR_R, 20, 1.f, 0.5f);
+        ui::animate(gs->hud, shape_1, STRID("shape_1.on_hover.color.g"), UI_ANIM_COLOR_G, 10, 0.f, 0.8f);
+        ui::animate(gs->hud, shape_1, STRID("shape_1.on_leave.color.r"), UI_ANIM_COLOR_R, 20, 0.5f, 1.f);
+        ui::animate(gs->hud, shape_1, STRID("shape_1.on_leave.color.g"), UI_ANIM_COLOR_G, 10, 0.8f, 0.f);
+
+        auto button_2 = ui::make_group(gs->hud);
+        ui::set_position(gs->hud, button_2, V2(500, 600));
+        ui::set_rotation(gs->hud, button_2, 20.f);
+
+        auto shape_2 = ui::make_shape(gs->hud, button_2);
+        ui::set_color(gs->hud, shape_2, V4(0.9, 0.4, 0.2, 1.0));
+        auto hover_callbacks_2 = ui::make_hoverable(gs->hud, button_2);
+        auto click_callbacks_2 = ui::make_clickable(gs->hud, button_2);
+
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_enter.color.g"), UI_ANIM_COLOR_G | UI_ANIM_PPONG, 40, 0.4f, 0.6f);
+        hover_callbacks_2->on_enter_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "shape_2.on_enter.color.g");
+        };
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_leave.color.g"), UI_ANIM_COLOR_G, 40, 0.6f, 0.4f);
+        hover_callbacks_2->on_leave_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::stop_animation(s, "shape_2.on_enter.color.g");
+            ui::play_animation(s, "shape_2.on_leave.color.g");
+        };
+
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_press.position.x"), UI_ANIM_POSITION_X, 3, 0, 5);
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_press.position.y"), UI_ANIM_POSITION_Y, 3, 0, 5);
+        click_callbacks_2->on_press_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "shape_2.on_press.position.x");
+            ui::play_animation(s, "shape_2.on_press.position.y");
+        };
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_release.position.x"), UI_ANIM_POSITION_X, 3, 5, 0);
+        ui::animate(gs->hud, shape_2, STRID("shape_2.on_release.position.y"), UI_ANIM_POSITION_Y, 3, 5, 0);
+        click_callbacks_2->on_release_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::play_animation(s, "shape_2.on_release.position.x");
+            ui::play_animation(s, "shape_2.on_release.position.y");
+        };
+
+        auto shape_3 = ui::make_shape(gs->hud);
+        ui::set_position(gs->hud, shape_3, V2(400, 200));
+        ui::set_scale(gs->hud, shape_3, V2(5, 5));
+        ui::set_rotation(gs->hud, shape_3, 70.f);
+        ui::set_color(gs->hud, shape_3, V4(0.3, 0.3, 0.8, 1.0));
+
+        ui::animate(gs->hud, shape_3, STRID("shape_3.ppong.position.x"), UI_ANIM_POSITION_X | UI_ANIM_PPONG, 120, 0, 100);
+        ui::play_animation(gs->hud, "shape_3.ppong.position.x");
+
+        auto hover_callbacks_3 = ui::make_hoverable(gs->hud, shape_3);
+        hover_callbacks_3->on_enter_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::set_color(s, h, V4(1, 0, 0, 0));
+        };
+        hover_callbacks_3->on_leave_internal = [](ui::system *s, ui::handle h)
+        {
+            ui::set_color(s, h, V4(0.3, 0.3, 0.8, 1.0));
+        };
+    }
 }
 
 
@@ -705,6 +501,16 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
         // Y axis
         draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    }
+
+    {
+        render_command::command_draw_mesh_with_texture cmd;
+        cmd.mesh_token = gs->rectangle_mesh_uv;
+        cmd.shader_token = gs->rectangle_shader_uv;
+        cmd.texture_token = gs->reference_texture;
+
+        cmd.model = math::matrix4::identity();
+        push_draw_mesh_with_texture_command(context, cmd);
     }
 
     // if (ui::button(&gs->ui, STRID("Button1").id))
@@ -936,75 +742,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
-    // Score
-    if (false)
-    {
-        float32 offset_x = gs->default_camera.position.x - 10.0f;
-        float32 offset_y = gs->default_camera.position.y + 5.0f;
-
-        if (gs->score == 0)
-        {
-            draw_0(context, gs, offset_x, offset_y);
-        }
-        else
-        {
-            uint32 score = gs->score;
-            while(score > 0)
-            {
-                if (score >= 50)
-                {
-                    // draw L
-                    draw_50(context, gs, offset_x, offset_y);
-                    score -= 50;
-                }
-                else if (score >= 40)
-                {
-                    // draw XL
-                    draw_10(context, gs, offset_x, offset_y);
-                    offset_x += letter_width + spacing;
-                    draw_50(context, gs, offset_x, offset_y);
-                    score -= 40;
-                }
-                else if (score >= 10)
-                {
-                    // draw X
-                    draw_10(context, gs, offset_x, offset_y);
-                    score -= 10;
-                }
-                else if (score >= 9)
-                {
-                    // draw IX
-                    draw_1(context, gs, offset_x, offset_y);
-                    offset_x += letter_width + spacing;
-                    draw_10(context, gs, offset_x, offset_y);
-                    score -= 9;
-                }
-                else if (score >= 5)
-                {
-                    // draw V
-                    draw_5(context, gs, offset_x, offset_y);
-                    score -= 5;
-                }
-                else if (score >= 4)
-                {
-                    // draw IV
-                    draw_1(context, gs, offset_x, offset_y);
-                    offset_x += letter_width + spacing;
-                    draw_5(context, gs, offset_x, offset_y);
-                    score -= 4;
-                }
-                else
-                {
-                    // draw I
-                    draw_1(context, gs, offset_x, offset_y);
-                    score -= 1;
-                }
-
-                offset_x += letter_width + spacing;
-            }
-        }
-    }
-
 #if UI_EDITOR_ENABLED
     if (gs->ui_editor_enabled)
     {
@@ -1048,6 +785,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
+#include <image/bmp.hpp>
 #include <execution_context.cpp>
 #include <ui/ui.cpp>
 #if UI_EDITOR_ENABLED

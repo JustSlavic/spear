@@ -120,6 +120,10 @@ struct game_state
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
 
+    rs::resource_token rectangle_mesh_uv;
+    rs::resource_token rectangle_shader_uv;
+    rs::resource_token reference_texture;
+
     rs::resource_token five_mesh;
     rs::resource_token zero_mesh;
     rs::resource_token ten_mesh;

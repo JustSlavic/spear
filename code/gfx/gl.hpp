@@ -39,6 +39,11 @@
 #define GL_STENCIL_ATTACHMENT             0x8D20
 #define GL_FRAMEBUFFER                    0x8D40
 #define GL_TEXTURE_2D_MULTISAMPLE         0x9100
+#define GL_TEXTURE_SWIZZLE_R              0x8E42
+#define GL_TEXTURE_SWIZZLE_G              0x8E43
+#define GL_TEXTURE_SWIZZLE_B              0x8E44
+#define GL_TEXTURE_SWIZZLE_A              0x8E45
+#define GL_TEXTURE_SWIZZLE_RGBA           0x8E46
 
 typedef void glGenFramebuffersType(isize n, uint32 *ids);
 typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
@@ -134,6 +139,7 @@ char const *gl_error_string(GLenum ec)
 void set_clear_color(float32 r, float32 g, float32 b, float32 a)
 {
     glClearColor(r, g, b, a);
+    GL_CHECK_ERRORS();
 }
 
 void set_clear_color(math::vector4 color)
@@ -144,6 +150,7 @@ void set_clear_color(math::vector4 color)
 void clear()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    GL_CHECK_ERRORS();
 }
 
 
@@ -164,8 +171,10 @@ struct shader
 bool32 is_shader_program_valid(uint32 program)
 {
     glValidateProgram(program);
+    GL_CHECK_ERRORS();
     bool32 program_valid;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &program_valid);
+    GL_CHECK_ERRORS();
 
     return program_valid;
 }
@@ -173,25 +182,32 @@ bool32 is_shader_program_valid(uint32 program)
 uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
+    GL_CHECK_ERRORS();
     glShaderSource(id, 1, &source_code, NULL);
+    GL_CHECK_ERRORS();
     glCompileShader(id);
+    GL_CHECK_ERRORS();
 
     int32 successful;
     glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
+    GL_CHECK_ERRORS();
     if (successful == GL_FALSE)
     {
         int64 length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int32 *) &length);
+        GL_CHECK_ERRORS();
 
         // @todo: use transient memory for that
         char* message = new char[length + 1];
         memory::set(message, 0, length + 1);
 
         glGetShaderInfoLog(id, length, &length, message);
+        GL_CHECK_ERRORS();
 
         // osOutputDebugString("%s", message);
 
         glDeleteShader(id);
+        GL_CHECK_ERRORS();
         delete[] message;
 
         return 0;
@@ -203,12 +219,18 @@ uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
 shader link_shader(uint32 vs, uint32 fs)
 {
     uint32 id = glCreateProgram();
+    GL_CHECK_ERRORS();
+    glUseProgram(0);
+    GL_CHECK_ERRORS();
     glAttachShader(id, vs);
+    GL_CHECK_ERRORS();
     glAttachShader(id, fs);
+    GL_CHECK_ERRORS();
     glLinkProgram(id);
+    GL_CHECK_ERRORS();
     glDetachShader(id, vs);
+    GL_CHECK_ERRORS();
     glDetachShader(id, fs);
-
     GL_CHECK_ERRORS();
 
     shader result = {};
@@ -229,41 +251,61 @@ shader link_shader(uint32 vs, uint32 fs)
 void use_shader(shader s)
 {
     glUseProgram(s.id);
+    GL_CHECK_ERRORS();
+}
+
+void uniform(shader s, char const *name, int32 n)
+{
+    auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
+    glUniform1i(location, n);
+    GL_CHECK_ERRORS();
 }
 
 void uniform(shader s, char const *name, float f)
 {
     auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
     glUniform1f(location, f);
+    GL_CHECK_ERRORS();
 }
 
 void uniform(shader s, char const *name, math::vector2 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
     glUniform2f(location, v.x, v.y);
+    GL_CHECK_ERRORS();
 }
 
 void uniform(shader s, char const *name, math::vector3 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
     glUniform3f(location, v.x, v.y, v.z);
+    GL_CHECK_ERRORS();
 }
 
 void uniform(shader s, char const *name, math::vector4 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
     glUniform4f(location, v.x, v.y, v.z, v.w);
+    GL_CHECK_ERRORS();
 }
 
 void uniform(shader s, char const *name, math::matrix4 const& m)
 {
     auto location = glGetUniformLocation(s.id, name);
+    GL_CHECK_ERRORS();
     glUniformMatrix4fv(location, 1, GL_FALSE, m.data());
+    GL_CHECK_ERRORS();
 }
 
 void set_viewport(viewport vp)
 {
     glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
+    GL_CHECK_ERRORS();
 }
 
 

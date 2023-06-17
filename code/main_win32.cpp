@@ -265,6 +265,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
     create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
+    context.debug_load_file = win32::load_file;
+
 #if DEBUG
     debug_loop_initial_game_state = ALLOCATE_BLOCK_(&platform_allocator, game_memory.size);
     debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input, 60*100);
@@ -491,6 +493,15 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 }
                 break;
 
+                case render_command::command_type::draw_mesh_with_texture:
+                {
+                    gfx::draw_rectangle_texture(&context,
+                        cmd->draw_mesh_with_texture.mesh_token,
+                        cmd->draw_mesh_with_texture.shader_token,
+                        cmd->draw_mesh_with_texture.texture_token,
+                        cmd->draw_mesh_with_texture.model, view, projection);
+                }
+                break;
                 case render_command::command_type::draw_screen_frame:
                 {
                     gfx::draw_polygon_simple(&context,

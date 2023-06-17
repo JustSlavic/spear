@@ -3,6 +3,8 @@
 
 #include <base.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
+#include <image/bitmap.hpp>
+
 
 namespace rs {
 
@@ -16,7 +18,7 @@ struct mesh_resource
 
 struct texture_resource
 {
-
+    image::bitmap texture;
 };
 
 struct shader_resource
@@ -32,6 +34,7 @@ struct resource
     {
         mesh_resource mesh;
         shader_resource shader;
+        texture_resource texture;
     };
     void *render_data;
 };

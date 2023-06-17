@@ -60,6 +60,7 @@ struct render_command
         setup_camera,
         draw_background,
         draw_mesh_with_color,
+        draw_mesh_with_texture,
         draw_screen_frame,
         draw_ui,
     };
@@ -91,6 +92,13 @@ struct render_command
         math::matrix4 model;
         math::vector4 color;
     };
+    struct command_draw_mesh_with_texture
+    {
+        rs::resource_token mesh_token;
+        rs::resource_token shader_token;
+        rs::resource_token texture_token;
+        math::matrix4 model;
+    };
     struct command_draw_screen_frame
     {
         math::vector4 color;
@@ -113,6 +121,7 @@ struct render_command
         command_draw_background draw_background;
         command_draw_rectangle draw_rectangle;
         command_draw_mesh_with_color draw_mesh_with_color;
+        command_draw_mesh_with_texture draw_mesh_with_texture;
         command_draw_screen_frame draw_screen_frame;
         command_draw_ui draw_ui;
     };
@@ -137,6 +146,8 @@ struct execution_context
     uint32 letterbox_width;
     uint32 letterbox_height;
 
+    memory_block (*debug_load_file)(memory::allocator *, char const *);
+
 #if DEBUG
     debug_time_measurement debug_measurements[DEBUG_TIME_SLOT_COUNT];
 #endif // DEBUG
@@ -150,6 +161,7 @@ execution_command exit_command();
 void push_setup_camera_command(execution_context *context, render_command::command_setup_camera setup_camera);
 void push_draw_background_command(execution_context *context, render_command::command_draw_background draw_bg);
 void push_draw_mesh_with_color_command(execution_context *context, render_command::command_draw_mesh_with_color draw_mesh);
+void push_draw_mesh_with_texture_command(execution_context *context, render_command::command_draw_mesh_with_texture draw_mesh);
 void push_draw_screen_frame(execution_context *context, render_command::command_draw_screen_frame);
 
 

@@ -140,6 +140,17 @@ void setup_camera(render_command *cmd)
 
 }
 
+void draw_background(execution_context *context, render_command *cmd)
+{
+    draw_polygon_simple(context,
+                        cmd->draw_background.mesh,
+                        cmd->draw_background.shader,
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
+                        cmd->draw_background.color);
+}
+
 void draw_polygon_simple(execution_context *context,
                          rs::resource_token mesh_token,
                          rs::resource_token shader_token,
@@ -175,15 +186,47 @@ void draw_polygon_simple(execution_context *context,
     }
 }
 
-void draw_background(execution_context *context, render_command *cmd)
+void draw_rectangle_texture(execution_context *context,
+                            rs::resource_token mesh_token,
+                            rs::resource_token shader_token,
+                            rs::resource_token texture_token,
+                            math::matrix4 model,
+                            math::matrix4 view,
+                            math::matrix4 projection)
 {
-    draw_polygon_simple(context,
-                        cmd->draw_background.mesh,
-                        cmd->draw_background.shader,
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
-                        cmd->draw_background.color);
+    rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
+    if (mesh->type == rs::resource_type::mesh)
+    {
+        rs::resource *shader = rs::get_resource(&context->resource_storage, shader_token);
+        if (shader->type == rs::resource_type::shader)
+        {
+            rs::resource *texture = rs::get_resource(&context->resource_storage, texture_token);
+            if (texture->type == rs::resource_type::texture)
+            {
+                if (!mesh->render_data)
+                {
+                    gl::load_mesh(context, mesh);
+                }
+                if (!shader->render_data)
+                {
+                    gl::load_shader(context, shader);
+                }
+                if (!texture->render_data)
+                {
+                    gl::load_texture(context, texture);
+                }
+                gl::draw_indexed_triangles(mesh, shader, texture, model, view, projection);
+            }
+        }
+        else
+        {
+            // @todo: shader resource is not valid
+        }
+    }
+    else
+    {
+        // @todo: mesh resource is not valid
+    }
 }
 
 

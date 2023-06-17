@@ -68,6 +68,45 @@ void main()
 
 )GLSL";
 
+GLOBAL char const *vs_textured_source = R"GLSL(
+#version 400
+
+layout (location = 0) in vec3 vertex_position;
+layout (location = 1) in vec2 uv_coordinates;
+
+out vec2 position;
+out vec2 uv;
+
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+
+void main()
+{
+    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
+    position = vertex_position.xy;
+    uv = uv_coordinates;
+    gl_Position = p;
+}
+)GLSL";
+
+GLOBAL char const *fs_textured_source = R"GLSL(
+#version 400
+
+in vec2 position;
+in vec2 uv;
+
+out vec4 result_color;
+
+uniform sampler2D u_texture0;
+
+void main()
+{
+    vec4 texture_color = texture(u_texture0, uv);
+    result_color = vec4(texture_color.rgb, 1.0);
+}
+)GLSL";
+
 
 math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
@@ -155,6 +194,10 @@ struct render_shader_data
     shader program;
 };
 
+struct render_texture_data
+{
+    uint32 texture_id;
+};
 
 void load_mesh(execution_context *context, rs::resource *resource)
 {
@@ -228,16 +271,30 @@ void load_shader(execution_context *context, rs::resource *resource)
         vs = compile_shader(vs_source, shader::vertex);
         fs = compile_shader(fs_circle_source, shader::fragment);
     }
+    if (resource->shader.name == STRID("rectangle_uv.shader"))
+    {
+        vs = compile_shader(vs_textured_source, shader::vertex);
+        fs = compile_shader(fs_textured_source, shader::fragment);
+    }
 
     auto program = link_shader(vs, fs);
 
     if (resource->render_data == NULL)
-    {
         resource->render_data = ALLOCATE(&context->renderer_allocator, render_shader_data);
-    }
 
     auto *data = (render_shader_data *) resource->render_data;
     data->program = program;
+}
+
+void load_texture(execution_context *context, rs::resource *resource)
+{
+    if (resource->render_data == NULL)
+    {
+        resource->render_data = ALLOCATE(&context->renderer_allocator, render_texture_data);
+    }
+
+    auto *data = (render_texture_data *) resource->render_data;
+    data->texture_id = create_texture(resource->texture.texture);
 }
 
 void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection, math::vector4 color)
@@ -253,6 +310,25 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);
+    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
+}
+
+void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resource *texture,
+                            math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+{
+    auto *mesh_data = (render_mesh_data *) mesh->render_data;
+    auto *shader_data = (render_shader_data *) shader->render_data;
+    auto *texture_data = (render_texture_data *) texture->render_data;
+
+    use_shader(shader_data->program);
+    uniform(shader_data->program, "u_model", model);
+    uniform(shader_data->program, "u_view", view);
+    uniform(shader_data->program, "u_projection", projection);
+    uniform(shader_data->program, "u_texture0", 0);
+
+    use_texture(texture_data->texture_id, 0);
+    glBindVertexArray(mesh_data->vertex_array_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_data->index_buffer_id);
     glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
 }
 

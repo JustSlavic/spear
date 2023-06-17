@@ -247,6 +247,48 @@ void destroy_window_and_driver(void *window, void *driver)
 {
 }
 
+uint32 create_texture(image::bitmap bitmap)
+{
+    uint32 id = 0;
+    glGenTextures(1, &id);
+    GL_CHECK_ERRORS();
+    glBindTexture(GL_TEXTURE_2D, id);
+    GL_CHECK_ERRORS();
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    GL_CHECK_ERRORS();
+
+    if (bitmap.color_order == IMAGE_BGR)
+    {
+        int32 swizzle_mask[4];
+        swizzle_mask[0] = GL_BLUE;
+        swizzle_mask[1] = GL_GREEN;
+        swizzle_mask[2] = GL_RED;
+        swizzle_mask[3] = GL_ONE;
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    else
+    {
+        ASSERT_FAIL();
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+    GL_CHECK_ERRORS();
+
+    return id;
+}
+
+void use_texture(uint32 texture_id, uint32 slot)
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    GL_CHECK_ERRORS();
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    GL_CHECK_ERRORS();
+}
+
 
 } // namespace gfx::gl
 

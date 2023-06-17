@@ -53,6 +53,7 @@ math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 
 void setup_projection_matrix(render_command *cmd);
 void setup_camera(render_command *cmd);
 
+void draw_background(execution_context *context, render_command *cmd);
 void draw_polygon_simple(execution_context *context,
                          rs::resource_token mesh_token,
                          rs::resource_token shader_token,
@@ -60,8 +61,13 @@ void draw_polygon_simple(execution_context *context,
                          math::matrix4 view,
                          math::matrix4 projection,
                          math::vector4 color);
-
-void draw_background(execution_context *context, render_command *cmd);
+void draw_rectangle_texture(execution_context *context,
+                            rs::resource_token mesh_token,
+                            rs::resource_token shader_token,
+                            rs::resource_token texture_token,
+                            math::matrix4 model,
+                            math::matrix4 view,
+                            math::matrix4 projectoin);
 
 
 } // namespace gfx

@@ -48,6 +48,15 @@ void push_draw_mesh_with_color_command(execution_context *context, render_comman
     push_render_command(context, cmd);
 }
 
+void push_draw_mesh_with_texture_command(execution_context *context, render_command::command_draw_mesh_with_texture draw_mesh)
+{
+    render_command cmd;
+    cmd.type = render_command::command_type::draw_mesh_with_texture;
+    cmd.draw_mesh_with_texture = draw_mesh;
+
+    push_render_command(context, cmd);
+}
+
 void push_draw_screen_frame(execution_context *context, render_command::command_draw_screen_frame draw_frame)
 {
     render_command cmd;

@@ -4,6 +4,7 @@
 #include <base.hpp>
 #include <platform.hpp>
 #include <memory/memory.hpp>
+#include <memory/allocator.hpp>
 #include <time.hpp>
 
 #include <windows.h>
@@ -186,6 +187,38 @@ INLINE uint64 get_file_time(char const *file_path)
     return result;
 }
 
+INLINE memory_block load_file(memory::allocator *allocator, char const *filename)
+{
+    memory_block result = {};
+
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        return result;
+    }
+
+    LARGE_INTEGER FileSize;
+    BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
+    if (GetSizeResult == FALSE)
+    {
+        return result;
+    }
+
+    void *Memory = ALLOCATE_BUFFER(allocator, FileSize.QuadPart);
+
+    DWORD BytesRead;
+    BOOL ReadFileResult = ReadFile(FileHandle, Memory, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
+
+    if (ReadFileResult == FALSE)
+    {
+        DEALLOCATE(allocator, Memory);
+        return result;
+    }
+
+    result.memory = Memory;
+    result.size   = FileSize.QuadPart;
+    return result;
+}
 
 struct dll
 {
