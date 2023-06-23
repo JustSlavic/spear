@@ -245,7 +245,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
     memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
-    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
     memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
     memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
     memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
@@ -583,3 +583,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
+#include <image/bmp.cpp>

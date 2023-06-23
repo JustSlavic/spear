@@ -1,7 +1,7 @@
 #include <rs/resource_system.hpp>
 #include <rs/resource_token.hpp>
 #include <rs/resource.hpp>
-#include <image/bmp.cpp>
+#include <image/bmp.hpp>
 
 
 namespace rs {

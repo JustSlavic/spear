@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <image/png.hpp>
 
 #if OS_WINDOWS
 #include <windows.h>
@@ -246,6 +247,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     {
         memory_block file_content = context->debug_load_file(&context->temporary_allocator, "IMG_1308.bmp");
         gs->reference_texture = rs::create_texture_resource(&context->resource_storage, file_content);
+    }
+
+    {
+        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
+        auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
     }
 
     // UI
@@ -785,7 +791,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
-#include <image/bmp.hpp>
+#include <image/bmp.cpp>
+#include <image/png.cpp>
+#include <memory/crc.cpp>
 #include <execution_context.cpp>
 #include <ui/ui.cpp>
 #if UI_EDITOR_ENABLED

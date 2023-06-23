@@ -78,15 +78,14 @@ bitmap load_bmp(memory::allocator *allocator, memory_block raw_data)
     }
 
     uint32 *pixels = (uint32 *) (((uint8 *) raw_data.memory) + header->data_offset);
-    int32 bytes_per_pixel = info->bits_per_pixel / 8;
 
     result.pixels = (uint8 *) ALLOCATE_BUFFER_(allocator, info->image_size);
     memory::copy(result.pixels, pixels, info->image_size);
     result.size   = info->image_size;
     result.width  = info->width;
     result.height = info->height;
-    result.bytes_per_pixel = bytes_per_pixel;
-    result.color_order = IMAGE_BGR;
+    result.bits_per_pixel = info->bits_per_pixel;
+    result.color_type = IMAGE_BGR;
     result.top_down = false;
 
     return result;

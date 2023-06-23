@@ -19,3 +19,5 @@ for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "0
 echo WAITING FOR PDB > lock.tmp
 cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game_platformer/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
 del lock.tmp
+
+cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fetest ../code/tests/png_reference_implementation.cpp /link /PDB:pngref.pdb %LINKER_FLAGS% %LIBS%

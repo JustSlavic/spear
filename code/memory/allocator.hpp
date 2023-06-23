@@ -19,26 +19,46 @@
 
 // #define REALLOCATE
 
-
 #define ALLOCATE_BUFFER_(ALLOCATOR, SIZE) (void *) allocate_(ALLOCATOR, SIZE, 1)
-#define ALLOCATE_BUFFER(ALLOCATOR, SIZE) (void *) allocate(ALLOCATOR, SIZE, 1)
+#define ALLOCATE_BUFFER(ALLOCATOR, SIZE) (void *)  allocate (ALLOCATOR, SIZE, 1)
 
 #define ALLOCATE_BUFFER_ALIGNED_(ALLOCATOR, SIZE, ALIGNMENT) (void *) allocate_(ALLOCATOR, SIZE, ALIGNMENT)
-#define ALLOCATE_BUFFER_ALIGNED(ALLOCATOR, SIZE, ALIGNMENT) (void *) allocate_(ALLOCATOR, SIZE, ALIGNMENT)
+#define ALLOCATE_BUFFER_ALIGNED(ALLOCATOR, SIZE, ALIGNMENT)  (void *) allocate (ALLOCATOR, SIZE, ALIGNMENT)
 
-#define ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, SIZE) (TYPE *) allocate_(ALLOCATOR, sizeof(TYPE) * SIZE, alignof(TYPE))
-#define ALLOCATE_BUFFER_TYPED(ALLOCATOR, TYPE, SIZE) (TYPE *) allocate(ALLOCATOR, sizeof(TYPE) * SIZE, alignof(TYPE))
+#define ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, COUNT) (TYPE *) allocate_(ALLOCATOR, sizeof(TYPE) * COUNT, alignof(TYPE))
+#define ALLOCATE_BUFFER_TYPED(ALLOCATOR, TYPE, COUNT)  (TYPE *) allocate (ALLOCATOR, sizeof(TYPE) * COUNT, alignof(TYPE))
 
 // #define ALLOCATE_ARRAY(ALLOCATOR, TYPE, COUNT) allocate_array(ALLOCATOR, sizeof(TYPE) * COUNT, alignof(TYPE))
 
 #define ALLOCATE_BLOCK_(ALLOCATOR, SIZE) allocate_block_(ALLOCATOR, SIZE, 1)
-#define ALLOCATE_BLOCK(ALLOCATOR, SIZE) allocate_block(ALLOCATOR, SIZE, 1)
+#define ALLOCATE_BLOCK(ALLOCATOR, SIZE)  allocate_block (ALLOCATOR, SIZE, 1)
 
 #define ALLOCATE_COPY(ALLOCATOR, OBJECT) allocate_copy(ALLOCATOR, OBJECT)
 #define ALLOCATE_COPY_TO_BLOCK(ALLOCATOR, OBJECT) allocate_copy_to_block(ALLOCATOR, OBJECT)
 
+// ======================== TEMPORARY ALLOCATIONS ======================== //
+
+#define T_ALLOCATE_(TYPE) (TYPE *) temporary_allocate_(sizeof(TYPE), alignof(TYPE))
+#define T_ALLOCATE(TYPE)  (TYPE *) temporary_allocate (sizeof(TYPE), alignof(TYPE))
+
+#define T_ALLOCATE_BUFFER_(SIZE) (void *) temporary_allocate_(SIZE, 1)
+#define T_ALLOCATE_BUFFER(SIZE)  (void *) temporary_allocate (SIZE, 1)
+
+#define T_ALLOCATE_BUFFER_ALIGNED_(SIZE, ALIGNMENT) (void *) temporary_allocate_(SIZE, ALIGNMENT)
+#define T_ALLOCATE_BUFFER_ALIGNED(SIZE, ALIGNMENT)  (void *) temporary_allocate (SIZE, ALIGNMENT)
+
+#define T_ALLOCATE_BUFFER_OF_(TYPE, COUNT) (TYPE *) temporary_allocate_(sizeof(TYPE) * COUNT, alignof(TYPE))
+#define T_ALLOCATE_BUFFER_OF(TYPE, COUNT)  (TYPE *) temporary_allocate (sizeof(TYPE) * COUNT, alignof(TYPE))
+
+#define T_ALLOCATE_BLOCK_(SIZE) temporary_allocate_block_(SIZE, 1)
+#define T_ALLOCATE_BLOCK(SIZE)  temporary_allocate_block (SIZE, 1)
+
+#define T_ALLOCATE_COPY(OBJECT) temporary_allocate_copy(OBJECT)
+#define T_ALLOCATE_COPY_TO_BLOCK(OBJECT) temporary_allocate_copy_to_block(OBJECT)
+
 
 namespace memory {
+
 
 struct allocator
 {
@@ -101,6 +121,13 @@ memory_block allocate_copy_to_block(allocator *a, memory_block block)
     memory::copy(result.memory, block.memory, block.size);
     return result;
 }
+
+// void initialize_temporary_arena(void *memory, usize size);
+// void initialize_temporary_arena(memory_block block);
+// void *temporary_allocate_(usize size, usize alignment);
+// void *temporary_allocate(usize size, usize alignment);
+// memory_block temporary_allocate_block_(usize size, usize alignment);
+// memory_block temporary_allocate_block(usize size, usize alignment);
 
 
 } // namespace memory

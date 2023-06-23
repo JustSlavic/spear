@@ -147,7 +147,7 @@ typedef int16 sound_sample_t;
 #endif // DEBUG
 
 #define ASSERT_FAIL(...) ASSERT_MSG(false, __VA_ARGS__)
-
+#define UNREACHABLE(...)
 
 #define STRINGIFY_(X)    #X
 #define STRINGIFY(X)     STRINGIFY_(X)

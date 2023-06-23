@@ -261,7 +261,7 @@ uint32 create_texture(image::bitmap bitmap)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     GL_CHECK_ERRORS();
 
-    if (bitmap.color_order == IMAGE_BGR)
+    if (bitmap.color_type == IMAGE_BGR)
     {
         int32 swizzle_mask[4];
         swizzle_mask[0] = GL_BLUE;
