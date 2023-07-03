@@ -86,13 +86,11 @@ math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vec
     vector3 s = normalized(cross(f, up));
     vector3 u = cross(s, f);
 
-    matrix4 result =
-    {
-         s.x,  u.x,  -f.x, 0,
-         s.y,  u.y,  -f.y, 0,
-         s.z,  u.z,  -f.z, 0,
-        -dot(s, eye), -dot(u, eye), dot(f, eye), 1,
-    };
+    matrix4 result = {};
+    result._1 = V4(s.x,  u.x,  -f.x, 0);
+    result._2 = V4(s.y,  u.y,  -f.y, 0);
+    result._3 = V4(s.z,  u.z,  -f.z, 0);
+    result._4 = V4(-dot(s, eye), -dot(u, eye), dot(f, eye), 1);
 
     return result;
 }

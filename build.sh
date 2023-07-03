@@ -11,7 +11,7 @@ linux_debug_build() {
 }
 
 linux_release_build() {
-    CXX_flAgs="-std=c++14"
+    CXX_FLAGS="-std=c++14"
     WARNINGS="-Wall -Werror"
     DEFINES="-DRELEASE=1 -DOS_LINUX=1"
     INCLUDES="-I../code"
@@ -23,7 +23,15 @@ linux_release_build() {
 macos_debug_build() {
     command=$1
 
-    swiftc ../code/main_macos.swift -o spear
+    CXX_FLAGS="-std=c++14 -g"
+    WARNINGS="-Wall -Werror"
+    DEFINES="-DDEBUG=1 -DOS_MAC=1"
+    INCLUDES="-I../code -I/opt/homebrew/Cellar/sdl2/2.26.5/include"
+    LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.26.5/lib"
+
+    clang++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_sdl.cpp -o spear $LIBS -framework OpenGL
+
+    # swiftc ../code/main_macos.swift -o spear
 }
 
 macos_release_build() {
@@ -89,6 +97,8 @@ elif [[ $os_name == "Darwin" ]]; then
         if [[ $? == 0 ]]; then
             ./tests
         fi
+        g++ ../code/math/g2_generator.cpp -o generator
+        ./generator
     else
         echo "Could not recognize the command provided (${command})"
     fi

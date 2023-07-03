@@ -2,6 +2,7 @@
 #define STRING_ID_HPP
 
 #include <base.hpp>
+#include <memory/allocator.hpp>
 
 
 struct string_id_storage;

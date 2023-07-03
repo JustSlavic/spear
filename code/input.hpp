@@ -160,7 +160,7 @@ struct gamepad_device
     }
 };
 
-struct input
+struct input_devices
 {
     keyboard_device keyboard;
     mouse_device mouse;

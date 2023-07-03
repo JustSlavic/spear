@@ -33,8 +33,10 @@
     OutputDebugStringA(OutputBuffer_##__LINE__); \
 } void(0)
 #elif OS_LINUX
-// #define osOutputDebugString(MSG, ...) printf(MSG, ##__VA_ARGS__)
-#endif // OS_WINDOWS
+#define osOutputDebugString(MSG, ...) printf(MSG, __VA_ARGS__)
+#elif OS_MAC
+#define osOutputDebugString(MSG, ...)
+#endif // OS_*
 
 
 float uniform_real(float from, float to)
@@ -787,13 +789,15 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     DEBUG_END_TIME_MEASUREMENT(update_and_render);
 }
 
-
+#if DLL_BUILD
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>
 #include <image/png.cpp>
 #include <memory/crc.cpp>
+#endif
+
 #include <execution_context.cpp>
 #include <ui/ui.cpp>
 #if UI_EDITOR_ENABLED

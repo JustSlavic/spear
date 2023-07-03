@@ -2,7 +2,12 @@
 #define GFX_GL_HPP
 
 #include <base.hpp>
+#if OS_MAC
+#define GL_SILENCE_DEPRECATION
+// #include <OpenGL/gl.h>
+#else // OS_MAC
 #include <GL/gl.h>
+#endif // OS_MAC
 
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 #define GL_UNSIGNED_INT_8_8_8_8           0x8035
@@ -44,6 +49,55 @@
 #define GL_TEXTURE_SWIZZLE_B              0x8E44
 #define GL_TEXTURE_SWIZZLE_A              0x8E45
 #define GL_TEXTURE_SWIZZLE_RGBA           0x8E46
+
+/* ErrorCode */
+#define GL_NO_ERROR                       0
+#define GL_INVALID_ENUM                   0x0500
+#define GL_INVALID_VALUE                  0x0501
+#define GL_INVALID_OPERATION              0x0502
+#define GL_STACK_OVERFLOW                 0x0503
+#define GL_STACK_UNDERFLOW                0x0504
+#define GL_OUT_OF_MEMORY                  0x0505
+
+/* ClearBufferMask */
+#define GL_DEPTH_BUFFER_BIT               0x00000100
+#define GL_STENCIL_BUFFER_BIT             0x00000400
+#define GL_COLOR_BUFFER_BIT               0x00004000
+
+/* Boolean */
+#define GL_FALSE                          0
+#define GL_TRUE                           1
+
+/* BeginMode */
+#define GL_POINTS                         0x0000
+#define GL_LINES                          0x0001
+#define GL_LINE_LOOP                      0x0002
+#define GL_LINE_STRIP                     0x0003
+#define GL_TRIANGLES                      0x0004
+#define GL_TRIANGLE_STRIP                 0x0005
+#define GL_TRIANGLE_FAN                   0x0006
+
+/* DataType */
+#define GL_BYTE                           0x1400
+#define GL_UNSIGNED_BYTE                  0x1401
+#define GL_SHORT                          0x1402
+#define GL_UNSIGNED_SHORT                 0x1403
+#define GL_INT                            0x1404
+#define GL_UNSIGNED_INT                   0x1405
+#define GL_FLOAT                          0x1406
+#define GL_FIXED                          0x140C
+
+typedef uint8  GLboolean;
+typedef uint32 GLenum;
+typedef uint32 GLbitfield;
+typedef float32 GLclampf;
+
+extern void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+extern void glClear(GLbitfield mask);
+extern GLenum glGetError(void);
+extern void glViewport(int32 x, int32 y, isize width, isize height);
+extern void glDrawArrays (GLenum mode, int32 first, isize count);
+extern void glDrawElements (GLenum mode, isize count, GLenum type, void const *indices);
 
 typedef void glGenFramebuffersType(isize n, uint32 *ids);
 typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
@@ -118,7 +172,8 @@ GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
     if (err) { ASSERT_FAIL(); } \
 } void(0)
 
-namespace gfx::gl {
+namespace gfx {
+namespace gl {
 
 char const *gl_error_string(GLenum ec)
 {
@@ -130,10 +185,10 @@ char const *gl_error_string(GLenum ec)
         case GL_OUT_OF_MEMORY: return "Error: GL_OUT_OF_MEMORY: There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.";
         case GL_STACK_UNDERFLOW: return "Error: GL_STACK_UNDERFLOW: An attempt has been made to perform an operation that would cause an internal stack to underflow.";
         case GL_STACK_OVERFLOW: return "Error: GL_STACK_OVERFLOW: An attempt has been made to perform an operation that would cause an internal stack to overflow.";
-        case GL_NO_ERROR: return NULL;  // No error has been recorded. The value of this symbolic constant is guaranteed to be 0.
+        case GL_NO_ERROR: return NULL_STRING;  // No error has been recorded. The value of this symbolic constant is guaranteed to be 0.
     }
 
-    return NULL;
+    return NULL_STRING;
 }
 
 void set_clear_color(float32 r, float32 g, float32 b, float32 a)
@@ -183,7 +238,7 @@ uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
     GL_CHECK_ERRORS();
-    glShaderSource(id, 1, &source_code, NULL);
+    glShaderSource(id, 1, &source_code, (int const *) NULL);
     GL_CHECK_ERRORS();
     glCompileShader(id);
     GL_CHECK_ERRORS();
@@ -309,7 +364,8 @@ void set_viewport(viewport vp)
 }
 
 
-} // namespace gfx::gl
+} // namespace gfx
+} // namespace gl
 
 #if OS_WINDOWS
 #include "gl_win32.hpp"
@@ -317,6 +373,10 @@ void set_viewport(viewport vp)
 
 #if OS_LINUX
 #include "gl_x11.hpp"
+#endif
+
+#if OS_MAC
+#include "gl_sdl.hpp"
 #endif
 
 #endif // GFX_GL_HPP

@@ -4,349 +4,224 @@
 #include <base.hpp>
 
 namespace math {
-namespace ga {
+namespace g2 {
 
-
-// AB = inner(A, B) + outer(A, B)
-
-
-//
-// g2 is the struct that represents clifford algebra G2,
-//      A  =  a0 +  a1 * e1  +  a2 * e2  +  a3 * e1 /\ e2
-//
-struct g2
+// Basis elements
+struct _e1 { float32 _1; };
+struct _e2 { float32 _2; };
+// Pseudoscalar
+struct _e1e2 { float32 _3; };
+// 2D-vectors
+struct _e1_e2
 {
-    float32 _0;
-    float32 _1, _2;
-    float32 _3;
+    union
+    {
+        struct { float32 x, y; };
+        struct { float32 u, v; };
+        struct { float32 _1, _2; };
+        float32 e[2];
+    };
 
-    struct e1_t {};
-    struct e2_t {};
-    struct e1e2_t {};
+    float32& operator [] (uint32 index)
+    {
+        ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
 
-    static e1_t e1;
-    static e2_t e2;
-    static e1e2_t e1e2;
-    static e1e2_t I;
+        float32 & result = e[index];
+        return result;
+    }
+
+    float *data()
+    {
+        return &e[0];
+    }
+
+    float const *data() const
+    {
+        return &e[0];
+    }
+};
+// Complex numbers
+struct _e0_e1e2
+{
+    union
+    {
+        struct { float32 _0, _3; };
+        struct { float32 re, im; };
+        float32 e[2];
+    };
+
+    float32& operator [] (uint32 index)
+    {
+        ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
+
+        float32 & result = e[index];
+        return result;
+    }
+
+    float *data()
+    {
+        return &e[0];
+    }
+
+    float const *data() const
+    {
+        return &e[0];
+    }
+};
+// Full G2 algebra
+struct _e0_e1_e2_e1e2
+{
+    union
+    {
+        struct { float32 _0, _1, _2, _3; };
+        struct { float32 re,  x,  y, im; };
+        float32 e[4];
+    };
+
+    float32& operator [] (uint32 index)
+    {
+        ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
+
+        float32 & result = e[index];
+        return result;
+    }
+
+    float *data()
+    {
+        return &e[0];
+    }
+
+    float const *data() const
+    {
+        return &e[0];
+    }
 };
 
+// Basis elements
+static _e1 e1 = []{ _e1 r; r._1 = 1.f; return r; }();
+static _e2 e2 = []{ _e2 r; r._2 = 1.f; return r; }();
+static _e1e2 e1e2 = []{ _e1e2 r; r._3 = 1.f; return r; }();
+static _e1e2 I = []{ _e1e2 r; r._3 = 1.f; return r; }();
 
-g2 operator + (g2 a, g2 b)
+// Type aliases
+typedef float32  real;
+typedef _e1_e2   vector2;
+typedef _e0_e1e2 complex;
+typedef _e0_e1_e2_e1e2 g2;
+
+#define G2_V2(E1, E2) ::math::g2::vector2{E1, E2}
+#define G2_C(E0, E3) ::math::g2::complex{E0, E3}
+#define G2(E0, E1, E2, E3) ::math::g2::_e0_e1_e2_e1e2{E0, E1, E2, E3}
+
+#include "g2_operators.hpp"
+
+// Functions
+
+vector2 make_vector2(float32 value)
 {
-    g2 result;
-    result._0 = a._0 + b._0;
-    result._1 = a._1 + b._1;
-    result._2 = a._2 + b._2;
-    result._3 = a._3 + b._3;
-
+    vector2 result;
+    result.x = value;
+    result.y = value;
     return result;
 }
 
-
-g2 operator + (g2 a, float32 x)
+vector2 make_vector2(float32 x, float32 y)
 {
-    g2 result;
-    result._0 = a._0 + x;
-    result._1 = a._1;
-    result._2 = a._2;
+    vector2 result;
+    result.x = x;
+    result.y = y;
+    return result;
+}
+
+complex make_complex(float32 value)
+{
+    complex result;
+    result.re = value;
+    result.im = 0.f;
+    return result;
+}
+
+complex make_complex(float32 re, float32 im)
+{
+    complex result;
+    result.re = re;
+    result.im = im;
+    return result;
+}
+
+complex to_complex(vector2 a)
+{
+    complex result = e1 * a;
+    return result;
+}
+
+complex to_complex(g2 a)
+{
+    complex result;
+    result._0 = a._0;
     result._3 = a._3;
-
     return result;
 }
 
-
-g2 operator + (float32 x, g2 a)
+vector2 to_vector2(complex a)
 {
-    return a + x;
-}
-
-
-g2 operator * (g2 a, g2 b)
-{
-    g2 result;
-    result._0 = a._0 * b._0 + a._1 * b._1 + a._2 * b._2 - a._3 * b._3;
-    result._1 = a._0 * b._1 + a._1 * b._0 + a._3 * b._2 - a._2 * b._3;
-    result._2 = a._0 * b._2 + a._2 * b._0 + a._1 * b._3 - a._3 * b._1;
-    result._3 = a._0 * b._3 + a._3 * b._0 + a._1 * b._2 - a._2 * b._1;
-
+    vector2 result = e1 * a;
     return result;
 }
 
-
-// All possible multiplications:
-
-// s * e1 (the e1 * s is the same)
-// s * e2 (the e2 * s is the same)
-// s * e1e2 (the e1e2 * s is the same)
-
-
-g2 operator * (g2::e1_t, float32 x)
+vector2 to_vector2(g2 a)
 {
-    g2 result;
-    result._0 = 0.f;
-    result._1 = x;
-    result._2 = 0.f;
-    result._3 = 0.f;
-
+    vector2 result;
+    result.x = a.x;
+    result.y = a.y;
     return result;
 }
 
-
-g2 operator * (float32 x, g2::e1_t)
+FORCE_INLINE complex operator / (float32 c, complex b)
 {
-    return g2::e1 * x;
-}
-
-
-g2 operator * (g2::e2_t, float32 x)
-{
-    g2 result;
-    result._0 = 0.f;
-    result._1 = 0.f;
-    result._2 = x;
-    result._3 = 0.f;
-
+    // c / (x + iy)
+    // c * (x - iy) / (xx + yy)
+    complex result = (c * conjugate(b)) / length_squared(b);
     return result;
 }
 
-
-g2 operator * (float32 x, g2::e2_t)
+FORCE_INLINE complex operator / (complex a, complex b)
 {
-    return g2::e2 * x;
-}
-
-
-g2 operator * (g2::e1e2_t, float32 x)
-{
-    g2 result;
-    result._0 = 0.f;
-    result._1 = 0.f;
-    result._2 = 0.f;
-    result._3 = x;
-
+    // (x + iy) / (r + is)
+    // (x + iy)(r - is) / (rr + ss)
+    complex result = (a * conjugate(b)) / length_squared(b);
     return result;
 }
 
-
-g2 operator * (float32 x, g2::e1e2_t)
+// Reflect a vector along the normal to the mirror
+// \  |n /
+// v\ | /r
+//   \|/
+// -------mirror
+INLINE vector2 reflect(vector2 v, vector2 n)
 {
-    return g2::e1e2 * x;
-}
-
-
-float32 operator * (g2::e1_t, g2::e1_t)
-{
-    return 1.f;
-}
-
-
-g2 operator * (g2::e2_t, g2::e2_t)
-{
-    g2 result;
-    result._0 = 1.f;
-    result._1 = 0.f;
-    result._2 = 0.f;
-    result._3 = 0.f;
-
+    // v = dot(v, n)*n + (v - dot(v, n)*n)
+    // reflect the component that is perpendicular to n
+    // r = - dot(v, n)*n + (v - dot(v, n)*n)
+    // r = v - 2*dot(v, n)*n
+    vector2 result = v - 2.0f*inner(v, n)*n;
     return result;
 }
 
-
-g2 operator * (g2::e1e2_t, g2::e1e2_t)
+// Reflect a vector through a mirror
+//    |mirror
+// \  |  /
+// v\ | /r
+//   \|/
+//    |
+INLINE vector2 mirror(vector2 v, vector2 m)
 {
-    g2 result;
-    result._0 = -1.f;
-    result._1 =  0.f;
-    result._2 =  0.f;
-    result._3 =  0.f;
-
+    // The same as 'reflect', but makes result is conserves the direction of vector
+    vector2 result = -reflect(v, m);
     return result;
 }
 
-
-g2 operator * (g2::e1_t, g2::e2_t)
-{
-    g2 result;
-    result._0 = 0.f;
-    result._1 = 0.f;
-    result._2 = 0.f;
-    result._3 = 1.f;
-
-    return result;
-}
-
-
-g2 operator * (g2::e2_t, g2::e1_t)
-{
-    g2 result;
-    result._0 =  0.f;
-    result._1 =  0.f;
-    result._2 =  0.f;
-    result._3 = -1.f;
-
-    return result;
-}
-
-
-g2 operator * (g2::e1_t, g2::e1e2_t)
-{
-    g2 result;
-    result._0 = 0.f;
-    result._1 = 0.f;
-    result._2 = 1.f;
-    result._3 = 0.f;
-
-    return result;
-}
-
-
-g2 operator * (g2::e1e2_t, g2::e1_t)
-{
-    g2 result;
-    result._0 =  0.f;
-    result._1 =  0.f;
-    result._2 = -1.f;
-    result._3 =  0.f;
-
-    return result;
-}
-
-
-g2 operator * (g2::e2_t, g2::e1e2_t)
-{
-    g2 result;
-    result._0 =  0.f;
-    result._1 = -1.f;
-    result._2 =  0.f;
-    result._3 =  0.f;
-
-    return result;
-}
-
-
-g2 operator * (g2::e1e2_t, g2::e2_t)
-{
-    g2 result;
-    result._0 = 0.f;
-    result._1 = 1.f;
-    result._2 = 0.f;
-    result._3 = 0.f;
-
-    return result;
-}
-
-
-g2 operator * (g2 a, float32 x)
-{
-    g2 result;
-    result._0 = a._0 * x;
-    result._1 = a._1 * x;
-    result._2 = a._2 * x;
-    result._3 = a._3 * x;
-
-    return result;
-}
-
-
-g2 operator * (float32 x, g2 a)
-{
-    return a * x;
-}
-
-
-g2 operator * (g2::e1_t, g2 a)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // e1A = a0*e1 + a1*e1e1 + a2*e1e2 + a3*(e1(e1/\e2))
-    //    =>
-    // e1e1 = inner(e1,e1) + outer(e1,e1) = 1 + 0
-    //    =>
-    // e1A = a1 + a0 * e1 + a3*e2 + a2*e1e2
-    g2 result;
-    result._0 = a._1;
-    result._1 = a._0;
-    result._2 = a._3;
-    result._3 = a._2;
-
-    return result;
-}
-
-
-g2 operator * (g2 a, g2::e1_t)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // Ae1 = a0e1 + a1*e1e1 + a2*e2e1    + a3*(e1/\e2)e1
-    //              |= a1     |= -a2e1e2   |= -a3*e2
-    g2 result;
-    result._0 =  a._1;
-    result._1 =  a._0;
-    result._2 = -a._3;
-    result._3 = -a._2;
-
-    return result;
-}
-
-
-g2 operator * (g2::e2_t, g2 a)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // e2A = a0*e2 + a1*(e2e1) + a2*(e2e2) + a3(e2e1e2)
-    //               |= -a1*e1e2 |= a2       |= -a3*e1
-    g2 result;
-    result._0 =  a._2;
-    result._1 = -a._3;
-    result._2 =  a._0;
-    result._3 = -a._1;
-
-    return result;
-}
-
-
-g2 operator * (g2 a, g2::e2_t)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // Ae2 = a0*e2 + a1*e1e2 + a2 + a3*e1
-    g2 result;
-    result._0 = a._2;
-    result._1 = a._3;
-    result._2 = a._0;
-    result._3 = a._1;
-
-    return result;
-}
-
-
-g2 operator * (g2::e1e2_t, g2 a)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // e1e2A = a0*e1e2 + a1*e1e2e1 + a2*e1e2e2 + a3*e1e2e1e2
-    // e1e2A = a0*e1e2 - a1*e2 + a2*e1 - a3
-    g2 result;
-    result._0 = -a._3;
-    result._1 =  a._2;
-    result._2 = -a._1;
-    result._3 =  a._0;
-
-    return result;
-}
-
-
-g2 operator * (g2 a, g2::e1e2_t)
-{
-    // A = a0 + a1*e1 + a2*e2 + a3*e1/\e2
-    // Ae1e2 = a0*e1e2 + a1*e1e1e2 + a2*e2e1e2 + a3*e1e2e1e2
-    // Ae1e2 = a0*e1e2 + a1*e2 - a2*e1 - a3
-    g2 result;
-    result._0 = -a._3;
-    result._1 = -a._2;
-    result._2 =  a._1;
-    result._3 =  a._0;
-
-    return result;
-}
-
-
-} // namespace ga
+} // namespace g2
 } // namespace math
 
 #endif // MATH_CLIFFORD2_HPP

@@ -2,8 +2,10 @@
 #define RESOURCE_SYSTEM_HPP
 
 #include <base.hpp>
-#include <memory/allocator.hpp>
+#include <array.hpp>
 #include <string_id.hpp>
+
+#include <memory/allocator.hpp>
 #include <rs/resource_token.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
 

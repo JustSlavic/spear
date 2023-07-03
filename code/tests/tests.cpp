@@ -462,30 +462,45 @@ TEST(Ui)
 
 TEST(CliffordG2)
 {
-    using namespace math::ga;
+    using namespace math::g2;
 
     // Geometric product e1*e2 = inner(e1, e2) + outer(e1, e2)
     // Because e1 and e2 are orthogonal, inner(e1, e2) = 0
     {
-        auto r = g2::e1 * g2::e2;
+        auto r = e1 * e2;
 
-        TEST_ASSERT_FLOAT_EQ(r._0, 0.f);
-        TEST_ASSERT_FLOAT_EQ(r._1, 0.f);
-        TEST_ASSERT_FLOAT_EQ(r._2, 0.f);
         TEST_ASSERT_FLOAT_EQ(r._3, 1.f);
     }
-
     // Complex numbers are represented as Z = X + Y*e1e2 in the G2 algebra,
     // while vectors are represented as V = v1*e1 + v2*e2.
     // Let's check that e1Z is a vector V = X*e1 + Y*e2.
     {
-        auto z = 3.f + 5.f * g2::I;  // 3 + 0*e1 + 0*e2 + 5*e1e2
-        auto v = g2::e1 * z;         // 0 + 3*e1 + 5*e2 + 0*e1e2
+        auto z = 3 + 5*I; // 3 + 0*e1 + 0*e2 + 5*e1e2
+        auto v = e1 * z;  // 0 + 3*e1 + 5*e2 + 0*e1e2
 
-        TEST_ASSERT_FLOAT_EQ(v._0, 0.f);
         TEST_ASSERT_FLOAT_EQ(v._1, 3.f);
         TEST_ASSERT_FLOAT_EQ(v._2, 5.f);
-        TEST_ASSERT_FLOAT_EQ(v._3, 0.f);
+    }
+    // Multiplying complex number by I rotates it by 90 degrees
+    {
+        auto z = 3 + 5*I;
+        auto w = z*I; // (3 + 5e1e2) * e1e2 = 3e1e2 - 5
+
+        TEST_ASSERT_FLOAT_EQ(w.re, -5.f);
+        TEST_ASSERT_FLOAT_EQ(w.im, 3.f);
+    }
+    // Multiplying two complex numbers in Clifford algebra makes
+    // the same effect as multiplying them in the complex field
+    {
+        auto z = 3 + 5*I;
+        auto w = 4 + 2*I;
+        auto g = z * w;
+        // (3 + 5i)(4 + 2i) =
+        // = (4*3 - 5*2) + (3*2 + 5*4)i =
+        // = 2 + 26i
+
+        TEST_ASSERT_FLOAT_EQ(g.re, 2.0f);
+        TEST_ASSERT_FLOAT_EQ(g.im, 26.f);
     }
 }
 
@@ -526,16 +541,20 @@ TEST(CliffordG3)
     {
         auto plane_e1 = g3::e1 * g3::I;
 
+        // e1e1e2e3 => e2e3
+
         TEST_ASSERT_FLOAT_EQ(plane_e1._0, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e1._1, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e1._2, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e1._3, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e1._4, 0.f);
-        TEST_ASSERT_FLOAT_EQ(plane_e1._5, 1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e1._5, 1.f); // e2e3
         TEST_ASSERT_FLOAT_EQ(plane_e1._6, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e1._7, 0.f);
 
         auto plane_e2 = g3::e2 * g3::I;
+
+        // e2e1e2e3 => -e1e3 => e3e1
 
         TEST_ASSERT_FLOAT_EQ(plane_e2._0, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e2._1, 0.f);
@@ -543,16 +562,18 @@ TEST(CliffordG3)
         TEST_ASSERT_FLOAT_EQ(plane_e2._3, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e2._4, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e2._5, 0.f);
-        TEST_ASSERT_FLOAT_EQ(plane_e2._6, -1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e2._6, 1.f); // e3e1
         TEST_ASSERT_FLOAT_EQ(plane_e2._7, 0.f);
 
         auto plane_e3 = g3::e3 * g3::I;
+
+        // e3e1e2e3 => -e1e3e2e3 => e1e2e3e3 => e1e2
 
         TEST_ASSERT_FLOAT_EQ(plane_e3._0, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e3._1, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e3._2, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e3._3, 0.f);
-        TEST_ASSERT_FLOAT_EQ(plane_e3._4, 1.f);
+        TEST_ASSERT_FLOAT_EQ(plane_e3._4, 1.f); // e1e2
         TEST_ASSERT_FLOAT_EQ(plane_e3._5, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e3._6, 0.f);
         TEST_ASSERT_FLOAT_EQ(plane_e3._7, 0.f);
@@ -562,7 +583,14 @@ TEST(CliffordG3)
     {
         auto sq = g3::I * g3::I;
 
-        TEST_ASSERT_FLOAT_EQ(sq, -1.f);
+        TEST_ASSERT_FLOAT_EQ(sq._0, -1.f);
+        TEST_ASSERT_FLOAT_EQ(sq._1,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._2,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._3,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._4,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._5,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._6,  0.f);
+        TEST_ASSERT_FLOAT_EQ(sq._7,  0.f);
     }
 
     // Let's say we have vector A, and vector N,
@@ -591,7 +619,6 @@ TEST(CliffordG3)
 
         auto a = v * g;
         auto b = (v._1 * g3::e1 + v._2 * g3::e2 + v._3 * g3::e3) * g;
-        auto c = geometric(v._1 * g3::e1 + v._2 * g3::e2 + v._3 * g3::e3, g);
 
         TEST_ASSERT_FLOAT_EQ(a._0, 1.f);
         TEST_ASSERT_FLOAT_EQ(a._1, 18.f);
@@ -610,15 +637,6 @@ TEST(CliffordG3)
         TEST_ASSERT_FLOAT_EQ(b._5, -5.f);
         TEST_ASSERT_FLOAT_EQ(b._6, 0.f);
         TEST_ASSERT_FLOAT_EQ(b._7, 8.f);
-
-        TEST_ASSERT_FLOAT_EQ(c._0, 1.f);
-        TEST_ASSERT_FLOAT_EQ(c._1, 18.f);
-        TEST_ASSERT_FLOAT_EQ(c._2, 5.f);
-        TEST_ASSERT_FLOAT_EQ(c._3, -7.f);
-        TEST_ASSERT_FLOAT_EQ(c._4, 4.f);
-        TEST_ASSERT_FLOAT_EQ(c._5, -5.f);
-        TEST_ASSERT_FLOAT_EQ(c._6, 0.f);
-        TEST_ASSERT_FLOAT_EQ(c._7, 8.f);
     }
     // Reflections could be obtained as -nan, where a is the vector,
     // and n is the normal to the reflective plane
@@ -663,7 +681,7 @@ TEST(CliffordG3)
     }
     // Rotations are performed by the double-sided transformation
     {
-g        // Angle between vectors is 90 degrees, so rotation will be in 180 degrees!
+        // Angle between vectors is 90 degrees, so rotation will be in 180 degrees!
         auto n = V3(1, 0, 0);
         auto m = V3(0, 1, 0);
 

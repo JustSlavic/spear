@@ -71,7 +71,13 @@ typedef double float64;
 #define FORCE_INLINE
 #define DLL_EXPORT
 
+#undef NULL
+#if OS_MAC
+#define NULL nullptr
+#else
 #define NULL ((void *) 0)
+#endif
+#define NULL_STRING ((char const *) 0)
 
 #if DEBUG
 #define DEBUG_BREAK __builtin_trap
@@ -99,6 +105,26 @@ typedef  int64 ptrdiff;
 typedef int16 sound_sample_t;
 
 #define EPSILON    1e-6f
+
+#undef INT8_MIN
+#undef INT16_MIN
+#undef INT32_MIN
+#undef INT64_MIN
+
+#undef INT8_MAX
+#undef INT16_MAX
+#undef INT32_MAX
+#undef INT64_MAX
+
+#undef UINT8_MIN
+#undef UINT16_MIN
+#undef UINT32_MIN
+#undef UINT64_MIN
+
+#undef UINT8_MAX
+#undef UINT16_MAX
+#undef UINT32_MAX
+#undef UINT64_MAX
 
 #define INT8_MIN   0x80
 #define INT16_MIN  0x8000

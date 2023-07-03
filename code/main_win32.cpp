@@ -277,10 +277,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     {
         screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "rectangle.shader"));
 
-        // 3     2
-        //   7 6
-        //   4 5
-        // 0     1
+        // 3--------2
+        // |\      /|
+        // | 7----6 |
+        // | |    | |
+        // | 4----5 |
+        // |/      \|
+        // 0--------1
+
         float32 border_width = (1.0f / 16.0f) * .1f;
         float32 border_height = (1.0f / 9.0f) * .1f;
         float32 vbo_[] = {

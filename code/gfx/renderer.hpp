@@ -2,13 +2,13 @@
 #define RENDERER_HPP
 
 #include <base.hpp>
-#include <platform.hpp>
 #include <math/vector3.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>
 #include <gfx/viewport.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
 #include <rs/resource_system.hpp>
+#include <execution_context.hpp>
 
 
 struct execution_context;

@@ -7,7 +7,8 @@
 #include <math/rectangle2.hpp>
 
 
-namespace gfx::gl {
+namespace gfx {
+namespace gl {
 
 GLOBAL char const *vs_source = R"GLSL(
 #version 400
@@ -333,4 +334,5 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resour
 }
 
 
-} // namespace gfx::gl
+} // namespace gfx
+} // namespace gl

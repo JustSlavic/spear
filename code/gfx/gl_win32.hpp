@@ -41,7 +41,8 @@ typedef void glActiveTextureType(GLenum texture);
 GLOBAL glActiveTextureType *glActiveTexture;
 
 
-namespace gfx::gl {
+namespace gfx {
+namespace gl {
 
 bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w)
 {
@@ -290,6 +291,7 @@ void use_texture(uint32 texture_id, uint32 slot)
 }
 
 
-} // namespace gfx::gl
+} // namespace gfx
+} // namespace gl
 
 #endif // GFX_GL_WIN32_HPP
