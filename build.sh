@@ -97,7 +97,7 @@ elif [[ $os_name == "Darwin" ]]; then
         ./generator
         g++ ../code/math/g3_generator.cpp -o generator
         ./generator
-        cp g3_operators.cpp ../code/math/g3_operators.hpp
+        # cp g3_operators.cpp ../code/math/g3_operators.hpp
 
         tests_build
         if [[ $? == 0 ]]; then

@@ -129,7 +129,7 @@ void output_additive_operators(FILE *output, char const *op)
             unsigned int lhs_lc = valid[i];
             unsigned int rhs_lc = valid[j];
             unsigned int result_lc = valid[i] | valid[j];
-            if (!is_valid(result_lc)) result_lc = 0xff;
+            result_lc = minimal_uber_space(result_lc);
 
             print_g(output, result_lc);
             fprintf(output, " operator %s (", op);
