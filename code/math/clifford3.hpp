@@ -2,298 +2,162 @@
 #define MATH_CLIFFORD3_HPP
 
 #include <base.hpp>
+#include <math/float32.hpp>
 #include <math/vector3.hpp>
 #include <math/quaternion.hpp>
 
 
 namespace math {
-namespace ga {
+namespace g3 {
 
 
-// g3 represents an element in the Clifford G3 algebra
-// A = a0 + a1*e1 + a2*e2 + a3*e3 + a4*e1e2 + a5*e2e3 + a6*e3e1 + a7*e1e2e3
-struct g3
+// Vector basis elements
+struct _e1 { float32 _1; };
+struct _e2 { float32 _2; };
+struct _e3 { float32 _3; };
+// Plane basis elements
+struct _e1e2 { float32 _4; };
+struct _e2e3 { float32 _5; };
+struct _e3e1 { float32 _6; };
+// Pseudoscalar
+struct _e1e2e3 { float32 _7; };
+// 3-D vectors
+struct _e1_e2_e3
 {
-    struct bivector
-    {
-        float32 _12, _23, _31;
-
-        static bivector outer(vector3 a, vector3 b);
-    };
-
-    float32 _0;
     union
     {
+        struct { float32 x, y, z; };
+        struct { float32 r, g, b; };
         struct { float32 _1, _2, _3; };
-        vector3 V;
+        float32 e[3];
     };
-    union
+
+    float32& operator [] (uint32 index)
     {
-        struct { float32 _4, _5, _6; };
-        bivector B;
-    };
-    float32 _7;
+        ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
 
-    static g3 e1;
-    static g3 e2;
-    static g3 e3;
-    static g3 e1e2;
-    static g3 e2e3;
-    static g3 e3e1;
-    static g3 e1e2e3;
-
-    static g3 B1;
-    static g3 B2;
-    static g3 B3;
-
-    static g3 I;
-
-    static g3 from_quaternion(quaternion q)
-    {
-        g3 result;
-        result._0 = q.w;
-        result._4 = q.z;
-        result._5 = q.x;
-        result._6 = q.y;
-
+        float32 & result = e[index];
         return result;
     }
+
+    float *data()
+    {
+        return &e[0];
+    }
+
+    float const *data() const
+    {
+        return &e[0];
+    }
 };
-
-g3 g3::e1     = []{ g3 result = {0}; result._1 = 1.f; return result; }();
-g3 g3::e2     = []{ g3 result = {0}; result._2 = 1.f; return result; }();
-g3 g3::e3     = []{ g3 result = {0}; result._3 = 1.f; return result; }();
-g3 g3::e1e2   = []{ g3 result = {0}; result._4 = 1.f; return result; }();
-g3 g3::e2e3   = []{ g3 result = {0}; result._5 = 1.f; return result; }();
-g3 g3::e3e1   = []{ g3 result = {0}; result._6 = 1.f; return result; }();
-g3 g3::e1e2e3 = []{ g3 result = {0}; result._7 = 1.f; return result; }();
-
-g3 g3::B1     = []{ g3 result = {0}; result._5 = 1.f; return result; }();
-g3 g3::B2     = []{ g3 result = {0}; result._6 = 1.f; return result; }();
-g3 g3::B3     = []{ g3 result = {0}; result._4 = 1.f; return result; }();
-g3 g3::I      = []{ g3 result = {0}; result._7 = 1.f; return result; }();
-
-
-g3 operator + (float32 x, g3 a)
+// Quaternions
+struct _e0_e1e2_e2e3_e3e1
 {
-    g3 result = a;
-    result._0 = a._0 + x;
+    union
+    {
+        struct { float32 _0, _4, _5, _6; };
+        struct { float32 w, z, x, y; };
+        struct { float32 r, k, i, j; };
+        float32 e[4];
+    };
 
+    float32& operator [] (uint32 index)
+    {
+        ASSERT_MSG(index < ARRAY_COUNT(e), "Attempt to access vector element out of range");
+
+        float32 & result = e[index];
+        return result;
+    }
+
+    float *data()
+    {
+        return &e[0];
+    }
+
+    float const *data() const
+    {
+        return &e[0];
+    }
+};
+// Full G3 algebra
+struct _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 { float32 _0, _1, _2, _3, _4, _5, _6, _7; };
+
+// Basis elements
+static _e1 e1 = []{ _e1 r; r._1 = 1.f; return r; }();
+static _e2 e2 = []{ _e2 r; r._2 = 1.f; return r; }();
+static _e3 e3 = []{ _e3 r; r._3 = 1.f; return r; }();
+static _e1e2 e1e2 = []{ _e1e2 r; r._4 = 1.f; return r; }();
+static _e2e3 e2e3 = []{ _e2e3 r; r._5 = 1.f; return r; }();
+static _e3e1 e3e1 = []{ _e3e1 r; r._6 = 1.f; return r; }();
+static _e1e2 K = []{ _e1e2 r; r._4 = 1.f; return r; }();
+static _e2e3 I = []{ _e2e3 r; r._5 = 1.f; return r; }();
+static _e3e1 J = []{ _e3e1 r; r._6 = 1.f; return r; }();
+static _e1e2e3 S = []{ _e1e2e3 r; r._7 = 1.f; return r; }();
+
+// Type aliases
+typedef _e1_e2_e3 vector;
+typedef _e0_e1e2_e2e3_e3e1 quaternion;
+
+#include "g3_operators.hpp"
+
+// Functions
+
+vector make_vector(float32 value)
+{
+    vector result;
+    result.x = value;
+    result.y = value;
+    result.z = value;
     return result;
 }
 
-g3 operator + (g3 a, float32 x)
+vector make_vector(float32 x, float32 y, float32 z)
 {
-    g3 result = x + a;
+    vector result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
     return result;
 }
 
-g3 operator - (float32 x, g3 a)
+vector to_vector(quaternion q)
 {
-    g3 result = a;
-    result._0 = a._0 - x;
-
+    vector result;
+    result.x = q.x;
+    result.y = q.y;
+    result.z = q.z;
     return result;
 }
 
-g3 operator - (g3 a, float32 x)
+vector to_vector(_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 g)
 {
-    g3 result = x - a;
+    vector result;
+    result.x = g._1;
+    result.y = g._2;
+    result.z = g._3;
     return result;
 }
 
-
-g3 operator + (g3 a, g3 b)
-{
-    g3 result;
-    result._0 = a._0 + b._0;
-    result._1 = a._1 + b._1;
-    result._2 = a._2 + b._2;
-    result._3 = a._3 + b._3;
-    result._4 = a._4 + b._4;
-    result._5 = a._5 + b._5;
-    result._6 = a._6 + b._6;
-    result._7 = a._7 + b._7;
-
-    return result;
-}
-
-g3 operator - (g3 a, g3 b)
-{
-    g3 result;
-    result._0 = a._0 - b._0;
-    result._1 = a._1 - b._1;
-    result._2 = a._2 - b._2;
-    result._3 = a._3 - b._3;
-    result._4 = a._4 - b._4;
-    result._5 = a._5 - b._5;
-    result._6 = a._6 - b._6;
-    result._7 = a._7 - b._7;
-
-    return result;
-}
-
-g3 operator - (g3 a)
-{
-    g3 result;
-    result._0 = -a._0;
-    result._1 = -a._1;
-    result._2 = -a._2;
-    result._3 = -a._3;
-    result._4 = -a._4;
-    result._5 = -a._5;
-    result._6 = -a._6;
-    result._7 = -a._7;
-
-    return result;
-}
-
-g3 operator * (float32 x, g3 a)
-{
-    g3 result;
-    result._0 = x * a._0;
-    result._1 = x * a._1;
-    result._2 = x * a._2;
-    result._3 = x * a._3;
-    result._4 = x * a._4;
-    result._5 = x * a._5;
-    result._6 = x * a._6;
-    result._7 = x * a._7;
-
-    return result;
-}
-
-g3 operator * (g3 a, float32 x)
-{
-    return x * a;
-}
-
-g3 operator * (g3 a, g3 b)
-{
-    // 8*8 multiplications
-    // 7*8 additions
-    g3 result;
-    result._0 = a._0*b._0 + a._1*b._1 + a._2*b._2 + a._3*b._3 - a._4*b._4 - a._5*b._5 - a._6*b._6 - a._7*b._7;
-    result._1 = a._0*b._1 + a._1*b._0 - a._2*b._4 + a._3*b._6 + a._4*b._2 - a._5*b._7 - a._6*b._3 - a._7*b._5;
-    result._2 = a._0*b._2 + a._1*b._4 + a._2*b._0 - a._3*b._5 - a._4*b._1 + a._5*b._3 - a._6*b._7 - a._7*b._6;
-    result._3 = a._0*b._3 - a._1*b._6 + a._2*b._5 + a._3*b._0 - a._4*b._7 - a._5*b._2 + a._6*b._1 - a._7*b._4;
-    result._4 = a._0*b._4 + a._1*b._2 - a._2*b._1 + a._3*b._7 + a._4*b._6 - a._5*b._6 + a._6*b._5 + a._7*b._3;
-    result._5 = a._0*b._5 + a._1*b._7 + a._2*b._3 - a._3*b._2 + a._4*b._6 + a._5*b._0 - a._6*b._4 + a._7*b._1;
-    result._6 = a._0*b._6 - a._3*b._3 + a._2*b._7 + a._3*b._1 - a._4*b._5 + a._5*b._4 + a._6*b._0 + a._7*b._2;
-    result._7 = a._0*b._7 + a._1*b._5 + a._2*b._6 + a._3*b._4 + a._4*b._3 + a._5*b._1 + a._6*b._2 + a._7*b._0;
-
-    return result;
-}
-
-g3 conjugate(g3 a)
-{
-    g3 result;
-    result._0 = a._0;
-    result._1 = a._1;
-    result._2 = a._2;
-    result._3 = a._3;
-    result._4 = -a._4;
-    result._5 = -a._5;
-    result._6 = -a._6;
-    result._7 = -a._7;
-
-    return result;
-}
-
-g3 operator * (vector3 a, g3 b)
-{
-    g3 result;
-    result._0 = a._1 * b._1 + a._2 * b._2 + a._3 * b._3;
-    result._1 = a._1 * b._0 - a._2 * b._4 + a._3 * b._6;
-    result._2 = a._1 * b._4 + a._2 * b._0 - a._3 * b._5;
-    result._3 = a._3 * b._0 + a._2 * b._5 - a._1 * b._6;
-    result._4 = a._1 * b._2 - a._2 * b._1 + a._3 * b._7;
-    result._5 = a._2 * b._3 - a._3 * b._2 + a._1 * b._7;
-    result._6 = a._3 * b._1 - a._1 * b._3 + a._2 * b._7;
-    result._7 = a._1 * b._5 + a._2 * b._6 + a._3 * b._4;
-
-    return result;
-}
-
-g3 operator * (g3 a, vector3 b)
-{
-    g3 result;
-    result._0 = a._1 * b._1 + a._2 * b._2 + a._3 * b._3;
-    result._1 = a._0 * b._1 + a._4 * b._2 - a._6 * b._3;
-    result._2 = a._0 * b._2 - a._4 * b._1 + a._5 * b._3;
-    result._3 = a._0 * b._3 - a._5 * b._2 + a._6 * b._1;
-    result._4 = a._1 * b._2 - a._2 * b._1 + a._7 * b._3;
-    result._5 = a._2 * b._3 - a._3 * b._2 + a._7 * b._1;
-    result._6 = a._3 * b._1 - a._1 * b._3 + a._7 * b._2;
-    result._7 = a._4 * b._3 + a._5 * b._1 + a._6 * b._2;
-
-    return result;
-}
-
-g3::bivector g3::bivector::outer(vector3 a, vector3 b)
-{
-    // A = a1e1 + a2e2 + a3e3
-    // B = b1e1 + b2e2 + b3e3
-    // A/\B = (a1e1 + a2e2 + a3e3) /\ (b1e1 + b2e2 + b3e3) =
-    //      = a1b1 e1e1 + a1b2 e1e2 + a1b3 e1e3
-    //      + a2b1 e2e1 + a2b2 e2e2 + a2b3 e2e3
-    //      + a3b1 e3e1 + a3b2 e3e2 + a3b3 e3e3
-    // A/\B = (a1b2 - a2b1) e1e2 + (a2b3 - a3b2) e2e3 + (a3b1 - a1b3) e3e1
-    g3::bivector result = {0};
-    result._12 = a._1 * b._2 - a._2 * b._1;
-    result._23 = a._2 * b._3 - a._3 * b._2;
-    result._31 = a._3 * b._1 - a._1 * b._3;
-
-    return result;
-}
-
-g3 outer(vector3 a, vector3 b)
-{
-    g3 result = {0};
-    result.B = g3::bivector::outer(a, b);
-
-    return result;
-}
-
-g3 operator * (vector3 a, vector3 b)
-{
-    g3 result = inner(a, b) + outer(a, b);
-    return result;
-}
-
-vector3 to_vector3(g3 a)
-{
-    vector3 result;
-    result._1 = a._1;
-    result._2 = a._2;
-    result._3 = a._3;
-
-    return result;
-}
-
-vector3 to_vector3(g3::bivector b)
-{
-    vector3 result;
-    result.x = b._23;
-    result.y = b._31;
-    result.z = b._12;
-
-    return result;
-}
-
-quaternion to_quaternion(g3 a)
+quaternion make_quaternion(vector v, float32 r)
 {
     quaternion result;
-    result.x = a._5;
-    result.y = a._6;
-    result.z = a._4;
-    result.w = a._0;
+    // result.x = v.x;
+    // result.y = v.y;
+    // result.z = v.z;
+    // result.w = r;
+    return result;
+}
 
+quaternion make_quaternion(vector axis_of_rotation, math::angle angle)
+{
+    quaternion result;
+    // result.v = axis_of_rotation * sin(0.5f * angle.radians);
+    // result.s = cos(0.5f * angle.radians);
     return result;
 }
 
 
-} // namespace ga
+} // namespace g3
 } // namespace math
 
 #endif // MATH_CLIFFORD3_HPP

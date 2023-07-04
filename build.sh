@@ -93,12 +93,16 @@ elif [[ $os_name == "Darwin" ]]; then
     elif [[ $command == "release" ]]; then
         macos_release_build
     elif [[ $command == "tests" ]]; then
+        g++ ../code/math/g2_generator.cpp -o generator
+        ./generator
+        g++ ../code/math/g3_generator.cpp -o generator
+        ./generator
+        cp g3_operators.cpp ../code/math/g3_operators.hpp
+
         tests_build
         if [[ $? == 0 ]]; then
             ./tests
         fi
-        g++ ../code/math/g2_generator.cpp -o generator
-        ./generator
     else
         echo "Could not recognize the command provided (${command})"
     fi

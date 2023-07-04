@@ -117,7 +117,7 @@ typedef _e0_e1_e2_e1e2 g2;
 
 // Functions
 
-vector2 make_vector2(float32 value)
+vector2 make_vector(float32 value)
 {
     vector2 result;
     result.x = value;
@@ -125,7 +125,7 @@ vector2 make_vector2(float32 value)
     return result;
 }
 
-vector2 make_vector2(float32 x, float32 y)
+vector2 make_vector(float32 x, float32 y)
 {
     vector2 result;
     result.x = x;
@@ -163,13 +163,13 @@ complex to_complex(g2 a)
     return result;
 }
 
-vector2 to_vector2(complex a)
+vector2 to_vector(complex a)
 {
     vector2 result = e1 * a;
     return result;
 }
 
-vector2 to_vector2(g2 a)
+vector2 to_vector(g2 a)
 {
     vector2 result;
     result.x = a.x;
