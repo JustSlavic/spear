@@ -105,7 +105,7 @@ static _e1e2 I = []{ _e1e2 r; r._3 = 1.f; return r; }();
 
 // Type aliases
 typedef float32  real;
-typedef _e1_e2   vector2;
+typedef _e1_e2   vector;
 typedef _e0_e1e2 complex;
 typedef _e0_e1_e2_e1e2 g2;
 
@@ -149,7 +149,7 @@ complex make_complex(float32 re, float32 im)
     return result;
 }
 
-complex to_complex(vector2 a)
+complex to_complex(vector a)
 {
     complex result = e1 * a;
     return result;
@@ -163,15 +163,15 @@ complex to_complex(g2 a)
     return result;
 }
 
-vector2 to_vector(complex a)
+vector to_vector(complex a)
 {
-    vector2 result = e1 * a;
+    vector result = e1 * a;
     return result;
 }
 
-vector2 to_vector(g2 a)
+vector to_vector(g2 a)
 {
-    vector2 result;
+    vector result;
     result.x = a.x;
     result.y = a.y;
     return result;
@@ -198,13 +198,13 @@ FORCE_INLINE complex operator / (complex a, complex b)
 // v\ | /r
 //   \|/
 // -------mirror
-INLINE vector2 reflect(vector2 v, vector2 n)
+INLINE vector reflect(vector v, vector n)
 {
     // v = dot(v, n)*n + (v - dot(v, n)*n)
     // reflect the component that is perpendicular to n
     // r = - dot(v, n)*n + (v - dot(v, n)*n)
     // r = v - 2*dot(v, n)*n
-    vector2 result = v - 2.0f*inner(v, n)*n;
+    vector result = v - 2.0f*inner(v, n)*n;
     return result;
 }
 
@@ -214,10 +214,10 @@ INLINE vector2 reflect(vector2 v, vector2 n)
 // v\ | /r
 //   \|/
 //    |
-INLINE vector2 mirror(vector2 v, vector2 m)
+INLINE vector mirror(vector v, vector m)
 {
     // The same as 'reflect', but makes result is conserves the direction of vector
-    vector2 result = -reflect(v, m);
+    vector result = -reflect(v, m);
     return result;
 }
 

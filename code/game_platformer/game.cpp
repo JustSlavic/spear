@@ -116,51 +116,6 @@ void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 
     push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
 }
 
-void teleport_back(game_state *gs)
-{
-    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
-    {
-        auto *e = get_entity(gs, entity_index);
-        e->position.x -= 100.f;
-    }
-    gs->default_camera.position.x -= 100.f;
-}
-
-void sprinkle_stones(game_state *gs)
-{
-    float32 x = gs->sam->position.x;
-    uint32 sprinkled = 0;
-    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
-    {
-        auto *e = get_entity(gs, entity_index);
-        if ((e->type == ENTITY_STONE) && (e->position.x < x - 20.f))
-        {
-            float32 x_mean = (sprinkled + 3) * 3.f;
-            e->position = V2(uniform_real(x_mean - 1.f, x_mean + 1.f) + 20.0f, -4. + e->height * 0.5f - uniform_real(0.1f, 0.3f));
-            sprinkled += 1;
-        }
-    }
-}
-
-
-void sprinkle_packages(game_state *gs)
-{
-    auto x = gs->sam->position.x;
-    uint32 sprinkled = 0;
-    for (uint32 entity_index = 1; entity_index < gs->entity_count; entity_index++)
-    {
-        auto *e = get_entity(gs, entity_index);
-        if ((e->type == ENTITY_PACKAGE) && (e->position.x < x - 20.f))
-        {
-            float32 x_mean = (sprinkled + 3) * 3.f;
-            e->position = V2(uniform_real(x_mean - 1.f, x_mean + 1.f) + 20.0f, -2);
-            e->deleted = false;
-            sprinkled += 1;
-        }
-    }
-}
-
-
 //
 // Arguments:
 // - execution_context *context;
@@ -796,7 +751,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 #include <image/bmp.cpp>
 #include <image/png.cpp>
 #include <memory/crc.cpp>
-#endif
+#endif // DLL_BUILD
 
 #include <execution_context.cpp>
 #include <ui/ui.cpp>

@@ -191,7 +191,7 @@ typedef int16 sound_sample_t;
 
 #define TOGGLE(X) (X) = !(X)
 
-#define SWAP(X, Y) { decltype(X) tmp__ = X; Y = X; X = tmp__; } while(0)
+#define SWAP(X, Y) { decltype(X) tmp__ = Y; Y = X; X = tmp__; } while(0)
 template <typename T>
 void swap(T &a, T &b)
 {
