@@ -104,7 +104,7 @@ typedef  int64 ptrdiff;
 // Sound buffer is a bunch of periods?
 typedef int16 sound_sample_t;
 
-#define EPSILON    1e-6f
+#define EPSILON    1e-5f
 
 #undef INT8_MIN
 #undef INT16_MIN

@@ -40,15 +40,15 @@ int32 round_to_int32(float32 x)
     return result;
 }
 
-bool32 near_zero(float32 x)
+bool32 near_zero(float32 x, float32 eps = EPSILON)
 {
-    bool32 result = (-EPSILON < x) and (x < EPSILON);
+    bool32 result = (-eps < x) and (x < eps);
     return result;
 }
 
-bool32 equal(float32 x, float32 y)
+bool32 equal(float32 x, float32 y, float32 eps = EPSILON)
 {
-    bool32 result = near_zero(x - y);
+    bool32 result = near_zero(x - y, eps);
     return result;
 }
 

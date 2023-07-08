@@ -141,18 +141,22 @@ vector to_vector(_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 g)
 quaternion make_quaternion(vector v, float32 r)
 {
     quaternion result;
-    // result.x = v.x;
-    // result.y = v.y;
-    // result.z = v.z;
-    // result.w = r;
+    result.x = v.x;
+    result.y = v.y;
+    result.z = v.z;
+    result.w = r;
     return result;
 }
 
 quaternion make_quaternion(vector axis_of_rotation, math::angle angle)
 {
+    vector v = axis_of_rotation * sin(0.5f * angle.radians);
+
     quaternion result;
-    // result.v = axis_of_rotation * sin(0.5f * angle.radians);
-    // result.s = cos(0.5f * angle.radians);
+    result.x = v.x;
+    result.y = v.y;
+    result.z = v.z;
+    result.w = cos(0.5f * angle.radians);
     return result;
 }
 

@@ -23,7 +23,7 @@
                 "syntax": "Packages/User/sublime-setup/polar_build_output_gcc.sublime-syntaxx"
             },
             "osx": {
-                "shell_cmd": "$folder/build.sh tests",
+                "shell_cmd": "$folder/build.sh",
                 "working_dir": "$folder",
             }
         },

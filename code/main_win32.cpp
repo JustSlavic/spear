@@ -22,7 +22,7 @@ GLOBAL bool32 viewport_changed;
 #if DEBUG
 GLOBAL debug_loop_state debug_loop_state = DEBUG_LOOP_IDLE;
 GLOBAL memory_block debug_loop_initial_game_state;
-GLOBAL array<input> debug_loop_inputs;
+GLOBAL array<input_devices> debug_loop_inputs;
 GLOBAL uint32 debug_loop_current_index;
 #endif // DEBUG
 
@@ -366,7 +366,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    input input = {};
+    input_devices input = {};
 
     int32 game_update_frequency_hz = monitor_refresh_rate_hz;
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;

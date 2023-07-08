@@ -590,19 +590,19 @@ TEST(CliffordG3)
         using namespace math;
 
         auto n = normalized(g3::make_vector(1, 1, 0));
-        auto a = g3::make_vector(3, 4, 5);
-        auto b = g3::make_vector(4, 3, 1);
+        auto a = g3::make_vector(23, 4, 5);
+        auto b = g3::make_vector(4, 7, 91);
 
         auto ra = -n*a*n;
         auto rb = -n*b*n;
 
         TEST_ASSERT_FLOAT_EQ(ra._1, -4.f);
-        TEST_ASSERT_FLOAT_EQ(ra._2, -3.f);
+        TEST_ASSERT_FLOAT_EQ(ra._2, -23.f);
         TEST_ASSERT_FLOAT_EQ(ra._3,  5.f);
 
-        TEST_ASSERT_FLOAT_EQ(rb._1, -3.f);
+        TEST_ASSERT_FLOAT_EQ(rb._1, -7.f);
         TEST_ASSERT_FLOAT_EQ(rb._2, -4.f);
-        TEST_ASSERT_FLOAT_EQ(rb._3,  1.f);
+        TEST_ASSERT_FLOAT_EQ(rb._3,  91.f);
 
         printf("inner(a, b) = %f\n", inner(a, b));
         printf("inner(ra, rb) = %f\n", inner(ra, rb));
@@ -623,14 +623,9 @@ TEST(CliffordG3)
         auto b2 = n*b1*n;
 
         TEST_ASSERT_FLOAT_EQ(b1._0, -b2._0);
-        // TEST_ASSERT_FLOAT_EQ(b1._1, -b2._1);
-        // TEST_ASSERT_FLOAT_EQ(b1._2, -b2._2);
-        // TEST_ASSERT_FLOAT_EQ(b1._3, -b2._3);
         TEST_ASSERT_FLOAT_EQ(b1._4, -b2._4);
         TEST_ASSERT_FLOAT_EQ(b1._5, -b2._5);
         TEST_ASSERT_FLOAT_EQ(b1._6, -b2._6);
-        // TEST_ASSERT_FLOAT_EQ(b1._7, -b2._7);
-
         // printf("b2 = [%f, {%f, %f, %f}, {%f, %f, %f}, %f]\n",
         //     b2._0, b2._1, b2._2, b2._3, b2._4, b2._5, b2._6, b2._7);
     }

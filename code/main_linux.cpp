@@ -72,7 +72,7 @@ GLOBAL uint32 current_display_height;
 GLOBAL uint32 display_size_changed;
 
 
-void process_pending_messages(linux::window *window, input *input)
+void process_pending_messages(linux::window *window, input_devices *input)
 {
     XEvent event;
     while (XPending(window->x_display))
@@ -236,7 +236,7 @@ int main(int argc, char **argv, char **env)
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    input input = {};
+    input_devices input = {};
 
     auto time_resolution = linux::get_wall_clock_frequency();
     UNUSED(time_resolution);

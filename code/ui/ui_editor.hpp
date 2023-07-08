@@ -13,7 +13,7 @@ namespace ui {
 struct editor;
 
 
-void update_editor(system *s, editor *e, input *input);
+void update_editor(system *s, editor *e, input_devices *input);
 void render_editor(execution_context *context, system *s, editor *e);
 
 

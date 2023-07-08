@@ -29,7 +29,7 @@ void process_pending_messages(input_devices *input)
             {
                 switch (event.key.keysym.scancode)
                 {
-                    case SDL_SCANCODE_ESCAPE: process_button_state(&input->keyboard[keyboard_device::esc], event.type == SDL_KEYDOWN);
+                    case SDL_SCANCODE_ESCAPE: process_button_state(&input->keyboard[KB_ESC], event.type == SDL_KEYDOWN);
                         break;
 
                     default:
@@ -91,7 +91,8 @@ int main()
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
+
+    context.strid_storage = initialize_string_id_storage(string_id_memory);
 
     context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
     context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
@@ -113,8 +114,8 @@ int main()
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, keyboard_device::key_count);
-        reset_transitions(input.mouse.buttons, mouse_device::key_count);
+        reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
+        reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         process_pending_messages(&input);
         // win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
         input.dt = last_frame_dt;
@@ -122,7 +123,7 @@ int main()
 
         update_and_render(&context, game_memory, &input);
 
-        for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.execution_commands.size(); cmd_index++)
         {
             auto cmd = context.execution_commands[cmd_index];
             switch (cmd.type)
@@ -134,9 +135,9 @@ int main()
                 break;
             }
         }
-        context.execution_commands.size = 0;
+        context.execution_commands.clear();
 
-        for (usize cmd_index = 0; cmd_index < context.render_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.render_commands.size(); cmd_index++)
         {
             auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
@@ -166,6 +167,7 @@ int main()
                 break;
 
                 case render_command::command_type::draw_screen_frame:
+                case render_command::command_type::draw_mesh_with_texture:
                 {
                     // gfx::draw_polygon_simple(&context,
                     //     screen_frame_mesh, screen_frame_shader,
@@ -184,7 +186,7 @@ int main()
                 break;
             }
         }
-        context.render_commands.size = 0;
+        context.render_commands.clear();
 
         SDL_GL_SwapWindow(window);
 

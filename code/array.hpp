@@ -62,7 +62,7 @@ struct static_array
     Type *data() { return data_; }
     usize size() { return size_; }
     usize capacity() { return Capacity; }
-    void reset() { size_ = 0; }
+    void clear() { size_ = 0; }
     bool empty() { return (size_ == 0); }
 
     Type& operator[] (usize index)
@@ -72,7 +72,7 @@ struct static_array
 
     Type const& operator[] (usize index) const
     {
-        return data[index];
+        return data_[index];
     }
 
     Type *push()
