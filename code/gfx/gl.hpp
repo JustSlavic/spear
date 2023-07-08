@@ -107,16 +107,16 @@ typedef uint32 GLenum;
 typedef uint32 GLbitfield;
 typedef float32 GLclampf;
 
-extern void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-extern void glClear(GLbitfield mask);
-extern GLenum glGetError(void);
-extern void glViewport(int32 x, int32 y, isize width, isize height);
-extern void glDrawArrays(GLenum mode, int32 first, isize count);
-extern void glDrawElements(GLenum mode, isize count, GLenum type, void const *indices);
-extern void glGenTextures(isize n, uint32 *textures);
-extern void glBindTexture(GLenum target, uint32 texture);
-extern void glTexParameteri(GLenum target, GLenum pname, int32 param);
-extern void glTexParameteriv(GLenum target, GLenum pname, int32 const *params);
+// extern void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+// extern void glClear(GLbitfield mask);
+// extern GLenum glGetError(void);
+// extern void glViewport(int32 x, int32 y, isize width, isize height);
+// extern void glDrawArrays(GLenum mode, int32 first, isize count);
+// extern void glDrawElements(GLenum mode, isize count, GLenum type, void const *indices);
+// extern void glGenTextures(isize n, uint32 *textures);
+// extern void glBindTexture(GLenum target, uint32 texture);
+// extern void glTexParameteri(GLenum target, GLenum pname, int32 param);
+// extern void glTexParameteriv(GLenum target, GLenum pname, int32 const *params);
 
 typedef void glGenFramebuffersType(isize n, uint32 *ids);
 typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
@@ -204,10 +204,10 @@ char const *gl_error_string(GLenum ec)
         case GL_OUT_OF_MEMORY: return "Error: GL_OUT_OF_MEMORY: There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.";
         case GL_STACK_UNDERFLOW: return "Error: GL_STACK_UNDERFLOW: An attempt has been made to perform an operation that would cause an internal stack to underflow.";
         case GL_STACK_OVERFLOW: return "Error: GL_STACK_OVERFLOW: An attempt has been made to perform an operation that would cause an internal stack to overflow.";
-        case GL_NO_ERROR: return NULL_STRING;  // No error has been recorded. The value of this symbolic constant is guaranteed to be 0.
+        case GL_NO_ERROR: return (char const *) NULL;  // No error has been recorded. The value of this symbolic constant is guaranteed to be 0.
     }
 
-    return NULL_STRING;
+    return (char const *) NULL;
 }
 
 void set_clear_color(float32 r, float32 g, float32 b, float32 a)

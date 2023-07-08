@@ -104,7 +104,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
 }
 
 
-void process_pending_messages(input *inp)
+void process_pending_messages(input_devices *inp)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -173,7 +173,7 @@ void process_pending_messages(input *inp)
                                 // Nullify keyboard such as nothing is pressed on stoping the playback loop
                                 // because if there's something left pressed, it will stay pressed although nothing is
                                 // pressed on the actual keyboard
-                                memory::set(inp, 0, sizeof(input));
+                                memory::set(inp, 0, sizeof(input_devices));
                                 debug_loop_state = DEBUG_LOOP_IDLE;
                             }
                         }
@@ -269,7 +269,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
 #if DEBUG
     debug_loop_initial_game_state = ALLOCATE_BLOCK_(&platform_allocator, game_memory.size);
-    debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input, 60*100);
+    debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input_devices, 60*100);
 #endif // DEBUG
 
     rs::resource_token screen_frame_mesh = {};

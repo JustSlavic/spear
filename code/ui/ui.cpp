@@ -590,7 +590,7 @@ void update_transforms(system *s)
     }
 }
 
-void update(system *s, input *inp)
+void update(system *s, input_devices *inp)
 {
     auto mouse_position = V3(inp->mouse.x, inp->mouse.y, 0);
     s->pressed = null_handle();

@@ -800,6 +800,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
 #include <execution_context.cpp>
 #include <ui/ui.cpp>
+
 #if UI_EDITOR_ENABLED
 #include <ui/ui_editor.cpp>
-#endif
+#endif // UI_EDITOR_ENABLED
