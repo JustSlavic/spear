@@ -125,6 +125,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     global_debug_measurements = context->debug_measurements;
 
     ASSERT(sizeof(game_state) < game_memory.size);
+    ASSERT(context->debug_load_file);
+
     game_state *gs = (game_state *) game_memory.memory;
 
     memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));

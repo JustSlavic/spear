@@ -108,23 +108,26 @@ void process_pending_messages(linux::window *window, input_devices *input)
 
         switch (event.type)
         {
+            case MotionNotify:
+            {
+                input->mouse.x = event.xmotion.x;
+                input->mouse.y = event.xmotion.y;
+            }
+            break;
+
             case ButtonPress:
             case ButtonRelease:
             {
-                // b32 is_down = (event.type == ButtonPress);
-
-                // if (event.xbutton.button == MOUSE_LMB)
-                // {
-                //     linux_process_key_event(&mouse->LMB, is_down);
-                // }
-                // else if (event.xbutton.button == MOUSE_MMB)
-                // {
-                //     linux_process_key_event(&mouse->MMB, is_down);
-                // }
-                // else if (event.xbutton.button == MOUSE_RMB)
-                // {
-                //     linux_process_key_event(&mouse->RMB, is_down);
-                // }
+                bool32 is_down = (event.type == ButtonPress);
+                switch (event.xbutton.button)
+                {
+                    case MOUSE_LMB: process_button_state(&input->mouse[MOUSE_LEFT], is_down);
+                        break;
+                    case MOUSE_MMB: process_button_state(&input->mouse[MOUSE_MIDDLE], is_down);
+                        break;
+                    case MOUSE_RMB: process_button_state(&input->mouse[MOUSE_RIGHT], is_down);
+                        break;
+                }
             }
             break;
 
@@ -189,32 +192,30 @@ void process_pending_messages(linux::window *window, input_devices *input)
 
 int main(int argc, char **argv, char **env)
 {
-    int32 display_width = 2400;
-    int32 display_height = 1600;
-
     linux::window window = {};
     gfx::driver driver = {};
 
-    linux::create_opengl_window(display_width, display_height, &window, &driver);
+    linux::create_opengl_window(1600, 900, &window, &driver);
     gfx::initialize_opengl(&driver);
 
-    auto monitor = get_monitor_stats(&window);
+    auto monitor = linux::get_monitor_stats(&window);
 
     gfx::set_clear_color(0, 0, 0, 1);
     int32 monitor_refresh_rate_hz = monitor.refresh_rate;
     gfx::vsync(&window, true);
 
-    memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(30));
+    memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
     memory::allocator global_allocator;
     memory::initialize_memory_arena(&global_allocator, global_memory);
 
-    memory_block platform_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block game_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
-    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block renderer_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(4));
-    memory_block resource_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block string_id_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+
+    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
+    memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
+    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
+    memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
+    memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
 
     memory::allocator platform_allocator = {};
     memory::initialize_memory_arena(&platform_allocator, platform_memory);
@@ -230,6 +231,8 @@ int main(int argc, char **argv, char **env)
     context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
     context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
     create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
+
+    context.debug_load_file = linux::load_file;
 
     initialize_memory(&context, game_memory);
 
@@ -251,6 +254,7 @@ int main(int argc, char **argv, char **env)
     while (running)
     {
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
+        reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         process_pending_messages(&window, &input);
         input.dt = last_frame_dt;
 

@@ -3,12 +3,18 @@
 
 #include <base.hpp>
 #include <memory/memory.hpp>
+#include <memory/allocator.hpp>
 
 #include <time.hpp>
 #include <time.h>
 #include <sys/mman.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
+
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 
 namespace gfx::gl {
@@ -130,6 +136,37 @@ INLINE void free_memory(memory_block block)
 {
     int ec = munmap(block.memory, block.size);
     ASSERT_MSG(ec == 0, "munmap failed");
+}
+
+memory_block load_file(memory::allocator *allocator, char const *filename)
+{
+    memory_block result = {};
+
+    int fd = open(filename, O_NOFOLLOW, O_RDONLY);
+    if (fd < 0)
+    {
+        return result;
+    }
+
+    struct stat st;
+    int ec = fstat(fd, &st);
+    if (ec < 0)
+    {
+        return result;
+    }
+
+    void *memory = ALLOCATE_BUFFER(allocator, st.st_size);
+    uint32 bytes_read = read(fd, memory, st.st_size);
+
+    if (bytes_read < st.st_size)
+    {
+        DEALLOCATE(allocator, memory);
+        return result;
+    }
+
+    result.memory = memory;
+    result.size   = st.st_size;
+    return result;
 }
 
 

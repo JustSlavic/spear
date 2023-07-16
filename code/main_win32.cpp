@@ -236,8 +236,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
     gfx::vsync(&window, true);
 
-    // @todo: Allocate the memory and initialize allocators on it
-
     memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
     memory::allocator global_allocator;
@@ -445,13 +443,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-#if 1
             game.update_and_render(&context, game_memory, &input);
-#else
-#define FIXED_DT 0.03333f
-            game.update_and_render(&context, game_memory, &input, FIXED_DT);
-#undef FIXED_DT
-#endif
         }
 
         for (usize cmd_index = 0; cmd_index < context.execution_commands.size(); cmd_index++)
