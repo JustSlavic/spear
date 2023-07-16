@@ -65,11 +65,6 @@ GLOBAL float32 lou_width = 0.3f;
 GLOBAL float32 lou_height = 0.5f;
 
 
-GLOBAL float32 letter_width = 0.5f;
-GLOBAL float32 letter_height = 0.8f;
-GLOBAL float32 spacing = 0.4f;
-
-
 GLOBAL math::vector4 sky_color = V4(148.0 / 255.0, 204.0 / 255.0, 209.0 / 255.0, 1.0);
 GLOBAL math::vector4 porter_color = V4(55.0/255.0, 70.0/255.0, 122.0/255.0, 1);
 GLOBAL math::vector4 ground_color = V4(50.0/255.0, 115.0/255.0, 53.0/255.0, 1);
@@ -202,13 +197,14 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // Load texture
     {
-        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "IMG_1308.bmp");
-        gs->reference_texture = rs::create_texture_resource(&context->resource_storage, file_content);
+        // memory_block file_content = context->debug_load_file(&context->temporary_allocator, "IMG_1308.bmp");
+        // gs->reference_texture = rs::create_texture_resource(&context->resource_storage, file_content);
     }
 
     {
-        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
-        auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
+        // memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
+        // auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
+        // UNUSED(bitmap);
     }
 
     // UI
@@ -404,7 +400,9 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
 
     if (get_press_count(input->keyboard[KB_F1]))
     {
+#if UI_EDITOR_ENABLED
         TOGGLE(gs->ui_editor_enabled);
+#endif // UI_EDITOR_ENABLED
     }
 
     if (get_hold_count(input->keyboard[KB_A]))
@@ -513,7 +511,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                 if (is(e, ENTITY_ON_GROUND))
                 {
                     // Friction with the ground
-                    auto normal_force = e->mass * math::length(gravity);
+                    // auto normal_force = e->mass * math::length(gravity);
                     auto friction = (BASE_FRICTION_COEFFICIENT * (-old_v));
                     acceleration += friction;
                 }

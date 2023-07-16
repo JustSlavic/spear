@@ -134,17 +134,17 @@ void process_pending_messages(linux::window *window, input_devices *input)
                 bool32 is_down = (event.type == KeyPress);
                 switch (event.xkey.keycode)
                 {
-                    case KEYCODE_ESC: process_button_state(&input->keyboard[keyboard_device::ESC], is_down);
+                    case KEYCODE_ESC: process_button_state(&input->keyboard[KB_ESC], is_down);
                         break;
-                    case KEYCODE_W: process_button_state(&input->keyboard[keyboard_device::W], is_down);
+                    case KEYCODE_W: process_button_state(&input->keyboard[KB_W], is_down);
                         break;
-                    case KEYCODE_A: process_button_state(&input->keyboard[keyboard_device::A], is_down);
+                    case KEYCODE_A: process_button_state(&input->keyboard[KB_A], is_down);
                         break;
-                    case KEYCODE_S: process_button_state(&input->keyboard[keyboard_device::S], is_down);
+                    case KEYCODE_S: process_button_state(&input->keyboard[KB_S], is_down);
                         break;
-                    case KEYCODE_D: process_button_state(&input->keyboard[keyboard_device::D], is_down);
+                    case KEYCODE_D: process_button_state(&input->keyboard[KB_D], is_down);
                         break;
-                    case KEYCODE_Y: process_button_state(&input->keyboard[keyboard_device::Y], is_down);
+                    case KEYCODE_Y: process_button_state(&input->keyboard[KB_Y], is_down);
                         break;
                 }
             }
@@ -223,7 +223,8 @@ int main(int argc, char **argv, char **env)
     memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
     memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
     memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-    memory::initialize_memory_arena(&context.strid_storage.arena, string_id_memory);
+
+    context.strid_storage = initialize_string_id_storage(string_id_memory);
 
     context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
     context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
@@ -249,7 +250,7 @@ int main(int argc, char **argv, char **env)
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, keyboard_device::KEY_COUNT);
+        reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         process_pending_messages(&window, &input);
         input.dt = last_frame_dt;
 
@@ -259,6 +260,7 @@ int main(int argc, char **argv, char **env)
             gfx::set_viewport(viewport);
             display_size_changed = false;
 
+            // @todo: get screen (monitor) width and height in pixels
             context.screen_width = 0;
             context.screen_height = 0;
 
@@ -273,7 +275,7 @@ int main(int argc, char **argv, char **env)
 
         update_and_render(&context, game_memory, &input);
 
-        for (usize cmd_index = 0; cmd_index < context.execution_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.execution_commands.size(); cmd_index++)
         {
             auto cmd = context.execution_commands[cmd_index];
             switch (cmd.type)
@@ -284,16 +286,17 @@ int main(int argc, char **argv, char **env)
                 }
                 break;
 
-            default:
+                default:
                 break;
             }
         }
 
-        for (usize cmd_index = 0; cmd_index < context.render_commands.size; cmd_index++)
+        for (usize cmd_index = 0; cmd_index < context.render_commands.size(); cmd_index++)
         {
             auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
             {
+                case render_command::command_type::draw_mesh_with_texture:
                 case render_command::command_type::setup_projection_matrix:
                 break;
 
@@ -331,7 +334,7 @@ int main(int argc, char **argv, char **env)
                 break;
             }
         }
-        context.render_commands.size = 0;
+        context.render_commands.clear();
         memory::reset_allocator(&context.temporary_allocator);
 
         gfx::swap_buffers(&window, &driver);
@@ -349,3 +352,5 @@ int main(int argc, char **argv, char **env)
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <game_platformer/game.cpp>
+#include <rs/resource_system.cpp>
+#include <image/bmp.cpp>

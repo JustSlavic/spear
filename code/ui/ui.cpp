@@ -562,6 +562,14 @@ void update_animations(system *s, float32 dt)
                 }
             }
             break;
+
+
+            case UI_ANIM_NORMAL:
+            case UI_ANIM_LOOP:
+            case UI_ANIM_PPONG:
+            case UI_ANIM_PROPERTY_MASK:
+            case UI_ANIM_TYPE_MASK:
+            break;
         }
     }
 }

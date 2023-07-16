@@ -51,7 +51,8 @@ GLOBAL glXSwapIntervalType *glXSwapInterval;
 GLOBAL glXCreateContextAttribsType *glXCreateContextAttribs;
 
 
-namespace gfx::gl {
+namespace gfx {
+namespace gl {
 
 
 struct glx_driver
@@ -335,6 +336,7 @@ void destroy_window_and_driver(void *window, void *driver)
 }
 
 
-} // namespace gfx::gl
+} // namespace gfx
+} // namespace gl
 
 #endif // GFX_GL_X11_HPP
