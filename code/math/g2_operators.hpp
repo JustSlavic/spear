@@ -303,18 +303,18 @@ float32 length_squared(T t) { return inner(t, conjugate(t)); }
 float32 length(float32 a) { return a; }
 float32 length(_e1 a) { return a._1; }
 float32 length(_e2 a) { return a._2; }
-float32 length(_e1_e2 a) { return square_root(length_squared(a)); }
+float32 length(_e1_e2 a) { return math::square_root(length_squared(a)); }
 float32 length(_e1e2 a) { return a._3; }
-float32 length(_e0_e1e2 a) { return square_root(length_squared(a)); }
-float32 length(_e0_e1_e2_e1e2 a) { return square_root(length_squared(a)); }
+float32 length(_e0_e1e2 a) { return math::square_root(length_squared(a)); }
+float32 length(_e0_e1_e2_e1e2 a) { return math::square_root(length_squared(a)); }
 
 void normalize(float32& a) { a = 1.f; }
 void normalize(_e1& a) { a._1 = 1.f; }
 void normalize(_e2& a) { a._2 = 1.f; }
-void normalize(_e1_e2& a) { float32 norm = length(a); if (not near_zero(norm)) { a._1 /= norm; a._2 /= norm; } }
+void normalize(_e1_e2& a) { float32 norm = length(a); if (not math::near_zero(norm)) { a._1 /= norm; a._2 /= norm; } }
 void normalize(_e1e2& a) {a._3 = 1.f; }
-void normalize(_e0_e1e2& a) { float32 norm = length(a); if (not near_zero(norm)) { a._0 /= norm; a._3 /= norm; } }
-void normalize(_e0_e1_e2_e1e2& a) { float32 norm = length(a); if (not near_zero(norm)) { a._0 /= norm; a._1 /= norm; a._2 /= norm; a._3 /= norm; } }
+void normalize(_e0_e1e2& a) { float32 norm = length(a); if (not math::near_zero(norm)) { a._0 /= norm; a._3 /= norm; } }
+void normalize(_e0_e1_e2_e1e2& a) { float32 norm = length(a); if (not math::near_zero(norm)) { a._0 /= norm; a._1 /= norm; a._2 /= norm; a._3 /= norm; } }
 
 float32 normalized(float32 a) { normalize(a); return a; }
 _e1 normalized(_e1 a) { normalize(a); return a; }

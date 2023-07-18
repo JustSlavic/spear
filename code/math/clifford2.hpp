@@ -3,7 +3,6 @@
 
 #include <base.hpp>
 
-namespace math {
 namespace g2 {
 
 // Basis elements
@@ -109,25 +108,25 @@ typedef _e1_e2   vector;
 typedef _e0_e1e2 complex;
 typedef _e0_e1_e2_e1e2 g2;
 
-#define G2_V2(E1, E2) ::math::g2::vector2{E1, E2}
-#define G2_C(E0, E3) ::math::g2::complex{E0, E3}
-#define G2(E0, E1, E2, E3) ::math::g2::_e0_e1_e2_e1e2{E0, E1, E2, E3}
+#define G2_V2(E1, E2) ::g2::vector{E1, E2}
+#define G2_C(E0, E3) ::g2::complex{E0, E3}
+#define G2(E0, E1, E2, E3) ::g2::_e0_e1_e2_e1e2{E0, E1, E2, E3}
 
 #include "g2_operators.hpp"
 
 // Functions
 
-vector2 make_vector(float32 value)
+vector make_vector(float32 value)
 {
-    vector2 result;
+    vector result;
     result.x = value;
     result.y = value;
     return result;
 }
 
-vector2 make_vector(float32 x, float32 y)
+vector make_vector(float32 x, float32 y)
 {
-    vector2 result;
+    vector result;
     result.x = x;
     result.y = y;
     return result;
@@ -222,6 +221,5 @@ INLINE vector mirror(vector v, vector m)
 }
 
 } // namespace g2
-} // namespace math
 
 #endif // MATH_CLIFFORD2_HPP

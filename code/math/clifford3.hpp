@@ -7,7 +7,6 @@
 #include <math/quaternion.hpp>
 
 
-namespace math {
 namespace g3 {
 
 
@@ -89,10 +88,10 @@ static _e3 e3 = []{ _e3 r; r._3 = 1.f; return r; }();
 static _e1e2 e1e2 = []{ _e1e2 r; r._4 = 1.f; return r; }();
 static _e2e3 e2e3 = []{ _e2e3 r; r._5 = 1.f; return r; }();
 static _e3e1 e3e1 = []{ _e3e1 r; r._6 = 1.f; return r; }();
-static _e1e2 K = []{ _e1e2 r; r._4 = 1.f; return r; }();
-static _e2e3 I = []{ _e2e3 r; r._5 = 1.f; return r; }();
-static _e3e1 J = []{ _e3e1 r; r._6 = 1.f; return r; }();
-static _e1e2e3 S = []{ _e1e2e3 r; r._7 = 1.f; return r; }();
+static _e1e2 XY = []{ _e1e2 r; r._4 = 1.f; return r; }();
+static _e2e3 YZ = []{ _e2e3 r; r._5 = 1.f; return r; }();
+static _e3e1 ZX = []{ _e3e1 r; r._6 = 1.f; return r; }();
+static _e1e2e3 I = []{ _e1e2e3 r; r._7 = 1.f; return r; }();
 
 // Type aliases
 typedef _e1_e2_e3 vector;
@@ -162,6 +161,5 @@ quaternion make_quaternion(vector axis_of_rotation, math::angle angle)
 
 
 } // namespace g3
-} // namespace math
 
 #endif // MATH_CLIFFORD3_HPP

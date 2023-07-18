@@ -462,7 +462,7 @@ TEST(Ui)
 
 TEST(CliffordG2)
 {
-    using namespace math::g2;
+    using namespace g2;
 
     // Geometric product e1*e2 = inner(e1, e2) + outer(e1, e2)
     // Because e1 and e2 are orthogonal, inner(e1, e2) = 0
@@ -508,18 +508,18 @@ TEST(CliffordG3)
 {
     // Test that B1B2B3 == 1
     {
-        using namespace math::g3;
+        using namespace g3;
 
-        auto r = I * J * K;
+        auto r = XY * YZ * ZX;
         TEST_ASSERT_FLOAT_EQ(r, 1.f);
     }
 
     // Antisymmetry of orthogonal bivectors
     {
-        using namespace math::g3;
+        using namespace g3;
 
-        auto a = I * J; // e1e3 => -1 * e3e1
-        auto b = J * I; // e3e1 =>  1 * e3e1
+        auto a = YZ * ZX; // e1e3 => -1 * e3e1
+        auto b = ZX * YZ; // e3e1 =>  1 * e3e1
 
         TEST_ASSERT_FLOAT_EQ(a._4, -b._4);
     }
@@ -528,21 +528,21 @@ TEST(CliffordG3)
     // applying a "duality transformation", aS or Sa (it commutes).
     // Let's test it on basis vectors: e1, e2, and e3
     {
-        using namespace math::g3;
+        using namespace g3;
 
-        auto plane_e1 = e1 * S;
+        auto plane_e1 = e1 * I;
 
         // e1e1e2e3 => e2e3
 
         TEST_ASSERT_FLOAT_EQ(plane_e1._5, 1.f); // e2e3
 
-        auto plane_e2 = e2 * S;
+        auto plane_e2 = e2 * I;
 
         // e2e1e2e3 => -e1e3 => e3e1
 
         TEST_ASSERT_FLOAT_EQ(plane_e2._6, 1.f); // e3e1
 
-        auto plane_e3 = e3 * S;
+        auto plane_e3 = e3 * I;
 
         // e3e1e2e3 => -e1e3e2e3 => e1e2e3e3 => e1e2
 
@@ -551,9 +551,9 @@ TEST(CliffordG3)
 
     // The I should also square to -1
     {
-        using namespace math::g3;
+        using namespace g3;
 
-        auto sq = S * S;
+        auto sq = I * I;
 
         TEST_ASSERT_FLOAT_EQ(sq, -1.f);
     }
@@ -562,10 +562,8 @@ TEST(CliffordG3)
     // we can get part of the vector A parallel to N,
     // and at the same time the perpendicular to N.
     {
-        using namespace math::g3;
-
-        auto a = make_vector(1, 0, 1);
-        auto n = make_vector(1, 0, 0); // @note: n have to be normalized
+        auto a = g3::make_vector(1, 0, 1);
+        auto n = g3::make_vector(1, 0, 0); // @note: n have to be normalized
 
         auto P = n * inner(n, a); // projection  (n1e1 + n2e2 + n3e3)*(se0)
         auto R = n * outer(n, a); // "rejection" (n1e1 + n2e2 + n3e3)*(r1e12)
@@ -587,8 +585,6 @@ TEST(CliffordG3)
     // Reflections could be obtained as -nan, where a is the vector,
     // and n is the normal to the reflective plane
     {
-        using namespace math;
-
         auto n = normalized(g3::make_vector(1, 1, 0));
         auto a = g3::make_vector(23, 4, 5);
         auto b = g3::make_vector(4, 7, 91);
@@ -604,10 +600,6 @@ TEST(CliffordG3)
         TEST_ASSERT_FLOAT_EQ(rb._2, -4.f);
         TEST_ASSERT_FLOAT_EQ(rb._3,  91.f);
 
-        printf("inner(a, b) = %f\n", inner(a, b));
-        printf("inner(ra, rb) = %f\n", inner(ra, rb));
-        printf("difference = %f\n", inner(a, b) - inner(ra, rb));
-
         // check that angles are the same
         TEST_ASSERT_FLOAT_EQ(inner(a, b), inner(ra, rb));
     }
@@ -615,8 +607,6 @@ TEST(CliffordG3)
     // We can reflect bivectors too with the same formula! Except bivectors do not require a minus sign.
     // B' = nBn
     {
-        using namespace math;
-
         auto b1 = 1.f * g3::e1e2 + 0.f * g3::e2e3 + 0.f * g3::e3e1;
         auto n = g3::make_vector(0, 1, 0); // Length 1 means rotation pi radians
 
@@ -632,8 +622,6 @@ TEST(CliffordG3)
 
     // Rotations are performed by the double-sided transformation
     {
-        using namespace math;
-
         // Angle between vectors is 90 degrees, so rotation will be in 180 degrees!
         auto n = g3::make_vector(1, 0, 0);
         auto m = g3::make_vector(0, 1, 0);

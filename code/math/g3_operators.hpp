@@ -1046,13 +1046,13 @@ float32 length_squared(_e1_e2_e3 a) { float32 r = inner(a, conjugated(a)); retur
 // float32 length(_e1 a) { return ::math::absolute(a._1); }
 // float32 length(_e2 a) { return ::math::absolute(a._2); }
 // float32 length(_e3 a) { return ::math::absolute(a._3); }
-float32 length(_e1_e2_e3 a) { return square_root(length_squared(a)); }
+float32 length(_e1_e2_e3 a) { return math::square_root(length_squared(a)); }
 // float32 length(_e1e2 a) { return ::math::absolute(a._4); }
 // float32 length(_e2e3 a) { return ::math::absolute(a._5); }
 // float32 length(_e3e1 a) { return ::math::absolute(a._6); }
-// float32 length(_e0_e1e2_e2e3_e3e1 a) { return square_root(length_squared(a)); }
+// float32 length(_e0_e1e2_e2e3_e3e1 a) { return math::square_root(length_squared(a)); }
 // float32 length(_e1e2e3 a) { return ::math::absolute(a._7); }
-// float32 length(_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 a) { return square_root(length_squared(a)); }
+// float32 length(_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 a) { return math::square_root(length_squared(a)); }
 
 // void normalize(_e1& a) { float32 norm = length(a); a._1 /= norm; }
 // void normalize(_e2& a) { float32 norm = length(a); a._2 /= norm; }
