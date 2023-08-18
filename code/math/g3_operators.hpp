@@ -538,18 +538,18 @@ _e1_e2_e3 operator * (_e1_e2_e3 a, float32 b) { _e1_e2_e3 r = {}; r._1 += (a._1 
 // _e0_e1e2_e2e3_e3e1 operator * (_e1_e2_e3 a, _e2 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._4 += (a._1 * b._2); r._0 += (a._2 * b._2); r._5 -= (a._3 * b._2); return r; }
 // _e0_e1e2_e2e3_e3e1 operator * (_e1_e2_e3 a, _e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._6 -= (a._1 * b._3); r._5 += (a._2 * b._3); r._0 += (a._3 * b._3); return r; }
 _e0_e1e2_e2e3_e3e1 operator * (_e1_e2_e3 a, _e1_e2_e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._0 += (a._1 * b._1); r._4 += (a._1 * b._2); r._6 -= (a._1 * b._3); r._4 -= (a._2 * b._1); r._0 += (a._2 * b._2); r._5 += (a._2 * b._3); r._6 += (a._3 * b._1); r._5 -= (a._3 * b._2); r._0 += (a._3 * b._3); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e1e2 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._2 += (a._1 * b._4); r._1 -= (a._2 * b._4); r._7 += (a._3 * b._4); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e2e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._7 += (a._1 * b._5); r._3 += (a._2 * b._5); r._2 -= (a._3 * b._5); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e3e1 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._3 -= (a._1 * b._6); r._7 += (a._2 * b._6); r._1 += (a._3 * b._6); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e1e2 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._2 += (a._1 * b._4); r._1 -= (a._2 * b._4); r._7 += (a._3 * b._4); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e2e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._7 += (a._1 * b._5); r._3 += (a._2 * b._5); r._2 -= (a._3 * b._5); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e3e1 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._3 -= (a._1 * b._6); r._7 += (a._2 * b._6); r._1 += (a._3 * b._6); return r; }
 _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e0_e1e2_e2e3_e3e1 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._1 += (a._1 * b._0); r._2 += (a._1 * b._4); r._7 += (a._1 * b._5); r._3 -= (a._1 * b._6); r._2 += (a._2 * b._0); r._1 -= (a._2 * b._4); r._3 += (a._2 * b._5); r._7 += (a._2 * b._6); r._3 += (a._3 * b._0); r._7 += (a._3 * b._4); r._2 -= (a._3 * b._5); r._1 += (a._3 * b._6); return r; }
-// _e0_e1e2_e2e3_e3e1 operator * (_e1_e2_e3 a, _e1e2e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._5 += (a._1 * b._7); r._6 += (a._2 * b._7); r._4 += (a._3 * b._7); return r; }
+_e0_e1e2_e2e3_e3e1 operator * (_e1_e2_e3 a, _e1e2e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._5 += (a._1 * b._7); r._6 += (a._2 * b._7); r._4 += (a._3 * b._7); return r; }
 // _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1_e2_e3 a, _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._1 += (a._1 * b._0); r._0 += (a._1 * b._1); r._4 += (a._1 * b._2); r._6 -= (a._1 * b._3); r._2 += (a._1 * b._4); r._7 += (a._1 * b._5); r._3 -= (a._1 * b._6); r._5 += (a._1 * b._7); r._2 += (a._2 * b._0); r._4 -= (a._2 * b._1); r._0 += (a._2 * b._2); r._5 += (a._2 * b._3); r._1 -= (a._2 * b._4); r._3 += (a._2 * b._5); r._7 += (a._2 * b._6); r._6 += (a._2 * b._7); r._3 += (a._3 * b._0); r._6 += (a._3 * b._1); r._5 -= (a._3 * b._2); r._0 += (a._3 * b._3); r._7 += (a._3 * b._4); r._2 -= (a._3 * b._5); r._1 += (a._3 * b._6); r._4 += (a._3 * b._7); return r; }
 
 // _e1e2 operator * (_e1e2 a, float32 b) { _e1e2 r = {}; r._4 += (a._4 * b); return r; }
 // _e2 operator * (_e1e2 a, _e1 b) { _e2 r = {}; r._2 -= (a._4 * b._1); return r; }
 // _e1 operator * (_e1e2 a, _e2 b) { _e1 r = {}; r._1 += (a._4 * b._2); return r; }
 // _e1e2e3 operator * (_e1e2 a, _e3 b) { _e1e2e3 r = {}; r._7 += (a._4 * b._3); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1e2 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._2 -= (a._4 * b._1); r._1 += (a._4 * b._2); r._7 += (a._4 * b._3); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e1e2 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._2 -= (a._4 * b._1); r._1 += (a._4 * b._2); r._7 += (a._4 * b._3); return r; }
 float32 operator * (_e1e2 a, _e1e2 b) { float32 r = 0.f; r -= (a._4 * b._4); return r; }
 _e3e1 operator * (_e1e2 a, _e2e3 b) { _e3e1 r = {}; r._6 -= (a._4 * b._5); return r; }
 _e2e3 operator * (_e1e2 a, _e3e1 b) { _e2e3 r = {}; r._5 += (a._4 * b._6); return r; }
@@ -561,7 +561,7 @@ _e2e3 operator * (_e1e2 a, _e3e1 b) { _e2e3 r = {}; r._5 += (a._4 * b._6); retur
 // _e1e2e3 operator * (_e2e3 a, _e1 b) { _e1e2e3 r = {}; r._7 += (a._5 * b._1); return r; }
 // _e3 operator * (_e2e3 a, _e2 b) { _e3 r = {}; r._3 -= (a._5 * b._2); return r; }
 // _e2 operator * (_e2e3 a, _e3 b) { _e2 r = {}; r._2 += (a._5 * b._3); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e2e3 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._7 += (a._5 * b._1); r._3 -= (a._5 * b._2); r._2 += (a._5 * b._3); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e2e3 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._7 += (a._5 * b._1); r._3 -= (a._5 * b._2); r._2 += (a._5 * b._3); return r; }
 _e3e1 operator * (_e2e3 a, _e1e2 b) { _e3e1 r = {}; r._6 += (a._5 * b._4); return r; }
 float32 operator * (_e2e3 a, _e2e3 b) { float32 r = 0.f; r -= (a._5 * b._5); return r; }
 _e1e2 operator * (_e2e3 a, _e3e1 b) { _e1e2 r = {}; r._4 -= (a._5 * b._6); return r; }
@@ -573,7 +573,7 @@ _e1e2 operator * (_e2e3 a, _e3e1 b) { _e1e2 r = {}; r._4 -= (a._5 * b._6); retur
 // _e3 operator * (_e3e1 a, _e1 b) { _e3 r = {}; r._3 += (a._6 * b._1); return r; }
 // _e1e2e3 operator * (_e3e1 a, _e2 b) { _e1e2e3 r = {}; r._7 += (a._6 * b._2); return r; }
 // _e1 operator * (_e3e1 a, _e3 b) { _e1 r = {}; r._1 -= (a._6 * b._3); return r; }
-// _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e3e1 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._3 += (a._6 * b._1); r._7 += (a._6 * b._2); r._1 -= (a._6 * b._3); return r; }
+_e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e3e1 a, _e1_e2_e3 b) { _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 r = {}; r._3 += (a._6 * b._1); r._7 += (a._6 * b._2); r._1 -= (a._6 * b._3); return r; }
 _e2e3 operator * (_e3e1 a, _e1e2 b) { _e2e3 r = {}; r._5 -= (a._6 * b._4); return r; }
 _e1e2 operator * (_e3e1 a, _e2e3 b) { _e1e2 r = {}; r._4 += (a._6 * b._5); return r; }
 float32 operator * (_e3e1 a, _e3e1 b) { float32 r = 0.f; r -= (a._6 * b._6); return r; }
@@ -597,7 +597,7 @@ _e0_e1_e2_e3_e1e2_e2e3_e3e1_e1e2e3 operator * (_e0_e1e2_e2e3_e3e1 a, _e1_e2_e3 b
 // _e2e3 operator * (_e1e2e3 a, _e1 b) { _e2e3 r = {}; r._5 += (a._7 * b._1); return r; }
 // _e3e1 operator * (_e1e2e3 a, _e2 b) { _e3e1 r = {}; r._6 += (a._7 * b._2); return r; }
 // _e1e2 operator * (_e1e2e3 a, _e3 b) { _e1e2 r = {}; r._4 += (a._7 * b._3); return r; }
-// _e0_e1e2_e2e3_e3e1 operator * (_e1e2e3 a, _e1_e2_e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._5 += (a._7 * b._1); r._6 += (a._7 * b._2); r._4 += (a._7 * b._3); return r; }
+_e0_e1e2_e2e3_e3e1 operator * (_e1e2e3 a, _e1_e2_e3 b) { _e0_e1e2_e2e3_e3e1 r = {}; r._5 += (a._7 * b._1); r._6 += (a._7 * b._2); r._4 += (a._7 * b._3); return r; }
 // _e3 operator * (_e1e2e3 a, _e1e2 b) { _e3 r = {}; r._3 -= (a._7 * b._4); return r; }
 // _e1 operator * (_e1e2e3 a, _e2e3 b) { _e1 r = {}; r._1 -= (a._7 * b._5); return r; }
 // _e2 operator * (_e1e2e3 a, _e3e1 b) { _e2 r = {}; r._2 -= (a._7 * b._6); return r; }

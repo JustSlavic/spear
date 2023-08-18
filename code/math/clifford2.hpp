@@ -5,6 +5,33 @@
 
 namespace g2 {
 
+
+//
+//              There are 4 types of products:
+//
+//  inner product:  A_r inner B_s = <A_r, B_s>_|r-s|
+//  outer product:  A_r outer B_s = <A_r, B_s>_(r+s)
+//  commutator product: A_r commu B_s = ...???
+//  scalar product: A_r scalar B_s = <A_r, B_s>_0
+//  left  contraction: A_r l_cont B_s = <A_r, B_s>_(s-r)
+//  right contraction: A_r r_cont B_s = <A_r, B_s>_(r-s)
+//  join:
+//  meet:
+//
+//  reversion: reversion of the blade A_r is the blade obtained
+//             by writing its vector factors in the reverse order
+//
+//             reversion(A_r) = (-1)^{r(r-1)/2} A_r
+//
+//  grade involution: reverses the grade of the odd-grade blades
+//
+//             involution(A_r) = (-1)^r A_r
+//
+//
+
+
+// Real numbers
+typedef float32 _e0;
 // Basis elements
 struct _e1 { float32 _1; };
 struct _e2 { float32 _2; };
@@ -103,18 +130,18 @@ static _e1e2 e1e2 = []{ _e1e2 r; r._3 = 1.f; return r; }();
 static _e1e2 I = []{ _e1e2 r; r._3 = 1.f; return r; }();
 
 // Type aliases
-typedef float32  real;
-typedef _e1_e2   vector;
-typedef _e0_e1e2 complex;
-typedef _e0_e1_e2_e1e2 g2;
+typedef _e0            real;
+typedef _e1_e2         vector;
+typedef _e0_e1e2       complex;
+typedef _e0_e1_e2_e1e2 multivector;
 
 #define G2_V2(E1, E2) ::g2::vector{E1, E2}
 #define G2_C(E0, E3) ::g2::complex{E0, E3}
 #define G2(E0, E1, E2, E3) ::g2::_e0_e1_e2_e1e2{E0, E1, E2, E3}
 
-#include "g2_operators.hpp"
-
 // Functions
+
+#include "g2_operators.hpp"
 
 vector make_vector(float32 value)
 {
@@ -154,7 +181,7 @@ complex to_complex(vector a)
     return result;
 }
 
-complex to_complex(g2 a)
+complex to_complex(multivector a)
 {
     complex result;
     result._0 = a._0;
@@ -168,7 +195,7 @@ vector to_vector(complex a)
     return result;
 }
 
-vector to_vector(g2 a)
+vector to_vector(multivector a)
 {
     vector result;
     result.x = a.x;
@@ -180,7 +207,7 @@ FORCE_INLINE complex operator / (float32 c, complex b)
 {
     // c / (x + iy)
     // c * (x - iy) / (xx + yy)
-    complex result = (c * conjugate(b)) / length_squared(b);
+    complex result = (c * conjugated(b)) / length_squared(b);
     return result;
 }
 
@@ -188,7 +215,7 @@ FORCE_INLINE complex operator / (complex a, complex b)
 {
     // (x + iy) / (r + is)
     // (x + iy)(r - is) / (rr + ss)
-    complex result = (a * conjugate(b)) / length_squared(b);
+    complex result = (a * conjugated(b)) / length_squared(b);
     return result;
 }
 

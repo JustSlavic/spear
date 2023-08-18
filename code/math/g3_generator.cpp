@@ -811,6 +811,75 @@ void output_normalized_functions(FILE *output)
     fprintf(output, "\n");
 }
 
+void output_operators(FILE *output)
+{
+    for (int i = 0; i < 11; i++)
+    {
+        for (int j = 0; j < 11; j++)
+        {
+            if (i == 0 && j == 0) continue; // Exclude f(float, float)
+
+            // linear combination
+            unsigned int lhs_lc = valid[i];
+            unsigned int rhs_lc = valid[j];
+            unsigned int result_lc = valid[i] | valid[j];
+            result_lc = minimal_uber_space(result_lc);
+
+            if (result_lc == 0xff) continue;
+
+            print_g(output, result_lc);
+            fprintf(output, " operator %s (", "+");
+            print_g(output, lhs_lc);
+            fprintf(output, " a, ");
+            print_g(output, rhs_lc);
+            fprintf(output, " b) { ");
+            print_g(output, result_lc);
+            fprintf(output, " r;");
+
+            int p = 1;
+            for (int k = 0; k < 8; k++)
+            {
+                bases b = (bases) p;
+                if (has(result_lc, b))
+                {
+                    fprintf(output, " r");
+                    if (result_lc != G_E0) fprintf(output, "._%d", k);
+                    fprintf(output, " = ");
+
+                    if (has(lhs_lc, b) && has(rhs_lc, b))
+                    {
+                        fprintf(output, "a");
+                        if (lhs_lc != G_E0) fprintf(output, "._%d", k);
+
+                        fprintf(output, " %s b", "+");
+                        if (rhs_lc != G_E0) fprintf(output, "._%d", k);
+                        fprintf(output, ";");
+                    }
+                    else if (has(lhs_lc, b) && !has(rhs_lc, b))
+                    {
+                        fprintf(output, "a");
+                        if (lhs_lc != G_E0) fprintf(output, "._%d", k);
+                        fprintf(output, ";");
+                    }
+                    else if (!has(lhs_lc, b) && has(rhs_lc, b))
+                    {
+                        fprintf(output, "b");
+                        if (rhs_lc != G_E0) fprintf(output, "._%d", k);
+                        fprintf(output, ";");
+                    }
+                    else
+                    {
+                        fprintf(output, "0.f;");
+                    }
+                }
+                p = (p << 1);
+            }
+            fprintf(output, " return r; }\n");
+        }
+        fprintf(output, "\n");
+    }
+}
+
 int main()
 {
     FILE *f = fopen("g3_operators.cpp", "w+");
@@ -830,6 +899,8 @@ int main()
     output_length_functions(f);
     output_normalize_functions(f);
     output_normalized_functions(f);
+
+    output_operators(stdout);
 
     fclose(f);
 
