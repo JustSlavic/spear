@@ -19,11 +19,13 @@ struct array
 
     Type& operator[] (usize index)
     {
+        ASSERT(index < size_);
         return data_[index];
     }
 
     Type const& operator[] (usize index) const
     {
+        ASSERT(index < size_);
         return data_[index];
     }
 

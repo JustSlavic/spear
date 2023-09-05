@@ -204,11 +204,12 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     }
 
     {
-        // memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
-        // auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
-        // UNUSED(bitmap);
+        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
+        auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
+        UNUSED(bitmap);
     }
 
+    return;
     // UI
     {
         auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));

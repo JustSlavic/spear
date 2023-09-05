@@ -375,11 +375,22 @@ void uniform(shader s, char const *name, math::matrix4 const& m)
     glUniformMatrix4fv(location, 1, GL_FALSE, m.data());
     GL_CHECK_ERRORS();
 }
-
+#define osOutputDebugString(MSG, ...) \
+{  \
+    char OutputBuffer_##__LINE__[256]; \
+    sprintf(OutputBuffer_##__LINE__, MSG, __VA_ARGS__); \
+    OutputDebugStringA(OutputBuffer_##__LINE__); \
+} void(0)
 void set_viewport(viewport vp)
 {
     glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
     GL_CHECK_ERRORS();
+
+    osOutputDebugString("#define GL_BLUE 0x%x\n", GL_BLUE);
+    osOutputDebugString("#define GL_GREEN 0x%x\n", GL_GREEN);
+    osOutputDebugString("#define GL_RED 0x%x\n", GL_RED);
+    osOutputDebugString("#define GL_ONE 0x%x\n", GL_ONE);
+    osOutputDebugString("#define GL_RGB 0x%x\n", GL_RGB);
 }
 
 uint32 create_texture(image::bitmap bitmap)

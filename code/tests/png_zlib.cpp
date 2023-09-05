@@ -4,51 +4,64 @@
 
 TEST(BitFetcher)
 {
-    // 16 bits
-    {
-        uint8 data[] = {
-            0x35,
-            0x35,
-            0x8f,
-            0x88,
-            0x7c,
-            0xd7,
-            0xfb,
-            0x4d,
-            0xb2,
-            0xd8,
-            0xec,
-            0xe6,
-            0xdc,
-            0x3b,
-            0x77,
-        };
+    uint8 data[] = {
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+        0xaa,
+    };
 
-        zlib::decoder decoder;
-        decoder.input_stream = memory_block{ data, sizeof(data) };
-        decoder.input_cursor = (uint8 *) decoder.input_stream.memory;
+    zlib::decoder decoder;
+    decoder.input = zlib::create_stream(data, sizeof(data));
 
-        decoder.bits = 0;
-        decoder.bits_available = 0;
+    decoder.bits = 0;
+    decoder.bits_available = 0;
 
-        for (int i = 0; i < sizeof(data); i++)
-        {
-            uint32 bits = 0;
-            uint32 shift = 0;
+    uint32 bits;
 
-            for (int j = 0; j < 4; j++)
-            {
-                uint32 bit = get_bits(&decoder, 2);
+    bits = get_bits(&decoder, 1);
+    TEST_ASSERT_EQ(bits, 0b0);
 
-                bits = bits | ((bit & 1) << shift++);
-                bit >>= 1;
-                bits = bits | ((bit & 1) << shift++);
-            }
+    bits = get_bits(&decoder, 2);
+    TEST_ASSERT_EQ(bits, 0b01);
 
-            printf("0x%x ", bits);
-        }
-        printf("\n");
-    }
+    bits = get_bits(&decoder, 3);
+    TEST_ASSERT_EQ(bits, 0b101);
+
+    bits = get_bits(&decoder, 4);
+    TEST_ASSERT_EQ(bits, 0b1010);
+
+    bits = get_bits(&decoder, 5);
+    TEST_ASSERT_EQ(bits, 0b01010);
+
+    bits = get_bits(&decoder, 6);
+    TEST_ASSERT_EQ(bits, 0b010101);
+
+    bits = get_bits(&decoder, 7);
+    TEST_ASSERT_EQ(bits, 0b1010101);
+
+    bits = get_bits(&decoder, 8);
+    TEST_ASSERT_EQ(bits, 0b10101010);
+
+    bits = get_bits(&decoder, 9);
+    TEST_ASSERT_EQ(bits, 0b010101010);
+
+    bits = get_bits(&decoder, 10);
+    TEST_ASSERT_EQ(bits, 0b0101010101);
+
+    bits = get_bits(&decoder, 11);
+    TEST_ASSERT_EQ(bits, 0b10101010101);
 }
 
 
