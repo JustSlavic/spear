@@ -8,11 +8,11 @@
 // PNG (Portable Network Graphics) Specification, Version 1.2
 //   http://www.libpng.org/pub/png/spec/1.2/PNG-Contents.html
 //
-// DEFLATE Compressed Data Format Specification version 1.3:
-//   https://www.ietf.org/rfc/rfc1951.txt
-//
 // ZLIB Compressed Data Format Specification version 3.3
 //   https://www.ietf.org/rfc/rfc1950.txt
+//
+// DEFLATE Compressed Data Format Specification version 1.3:
+//   https://www.ietf.org/rfc/rfc1951.txt
 //
 
 
@@ -103,6 +103,23 @@ GLOBAL uint32 DIST_extras[] = {
     4, 4,  5,  5,  6,  6,  7,  7,  8,  8,
     9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
 };
+// Static Huffman code lengths
+GLOBAL const uint32 fixed_litlen_lenghts[] =
+{
+   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+   8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+   9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+   7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
+};
+GLOBAL const uint32 fixed_dist_lengths[32] =
+{
+   5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+};
 
 
 namespace png {
@@ -153,8 +170,6 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
 
         png__chunk_header chunk_header = *PNG_CONSUME_STRUCT(data, png__chunk_header);
         chunk_header.size_of_data = change_endianness(chunk_header.size_of_data);
-
-        osOutputDebugString("%.*s (%u bytes):\n", 4, (char const *) &chunk_header.type, chunk_header.size_of_data);
 
         auto chunk_type_size = sizeof(chunk_header.type);
         png::crc_t computed_crc = change_endianness(compute_crc(data - chunk_type_size, chunk_header.size_of_data + chunk_type_size));
@@ -291,7 +306,7 @@ bool32 operator != (huffman_entry a, huffman_entry b)
 
 
 array<huffman_entry> compute_huffman(memory::allocator *temporary_allocator,
-                                     uint32 *code_lengths,
+                                     uint32 const *code_lengths,
                                      usize code_lengths_count);
 uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
 {
@@ -418,18 +433,16 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
             if (BTYPE == 1)
             {
                 // Compressed with fixed Huffman code
+                litlen_huffman = compute_huffman(temporary_allocator, fixed_litlen_lenghts, ARRAY_COUNT(fixed_litlen_lenghts));
+                dist_huffman = compute_huffman(temporary_allocator, fixed_dist_lengths, ARRAY_COUNT(fixed_dist_lengths));
             }
             if (BTYPE == 2)
             {
                 // Compressed with dynamic Huffman code
 
-                uint32 HLIT = get_bits(decoder, 5);
-                uint32 HDIST = get_bits(decoder, 5);
-                uint32 HCLEN = get_bits(decoder, 4);
-
-                uint32 number_of_LITLEN_codes = HLIT + 257;
-                uint32 number_of_DIST_codes = HDIST + 1;
-                uint32 number_of_code_length_codes = HCLEN + 4;
+                uint32 HLIT = get_bits(decoder, 5) + 257;
+                uint32 HDIST = get_bits(decoder, 5) + 1;
+                uint32 HCLEN = get_bits(decoder, 4) + 4;
 
                 uint32 code_lengths_swizzle[] =
                 {
@@ -437,55 +450,49 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
                 };
                 uint32 CLEN_code_lengths[ARRAY_COUNT(code_lengths_swizzle)] = {};
 
-                for (int i = 0; i < ARRAY_COUNT(CLEN_code_lengths); i++)
+                for (uint32 i = 0; i < HCLEN; i++)
                 {
                     CLEN_code_lengths[code_lengths_swizzle[i]] = get_bits(decoder, 3);
                 }
 
                 auto clen_huffman = compute_huffman(temporary_allocator, CLEN_code_lengths, ARRAY_COUNT(CLEN_code_lengths));
 
-                auto LITLEN_DIST_code_lengths = ALLOCATE_ARRAY_OPEN(temporary_allocator, uint32, number_of_LITLEN_codes + number_of_DIST_codes);
+                auto LITLEN_DIST_code_lengths = ALLOCATE_ARRAY_OPEN(temporary_allocator, uint32, HLIT + HDIST);
 
                 uint32 index = 0;
-                while (index < number_of_LITLEN_codes + number_of_DIST_codes)
+                while (index < HLIT + HDIST)
                 {
                     uint32 symbol = decode_huffman(decoder, clen_huffman);
                     if (symbol < 16)
                     {
-                        osOutputDebugString("LITLEN_DIST_code_length[%d] = %d;\n", index, symbol);
                         LITLEN_DIST_code_lengths[index++] = symbol;
                     }
-                    else if (symbol == 16)
+                    else
                     {
-                        auto repeat_value = LITLEN_DIST_code_lengths[index - 1];
-                        auto repeat_length = zlib::get_bits(decoder, 2) + 3;
+                        uint32 repeat_value = 0;
+                        uint32 repeat_length = 0;
+                        if (symbol == 16)
+                        {
+                            repeat_value = LITLEN_DIST_code_lengths[index - 1];
+                            repeat_length = zlib::get_bits(decoder, 2) + 3;
+                        }
+                        else if (symbol == 17)
+                        {
+                            repeat_length = zlib::get_bits(decoder, 3) + 3;
+                        }
+                        else if (symbol == 18)
+                        {
+                            repeat_length = zlib::get_bits(decoder, 7) + 11;
+                        }
+
                         for (uint32 repeat = 0; repeat < repeat_length; repeat++)
                         {
-                            osOutputDebugString("LITLEN_DIST_code_length[%d] = %d;\n", index, repeat_value);
                             LITLEN_DIST_code_lengths[index++] = repeat_value;
                         }
                     }
-                    else if (symbol == 17)
-                    {
-                        auto repeat_length = zlib::get_bits(decoder, 3) + 3;
-                        for (uint32 repeat = 0; repeat < repeat_length; repeat++)
-                        {
-                            osOutputDebugString("LITLEN_DIST_code_length[%d] = %d;\n", index, 0);
-                            LITLEN_DIST_code_lengths[index++] = 0;
-                        }
-                    }
-                    else if (symbol == 18)
-                    {
-                        auto repeat_length = zlib::get_bits(decoder, 7) + 11;
-                        for (uint32 repeat = 0; repeat < repeat_length; repeat++)
-                        {
-                            osOutputDebugString("LITLEN_DIST_code_length[%d] = %d;\n", index, 0);
-                            LITLEN_DIST_code_lengths[index++] = 0;
-                        }
-                    }
                 }
-                litlen_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data(), number_of_LITLEN_codes);
-                dist_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data() + number_of_LITLEN_codes, number_of_DIST_codes);
+                litlen_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data(), HLIT);
+                dist_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data() + HLIT, HDIST);
             }
 
             while (true)
@@ -514,6 +521,14 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
                     auto DIST = DIST_bases[DIST_index];
                     if (DIST_extras[DIST_index]) DIST += zlib::get_bits(decoder, DIST_extras[DIST_index]);
                     osOutputDebugString("DIST = %d\n", DIST);
+
+                    uint8 *repeat_cursor = decoder->output.cursor - DIST;
+                    for (uint32 repeat = 0; repeat < LEN; repeat++)
+                    {
+                        *(decoder->output.cursor) = *repeat_cursor;
+                        decoder->output.cursor += 1;
+                        repeat_cursor += 1;
+                    }
                 }
                 else
                 {
@@ -545,7 +560,7 @@ uint32 reverse_bits(uint32 t, uint32 n)
 }
 
 
-array<huffman_entry> compute_huffman(memory::allocator *a, uint32 *code_lengths, usize code_lengths_count)
+array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_lengths, usize code_lengths_count)
 {
     auto bl_count = ALLOCATE_ARRAY_OPEN(a, uint32, 18);
     auto next_code = ALLOCATE_ARRAY_OPEN(a, uint32, 16);
