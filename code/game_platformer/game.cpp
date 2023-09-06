@@ -199,12 +199,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // Load texture
     {
-        // memory_block file_content = context->debug_load_file(&context->temporary_allocator, "IMG_1308.bmp");
-        // gs->reference_texture = rs::create_texture_resource(&context->resource_storage, file_content);
-    }
-
-    {
-        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
+        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "white.png");
         auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
         gs->reference_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
     }

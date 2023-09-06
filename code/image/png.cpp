@@ -50,7 +50,7 @@ enum png__rendering_intent : uint8 {
     PNG_ABSOLUTE_COLORIMETRIC = 3,
 };
 
-enum png_interlace_method : uint8 {
+enum png__interlace_method : uint8 {
     PNG_INTERLACE_NONE  = 0,
     PNG_INTERLACE_ADAM7 = 1,
 };
