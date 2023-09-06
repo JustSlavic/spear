@@ -55,7 +55,14 @@ enum png_interlace_method : uint8 {
     PNG_INTERLACE_ADAM7 = 1,
 };
 
-#define PNG_DEFLATE_MAX_BITS 16
+enum png__filter_method : uint8 {
+    PNG_FILTER_NONE    = 0,
+    PNG_FILTER_SUB     = 1,
+    PNG_FILTER_UP      = 2,
+    PNG_FILTER_AVERAGE = 3,
+    PNG_FILTER_PAETH   = 4,
+};
+
 #define PNG_MAGIC_NUMBER(a, b, c, d) ((((uint32)a) << 0) | (((uint32)b) << 8) | (((uint32)c) << 16) | (((uint32)d) << 24))
 
 enum {
@@ -124,13 +131,27 @@ GLOBAL const uint32 fixed_dist_lengths[32] =
 
 namespace png {
 
+using crc_t = uint32;
+
 void *consume_memory(uint8 **data, usize size) {
     void *result = *data;
     *data += size;
     return result;
 }
 
-using crc_t = uint32;
+int paeth_predictor(int a, int b, int c)
+{
+    // a - left, b - above, c - upper left
+    int p = a + b - c; // initial estimate
+    int pa = math::absolute(p - a); // distances to a, b, c
+    int pb = math::absolute(p - b);
+    int pc = math::absolute(p - c);
+    // return nearest of a, b, c,
+    // breaking ties in order a, b, c.
+    if ((pa <= pb) && (pa <= pc)) return a;
+    else if (pb <= pc) return b;
+    else return c;
+}
 
 } // namespace png
 
@@ -152,8 +173,10 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
         return result;
     }
 
+    png__ihdr_header *ihdr;
     png__rendering_intent *rendering_intent;
     float64 gamma = 0.f;
+
     zlib::decoder decoder = {};
 
     bool32 is_end = false;
@@ -176,7 +199,7 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
 
         if (chunk_header.type == PNG_IHDR_ID)
         {
-            png__ihdr_header *ihdr = PNG_CONSUME_STRUCT(data, png__ihdr_header);
+            ihdr = PNG_CONSUME_STRUCT(data, png__ihdr_header);
 
             // @note: Only compression method 0 (deflate/inflate compression with
             // a sliding window of at most 32768 bytes) is defined.
@@ -229,10 +252,9 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
 
             result.width  = change_endianness(ihdr->width);
             result.height = change_endianness(ihdr->height);
-            result.size = result.width * result.height * (result.bits_per_pixel / 8);
-            result.pixels = (uint8 *) ALLOCATE_BUFFER_(allocator, result.size);
-
-            osOutputDebugString("image: %dx%d %d bits per pixel\n", result.width, result.height, result.bits_per_pixel);
+            // @note additional + height for filter types at the start of each scanline
+            result.size = result.width * result.height * (result.bits_per_pixel / 8) + result.height;
+            result.pixels = (uint8 *) ALLOCATE_BUFFER_ALIGNED(allocator, result.size, alignof(uint32));
 
             decoder.output = zlib::create_stream(result.pixels, result.size);
         }
@@ -285,6 +307,72 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
         {
             // @todo: handle invalid CRC !!!
             return {};
+        }
+    }
+
+    // Defilter the image
+    {
+        uint8 *input_stream = result.pixels;
+        uint8 *output_stream = result.pixels;
+        uint32 bytes_per_pixel = result.bits_per_pixel / 8;
+
+        for (uint32 y = 0; y < result.height; y++)
+        {
+            auto filter_method = (png__filter_method) *input_stream++;
+            bool first_scanline = (y == 0);
+            if (filter_method == PNG_FILTER_NONE)
+            {
+                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                {
+                    *output_stream++ = *input_stream++;
+                }
+            }
+            else if (filter_method == PNG_FILTER_SUB)
+            {
+                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                {
+                    int prev_on_scanline = x - bytes_per_pixel;
+                    uint8 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
+                    *output_stream++ = *input_stream++ + left;
+                }
+            }
+            else if (filter_method == PNG_FILTER_UP)
+            {
+                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                {
+                    uint8 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
+                    *output_stream++ = *input_stream++ + upper;
+                }
+            }
+            else if (filter_method == PNG_FILTER_AVERAGE)
+            {
+                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                {
+                    int prev_on_scanline = x - bytes_per_pixel;
+                    uint32 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
+                    uint32 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
+                    uint32 average = (left + upper) >> 1;
+                    *output_stream++ = (uint8) (*input_stream++ + average);
+                }
+            }
+            else if (filter_method == PNG_FILTER_PAETH)
+            {
+                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                {
+                    int prev_on_scanline = x - bytes_per_pixel;
+
+                    uint8 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
+                    uint8 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
+                    uint8 upper_left = (prev_on_scanline < 0) || first_scanline ? 0 :
+                        *(output_stream - (result.width * bytes_per_pixel) - bytes_per_pixel);
+
+                    *output_stream++ = *input_stream++ + (uint8) png::paeth_predictor(left, upper, upper_left);
+                }
+            }
+            else
+            {
+                ASSERT_FAIL();
+            }
         }
     }
 
@@ -365,10 +453,6 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
         uint8 FDICT  = (0x20 & FLG) >> 5;
         uint8 FLEVEL = (0xC0 & FLG) >> 6;
 
-        osOutputDebugString("    FCHECK = %d\n", FCHECK);
-        osOutputDebugString("    FDICT  = %d\n", FDICT );
-        osOutputDebugString("    FLEVEL = %d\n", FLEVEL);
-
         if (((CMF * 256 + FLG) % 31) != 0)
         {
             // The FCHECK value must be such that CMF and FLG, when viewed as
@@ -399,9 +483,6 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
     {
         BFINAL = (uint8) get_bits(decoder, 1); // ((*zlib_data) & 0b0000'0001);
         BTYPE  = (uint8) get_bits(decoder, 2); // ((*zlib_data) & 0b0000'0110) >> 1;
-
-        osOutputDebugString("    BFINAL = %d\n", BFINAL);
-        osOutputDebugString("    BTYPE  = %d\n", BTYPE);
 
         if (BTYPE == 0)
         {
@@ -503,11 +584,9 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
                     // Copy value (literal byte) to output stream
                     *(decoder->output.cursor) = (uint8) LITLEN;
                     decoder->output.cursor += 1;
-                    osOutputDebugString("LIT = %d\n", LITLEN);
                 }
                 else if (LITLEN == 256) // End of block
                 {
-                    osOutputDebugString("End of block.\n");
                     break;
                 }
                 else if (LITLEN < 286)
@@ -515,12 +594,10 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
                     auto LEN_index = LITLEN - 257;
                     auto LEN = LEN_bases[LEN_index];
                     if (LEN_extras[LEN_index]) LEN += zlib::get_bits(decoder, LEN_extras[LEN_index]);
-                    osOutputDebugString("LEN = %d\n", LEN);
 
                     uint32 DIST_index = decode_huffman(decoder, dist_huffman);
                     auto DIST = DIST_bases[DIST_index];
                     if (DIST_extras[DIST_index]) DIST += zlib::get_bits(decoder, DIST_extras[DIST_index]);
-                    osOutputDebugString("DIST = %d\n", DIST);
 
                     uint8 *repeat_cursor = decoder->output.cursor - DIST;
                     for (uint32 repeat = 0; repeat < LEN; repeat++)
@@ -562,7 +639,7 @@ uint32 reverse_bits(uint32 t, uint32 n)
 
 array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_lengths, usize code_lengths_count)
 {
-    auto bl_count = ALLOCATE_ARRAY_OPEN(a, uint32, 18);
+    auto bl_count = ALLOCATE_ARRAY_OPEN(a, uint32, 17);
     auto next_code = ALLOCATE_ARRAY_OPEN(a, uint32, 16);
     struct huffman_table_entry
     {
@@ -586,7 +663,7 @@ array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_le
     {
         uint32 code = 0;
         bl_count[0] = 0;
-        for (int bits = 1; bits < PNG_DEFLATE_MAX_BITS; bits++)
+        for (int bits = 1; bits < 16; bits++)
         {
             code = (code + bl_count[bits-1]) << 1;
             next_code[bits] = code;
@@ -599,13 +676,11 @@ array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_le
     // (which have a bit length of zero) must not be assigned a
     // value.
     {
-        osOutputDebugString("===================== huffman ================== \n");
         for (int symbol = 0; symbol < code_lengths_count; symbol++)
         {
             auto len = code_lengths[symbol];
             if (len > 0)
             {
-                osOutputDebugString("symbol = %d; code = %d; code_length = %d;\n", symbol, next_code[len], len);
                 huffman_table[symbol].symbol = symbol;
                 huffman_table[symbol].code_length = len;
                 huffman_table[symbol].code = next_code[len]++;

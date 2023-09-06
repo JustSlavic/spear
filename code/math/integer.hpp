@@ -96,4 +96,21 @@ uint64 change_endianness(uint64 n) {
 }
 
 
+namespace math {
+
+int32 absolute(int32 x)
+{
+    int32 result = x < 0 ? -x : x;
+    return result;
+}
+
+int64 absolute(int64 x)
+{
+    int64 result = x < 0 ? -x : x;
+    return result;
+}
+
+}
+
+
 #endif // MATH_INTEGER_HPP

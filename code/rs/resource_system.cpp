@@ -1,7 +1,6 @@
 #include <rs/resource_system.hpp>
 #include <rs/resource_token.hpp>
 #include <rs/resource.hpp>
-#include <image/bmp.hpp>
 
 
 namespace rs {
@@ -53,14 +52,14 @@ resource_token create_shader_resource(resource_storage *storage, string_id name)
     return token;
 }
 
-resource_token create_texture_resource(resource_storage *storage, memory_block image_data)
+resource_token create_texture_resource(resource_storage *storage, image::bitmap texture)
 {
     resource_token token = get_new_resource_token(storage);
     if (token.id)
     {
         resource *r = get_resource(storage, token);
         r->type = rs::resource_type::texture;
-        r->texture.texture = image::load_bmp(&storage->heap, image_data);
+        r->texture.texture = texture;
     }
     return token;
 }

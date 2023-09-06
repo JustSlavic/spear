@@ -407,21 +407,28 @@ uint32 create_texture(image::bitmap bitmap)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     GL_CHECK_ERRORS();
 
-    if (bitmap.color_type == IMAGE_BGR)
+    if (bitmap.color_type == IMAGE_RGBA)
     {
-        int32 swizzle_mask[4];
-        swizzle_mask[0] = GL_BLUE;
-        swizzle_mask[1] = GL_GREEN;
-        swizzle_mask[2] = GL_RED;
-        swizzle_mask[3] = GL_ONE;
-        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    else if (bitmap.color_type == IMAGE_RGB)
+    {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
     }
+    // else if (bitmap.color_type == IMAGE_BGR)
+    // {
+    //     int32 swizzle_mask[4];
+    //     swizzle_mask[0] = GL_BLUE;
+    //     swizzle_mask[1] = GL_GREEN;
+    //     swizzle_mask[2] = GL_RED;
+    //     swizzle_mask[3] = GL_ONE;
+    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+    // }
     else
     {
         ASSERT_FAIL();
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
     GL_CHECK_ERRORS();
 
     return id;

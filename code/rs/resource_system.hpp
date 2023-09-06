@@ -9,6 +9,9 @@
 #include <rs/resource_token.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
 
+#include <image/bitmap.hpp>
+
+
 
 namespace rs {
 
@@ -33,7 +36,7 @@ resource *get_resource(resource_storage *storage, resource_token token);
 resource_token create_null_resource(resource_storage *storage);
 resource_token create_mesh_resource(resource_storage *storage, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl);
 resource_token create_shader_resource(resource_storage *storage, string_id name);
-resource_token create_texture_resource(resource_storage *storage, memory_block image_data);
+resource_token create_texture_resource(resource_storage *storage, image::bitmap);
 
 
 } // namespace rs

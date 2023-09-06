@@ -206,10 +206,9 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     {
         memory_block file_content = context->debug_load_file(&context->temporary_allocator, "pepe.png");
         auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
-        UNUSED(bitmap);
+        gs->reference_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
     }
 
-    return;
     // UI
     {
         auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
@@ -474,6 +473,10 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         cmd.texture_token = gs->reference_texture;
 
         cmd.model = math::matrix4::identity();
+        cmd.model._11 *= 4;
+        cmd.model._22 *= 4;
+        cmd.model._33 *= 4;
+
         push_draw_mesh_with_texture_command(context, cmd);
     }
 
