@@ -129,6 +129,81 @@ GLOBAL const uint32 fixed_dist_lengths[32] =
 };
 
 
+namespace zlib {
+
+struct stream
+{
+    uint8 *memory;
+    usize size;
+
+    uint8 *cursor;
+    uint8 *end_of_stream;
+};
+
+stream create_stream(void *memory, usize size)
+{
+    stream result;
+    result.memory = (uint8 *) memory;
+    result.size = size;
+    result.cursor = (uint8 *) memory;
+    result.end_of_stream = ((uint8 *) memory) + size;
+
+    return result;
+}
+
+struct decoder
+{
+    bool32 initialized;
+
+    stream input;
+    stream output;
+
+    uint32 bits;
+    uint32 bits_available;
+};
+
+uint32 get_bits_unsafe(decoder *z, uint32 n)
+{
+    uint32 result = z->bits & ((1 << n) - 1);
+    z->bits = z->bits >> n;
+    z->bits_available = z->bits_available - n;
+    return result;
+}
+
+void refill_byte(decoder *z)
+{
+    if ((z->bits_available < 24) && (z->input.cursor < z->input.end_of_stream))
+    {
+        uint32 byte = *z->input.cursor++;
+        z->bits = z->bits | (byte << z->bits_available);
+        z->bits_available += 8;
+    }
+}
+
+uint32 get_bits(decoder *z, uint32 requested_bit_count)
+{
+    ASSERT(0 < requested_bit_count && requested_bit_count <= 32);
+
+    while (z->bits_available < requested_bit_count)
+    {
+        refill_byte(z);
+    }
+
+    uint32 result = z->bits & ((1 << requested_bit_count) - 1);
+    z->bits = z->bits >> requested_bit_count;
+    z->bits_available -= requested_bit_count;
+
+    return result;
+}
+
+void skip_byte(decoder *z)
+{
+    get_bits_unsafe(z, z->bits_available % 8);
+}
+
+} // namespace zlib
+
+
 namespace png {
 
 using crc_t = uint32;
@@ -315,63 +390,89 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
         uint8 *input_stream = result.pixels;
         uint8 *output_stream = result.pixels;
         uint32 bytes_per_pixel = result.bits_per_pixel / 8;
+        uint32 stride = result.width * bytes_per_pixel;
 
-        for (uint32 y = 0; y < result.height; y++)
+        // Process first scanline separately, because references to previous scanline result to 0
         {
             auto filter_method = (png__filter_method) *input_stream++;
-            bool first_scanline = (y == 0);
-            if (filter_method == PNG_FILTER_NONE)
+            for (uint32 x = 0; x < bytes_per_pixel; x++)
             {
-                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
-                {
-                    *output_stream++ = *input_stream++;
-                }
+                *output_stream++ = *input_stream++;
             }
-            else if (filter_method == PNG_FILTER_SUB)
+            for (uint32 x = bytes_per_pixel; x < stride; x++)
             {
-                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
+                uint32 additional_value = 0;
+                switch (filter_method)
                 {
-                    int prev_on_scanline = x - bytes_per_pixel;
-                    uint8 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
-                    *output_stream++ = *input_stream++ + left;
+                    case PNG_FILTER_NONE:
+                        break;
+                    case PNG_FILTER_SUB:
+                        additional_value = *(output_stream - bytes_per_pixel);
+                        break;
+                    case PNG_FILTER_UP:
+                        break; // Because first scanline
+                    case PNG_FILTER_AVERAGE:
+                        additional_value = (*(output_stream - bytes_per_pixel)) >> 1;
+                        break;
+                    case PNG_FILTER_PAETH:
+                        additional_value = png::paeth_predictor(*(output_stream - bytes_per_pixel), 0, 0);
+                        break;
+                    default: ASSERT_FAIL();
                 }
+                *output_stream++ = *input_stream++ + (uint8) additional_value;
             }
-            else if (filter_method == PNG_FILTER_UP)
-            {
-                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
-                {
-                    uint8 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
-                    *output_stream++ = *input_stream++ + upper;
-                }
-            }
-            else if (filter_method == PNG_FILTER_AVERAGE)
-            {
-                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
-                {
-                    int prev_on_scanline = x - bytes_per_pixel;
-                    uint32 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
-                    uint32 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
-                    uint32 average = (left + upper) >> 1;
-                    *output_stream++ = (uint8) (*input_stream++ + average);
-                }
-            }
-            else if (filter_method == PNG_FILTER_PAETH)
-            {
-                for (uint32 x = 0; x < result.width * bytes_per_pixel; x++)
-                {
-                    int prev_on_scanline = x - bytes_per_pixel;
+        }
 
-                    uint8 left = prev_on_scanline < 0 ? 0 : *(output_stream - bytes_per_pixel);
-                    uint8 upper = first_scanline ? 0 : *(output_stream - result.width * bytes_per_pixel);
-                    uint8 upper_left = (prev_on_scanline < 0) || first_scanline ? 0 :
-                        *(output_stream - (result.width * bytes_per_pixel) - bytes_per_pixel);
-
-                    *output_stream++ = *input_stream++ + (uint8) png::paeth_predictor(left, upper, upper_left);
-                }
-            }
-            else
+        for (uint32 y = 1; y < result.height; y++)
+        {
+            auto filter_method = (png__filter_method) *input_stream++;
+            for (uint32 x = 0; x < bytes_per_pixel; x++)
             {
-                ASSERT_FAIL();
+                uint32 additional_value = 0;
+                switch (filter_method)
+                {
+                    case PNG_FILTER_NONE:
+                    case PNG_FILTER_SUB:
+                        break;
+                    case PNG_FILTER_UP:
+                        additional_value = *(output_stream - stride);
+                        break;
+                    case PNG_FILTER_AVERAGE:
+                        additional_value = (*(output_stream - stride)) >> 1;
+                        break;
+                    case PNG_FILTER_PAETH:
+                        additional_value = png::paeth_predictor(0, *(output_stream - stride), 0);
+                        break;
+                    default: ASSERT_FAIL();
+                }
+                *output_stream++ = *input_stream++ + (uint8) additional_value;
+            }
+            for (uint32 x = bytes_per_pixel; x < stride; x++)
+            {
+                uint32 additional_value = 0;
+                switch (filter_method)
+                {
+                    case PNG_FILTER_NONE:
+                        break;
+                    case PNG_FILTER_SUB:
+                        additional_value = *(output_stream - bytes_per_pixel);
+                        break;
+                    case PNG_FILTER_UP:
+                        additional_value = *(output_stream - stride);
+                        break;
+                    case PNG_FILTER_AVERAGE:
+                        additional_value = (*(output_stream - bytes_per_pixel) + *(output_stream - stride)) >> 1;
+                        break;
+                    case PNG_FILTER_PAETH:
+                        additional_value =
+                            png::paeth_predictor(
+                                *(output_stream - bytes_per_pixel),
+                                *(output_stream - stride),
+                                *(output_stream - stride - bytes_per_pixel));
+                        break;
+                    default: ASSERT_FAIL();
+                }
+                *output_stream++ = *input_stream++ + (uint8) additional_value;
             }
         }
     }
@@ -504,7 +605,11 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_al
                 return false;
             }
 
-            for (int i = 0; i < LEN; i++) get_bits(decoder, 8);
+            for (int i = 0; i < LEN; i++)
+            {
+                *(decoder->output.cursor) = (uint8) get_bits(decoder, 8);
+                decoder->output.cursor += 1;
+            }
         }
         else if ((BTYPE == 1) || (BTYPE == 2))
         {
