@@ -2,8 +2,6 @@
 #include <math/integer.hpp>
 #include <memory/crc.hpp>
 
-#include <zlib_decoder.hpp>
-
 //
 // PNG (Portable Network Graphics) Specification, Version 1.2
 //   http://www.libpng.org/pub/png/spec/1.2/PNG-Contents.html
