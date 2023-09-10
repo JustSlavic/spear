@@ -1,7 +1,7 @@
 #ifndef GFX_VERTEX_BUFFER_LAYOUT_HPP
 #define GFX_VERTEX_BUFFER_LAYOUT_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace gfx {

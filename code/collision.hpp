@@ -1,7 +1,7 @@
 #ifndef COLLISION_HPP
 #define COLLISION_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 math::vector2 closest_point_on_segment_to_point(math::vector2 a, math::vector2 b, math::vector2 p)

@@ -1,7 +1,7 @@
 #ifndef MATH_COMPLEX_HPP
 #define MATH_COMPLEX_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/float32.hpp>
 
 

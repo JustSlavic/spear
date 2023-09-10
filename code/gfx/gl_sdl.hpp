@@ -1,7 +1,7 @@
 #ifndef GFX_GL_MAC_HPP
 #define GFX_GL_MAC_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace gfx {

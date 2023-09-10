@@ -1,7 +1,7 @@
 #ifndef MATH_CLIFFORD2_HPP
 #define MATH_CLIFFORD2_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 namespace g2 {
 

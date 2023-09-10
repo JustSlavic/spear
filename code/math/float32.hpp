@@ -1,7 +1,7 @@
 #ifndef MATH_FLOAT32_HPP
 #define MATH_FLOAT32_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math.h>
 
 
@@ -42,7 +42,7 @@ int32 round_to_int32(float32 x)
 
 bool32 near_zero(float32 x, float32 eps = EPSILON)
 {
-    bool32 result = (-eps < x) and (x < eps);
+    bool32 result = (-eps < x) && (x < eps);
     return result;
 }
 
@@ -54,7 +54,7 @@ bool32 equal(float32 x, float32 y, float32 eps = EPSILON)
 
 bool32 finite(float32 x)
 {
-    bool32 result = (-infinity < x) and (x < infinity);
+    bool32 result = (-infinity < x) && (x < infinity);
     return result;
 }
 

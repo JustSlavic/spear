@@ -44,7 +44,7 @@ struct editor
 };
 
 
-void update_editor(system *s, editor *e, input_devices *input)
+void update_editor(system *s, editor *e, input_state *input)
 {
 
 }

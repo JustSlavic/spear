@@ -1,7 +1,7 @@
 #ifndef GFX_DX11_HPP
 #define GFX_DX11_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 #include <d3d11.h>
 #include <d3dcompiler.h>

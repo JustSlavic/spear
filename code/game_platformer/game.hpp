@@ -1,7 +1,7 @@
 #ifndef GAME_STATE_HPP
 #define GAME_STATE_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 #include <array.hpp>
 #include <math/integer.hpp>

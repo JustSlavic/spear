@@ -1,7 +1,7 @@
 #ifndef PLATFORM_WIN32_HPP
 #define PLATFORM_WIN32_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <platform.hpp>
 #include <memory/memory.hpp>
 #include <memory/allocator.hpp>

@@ -1,7 +1,7 @@
 #ifndef PLATFORM_HPP
 #define PLATFORM_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace platform {

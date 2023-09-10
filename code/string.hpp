@@ -1,7 +1,7 @@
 #ifndef STRING_HPP
 #define STRING_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 usize size_no0(const char *str)

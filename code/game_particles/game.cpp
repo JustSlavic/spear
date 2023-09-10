@@ -520,7 +520,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 // Arguments:
 // - execution_context *context;
 // - memory_block game_memory;
-// - input_devices input;
+// - input_state input;
 // - float32 dt;
 //
 UPDATE_AND_RENDER_FUNCTION(update_and_render)

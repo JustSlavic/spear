@@ -199,7 +199,7 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // Load texture
     {
-        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "white.png");
+        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "vohiyo.png");
         auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
         gs->reference_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
     }
@@ -369,7 +369,7 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
 // Arguments:
 // - execution_context *context;
 // - memory_block game_memory;
-// - input_devices input;
+// - input_state input;
 //
 UPDATE_AND_RENDER_FUNCTION(update_and_render)
 {

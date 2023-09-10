@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 
-#include <base.hpp>
+#include <base.h>
 #include <time.hpp>
 #include <input.hpp>
 #include <gfx/renderer.hpp>
@@ -14,7 +14,7 @@ GLOBAL uint32 current_client_width;
 GLOBAL uint32 current_client_height;
 
 
-void process_pending_messages(input_devices *input)
+void process_pending_messages(input_state *input)
 {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
@@ -105,7 +105,7 @@ int main()
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    input_devices input = {};
+    input_state input = {};
 
     float32 last_frame_dt = 60.f;
     timepoint last_timepoint;

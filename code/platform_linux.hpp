@@ -1,7 +1,7 @@
 #ifndef PLATFORM_LINUX_HPP
 #define PLATFORM_LINUX_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <memory/memory.hpp>
 #include <memory/allocator.hpp>
 

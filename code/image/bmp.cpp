@@ -51,12 +51,6 @@ struct bmp_color_table
 enum { BMP_SIGNATURE = BMP_MAGIC_NUMBER('B', 'M') };
 
 
-bitmap load_bmp(char const *filename)
-{
-    bitmap result = {};
-    return result;
-}
-
 bitmap load_bmp(memory::allocator *allocator, memory_block raw_data)
 {
     bitmap result = {};

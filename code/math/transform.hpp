@@ -1,7 +1,7 @@
 #ifndef MATH_TRANSFORM_HPP
 #define MATH_TRANSFORM_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector3.hpp>
 #include <math/matrix3.hpp>
 #include <math/matrix4.hpp>

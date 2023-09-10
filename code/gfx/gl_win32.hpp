@@ -1,7 +1,7 @@
 #ifndef GFX_GL_WIN32_HPP
 #define GFX_GL_WIN32_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

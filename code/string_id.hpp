@@ -1,7 +1,7 @@
 #ifndef STRING_ID_HPP
 #define STRING_ID_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <memory/allocator.hpp>
 
 

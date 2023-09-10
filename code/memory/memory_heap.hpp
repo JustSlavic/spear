@@ -1,7 +1,7 @@
 #ifndef MEMORY_MEMORY_HEAP_HPP
 #define MEMORY_MEMORY_HEAP_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include "allocator.hpp"
 
 
@@ -109,7 +109,7 @@ void *heap_allocate(allocator *a, usize requested_size, usize alignment)
         requested_size = sizeof(usize);
 
     auto *header = heap->first_header;
-    loop
+    while (1)
     {
         if (header == heap->last_guard) break;
 

@@ -1,7 +1,7 @@
 #ifndef GFX_RESOURCE_HPP
 #define GFX_RESOURCE_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <gfx/vertex_buffer_layout.hpp>
 #include <image/bitmap.hpp>
 

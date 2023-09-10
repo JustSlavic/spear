@@ -1,7 +1,7 @@
 #ifndef MATH_MATRIX4_HPP
 #define MATH_MATRIX4_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector4.hpp>
 
 
@@ -331,12 +331,15 @@ matrix4 rotated_z(float32 radians, matrix4 m)
 
 void transpose(matrix4& m)
 {
-    swap(m._12, m._21);
-    swap(m._13, m._31);
-    swap(m._14, m._41);
-    swap(m._23, m._32);
-    swap(m._24, m._42);
-    swap(m._34, m._43);
+    float32 tmp;
+#define SWAP_(X, Y) tmp = (X); (X) = (Y); (Y) = tmp;
+    SWAP_(m._12, m._21);
+    SWAP_(m._13, m._31);
+    SWAP_(m._14, m._41);
+    SWAP_(m._23, m._32);
+    SWAP_(m._24, m._42);
+    SWAP_(m._34, m._43);
+#undef SWAP_
 }
 
 matrix4 transposed(matrix4 m)

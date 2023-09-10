@@ -1,7 +1,7 @@
 #ifndef MATH_PLANE_HPP
 #define MATH_PLANE_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace math

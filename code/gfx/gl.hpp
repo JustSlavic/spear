@@ -1,7 +1,7 @@
 #ifndef GFX_GL_HPP
 #define GFX_GL_HPP
 
-#include <base.hpp>
+#include <base.h>
 #if OS_MAC
 #define GL_SILENCE_DEPRECATION
 // #include <OpenGL/gl.h>
@@ -246,7 +246,7 @@ bool32 is_shader_program_valid(uint32 program)
 {
     glValidateProgram(program);
     GL_CHECK_ERRORS();
-    bool32 program_valid;
+    int32 program_valid;
     glGetProgramiv(program, GL_VALIDATE_STATUS, &program_valid);
     GL_CHECK_ERRORS();
 

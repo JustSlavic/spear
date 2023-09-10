@@ -1,7 +1,7 @@
 #ifndef GFX_VIEWPORT_HPP
 #define GFX_VIEWPORT_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace gfx {

@@ -1,7 +1,7 @@
 #ifndef ARRAY_HPP
 #define ARRAY_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 template <typename Type>

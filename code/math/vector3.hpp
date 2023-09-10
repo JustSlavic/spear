@@ -1,7 +1,7 @@
 #ifndef MATH_VECTOR3_HPP
 #define MATH_VECTOR3_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector2.hpp>
 
 

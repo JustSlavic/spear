@@ -1,7 +1,7 @@
 #ifndef MATH_SU2_HPP
 #define MATH_SU2_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/complex.hpp>
 
 namespace math {

@@ -1,7 +1,7 @@
 #ifndef IMAGE_BITMAP_HPP
 #define IMAGE_BITMAP_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 enum color_t : uint32

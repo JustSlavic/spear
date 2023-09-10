@@ -1,7 +1,7 @@
 #ifndef MATH_BIVECTOR_HPP
 #define MATH_BIVECTOR_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector3.hpp>
 
 

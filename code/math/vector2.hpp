@@ -1,7 +1,7 @@
 #ifndef MATH_VECTOR2_HPP
 #define MATH_VECTOR2_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/float32.hpp>
 
 

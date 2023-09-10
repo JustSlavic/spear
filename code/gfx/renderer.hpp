@@ -1,7 +1,7 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector3.hpp>
 #include <math/matrix4.hpp>
 #include <math/rectangle2.hpp>

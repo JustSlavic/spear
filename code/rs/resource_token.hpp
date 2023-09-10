@@ -1,7 +1,7 @@
 #ifndef RESOURCE_TOKEN_HPP
 #define RESOURCE_TOKEN_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace rs {

@@ -1,7 +1,7 @@
 #ifndef MATH_PREDICATES_HPP
 #define MATH_PREDICATES_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 #include <math/vector2.hpp>
 #include <math/vector3.hpp>

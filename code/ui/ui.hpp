@@ -1,7 +1,7 @@
 #ifndef UI_HPP
 #define UI_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <memory/memory.hpp>
 
 #include <array.hpp>
@@ -147,7 +147,7 @@ system *initialize(memory_block ui_memory);
 void set_string_id_storage(system *s, string_id_storage *storage);
 void set_resource_rectangle_mesh(system *s, rs::resource_token mesh);
 void set_resource_rectangle_shader(system *s, rs::resource_token shader);
-void update(system *s, input_devices *input);
+void update(system *s, input_state *input);
 void render(execution_context *context, system *s);
 
 handle make_group(system *s);

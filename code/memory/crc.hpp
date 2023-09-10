@@ -1,7 +1,7 @@
 #ifndef MEMORY_CRC_HPP
 #define MEMORY_CRC_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 //
 // Return the CRC of the bytes buf[0..len-1].

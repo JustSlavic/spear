@@ -1,7 +1,7 @@
 #ifndef MATH_FLOAT64_HPP
 #define MATH_FLOAT64_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math.h>
 
 

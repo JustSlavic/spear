@@ -1,7 +1,7 @@
 #ifndef MATH_MATRIX2_HPP
 #define MATH_MATRIX2_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector2.hpp>
 
 
@@ -179,7 +179,7 @@ matrix2 operator * (matrix2 a, matrix2 b)
 
 void transpose(matrix2& m)
 {
-    swap(m._12, m._21);
+    float32 tmp = m._12; m._12 = m._21; m._21 = tmp;
 }
 
 matrix2 transposed(matrix2 m)
@@ -209,7 +209,7 @@ matrix2 inverse(matrix2 const& m)
     matrix2 result = matrix2::zero();
 
     float32 det = determinant(m);
-    if (not near_zero(det))
+    if (!near_zero(det))
     {
         result = (1.0f / det) * adjoint(m);
     }

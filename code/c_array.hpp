@@ -1,7 +1,7 @@
 #ifndef C_ARRAY_HPP
 #define C_ARRAY_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 typedef struct array_header_t

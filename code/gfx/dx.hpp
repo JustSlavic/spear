@@ -2,7 +2,7 @@
 #define GFX_DX_HPP
 
 
-#include <base.hpp>
+#include <base.h>
 
 
 namespace gfx {

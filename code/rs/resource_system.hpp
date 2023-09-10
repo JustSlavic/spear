@@ -1,7 +1,7 @@
 #ifndef RESOURCE_SYSTEM_HPP
 #define RESOURCE_SYSTEM_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <array.hpp>
 #include <string_id.hpp>
 

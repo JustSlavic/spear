@@ -1,7 +1,7 @@
 #ifndef TIME_HPP
 #define TIME_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 struct timepoint

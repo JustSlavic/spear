@@ -1,7 +1,7 @@
 #ifndef MATH_INTEGER_HPP
 #define MATH_INTEGER_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 INLINE int32 truncate_to_int32(int64 x)

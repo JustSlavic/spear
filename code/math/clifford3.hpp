@@ -1,7 +1,7 @@
 #ifndef MATH_CLIFFORD3_HPP
 #define MATH_CLIFFORD3_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/float32.hpp>
 #include <math/vector3.hpp>
 #include <math/quaternion.hpp>

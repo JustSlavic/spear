@@ -1,7 +1,7 @@
 #ifndef MATH_RECTANGLE2_HPP
 #define MATH_RECTANGLE2_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector2.hpp>
 
 

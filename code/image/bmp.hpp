@@ -1,7 +1,7 @@
 #ifndef IMAGE_BMP_HPP
 #define IMAGE_BMP_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <memory/memory.hpp>
 #include <image/bitmap.hpp>
 
@@ -9,7 +9,6 @@
 namespace image {
 
 
-bitmap load_bmp(char const *filename);
 bitmap load_bmp(memory::allocator *allocator, memory_block memory);
 
 

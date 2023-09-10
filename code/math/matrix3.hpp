@@ -1,7 +1,7 @@
 #ifndef MATH_MATRIX3_HPP
 #define MATH_MATRIX3_HPP
 
-#include <base.hpp>
+#include <base.h>
 #include <math/vector3.hpp>
 
 
@@ -217,9 +217,12 @@ matrix3 operator * (matrix3 a, matrix3 b)
 
 void transpose(matrix3& m)
 {
-    swap(m._12, m._21);
-    swap(m._13, m._31);
-    swap(m._23, m._32);
+    float32 tmp;
+#define SWAP_(X, Y) tmp = (X); (X) = (Y); (Y) = tmp;
+    SWAP_(m._12, m._21);
+    SWAP_(m._13, m._31);
+    SWAP_(m._23, m._32);
+#undef SWAP_
 }
 
 matrix3 transposed(matrix3 m)
@@ -260,7 +263,7 @@ matrix3 inverse(matrix3 const& m)
     matrix3 result = matrix3::zero();
 
     float32 det = determinant(m);
-    if (not near_zero(det))
+    if (!near_zero(det))
     {
         result = (1.0f / det) * adjoint(m);
     }

@@ -1,7 +1,7 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 
 //
@@ -160,7 +160,7 @@ struct gamepad_device
     }
 };
 
-struct input_devices
+struct input_state
 {
     keyboard_device keyboard;
     mouse_device mouse;

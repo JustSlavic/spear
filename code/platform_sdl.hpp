@@ -2,7 +2,7 @@
 #define PLATFORM_SDL_HPP
 
 // My library
-#include <base.hpp>
+#include <base.h>
 #include <memory/memory.hpp>
 // Standard library
 #include <stdlib.h>
