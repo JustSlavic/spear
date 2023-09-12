@@ -132,8 +132,8 @@ struct execution_context
     array<execution_command> execution_commands;
     array<render_command> render_commands;
 
-    memory::allocator temporary_allocator;
-    memory::allocator renderer_allocator;
+    memory_allocator temporary_allocator;
+    memory_allocator renderer_allocator;
     rs::resource_storage resource_storage;
     string_id_storage *strid_storage;
 
@@ -146,7 +146,7 @@ struct execution_context
     uint32 letterbox_width;
     uint32 letterbox_height;
 
-    memory_block (*debug_load_file)(memory::allocator *, char const *);
+    memory_block (*debug_load_file)(memory_allocator, char const *);
 
 #if DEBUG
     debug_time_measurement debug_measurements[DEBUG_TIME_SLOT_COUNT];

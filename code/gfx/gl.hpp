@@ -273,7 +273,7 @@ uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
 
         // @todo: use transient memory for that
         char* message = new char[length + 1];
-        memory::set(message, 0, length + 1);
+        memory__set(message, 0, length + 1);
 
         glGetShaderInfoLog(id, length, &length, message);
         GL_CHECK_ERRORS();

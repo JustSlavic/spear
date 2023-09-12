@@ -2,9 +2,10 @@
 #define PLATFORM_WIN32_HPP
 
 #include <base.h>
+#include <memory.h>
+#include <memory_allocator.h>
+
 #include <platform.hpp>
-#include <memory/memory.hpp>
-#include <memory/allocator.hpp>
 #include <time.hpp>
 
 #include <windows.h>
@@ -160,7 +161,7 @@ uint32 get_program_path(HINSTANCE instance, char *buffer, uint32 buffer_size)
 INLINE memory_block allocate_memory(void *base_address, usize size)
 {
     memory_block result;
-    result.memory = VirtualAlloc(base_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    result.memory = (byte *) VirtualAlloc(base_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     result.size = size;
     ASSERT_MSG(result.memory, "VirtualAlloc failed");
     return result;
@@ -187,9 +188,9 @@ INLINE uint64 get_file_time(char const *file_path)
     return result;
 }
 
-INLINE memory_block load_file(memory::allocator *allocator, char const *filename)
+INLINE memory_block load_file(memory_allocator allocator, char const *filename)
 {
-    memory_block result = {};
+    memory_block result = memory__empty_block();
 
     HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (FileHandle == INVALID_HANDLE_VALUE)
@@ -204,10 +205,10 @@ INLINE memory_block load_file(memory::allocator *allocator, char const *filename
         return result;
     }
 
-    void *Memory = ALLOCATE_BUFFER(allocator, FileSize.QuadPart);
+    memory_block Memory = ALLOCATE_BUFFER(allocator, FileSize.QuadPart);
 
     DWORD BytesRead;
-    BOOL ReadFileResult = ReadFile(FileHandle, Memory, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
+    BOOL ReadFileResult = ReadFile(FileHandle, Memory.memory, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
 
     if (ReadFileResult == FALSE)
     {
@@ -215,7 +216,7 @@ INLINE memory_block load_file(memory::allocator *allocator, char const *filename
         return result;
     }
 
-    result.memory = Memory;
+    result.memory = Memory.memory;
     result.size   = FileSize.QuadPart;
     return result;
 }

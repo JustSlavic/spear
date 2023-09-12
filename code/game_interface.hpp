@@ -2,8 +2,9 @@
 #define GAME_HPP
 
 #include <base.h>
+#include <memory.h>
+
 #include <input.hpp>
-#include <memory/memory.hpp>
 #include <execution_context.hpp>
 
 

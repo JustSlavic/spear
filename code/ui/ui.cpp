@@ -1,6 +1,6 @@
 #include "ui.hpp"
 
-#include <memory/allocator.hpp>
+#include <memory_allocator.h>
 
 
 namespace ui {
@@ -74,7 +74,7 @@ struct system
 {
 
     // Memory
-    memory::allocator ui_allocator;
+    memory_allocator ui_allocator;
     string_id_storage *strid_storage;
 
     // Root
@@ -105,10 +105,9 @@ struct system
 
 system *initialize(memory_block ui_memory)
 {
-    memory::allocator arena;
-    initialize_memory_arena(&arena, ui_memory);
+    memory_allocator arena = memory_allocator__create_arena_from_memory_block(ui_memory);
 
-    system *s = ALLOCATE(&arena, system);
+    system *s = ALLOCATE(arena, system);
     s->ui_allocator = arena;
 
     return s;
@@ -122,7 +121,7 @@ void push_attach_to_slot(system *s, attach *slot, handle child)
     }
     if (slot->h)
     {
-        slot->next = ALLOCATE(&s->ui_allocator, attach);
+        slot->next = ALLOCATE(s->ui_allocator, attach);
         slot->next->h = child;
     }
     else

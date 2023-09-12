@@ -36,7 +36,7 @@ struct resource
         shader_resource shader;
         texture_resource texture;
     };
-    void *render_data;
+    memory_block render_data;
 };
 
 

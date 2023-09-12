@@ -2,14 +2,15 @@
 #define IMAGE_BMP_HPP
 
 #include <base.h>
-#include <memory/memory.hpp>
+#include <memory.h>
+
 #include <image/bitmap.hpp>
 
 
 namespace image {
 
 
-bitmap load_bmp(memory::allocator *allocator, memory_block memory);
+bitmap load_bmp(memory_allocator a, memory_block memory);
 
 
 } // namespace image

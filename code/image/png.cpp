@@ -230,8 +230,8 @@ int paeth_predictor(int a, int b, int c)
 
 #define PNG_CONSUME_STRUCT(POINTER, TYPE) (TYPE *)png::consume_memory(&POINTER, sizeof(TYPE))
 
-bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_allocator);
-bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memory_block contents)
+bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allocator);
+bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_block contents)
 {
     bitmap result = {};
 
@@ -327,7 +327,7 @@ bitmap load_png(memory::allocator *allocator, memory::allocator *temporary, memo
             result.height = change_endianness(ihdr->height);
             // @note additional + height for filter types at the start of each scanline
             result.size = result.width * result.height * (result.bits_per_pixel / 8) + result.height;
-            result.pixels = (uint8 *) ALLOCATE_BUFFER_ALIGNED(allocator, result.size, alignof(uint32));
+            result.pixels = (uint8 *) ALLOCATE_BUFFER_ALIGNED(allocator, result.size, alignof(uint32)).memory;
 
             decoder.output = zlib::create_stream(result.pixels, result.size);
         }
@@ -492,7 +492,7 @@ bool32 operator != (huffman_entry a, huffman_entry b)
 }
 
 
-array<huffman_entry> compute_huffman(memory::allocator *temporary_allocator,
+array<huffman_entry> compute_huffman(memory_allocator temporary_allocator,
                                      uint32 const *code_lengths,
                                      usize code_lengths_count);
 uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
@@ -513,7 +513,7 @@ uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
     return huffman[A].symbol;
 }
 
-bool32 decode_idat_chunk(zlib::decoder *decoder, memory::allocator *temporary_allocator)
+bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allocator)
 {
     if (!decoder->initialized)
     {
@@ -740,7 +740,7 @@ uint32 reverse_bits(uint32 t, uint32 n)
 }
 
 
-array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_lengths, usize code_lengths_count)
+array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_lengths, usize code_lengths_count)
 {
     auto bl_count = ALLOCATE_ARRAY_OPEN(a, uint32, 17);
     auto next_code = ALLOCATE_ARRAY_OPEN(a, uint32, 16);
@@ -829,9 +829,9 @@ array<huffman_entry> compute_huffman(memory::allocator *a, uint32 const *code_le
         }
     }
 
-    DEALLOCATE(a, bl_count.data());
-    DEALLOCATE(a, next_code.data());
-    DEALLOCATE(a, huffman_table.data());
+    // DEALLOCATE(a, bl_count.data());
+    // DEALLOCATE(a, next_code.data());
+    // DEALLOCATE(a, huffman_table.data());
 
     return huffman;
 }

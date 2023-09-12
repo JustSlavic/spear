@@ -163,11 +163,11 @@ void draw_polygon_simple(execution_context *context,
         rs::resource *shader = rs::get_resource(&context->resource_storage, shader_token);
         if (shader->type == rs::resource_type::shader)
         {
-            if (!mesh->render_data)
+            if (!mesh->render_data.memory)
             {
                 gl::load_mesh(context, mesh);
             }
-            if (!shader->render_data)
+            if (!shader->render_data.memory)
             {
                 gl::load_shader(context, shader);
             }
@@ -201,15 +201,15 @@ void draw_rectangle_texture(execution_context *context,
             rs::resource *texture = rs::get_resource(&context->resource_storage, texture_token);
             if (texture->type == rs::resource_type::texture)
             {
-                if (!mesh->render_data)
+                if (!mesh->render_data.memory)
                 {
                     gl::load_mesh(context, mesh);
                 }
-                if (!shader->render_data)
+                if (!shader->render_data.memory)
                 {
                     gl::load_shader(context, shader);
                 }
-                if (!texture->render_data)
+                if (!texture->render_data.memory)
                 {
                     gl::load_texture(context, texture);
                 }

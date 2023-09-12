@@ -173,7 +173,7 @@ void process_pending_messages(input_state *inp)
                                 // Nullify keyboard such as nothing is pressed on stoping the playback loop
                                 // because if there's something left pressed, it will stay pressed although nothing is
                                 // pressed on the actual keyboard
-                                memory::set(inp, 0, sizeof(input_state));
+                                memory__set(inp, 0, sizeof(input_state));
                                 debug_loop_state = DEBUG_LOOP_IDLE;
                             }
                         }
@@ -238,36 +238,27 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
-    memory::allocator global_allocator;
-    memory::initialize_memory_arena(&global_allocator, global_memory);
+    execution_context context;
+    memory__set(&context, 0, sizeof(execution_context));
 
-    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
-    memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
-    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
-    memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
-    memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    memory_allocator global_allocator = memory_allocator__create_arena_from_memory_block(global_memory);
+    memory_allocator platform_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(20));
+    context.temporary_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(10));
+    context.renderer_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(2));
+    context.resource_storage.heap = memory_allocator__create_arena(global_allocator, MEGABYTES(1));
+    context.strid_storage = initialize_string_id_storage(ALLOCATE_BUFFER(global_allocator, MEGABYTES(1)));
 
-    memory::allocator platform_allocator = {};
-    memory::initialize_memory_arena(&platform_allocator, platform_memory);
-
-    execution_context context = {};
-    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
-    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
-    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-
-    context.strid_storage = initialize_string_id_storage(string_id_memory);
-
-    context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
-    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
-    context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
+    context.execution_commands = ALLOCATE_ARRAY(platform_allocator, execution_command, 5);
+    context.render_commands = ALLOCATE_ARRAY(context.renderer_allocator, render_command, 1 << 12);
+    context.resource_storage.resources = ALLOCATE_ARRAY(context.renderer_allocator, rs::resource, 32);
     create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     context.debug_load_file = win32::load_file;
 
 #if DEBUG
-    debug_loop_initial_game_state = ALLOCATE_BLOCK_(&platform_allocator, game_memory.size);
-    debug_loop_inputs = ALLOCATE_ARRAY_(&platform_allocator, input_state, 60*100);
+    memory_block game_memory = ALLOCATE_BUFFER(global_allocator, MEGABYTES(5));
+    debug_loop_initial_game_state = ALLOCATE_BUFFER_(platform_allocator, game_memory.size);
+    debug_loop_inputs = ALLOCATE_ARRAY_(platform_allocator, input_state, 60*100);
 #endif // DEBUG
 
     rs::resource_token screen_frame_mesh = {};
@@ -296,8 +287,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             -1.0f + border_width,  1.0f - border_height, 0.0f,
         };
 
-        auto vbo = ALLOCATE_BLOCK_(&context.temporary_allocator, sizeof(vbo_));
-        memory::copy(vbo.memory, vbo_, sizeof(vbo_));
+        auto vbo = ALLOCATE_BUFFER_(context.temporary_allocator, sizeof(vbo_));
+        memory__copy(vbo.memory, vbo_, sizeof(vbo_));
 
         uint32 ibo_[] = {
             0, 4, 3,
@@ -310,8 +301,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             7, 2, 3,
         };
 
-        auto ibo = ALLOCATE_BLOCK_(&context.temporary_allocator, sizeof(ibo_));
-        memory::copy(ibo.memory, ibo_, sizeof(ibo_));
+        auto ibo = ALLOCATE_BUFFER_(context.temporary_allocator, sizeof(ibo_));
+        memory__copy(ibo.memory, ibo_, sizeof(ibo_));
 
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
@@ -334,16 +325,16 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     // Constructing the names of game dlls
 
     char game_dll_buffer[256] = {};
-    memory::copy(game_dll_buffer, buffer, program_path_size_no_filename);
-    memory::copy(game_dll_buffer + program_path_size_no_filename, "game.dll", 8);
+    memory__copy(game_dll_buffer, buffer, program_path_size_no_filename);
+    memory__copy(game_dll_buffer + program_path_size_no_filename, "game.dll", 8);
 
     char temp_dll_buffer[256] = {};
-    memory::copy(temp_dll_buffer, buffer, program_path_size_no_filename);
-    memory::copy(temp_dll_buffer + program_path_size_no_filename, "temp.dll", 8);
+    memory__copy(temp_dll_buffer, buffer, program_path_size_no_filename);
+    memory__copy(temp_dll_buffer + program_path_size_no_filename, "temp.dll", 8);
 
     char lock_tmp_buffer[256] = {};
-    memory::copy(lock_tmp_buffer, buffer, program_path_size_no_filename);
-    memory::copy(lock_tmp_buffer + program_path_size_no_filename, "lock.tmp", 8);
+    memory__copy(lock_tmp_buffer, buffer, program_path_size_no_filename);
+    memory__copy(lock_tmp_buffer + program_path_size_no_filename, "lock.tmp", 8);
 
     // Load the game code and initialize the memory
 
@@ -413,7 +404,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             if (debug_loop_inputs.empty())
             {
                 // Just started recording, save initial game memory
-                memory::copy(debug_loop_initial_game_state.memory, game_memory.memory, game_memory.size);
+                memory__copy(debug_loop_initial_game_state.memory, game_memory.memory, game_memory.size);
                 debug_loop_current_index = 0;
             }
 
@@ -432,7 +423,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             if (debug_loop_current_index == 0)
             {
                 // The playback loop started over again, copy saved initial game memory back to use.
-                memory::copy(game_memory.memory, debug_loop_initial_game_state.memory, game_memory.size);
+                memory__copy(game_memory.memory, debug_loop_initial_game_state.memory, game_memory.size);
             }
 
             input = debug_loop_inputs[debug_loop_current_index];
@@ -519,7 +510,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         context.render_commands.clear();
 
-        memory::reset_allocator(&context.temporary_allocator);
+        memory_allocator__reset(context.temporary_allocator);
 
 #if DEBUG & 0
         // @todo: this things should be abstract so no code from the game should appear here
@@ -576,7 +567,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
 
 #include <gfx/renderer.cpp>
-#include <memory/allocator.cpp>
+#include <memory_allocator.c>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>

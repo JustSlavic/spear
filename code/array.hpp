@@ -2,6 +2,7 @@
 #define ARRAY_HPP
 
 #include <base.h>
+#include <memory.h>
 
 
 template <typename Type>
@@ -49,10 +50,30 @@ struct array
     }
 };
 
-#define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED_(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}
-#define ALLOCATE_ARRAY(ALLOCATOR, TYPE, CAPACITY) array<TYPE>{ALLOCATE_BUFFER_TYPED(ALLOCATOR, TYPE, CAPACITY), 0, (CAPACITY)}
 
-#define ALLOCATE_ARRAY_OPEN(ALLOCATOR, TYPE, SIZE) array<TYPE>{ALLOCATE_BUFFER_TYPED(ALLOCATOR, TYPE, SIZE), SIZE, SIZE}
+template <typename Type>
+array<Type> create_array_from_block(memory_block block)
+{
+    array<Type> result;
+    result.data_ = (Type *) block.memory;
+    result.size_ = 0;
+    result.capacity_ = (block.size / sizeof(Type));
+
+    return result;
+}
+
+template <typename Type>
+array<Type> create_array_from_block_open(memory_block block)
+{
+    auto result = create_array_from_block<Type>(block);
+    result.size_ = result.capacity_;
+    return result;
+}
+
+#define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) create_array_from_block<TYPE>(ALLOCATE_BUFFER_ALIGNED_(ALLOCATOR, (CAPACITY) * sizeof(TYPE), alignof(TYPE)))
+#define ALLOCATE_ARRAY(ALLOCATOR, TYPE, CAPACITY) create_array_from_block<TYPE>(ALLOCATE_BUFFER_ALIGNED(ALLOCATOR, (CAPACITY) * sizeof(TYPE), alignof(TYPE)))
+
+#define ALLOCATE_ARRAY_OPEN(ALLOCATOR, TYPE, CAPACITY) create_array_from_block_open<TYPE>(ALLOCATE_BUFFER_ALIGNED(ALLOCATOR, (CAPACITY) * sizeof(TYPE), alignof(TYPE)))
 
 
 template <typename Type, usize Capacity>

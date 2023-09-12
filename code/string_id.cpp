@@ -7,7 +7,8 @@
 
 struct string_id_storage
 {
-    memory::allocator arena;
+    memory_block memory;
+    memory_allocator arena;
 
     #define HASH_TABLE_SIZE 1024
     uint32 hash_table_hashes[HASH_TABLE_SIZE];
@@ -17,11 +18,11 @@ struct string_id_storage
 
 string_id_storage *initialize_string_id_storage(memory_block block)
 {
-    memory::allocator arena;
-    memory::initialize_memory_arena(&arena, block);
+    memory_allocator arena = memory_allocator__create_arena_from_memory_block(block);
 
-    string_id_storage *storage = ALLOCATE(&arena, string_id_storage);
+    string_id_storage *storage = ALLOCATE(arena, string_id_storage);
     storage->arena = arena;
+    storage->memory = block;
 
     return storage;
 }
@@ -68,15 +69,15 @@ string_id make_string_id(string_id_storage *storage, char const *cstr, usize siz
 
     if (storage->hash_table_offsets[index] == 0)
     {
-        void *buffer = ALLOCATE_BUFFER_ALIGNED_(&storage->arena, (size + 1) + sizeof(usize), alignof(usize));
-        usize *size_in_buffer  = (usize *) buffer;
-        char *string_in_buffer = (char *)  buffer + sizeof(usize);
+        memory_block buffer = ALLOCATE_BUFFER_ALIGNED_(storage->arena, (size + 1) + sizeof(usize), alignof(usize));
+        usize *size_in_buffer  = (usize *) buffer.memory;
+        char *string_in_buffer = (char *)  buffer.memory + sizeof(usize);
 
         *size_in_buffer = size;
-        memory::copy(string_in_buffer, cstr, size);
+        memory__copy(string_in_buffer, cstr, size);
         string_in_buffer[size] = 0; // null-terminator just in case I have to pass this buffer to a function, which expects c-string
 
-        uint32 offset = truncate_to_uint32((intptr) string_in_buffer - (intptr) storage->arena.memory);
+        uint32 offset = truncate_to_uint32((intptr) string_in_buffer - (intptr) storage->memory.memory);
         storage->hash_table_offsets[index] = offset;
         result.id = offset;
     }
@@ -97,7 +98,7 @@ string_id make_string_id(string_id_storage *storage, char const *cstr)
 
 char const *get_cstring_by_id(string_id_storage *storage, string_id id)
 {
-    char const *result = (char const *) storage->arena.memory + id.id;
+    char const *result = (char const *) storage->memory.memory + id.id;
     return result;
 }
 

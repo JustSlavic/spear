@@ -5,7 +5,7 @@
 #include <array.hpp>
 #include <string_id.hpp>
 
-#include <memory/allocator.hpp>
+#include <memory_allocator.h>
 #include <rs/resource_token.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
 
@@ -27,7 +27,7 @@ enum class resource_type
 struct resource;
 struct resource_storage
 {
-    memory::allocator heap;
+    memory_allocator heap;
     array<resource> resources;
 };
 

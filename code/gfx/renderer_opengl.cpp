@@ -245,12 +245,12 @@ void load_mesh(execution_context *context, rs::resource *resource)
         }
     }
 
-    if (resource->render_data == NULL)
+    if (resource->render_data.memory == NULL)
     {
-        resource->render_data = ALLOCATE(&context->renderer_allocator, render_mesh_data);
+        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_mesh_data);
     }
 
-    auto *data = (render_mesh_data *) resource->render_data;
+    auto *data = (render_mesh_data *) resource->render_data.memory;
     data->vertex_buffer_id = vertex_buffer_id;
     data->index_buffer_id = index_buffer_id;
     data->vertex_array_id = vertex_array_id;
@@ -280,28 +280,28 @@ void load_shader(execution_context *context, rs::resource *resource)
 
     auto program = link_shader(vs, fs);
 
-    if (resource->render_data == NULL)
-        resource->render_data = ALLOCATE(&context->renderer_allocator, render_shader_data);
+    if (resource->render_data.memory == NULL)
+        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_shader_data);
 
-    auto *data = (render_shader_data *) resource->render_data;
+    auto *data = (render_shader_data *) resource->render_data.memory;
     data->program = program;
 }
 
 void load_texture(execution_context *context, rs::resource *resource)
 {
-    if (resource->render_data == NULL)
+    if (resource->render_data.memory == NULL)
     {
-        resource->render_data = ALLOCATE(&context->renderer_allocator, render_texture_data);
+        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_texture_data);
     }
 
-    auto *data = (render_texture_data *) resource->render_data;
+    auto *data = (render_texture_data *) resource->render_data.memory;
     data->texture_id = create_texture(resource->texture.texture);
 }
 
 void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection, math::vector4 color)
 {
-    auto *mesh_render_data = (render_mesh_data *) mesh->render_data;
-    auto *shader_render_data = (render_shader_data *) shader->render_data;
+    auto *mesh_render_data = (render_mesh_data *) mesh->render_data.memory;
+    auto *shader_render_data = (render_shader_data *) shader->render_data.memory;
 
     use_shader(shader_render_data->program);
     uniform(shader_render_data->program, "u_model", model);
@@ -317,9 +317,9 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
 void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resource *texture,
                             math::matrix4 model, math::matrix4 view, math::matrix4 projection)
 {
-    auto *mesh_data = (render_mesh_data *) mesh->render_data;
-    auto *shader_data = (render_shader_data *) shader->render_data;
-    auto *texture_data = (render_texture_data *) texture->render_data;
+    auto *mesh_data = (render_mesh_data *) mesh->render_data.memory;
+    auto *shader_data = (render_shader_data *) shader->render_data.memory;
+    auto *texture_data = (render_texture_data *) texture->render_data.memory;
     UNUSED(texture_data);
 
     use_shader(shader_data->program);

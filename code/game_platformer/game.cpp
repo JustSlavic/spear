@@ -128,13 +128,14 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     ASSERT(context->debug_load_file);
 
     game_state *gs = (game_state *) game_memory.memory;
-
-    memory::initialize_memory_arena(&gs->game_allocator, (byte *) game_memory.memory + sizeof(game_state), game_memory.size - sizeof(game_state));
+    memory__advance_block(&game_memory, sizeof(game_state));
+    gs->game_allocator = memory_allocator__create_arena_from_memory_block(game_memory);
 
     // Entities
     {
-        gs->entities = (entity *) ALLOCATE_BUFFER_(&gs->game_allocator, sizeof(entity) * 20);
-        gs->entities_capacity = 200000;
+        gs->entities_capacity = 20;
+        memory_block entities = ALLOCATE_BUFFER_ALIGNED(gs->game_allocator, sizeof(entity) * gs->entities_capacity, alignof(entity));
+        gs->entities = (entity *) entities.memory;
         // @note: let zero-indexed entity be 'null entity' representing lack of entity
         gs->entity_count = 1;
     }
@@ -158,11 +159,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
 
-        auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
-        memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
+        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
+        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
 
-        auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
-        memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
+        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
+        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
         gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
         gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
@@ -187,11 +188,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         gfx::push_layout_element(&vbl, 3); // XYZ
         gfx::push_layout_element(&vbl, 2); // UV
 
-        auto vbo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(vbo_init));
-        memory::copy(vbo.memory, vbo_init, sizeof(vbo_init));
+        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
+        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
 
-        auto ibo = ALLOCATE_BLOCK_(&context->temporary_allocator, sizeof(ibo_init));
-        memory::copy(ibo.memory, ibo_init, sizeof(ibo_init));
+        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
+        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
         gs->rectangle_mesh_uv   = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
         gs->rectangle_shader_uv = create_shader_resource(&context->resource_storage, STRID("rectangle_uv.shader"));
@@ -199,14 +200,14 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
 
     // Load texture
     {
-        memory_block file_content = context->debug_load_file(&context->temporary_allocator, "vohiyo.png");
-        auto bitmap = image::load_png(&context->temporary_allocator, &context->temporary_allocator, file_content);
+        memory_block file_content = context->debug_load_file(context->temporary_allocator, "button_push_1.png");
+        auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
         gs->reference_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
     }
 
     // UI
     {
-        auto ui_memory = ALLOCATE_BLOCK_(&gs->game_allocator, MEGABYTES(1));
+        auto ui_memory = ALLOCATE_BUFFER_(gs->game_allocator, MEGABYTES(1));
         gs->hud = ui::initialize(ui_memory);
 
         ui::set_string_id_storage(gs->hud, context->strid_storage);
@@ -378,8 +379,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     float32 dt = input->dt;
     global_debug_measurements = context->debug_measurements;
 
-    DEBUG_BEGIN_TIME_MEASUREMENT(update_and_render);
-
     game_state *gs = (game_state *) game_memory.memory;
     sam_move move_data = {};
 
@@ -454,12 +453,12 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     // Coordinates
-    {
-        // X axis
-        draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
-        // Y axis
-        draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
-    }
+    // {
+    //     // X axis
+    //     draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
+    //     // Y axis
+    //     draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
+    // }
 
     {
         render_command::command_draw_mesh_with_texture cmd;
@@ -738,13 +737,10 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     }
 
     gs->near_exit_time -= dt;
-    gs->blink_time -= dt;
-
-    DEBUG_END_TIME_MEASUREMENT(update_and_render);
 }
 
 #if DLL_BUILD
-#include <memory/allocator.cpp>
+#include <memory_allocator.c>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>

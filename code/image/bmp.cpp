@@ -51,7 +51,7 @@ struct bmp_color_table
 enum { BMP_SIGNATURE = BMP_MAGIC_NUMBER('B', 'M') };
 
 
-bitmap load_bmp(memory::allocator *allocator, memory_block raw_data)
+bitmap load_bmp(memory_allocator allocator, memory_block raw_data)
 {
     bitmap result = {};
 
@@ -73,8 +73,8 @@ bitmap load_bmp(memory::allocator *allocator, memory_block raw_data)
 
     uint32 *pixels = (uint32 *) (((uint8 *) raw_data.memory) + header->data_offset);
 
-    result.pixels = (uint8 *) ALLOCATE_BUFFER_(allocator, info->image_size);
-    memory::copy(result.pixels, pixels, info->image_size);
+    result.pixels = (uint8 *) ALLOCATE_BUFFER_(allocator, info->image_size).memory;
+    memory__copy(result.pixels, pixels, info->image_size);
     result.size   = info->image_size;
     result.width  = info->width;
     result.height = info->height;

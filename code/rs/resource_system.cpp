@@ -33,8 +33,8 @@ resource_token create_mesh_resource(resource_storage *storage, memory_block vbo,
     {
         resource *r = get_resource(storage, token);
         r->type = rs::resource_type::mesh;
-        r->mesh.vbo = ALLOCATE_COPY(&storage->heap, vbo);
-        r->mesh.ibo = ALLOCATE_COPY(&storage->heap, ibo);
+        r->mesh.vbo = ALLOCATE_COPY(storage->heap, vbo);
+        r->mesh.ibo = ALLOCATE_COPY(storage->heap, ibo);
         r->mesh.vbl = vbl;
     }
     return token;
