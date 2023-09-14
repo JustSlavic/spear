@@ -125,11 +125,6 @@ struct game_state
     rs::resource_token button_push_1_texture;
     rs::resource_token button_push_2_texture;
 
-    rs::resource_token five_mesh;
-    rs::resource_token zero_mesh;
-    rs::resource_token ten_mesh;
-    rs::resource_token fifty_mesh;
-
     entity *entities;
     usize entities_capacity;
     usize entity_count;

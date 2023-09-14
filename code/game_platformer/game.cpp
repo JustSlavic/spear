@@ -258,6 +258,8 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         auto button_3 = make_push_button(gs, V2(400, 400));
         ui::set_scale(gs->hud, button_3, V2(3, 3));
 
+        auto button_4 = make_push_button(gs, V2(500, 500));
+
         auto button_1 = ui::make_group(gs->hud);
         auto shape_1 = ui::make_shape(gs->hud, button_1);
         auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1);
@@ -500,7 +502,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
                     }
                 }
 
-                // @todo: should I consider air resitance?
+                // @todo: should I consider air resistance?
                 if (is(e, ENTITY_ON_GROUND))
                 {
                     // Friction with the ground

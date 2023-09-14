@@ -96,12 +96,12 @@ struct system
     handle pressed;
 
     // Primary elements
-    static_array<element, 10> elements;
+    static_array<element, 30> elements;
     // Secondary elements
-    static_array<shape, 10> shapes;
-    static_array<image, 10> images;
-    static_array<hoverable, 10> hoverables;
-    static_array<clickable, 10> clickables;
+    static_array<shape, 20> shapes;
+    static_array<image, 20> images;
+    static_array<hoverable, 20> hoverables;
+    static_array<clickable, 20> clickables;
     static_array<animation, 32> animations;
 
     // Hash table for fetching all attachables of an element
@@ -868,14 +868,10 @@ void render(execution_context *context, system *s)
         push_render_command(context, cmd);
     }
 
-    osOutputDebugString("============= Frame =============\n");
-
     for (usize image_index = s->images.size() - 1; image_index < s->images.size(); image_index--)
     {
         auto *image = s->images.data() + image_index;
         auto *element = s->elements.data() + image->owner.index;
-
-        osOutputDebugString("image_index == %llu; visible == %s\n", image_index, element->is_visible ? "true" : "false");
 
         if (element->is_visible == false) continue;
 
