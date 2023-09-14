@@ -17,6 +17,8 @@ struct element
     math::vector2 scale;
     float32 rotation;
 
+    bool32 is_visible;
+
     // Cache
     math::transform transform;
     math::transform transform_to_root;
@@ -27,6 +29,14 @@ struct shape
     handle owner;
     float32 width, height;
     math::vector4 color;
+};
+
+struct image
+{
+    handle owner;
+    uint32 width;
+    uint32 height;
+    rs::resource_token texture_token;
 };
 
 struct hoverable
@@ -89,6 +99,7 @@ struct system
     static_array<element, 10> elements;
     // Secondary elements
     static_array<shape, 10> shapes;
+    static_array<image, 10> images;
     static_array<hoverable, 10> hoverables;
     static_array<clickable, 10> clickables;
     static_array<animation, 32> animations;
@@ -101,6 +112,8 @@ struct system
     // Rendering stuff
     rs::resource_token rectangle_mesh;
     rs::resource_token rectangle_shader;
+    rs::resource_token rectangle_mesh_uv;
+    rs::resource_token rectangle_shader_uv;
 };
 
 system *initialize(memory_block ui_memory)
@@ -190,6 +203,16 @@ void set_resource_rectangle_shader(system *s, rs::resource_token shader)
     s->rectangle_shader = shader;
 }
 
+void set_resource_rectangle_mesh_uv(system *s, rs::resource_token mesh)
+{
+    s->rectangle_mesh_uv = mesh;
+}
+
+void set_resource_rectangle_shader_uv(system *s, rs::resource_token shader)
+{
+    s->rectangle_shader_uv = shader;
+}
+
 struct element_ref
 {
     handle h;
@@ -204,6 +227,7 @@ element_ref push_element(system *s)
     result.h.type = UI_ELEMENT;
     result.h.index = (uint32) s->elements.size();
     result.p = s->elements.push();
+    result.p->is_visible = true;
     return result;
 }
 
@@ -218,9 +242,26 @@ shape_ref push_shape(system *s)
     ASSERT(s->shapes.size() < s->shapes.capacity());
 
     shape_ref result;
-    result.h.type  = UI_SHAPE;
+    result.h.type = UI_SHAPE;
     result.h.index = (uint32) s->shapes.size();
     result.p = s->shapes.push();
+    return result;
+}
+
+struct image_ref
+{
+    handle h;
+    image *p;
+};
+
+image_ref push_image(system *s)
+{
+    ASSERT(s->images.size() < s->images.capacity());
+
+    image_ref result;
+    result.h.type = UI_IMAGE;
+    result.h.index = (uint32) s->images.size();
+    result.p = s->images.push();
     return result;
 }
 
@@ -325,6 +366,35 @@ handle make_shape(system *s)
     root_handle.index = 0;
 
     handle result = make_shape(s, root_handle);
+    return result;
+}
+
+handle make_image(system *s, handle parent)
+{
+    auto child = push_element(s);
+    auto image = push_image(s);
+    attach_child(s, parent, child.h);
+    attach_child(s, child.h, image.h);
+
+    child.p->position = V2(0);
+    child.p->scale    = V2(1);
+    child.p->rotation = 0.f;
+    child.p->parent   = parent;
+
+    image.p->owner = child.h;
+    image.p->width = 0;
+    image.p->height = 0;
+
+    return child.h;
+}
+
+handle make_image(system *s)
+{
+    handle root_handle;
+    root_handle.type = UI_ROOT;
+    root_handle.index = 0;
+
+    handle result = make_image(s, root_handle);
     return result;
 }
 
@@ -771,14 +841,16 @@ void render(execution_context *context, system *s)
         math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    for (usize i = s->shapes.size() - 1; i < s->shapes.size(); i--)
+    for (usize shape_index = s->shapes.size() - 1; shape_index < s->shapes.size(); shape_index--)
     {
-        auto *g = s->shapes.data() + i;
-        auto *e = s->elements.data() + g->owner.index;
+        auto *shape = s->shapes.data() + shape_index;
+        auto *element = s->elements.data() + shape->owner.index;
+
+        if (element->is_visible == false) continue;
 
         auto model =
-            math::scaled(V3(0.5f * g->width, 0.5f * g->height, 1),
-            math::to_matrix4(e->transform_to_root));
+            math::scaled(V3(0.5f * shape->width, 0.5f * shape->height, 1),
+            math::to_matrix4(element->transform_to_root));
 
         render_command::command_draw_ui command_draw_ui;
         command_draw_ui.mesh_token = s->rectangle_mesh;
@@ -787,13 +859,40 @@ void render(execution_context *context, system *s)
         command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
         command_draw_ui.view = math::matrix4::identity();
         command_draw_ui.projection = projection;
-        command_draw_ui.color = g->color;
+        command_draw_ui.color = shape->color;
 
         render_command cmd;
         cmd.type = render_command::command_type::draw_ui;
         cmd.draw_ui = command_draw_ui;
 
         push_render_command(context, cmd);
+    }
+
+    osOutputDebugString("============= Frame =============\n");
+
+    for (usize image_index = s->images.size() - 1; image_index < s->images.size(); image_index--)
+    {
+        auto *image = s->images.data() + image_index;
+        auto *element = s->elements.data() + image->owner.index;
+
+        osOutputDebugString("image_index == %llu; visible == %s\n", image_index, element->is_visible ? "true" : "false");
+
+        if (element->is_visible == false) continue;
+
+        auto model =
+            math::scaled(V3(0.5f * 100, 0.5f * 100, 1),
+            math::to_matrix4(element->transform_to_root));
+
+        render_command::command_draw_ui_texture cmd;
+        cmd.mesh_token = s->rectangle_mesh_uv;
+        cmd.shader_token = s->rectangle_shader_uv;
+        cmd.texture_token = image->texture_token;
+
+        cmd.model = math::transposed(model);
+        cmd.view = math::matrix4::identity();
+        cmd.projection = projection;
+
+        push_draw_ui_texture_command(context, cmd);
     }
 }
 
@@ -851,6 +950,17 @@ handle attach_iterator::operator * () const
     return p->h;
 }
 
+handle attach_iterator::operator [] (int index) const
+{
+    auto q = p;
+    while (index > 0)
+    {
+        q = q->next;
+        index -= 1;
+    }
+    return q->h;
+}
+
 attach_iterator::operator bool()
 {
     return p;
@@ -864,6 +974,17 @@ attach_iterator begin(attach_iterator it)
 attach_iterator end(attach_iterator it)
 {
     attach_iterator result = {};
+    return result;
+}
+
+bool get_visible(system *s, handle h)
+{
+    bool result = false;
+    if (h.type == UI_ELEMENT)
+    {
+        element *e = s->elements.data() + h.index;
+        result = e->is_visible;
+    }
     return result;
 }
 
@@ -903,6 +1024,27 @@ void set_color(system *s, handle h, math::vector4 color)
             shape *p = s->shapes.data() + a.index;
             p->color = color;
         }
+    }
+}
+
+void set_texture(system *s, handle h, rs::resource_token token)
+{
+    for (auto a : iterate_attaches(s, h))
+    {
+        if (a.type == UI_IMAGE)
+        {
+            image *p = s->images.data() + a.index;
+            p->texture_token = token;
+        }
+    }
+}
+
+void set_visible(system *s, handle h, bool is_visible)
+{
+    if (h.type == UI_ELEMENT)
+    {
+        element *e = s->elements.data() + h.index;
+        e->is_visible = is_visible;
     }
 }
 

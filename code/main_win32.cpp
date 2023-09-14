@@ -492,8 +492,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 case render_command::command_type::draw_screen_frame:
                 {
                     gfx::draw_polygon_simple(&context,
-                        screen_frame_mesh, screen_frame_shader,
-                        math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
+                        screen_frame_mesh,
+                        screen_frame_shader,
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
+                        math::matrix4::identity(),
                         cmd->draw_screen_frame.color);
                 }
                 break;
@@ -501,9 +504,24 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 case render_command::command_type::draw_ui:
                 {
                     gfx::draw_polygon_simple(&context,
-                        cmd->draw_ui.mesh_token, cmd->draw_ui.shader_token,
-                        cmd->draw_ui.model, cmd->draw_ui.view, cmd->draw_ui.projection,
+                        cmd->draw_ui.mesh_token,
+                        cmd->draw_ui.shader_token,
+                        cmd->draw_ui.model,
+                        cmd->draw_ui.view,
+                        cmd->draw_ui.projection,
                         cmd->draw_ui.color);
+                }
+                break;
+
+                case render_command::command_type::draw_ui_texture:
+                {
+                    gfx::draw_rectangle_texture(&context,
+                        cmd->draw_ui_texture.mesh_token,
+                        cmd->draw_ui_texture.shader_token,
+                        cmd->draw_ui_texture.texture_token,
+                        cmd->draw_ui_texture.model,
+                        cmd->draw_ui_texture.view,
+                        cmd->draw_ui_texture.projection);
                 }
                 break;
             }

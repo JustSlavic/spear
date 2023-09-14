@@ -19,12 +19,12 @@
 #include <math/matrix4.hpp>
 
 #include <collision.hpp>
-#include <stdlib.h>
-#include <time.h>
-#include <stdio.h>
 #include <image/png.hpp>
 
 #if OS_WINDOWS
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <windows.h>
 #define osOutputDebugString(MSG, ...) \
 {  \
@@ -110,6 +110,39 @@ void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 
 
     push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
 }
+
+
+ui::handle make_push_button(game_state *gs, math::vector2 position)
+{
+    auto button = ui::make_group(gs->hud);
+    ui::set_position(gs->hud, button, position);
+    auto hover_callbacks_4 = ui::make_hoverable(gs->hud, button);
+    auto click_callbacks_4 = ui::make_clickable(gs->hud, button);
+    click_callbacks_4->on_press_internal = [](ui::system *s, ui::handle h)
+    {
+        auto it = ui::iterate_attaches(s, h);
+
+        ui::set_visible(s, it[2], false);
+        ui::set_visible(s, it[3], true);
+    };
+    click_callbacks_4->on_release_internal = [](ui::system *s, ui::handle h)
+    {
+        auto it = ui::iterate_attaches(s, h);
+
+        ui::set_visible(s, it[2], true);
+        ui::set_visible(s, it[3], false);
+    };
+
+    auto button_3_state_up = ui::make_image(gs->hud, button);
+    ui::set_visible(gs->hud, button_3_state_up, true);
+    ui::set_texture(gs->hud, button_3_state_up, gs->button_push_1_texture);
+    auto button_3_state_down = ui::make_image(gs->hud, button);
+    ui::set_visible(gs->hud, button_3_state_down, false);
+    ui::set_texture(gs->hud, button_3_state_down, gs->button_push_2_texture);
+
+    return button;
+}
+
 
 //
 // Arguments:
@@ -198,12 +231,18 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         gs->rectangle_shader_uv = create_shader_resource(&context->resource_storage, STRID("rectangle_uv.shader"));
     }
 
-    // Load texture
+    // Load textures
     {
         memory_block file_content = context->debug_load_file(context->temporary_allocator, "button_push_1.png");
         auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
-        gs->reference_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
+        gs->button_push_1_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
     }
+    {
+        memory_block file_content = context->debug_load_file(context->temporary_allocator, "button_push_2.png");
+        auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
+        gs->button_push_2_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
+    }
+
 
     // UI
     {
@@ -213,6 +252,11 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
         ui::set_string_id_storage(gs->hud, context->strid_storage);
         ui::set_resource_rectangle_mesh(gs->hud, gs->rectangle_mesh);
         ui::set_resource_rectangle_shader(gs->hud, gs->rectangle_shader);
+        ui::set_resource_rectangle_mesh_uv(gs->hud, gs->rectangle_mesh_uv);
+        ui::set_resource_rectangle_shader_uv(gs->hud, gs->rectangle_shader_uv);
+
+        auto button_3 = make_push_button(gs, V2(400, 400));
+        ui::set_scale(gs->hud, button_3, V2(3, 3));
 
         auto button_1 = ui::make_group(gs->hud);
         auto shape_1 = ui::make_shape(gs->hud, button_1);
@@ -394,44 +438,12 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         }
     }
 
+#if UI_EDITOR_ENABLED
     if (get_press_count(input->keyboard[KB_F1]))
     {
-#if UI_EDITOR_ENABLED
         TOGGLE(gs->ui_editor_enabled);
+    }
 #endif // UI_EDITOR_ENABLED
-    }
-
-    if (get_hold_count(input->keyboard[KB_A]))
-    {
-        if (is(gs->sam, ENTITY_ON_GROUND))
-        {
-            move_data.acceleration.x -= PLAYER_BASE_MOVEMENT_ACCELERATION;
-        }
-        else
-        {
-            move_data.velocity.x -= PLAYER_BASE_JUMP_CORRECTION_SPEED;
-        }
-    }
-    if (get_hold_count(input->keyboard[KB_D]))
-    {
-        if (is(gs->sam, ENTITY_ON_GROUND))
-        {
-            move_data.acceleration.x += PLAYER_BASE_MOVEMENT_ACCELERATION;
-        }
-        else
-        {
-            move_data.velocity.x += PLAYER_BASE_JUMP_CORRECTION_SPEED;
-        }
-    }
-
-    if (get_press_count(input->keyboard[KB_SPACE]))
-    {
-        if (is(gs->sam, ENTITY_ON_GROUND))
-        {
-            move_data.acceleration.y += (PLAYER_BASE_JUMP_ACCELERATION / (0.1f * gs->carried_packages + 1)) / dt;
-            move_data.jump = true;
-        }
-    }
 
     // Setup camera
     {
@@ -458,25 +470,6 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
     //     draw_aligned_rectangle(context, gs, 0.5f, 0.f, 0.5f, 0.05f, V4(0.9, 0.2, 0.2, 1.0));
     //     // Y axis
     //     draw_aligned_rectangle(context, gs, 0.f, 0.5f, 0.05f, 0.5f, V4(0.2, 0.9, 0.2, 1.0));
-    // }
-
-    {
-        render_command::command_draw_mesh_with_texture cmd;
-        cmd.mesh_token = gs->rectangle_mesh_uv;
-        cmd.shader_token = gs->rectangle_shader_uv;
-        cmd.texture_token = gs->reference_texture;
-
-        cmd.model = math::matrix4::identity();
-        cmd.model._11 *= 4;
-        cmd.model._22 *= 4;
-        cmd.model._33 *= 4;
-
-        push_draw_mesh_with_texture_command(context, cmd);
-    }
-
-    // if (ui::button(&gs->ui, STRID("Button1").id))
-    // {
-    //     osOutputDebugString("PRESSED!!!\n");
     // }
 
     for (uint32 eid = 1; eid < gs->entity_count; eid++)
@@ -734,9 +727,11 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         render_command::command_draw_screen_frame draw_frame;
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
-    }
 
-    gs->near_exit_time -= dt;
+        gs->near_exit_time -= dt;
+        if (gs->near_exit_time < 0)
+            gs->near_exit_time = 0;
+    }
 }
 
 #if DLL_BUILD

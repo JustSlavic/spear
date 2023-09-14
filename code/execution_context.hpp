@@ -63,6 +63,7 @@ struct render_command
         draw_mesh_with_texture,
         draw_screen_frame,
         draw_ui,
+        draw_ui_texture,
     };
     struct command_setup_projection_matrix
     {
@@ -112,6 +113,15 @@ struct render_command
         math::matrix4 projection;
         math::vector4 color;
     };
+    struct command_draw_ui_texture
+    {
+        rs::resource_token mesh_token;
+        rs::resource_token shader_token;
+        rs::resource_token texture_token;
+        math::matrix4 model;
+        math::matrix4 view;
+        math::matrix4 projection;
+    };
 
     command_type type;
     union
@@ -124,6 +134,7 @@ struct render_command
         command_draw_mesh_with_texture draw_mesh_with_texture;
         command_draw_screen_frame draw_screen_frame;
         command_draw_ui draw_ui;
+        command_draw_ui_texture draw_ui_texture;
     };
 };
 

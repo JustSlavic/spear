@@ -82,6 +82,7 @@ enum type_t
     UI_ROOT,
     UI_ELEMENT,
     UI_SHAPE,
+    UI_IMAGE,
     UI_HOVERABLE,
     UI_CLICKABLE,
     UI_ANIMATION,
@@ -115,6 +116,7 @@ struct attach_iterator
     bool operator==(attach_iterator other);
     bool operator!=(attach_iterator other);
     handle operator*() const;
+    handle operator[](int) const;
     operator bool();
 };
 
@@ -147,6 +149,8 @@ system *initialize(memory_block ui_memory);
 void set_string_id_storage(system *s, string_id_storage *storage);
 void set_resource_rectangle_mesh(system *s, rs::resource_token mesh);
 void set_resource_rectangle_shader(system *s, rs::resource_token shader);
+void set_resource_rectangle_mesh_uv(system *s, rs::resource_token mesh);
+void set_resource_rectangle_shader_uv(system *s, rs::resource_token shader);
 void update(system *s, input_state *input);
 void render(execution_context *context, system *s);
 
@@ -154,13 +158,19 @@ handle make_group(system *s);
 handle make_group(system *s, handle parent);
 handle make_shape(system *s);
 handle make_shape(system *s, handle parent);
+handle make_image(system *s);
+handle make_image(system *s, handle parent);
 hover_callbacks *make_hoverable(system *s, handle owner);
 click_callbacks *make_clickable(system *s, handle owner);
+
+bool get_visible(system *s, handle h);
 
 void set_position(system *s, handle h, math::vector2 position);
 void set_scale(system *s, handle h, math::vector2 scale);
 void set_rotation(system *s, handle h, float32 rotation);
 void set_color(system *s, handle h, math::vector4 color);
+void set_texture(system *s, handle h, rs::resource_token token);
+void set_visible(system *s, handle h, bool is_visible);
 
 void animate(system *s, handle h, string_id id, uint32 a, uint32 duration_frames, float32 start_value, float32 final_value);
 void play_animation(system *s, char const *cstr);

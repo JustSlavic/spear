@@ -427,7 +427,7 @@ uint32 create_texture(image::bitmap bitmap)
     // }
     else
     {
-        ASSERT_FAIL();
+        ASSERT_FAIL("Unsupported color type!");
     }
     GL_CHECK_ERRORS();
 

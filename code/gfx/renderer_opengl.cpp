@@ -198,6 +198,8 @@ struct render_shader_data
 struct render_texture_data
 {
     uint32 texture_id;
+    bool32 is_top_down;
+    float32 aspect_ratio;
 };
 
 void load_mesh(execution_context *context, rs::resource *resource)
@@ -296,6 +298,8 @@ void load_texture(execution_context *context, rs::resource *resource)
 
     auto *data = (render_texture_data *) resource->render_data.memory;
     data->texture_id = create_texture(resource->texture.texture);
+    data->is_top_down = resource->texture.texture.top_down;
+    data->aspect_ratio = (float32) resource->texture.texture.width / (float32) resource->texture.texture.height;
 }
 
 void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection, math::vector4 color)
@@ -323,6 +327,13 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resour
     UNUSED(texture_data);
 
     use_shader(shader_data->program);
+    use_texture(texture_data->texture_id, 0);
+
+    model._22 *= 1.0f/texture_data->aspect_ratio;
+    // if (!texture_data->is_top_down)
+    // {
+    //     // @todo: aspect ratio have to have the effect different than that for sure
+    // }
     uniform(shader_data->program, "u_model", model);
     uniform(shader_data->program, "u_view", view);
     uniform(shader_data->program, "u_projection", projection);

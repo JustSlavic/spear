@@ -57,6 +57,15 @@ void push_draw_mesh_with_texture_command(execution_context *context, render_comm
     push_render_command(context, cmd);
 }
 
+void push_draw_ui_texture_command(execution_context *context, render_command::command_draw_ui_texture cmd_)
+{
+    render_command cmd;
+    cmd.type = render_command::command_type::draw_ui_texture;
+    cmd.draw_ui_texture = cmd_;
+
+    push_render_command(context, cmd);
+}
+
 void push_draw_screen_frame(execution_context *context, render_command::command_draw_screen_frame draw_frame)
 {
     render_command cmd;
