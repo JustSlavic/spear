@@ -374,8 +374,8 @@ handle make_image(system *s, handle parent)
     child.p->parent   = parent;
 
     image.p->owner  = child.h;
-    image.p->width  = 0;
-    image.p->height = 0;
+    image.p->width  = 100;
+    image.p->height = 100;
     image.p->type   = UI_IMAGE;
 
     return child.h;
@@ -670,20 +670,20 @@ void update(system *s, input_state *inp)
     handle hovered = null_handle();
     for (usize i = 0; i < s->hoverables.size(); i++)
     {
-        hoverable *child = s->hoverables.data() + i;
+        hoverable *h = s->hoverables.data() + i;
 
-        ASSERT(child->owner.type == UI_ELEMENT);
-        element *owner = s->elements.data() + child->owner.index;
+        ASSERT(h->owner.type == UI_ELEMENT);
+        element *owner = s->elements.data() + h->owner.index;
 
         auto inverse_transform = inverse(owner->transform_to_root);
         auto mouse_position_local = inverse_transform * mouse_position;
 
-        if (math::is_inside(child->area, mouse_position_local.xy))
+        if (math::is_inside(h->area, mouse_position_local.xy))
         {
             if (!hovered)
             {
                 hovered.type = UI_ELEMENT;
-                hovered.index = (uint32) child->owner.index;
+                hovered.index = (uint32) h->owner.index;
             }
             // @todo: implement order index again ?
         }
@@ -884,6 +884,17 @@ handle null_handle()
 {
     handle result;
     result.type = UI_NONE;
+    result.index = 0;
+
+    return result;
+}
+
+handle make_handle(type_t t, uint32 index)
+{
+    handle result;
+    result.type = t;
+    result.index = index;
+
     return result;
 }
 

@@ -103,6 +103,7 @@ struct handle
 };
 
 handle null_handle();
+handle make_handle(type_t, uint32 index);
 bool32 operator == (handle a, handle b);
 bool32 operator != (handle a, handle b);
 

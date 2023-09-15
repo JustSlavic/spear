@@ -248,6 +248,9 @@ INITIALIZE_MEMORY_FUNCTION(initialize_memory)
     {
         auto ui_memory = ALLOCATE_BUFFER_(gs->game_allocator, MEGABYTES(1));
         gs->hud = ui::initialize(ui_memory);
+#if UI_EDITOR_ENABLED
+        gs->ui_editor = ui::initialize_editor(gs->game_allocator);
+#endif // UI_EDITOR_ENABLED
 
         ui::set_string_id_storage(gs->hud, context->strid_storage);
         ui::set_resource_rectangle_mesh(gs->hud, gs->rectangle_mesh);

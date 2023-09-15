@@ -11,6 +11,7 @@ namespace ui {
 
 struct editor;
 
+editor *initialize_editor(memory_allocator a);
 void update_editor(system *s, editor *e, input_state *input);
 void render_editor(execution_context *context, system *s, editor *e);
 
