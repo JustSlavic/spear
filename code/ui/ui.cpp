@@ -24,19 +24,18 @@ struct element
     math::transform transform_to_root;
 };
 
-struct shape
-{
-    handle owner;
-    float32 width, height;
-    math::vector4 color;
-};
-
-struct image
+struct drawable
 {
     handle owner;
     uint32 width;
     uint32 height;
-    rs::resource_token texture_token;
+
+    type_t type;
+    union
+    {
+        math::vector4 color;
+        rs::resource_token texture_token;
+    };
 };
 
 struct hoverable
@@ -91,17 +90,15 @@ struct system
     element root;
 
     // Interactive stuff
-    handle hot;
-    handle active;
-    handle pressed;
+    handle hot; // The element above which is the mouse
+    handle active; // The element which player is interacting with
 
     // Primary elements
-    static_array<element, 30> elements;
+    static_array<element, 32> elements;
     // Secondary elements
-    static_array<shape, 20> shapes;
-    static_array<image, 20> images;
-    static_array<hoverable, 20> hoverables;
-    static_array<clickable, 20> clickables;
+    static_array<drawable, 32> drawables;
+    static_array<hoverable, 32> hoverables;
+    static_array<clickable, 32> clickables;
     static_array<animation, 32> animations;
 
     // Hash table for fetching all attachables of an element
@@ -231,37 +228,31 @@ element_ref push_element(system *s)
     return result;
 }
 
-struct shape_ref
+struct drawable_ref
 {
     handle h;
-    shape *p;
+    drawable *p;
 };
 
-shape_ref push_shape(system *s)
+drawable_ref push_shape(system *s)
 {
-    ASSERT(s->shapes.size() < s->shapes.capacity());
+    ASSERT(s->drawables.size() < s->drawables.capacity());
 
-    shape_ref result;
+    drawable_ref result;
     result.h.type = UI_SHAPE;
-    result.h.index = (uint32) s->shapes.size();
-    result.p = s->shapes.push();
+    result.h.index = (uint32) s->drawables.size();
+    result.p = s->drawables.push();
     return result;
 }
 
-struct image_ref
+drawable_ref push_image(system *s)
 {
-    handle h;
-    image *p;
-};
+    ASSERT(s->drawables.size() < s->drawables.capacity());
 
-image_ref push_image(system *s)
-{
-    ASSERT(s->images.size() < s->images.capacity());
-
-    image_ref result;
+    drawable_ref result;
     result.h.type = UI_IMAGE;
-    result.h.index = (uint32) s->images.size();
-    result.p = s->images.push();
+    result.h.index = (uint32) s->drawables.size();
+    result.p = s->drawables.push();
     return result;
 }
 
@@ -352,8 +343,9 @@ handle make_shape(system *s, handle parent)
     child.p->parent   = parent;
 
     graphics.p->owner  = child.h;
-    graphics.p->width  = 100.f;
-    graphics.p->height = 100.f;
+    graphics.p->width  = 100;
+    graphics.p->height = 100;
+    graphics.p->type   = UI_SHAPE;
     graphics.p->color  = V4(1);
 
     return child.h;
@@ -381,9 +373,10 @@ handle make_image(system *s, handle parent)
     child.p->rotation = 0.f;
     child.p->parent   = parent;
 
-    image.p->owner = child.h;
-    image.p->width = 0;
+    image.p->owner  = child.h;
+    image.p->width  = 0;
     image.p->height = 0;
+    image.p->type   = UI_IMAGE;
 
     return child.h;
 }
@@ -544,8 +537,8 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
-                            p->width = value;
+                            auto *p = s->drawables.data() + h.index;
+                            p->width = (uint32) value;
                         }
                     }
                 }
@@ -560,8 +553,8 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
-                            p->height = value;
+                            auto *p = s->drawables.data() + h.index;
+                            p->height = (uint32) value;
                         }
                     }
                 }
@@ -576,7 +569,7 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
+                            auto *p = s->drawables.data() + h.index;
                             p->color.r = value;
                         }
                     }
@@ -592,7 +585,7 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
+                            auto *p = s->drawables.data() + h.index;
                             p->color.g = value;
                         }
                     }
@@ -608,7 +601,7 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
+                            auto *p = s->drawables.data() + h.index;
                             p->color.b = value;
                         }
                     }
@@ -624,7 +617,7 @@ void update_animations(system *s, float32 dt)
                     {
                         if (h.type == UI_SHAPE)
                         {
-                            auto *p = s->shapes.data() + h.index;
+                            auto *p = s->drawables.data() + h.index;
                             p->color.a = value;
                         }
                     }
@@ -670,7 +663,6 @@ void update_transforms(system *s)
 void update(system *s, input_state *inp)
 {
     auto mouse_position = V3(inp->mouse.x, inp->mouse.y, 0);
-    s->pressed = null_handle();
 
     update_animations(s, inp->dt);
     update_transforms(s);
@@ -823,7 +815,6 @@ void update(system *s, input_state *inp)
                     auto *p = s->clickables.data() + child.index;
                     if (s->active == s->hot)
                     {
-                        s->pressed = s->active;
                         p->callbacks.on_release(s, s->active);
                     }
                     p->callbacks.on_release_internal(s, s->active);
@@ -841,54 +832,51 @@ void render(execution_context *context, system *s)
         math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    for (usize shape_index = s->shapes.size() - 1; shape_index < s->shapes.size(); shape_index--)
+    for (usize index = s->drawables.size() - 1; index < s->drawables.size(); index--)
     {
-        auto *shape = s->shapes.data() + shape_index;
-        auto *element = s->elements.data() + shape->owner.index;
+        auto *drawable = s->drawables.data() + index;
+        auto *element = s->elements.data() + drawable->owner.index;
 
         if (element->is_visible == false) continue;
 
-        auto model =
-            math::scaled(V3(0.5f * shape->width, 0.5f * shape->height, 1),
-            math::to_matrix4(element->transform_to_root));
+        if (drawable->type == UI_SHAPE)
+        {
+            auto model =
+                math::scaled(V3(0.5f * drawable->width, 0.5f * drawable->height, 1),
+                math::to_matrix4(element->transform_to_root));
 
-        render_command::command_draw_ui command_draw_ui;
-        command_draw_ui.mesh_token = s->rectangle_mesh;
-        command_draw_ui.shader_token = s->rectangle_shader;
+            render_command::command_draw_ui command_draw_ui;
+            command_draw_ui.mesh_token = s->rectangle_mesh;
+            command_draw_ui.shader_token = s->rectangle_shader;
 
-        command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
-        command_draw_ui.view = math::matrix4::identity();
-        command_draw_ui.projection = projection;
-        command_draw_ui.color = shape->color;
+            command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
+            command_draw_ui.view = math::matrix4::identity();
+            command_draw_ui.projection = projection;
+            command_draw_ui.color = drawable->color;
 
-        render_command cmd;
-        cmd.type = render_command::command_type::draw_ui;
-        cmd.draw_ui = command_draw_ui;
+            render_command cmd;
+            cmd.type = render_command::command_type::draw_ui;
+            cmd.draw_ui = command_draw_ui;
 
-        push_render_command(context, cmd);
-    }
+            push_render_command(context, cmd);
+        }
+        else if (drawable->type == UI_IMAGE)
+        {
+            auto model =
+                math::scaled(V3(0.5f * 100, 0.5f * 100, 1),
+                math::to_matrix4(element->transform_to_root));
 
-    for (usize image_index = s->images.size() - 1; image_index < s->images.size(); image_index--)
-    {
-        auto *image = s->images.data() + image_index;
-        auto *element = s->elements.data() + image->owner.index;
+            render_command::command_draw_ui_texture cmd;
+            cmd.mesh_token = s->rectangle_mesh_uv;
+            cmd.shader_token = s->rectangle_shader_uv;
+            cmd.texture_token = drawable->texture_token;
 
-        if (element->is_visible == false) continue;
+            cmd.model = math::transposed(model);
+            cmd.view = math::matrix4::identity();
+            cmd.projection = projection;
 
-        auto model =
-            math::scaled(V3(0.5f * 100, 0.5f * 100, 1),
-            math::to_matrix4(element->transform_to_root));
-
-        render_command::command_draw_ui_texture cmd;
-        cmd.mesh_token = s->rectangle_mesh_uv;
-        cmd.shader_token = s->rectangle_shader_uv;
-        cmd.texture_token = image->texture_token;
-
-        cmd.model = math::transposed(model);
-        cmd.view = math::matrix4::identity();
-        cmd.projection = projection;
-
-        push_draw_ui_texture_command(context, cmd);
+            push_draw_ui_texture_command(context, cmd);
+        }
     }
 }
 
@@ -1017,7 +1005,7 @@ void set_color(system *s, handle h, math::vector4 color)
     {
         if (a.type == UI_SHAPE)
         {
-            shape *p = s->shapes.data() + a.index;
+            drawable *p = s->drawables.data() + a.index;
             p->color = color;
         }
     }
@@ -1029,7 +1017,7 @@ void set_texture(system *s, handle h, rs::resource_token token)
     {
         if (a.type == UI_IMAGE)
         {
-            image *p = s->images.data() + a.index;
+            drawable *p = s->drawables.data() + a.index;
             p->texture_token = token;
         }
     }
