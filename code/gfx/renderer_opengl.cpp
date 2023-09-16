@@ -108,6 +108,44 @@ void main()
 }
 )GLSL";
 
+GLOBAL char const *vs_frame_source = R"GLSL(
+#version 400
+
+#define BORDER_WIDTH  (1.0 / 16.0) * 0.1
+#define BORDER_HEIGHT (1.0 /  9.0) * 0.1
+
+layout (location = 0) in vec2 vertex_position;
+layout (location = 1) in vec2 vertex_add_sign;
+
+out vec4 fragment_color;
+
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+uniform vec4 u_color;
+
+void main()
+{
+    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 0.0, 1.0);
+    fragment_color = u_color;
+    gl_Position = p + vec4(vertex_add_sign.x * BORDER_WIDTH, -vertex_add_sign.y * BORDER_HEIGHT, 0.0, 0.0);
+}
+)GLSL";
+
+
+GLOBAL char const *fs_frame_source = R"GLSL(
+#version 400
+
+in vec4 fragment_color;
+out vec4 result_color;
+
+void main()
+{
+    result_color = fragment_color;
+}
+)GLSL";
+
+
 
 math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
@@ -278,6 +316,11 @@ void load_shader(execution_context *context, rs::resource *resource)
     {
         vs = compile_shader(vs_textured_source, shader::vertex);
         fs = compile_shader(fs_textured_source, shader::fragment);
+    }
+    if (resource->shader.name == STRID("frame.shader"))
+    {
+        vs = compile_shader(vs_frame_source, shader::vertex);
+        fs = compile_shader(fs_frame_source, shader::fragment);
     }
 
     auto program = link_shader(vs, fs);

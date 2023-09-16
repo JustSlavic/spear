@@ -102,6 +102,9 @@ struct render_command
     };
     struct command_draw_screen_frame
     {
+        math::matrix4 model;
+        math::matrix4 view;
+        math::matrix4 projection;
         math::vector4 color;
     };
     struct command_draw_ui

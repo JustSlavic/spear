@@ -264,7 +264,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     rs::resource_token screen_frame_mesh = {};
     rs::resource_token screen_frame_shader = {};
     {
-        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "rectangle.shader"));
+        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "frame.shader"));
 
         // 3--------2
         // |\      /|
@@ -274,17 +274,23 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         // |/      \|
         // 0--------1
 
+        struct frame_vertex
+        {
+            float32 x, y;
+            float32 w, h;
+        };
+
         float32 border_width = (1.0f / 16.0f) * .1f;
         float32 border_height = (1.0f / 9.0f) * .1f;
-        float32 vbo_[] = {
-            -1.0f, -1.0f, 0.0f,
-             1.0f, -1.0f, 0.0f,
-             1.0f,  1.0f, 0.0f,
-            -1.0f,  1.0f, 0.0f,
-            -1.0f + border_width, -1.0f + border_height, 0.0f,
-             1.0f - border_width, -1.0f + border_height, 0.0f,
-             1.0f - border_width,  1.0f - border_height, 0.0f,
-            -1.0f + border_width,  1.0f - border_height, 0.0f,
+        frame_vertex vbo_[] = {
+            frame_vertex{ -1.f, -1.f,  0.f,  0.f },
+            frame_vertex{  1.f, -1.f,  0.f,  0.f },
+            frame_vertex{  1.f,  1.f,  0.f,  0.f },
+            frame_vertex{ -1.f,  1.f,  0.f,  0.f },
+            frame_vertex{ -1.f, -1.f,  1.f,  1.f },
+            frame_vertex{  1.f, -1.f, -1.f,  1.f },
+            frame_vertex{  1.f,  1.f, -1.f, -1.f },
+            frame_vertex{ -1.f,  1.f,  1.f, -1.f },
         };
 
         auto vbo = ALLOCATE_BUFFER_(context.temporary_allocator, sizeof(vbo_));
@@ -305,7 +311,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         memory__copy(ibo.memory, ibo_, sizeof(ibo_));
 
         gfx::vertex_buffer_layout vbl = {};
-        gfx::push_layout_element(&vbl, 3);
+        gfx::push_layout_element(&vbl, 2);
+        gfx::push_layout_element(&vbl, 2);
         screen_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
     }
 
@@ -494,9 +501,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     gfx::draw_polygon_simple(&context,
                         screen_frame_mesh,
                         screen_frame_shader,
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
+                        cmd->draw_screen_frame.model,
+                        cmd->draw_screen_frame.view,
+                        cmd->draw_screen_frame.projection,
                         cmd->draw_screen_frame.color);
                 }
                 break;

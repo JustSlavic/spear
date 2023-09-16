@@ -98,27 +98,22 @@ void render_editor(execution_context *context, system *s, editor *e)
         math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    if (e->hot)
+    // if (e->hot)
+    for (uint32 i = 0; i < s->elements.size(); i++)
     {
-        auto *element = s->elements.data() + e->hot.index;
+        auto *element = s->elements.data() + i;
         auto model =
             math::scaled(V3(50, 50, 1),
             math::to_matrix4(element->transform_to_root));
+        transpose(model);
 
-        render_command::command_draw_ui command_draw_ui;
-        command_draw_ui.mesh_token = s->rectangle_mesh;
-        command_draw_ui.shader_token = s->rectangle_shader;
+        render_command::command_draw_screen_frame draw_frame;
+        draw_frame.model = model;
+        draw_frame.view = math::matrix4::identity();
+        draw_frame.projection = projection;
 
-        command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
-        command_draw_ui.view = math::matrix4::identity();
-        command_draw_ui.projection = projection;
-        command_draw_ui.color = V4(1, 0, 0, 1);
-
-        render_command cmd;
-        cmd.type = render_command::command_type::draw_ui;
-        cmd.draw_ui = command_draw_ui;
-
-        push_render_command(context, cmd);
+        draw_frame.color = V4(1,0,0,1);
+        push_draw_screen_frame(context, draw_frame);
     }
 }
 
