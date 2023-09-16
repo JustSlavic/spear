@@ -720,7 +720,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
             render_command::command_draw_screen_frame draw_frame;
             draw_frame.model = math::matrix4::identity();
             draw_frame.view = math::matrix4::identity();
-            draw_frame.projection = math::scaled(V3(1, -1, 1), math::matrix4::identity());
+            draw_frame.projection = math::matrix4::identity();
             draw_frame.color = V4(0,0,0,1);
             push_draw_screen_frame(context, draw_frame);
         }
@@ -735,7 +735,7 @@ UPDATE_AND_RENDER_FUNCTION(update_and_render)
         render_command::command_draw_screen_frame draw_frame;
         draw_frame.model = math::matrix4::identity();
         draw_frame.view = math::matrix4::identity();
-        draw_frame.projection = math::scaled(V3(1, -1, 1), math::matrix4::identity());
+        draw_frame.projection = math::matrix4::identity();
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
 

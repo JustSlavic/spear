@@ -94,14 +94,14 @@ void update_editor(system *s, editor *editor, input_state *input)
 void render_editor(execution_context *context, system *s, editor *e)
 {
     auto projection =
-        math::translated(V3(-1, 1, 0),
-        math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
+        math::translated(V3(-1, -1, 0),
+        math::scaled(V3(2.0/context->letterbox_width, 2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    // if (e->hot)
-    for (uint32 i = 0; i < s->elements.size(); i++)
+    if (e->hot)
+    // for (uint32 i = 0; i < s->elements.size(); i++)
     {
-        auto *element = s->elements.data() + i;
+        auto *element = s->elements.data() + e->hot.index;
         auto model =
             math::scaled(V3(50, 50, 1),
             math::to_matrix4(element->transform_to_root));
