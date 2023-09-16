@@ -844,12 +844,13 @@ void render(execution_context *context, system *s)
             auto model =
                 math::scaled(V3(0.5f * drawable->width, 0.5f * drawable->height, 1),
                 math::to_matrix4(element->transform_to_root));
+            math::transpose(model);
 
             render_command::command_draw_ui command_draw_ui;
             command_draw_ui.mesh_token = s->rectangle_mesh;
             command_draw_ui.shader_token = s->rectangle_shader;
 
-            command_draw_ui.model = math::transposed(model); // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
+            command_draw_ui.model = model; // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
             command_draw_ui.view = math::matrix4::identity();
             command_draw_ui.projection = projection;
             command_draw_ui.color = drawable->color;
