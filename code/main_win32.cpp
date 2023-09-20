@@ -148,6 +148,10 @@ void process_pending_messages(input_state *inp)
                         break;
                     case VK_SPACE: process_button_state(&inp->keyboard[KB_SPACE], is_down);
                         break;
+                    case VK_SHIFT: process_button_state(&inp->keyboard[KB_SHIFT], is_down);
+                        break;
+                    case VK_CONTROL: process_button_state(&inp->keyboard[KB_CTRL], is_down);
+                        break;
                     case 'W': process_button_state(&inp->keyboard[KB_W], is_down);
                         break;
                     case 'A': process_button_state(&inp->keyboard[KB_A], is_down);
@@ -199,7 +203,9 @@ void process_pending_messages(input_state *inp)
                             }
                         }
 #endif // DEBUG
-                        break;
+                    break;
+                    case 'Z': process_button_state(&inp->keyboard[KB_Z], is_down);
+                    break;
                 }
             }
             break;

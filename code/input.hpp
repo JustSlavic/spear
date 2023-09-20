@@ -49,11 +49,8 @@ INLINE uint32 get_hold_count(button_state button)
 
 INLINE void process_button_state(button_state *button, bool32 is_down)
 {
-    if (button->is_down != is_down)
-    {
-        button->is_down = is_down;
-        button->transition_count += 1;
-    }
+    button->transition_count += (button->is_down != is_down);
+    button->is_down = is_down;
 }
 
 enum keyboard_key
@@ -66,6 +63,7 @@ enum keyboard_key
     KB_CONTROL_LEFT, KB_SUPER_LEFT, KB_ALT_LEFT, KB_SPACE, KB_ALT_RIGHT, KB_CONTROL_RIGHT,
     KB_NUM1, KB_NUM2, KB_NUM3, KB_NUM4, KB_NUM5, KB_NUM6, KB_NUM7, KB_NUM8, KB_NUM9, KB_NUM0,
     KB_PAGE_UP, KB_PAGE_DOWN, KB_HOME, KB_END,KB_INSERT, KB_DELETE,
+    KB_CTRL, KB_ALT, KB_SHIFT,
     // @note: key_count have to be the last in enum
     KB_KEY_COUNT
 };

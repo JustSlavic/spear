@@ -43,8 +43,8 @@ struct editor
     // @note: current_action is like a scratchpad where you
     // record your action and then commit to history later.
     editor_action current_action;
-    editor_action history[32];
-    isize action_end_index;
+    editor_action history[64];
+    uint64 action_end_index;
 };
 
 
@@ -52,6 +52,55 @@ editor *initialize_editor(memory_allocator a)
 {
     editor *result = ALLOCATE(a, editor);
     return result;
+}
+
+
+editor_action ui_editor__null_action()
+{
+    editor_action result;
+    result.type = UI_EDITOR_ACTION_NONE;
+    return result;
+}
+
+void ui_editor__commit_action(editor *e, editor_action action)
+{
+    if (action.type != UI_EDITOR_ACTION_NONE)
+    {
+        e->history[e->action_end_index % ARRAY_COUNT(e->history)] = action;
+        e->action_end_index += 1;
+        e->history[e->action_end_index % ARRAY_COUNT(e->history)] = ui_editor__null_action();
+    }
+}
+
+void ui_editor__undo_action(editor *e)
+{
+    if (e->action_end_index > 0)
+    {
+        editor_action action = e->history[(e->action_end_index - 1) % ARRAY_COUNT(e->history)];
+        if (action.type == UI_EDITOR_ACTION_SELECTION)
+        {
+            e->selection = action.selection.old_selection;
+        }
+
+        if (action.type != UI_EDITOR_ACTION_NONE)
+        {
+            e->action_end_index -= 1;
+        }
+    }
+}
+
+void ui_editor__redo_action(editor *e)
+{
+    editor_action action = e->history[e->action_end_index % ARRAY_COUNT(e->history)];
+    if (action.type == UI_EDITOR_ACTION_SELECTION)
+    {
+        e->selection = action.selection.new_selection;
+    }
+
+    if (action.type != UI_EDITOR_ACTION_NONE)
+    {
+        e->action_end_index += 1;
+    }
 }
 
 
@@ -137,6 +186,12 @@ void update_editor(system *s, editor *editor, input_state *input)
 
     if (get_press_count(input->mouse[MOUSE_LEFT]))
     {
+        editor_action action;
+        action.type = UI_EDITOR_ACTION_SELECTION;
+        action.selection.old_selection = editor->selection;
+        action.selection.new_selection = editor->hot;
+        ui_editor__commit_action(editor, action);
+
         editor->active = editor->hot;
         editor->selection = editor->hot;
     }
@@ -144,6 +199,20 @@ void update_editor(system *s, editor *editor, input_state *input)
     if (get_release_count(input->mouse[MOUSE_LEFT]))
     {
         editor->active = null_handle();
+    }
+
+    auto ctrl = get_hold_count(input->keyboard[KB_CTRL]);
+    auto shift = get_hold_count(input->keyboard[KB_SHIFT]);
+    auto z = get_press_count(input->keyboard[KB_Z]);
+    osOutputDebugString("ctrl=%d, shift=%d, z=%d\n", ctrl, shift, z);
+    if (ctrl && !shift && z)
+    {
+        ui_editor__undo_action(editor);
+    }
+
+    if (ctrl && shift && z)
+    {
+        ui_editor__redo_action(editor);
     }
 }
 
