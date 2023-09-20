@@ -128,7 +128,9 @@ void main()
 {
     vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 0.0, 1.0);
     fragment_color = u_color;
-    p = p + vec4(vertex_add_sign.x * BORDER_WIDTH, vertex_add_sign.y * BORDER_HEIGHT, 0.0, 0.0);
+    vec4 vertex_add = -vec4(vertex_add_sign, 0, 0); // Minus sign invertes the frame inside-out so
+                                                    // the frame doesn't obscure the UI element.
+    p = p + vec4(-vertex_add_sign.x * BORDER_WIDTH, -vertex_add_sign.y * BORDER_HEIGHT, 0.0, 0.0);
     p.y *= -1.0; // Accounting to the fact that UI is Y-top-down, but I draw AABB in the Y-down-top
     gl_Position = p;
 }

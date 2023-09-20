@@ -98,21 +98,66 @@ void render_editor(execution_context *context, system *s, editor *e)
         math::scaled(V3(2.0/context->letterbox_width, 2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    if (e->hot)
-    // for (uint32 i = 0; i < s->elements.size(); i++)
+    // if (e->hot)
+    for (uint32 element_index = 0; element_index < s->elements.size(); element_index++)
     {
-        auto *element = s->elements.data() + e->hot.index;
-        auto model =
-            math::scaled(V3(50, 50, 1),
-            math::to_matrix4(element->transform_to_root));
-        transpose(model);
+        auto h = make_handle(UI_ELEMENT, element_index);
+        bool32 have_graphics = false;
+        for (auto a : iterate_attaches(s, h))
+        {
+            have_graphics = (a.type == UI_SHAPE || a.type == UI_IMAGE);
+            if (have_graphics) break;
+        }
+        if (!have_graphics) continue;
+
+        auto *element = &s->elements[element_index];
+        auto model = math::to_matrix4(element->transform_to_root);
+
+        auto rect = math::rectangle2::from_center_size(V2(0), 100, 100);
+        auto tl = model * V4(math::top_left(rect), 0, 1);
+        auto bl = model * V4(math::bottom_left(rect), 0, 1);
+        auto br = model * V4(math::bottom_right(rect), 0, 1);
+        auto tr = model * V4(math::top_right(rect), 0, 1);
+
+        auto min_x = tl.x;
+        if (bl.x < min_x) min_x = bl.x;
+        if (br.x < min_x) min_x = br.x;
+        if (tr.x < min_x) min_x = tr.x;
+
+        auto max_x = tl.x;
+        if (bl.x > max_x) max_x = bl.x;
+        if (br.x > max_x) max_x = br.x;
+        if (tr.x > max_x) max_x = tr.x;
+
+        auto min_y = tl.y;
+        if (bl.y < min_y) min_y = bl.y;
+        if (br.y < min_y) min_y = br.y;
+        if (tr.y < min_y) min_y = tr.y;
+
+        auto max_y = tl.y;
+        if (bl.y > max_y) max_y = bl.y;
+        if (br.y > max_y) max_y = br.y;
+        if (tr.y > max_y) max_y = tr.y;
+
+        auto aabb_width = max_x - min_x;
+        auto aabb_height = max_y - min_y;
+        auto aabb_center = V2(0.5f * (min_x + max_x), 0.5f * (min_y + max_y));
 
         render_command::command_draw_screen_frame draw_frame;
-        draw_frame.model = model;
+        draw_frame.model =
+            math::translated(V3(aabb_center, 0),
+            math::scaled(V3(0.5f * aabb_width, 0.5f * aabb_height, 1),
+            math::matrix4::identity()));
         draw_frame.view = math::matrix4::identity();
         draw_frame.projection = projection;
-
-        draw_frame.color = V4(1,0,0,1);
+        if (h == e->hot)
+        {
+            draw_frame.color = V4(1.0,0.2,0.2,1);
+        }
+        else
+        {
+            draw_frame.color = V4(0.2,0.5,0.9,1);
+        }
         push_draw_screen_frame(context, draw_frame);
     }
 }
