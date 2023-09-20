@@ -64,16 +64,19 @@ void update_editor(system *s, editor *editor, input_state *input)
         ASSERT(d->owner.type == UI_ELEMENT);
         element *e = s->elements.data() + d->owner.index;
 
-        auto inverse_transform = inverse(e->transform_to_root);
-        auto mouse_position_local = inverse_transform * mouse_position;
-
-        math::rectangle2 rect = math::rectangle2::from_center_size(e->position, (float32) d->width, (float32) d->height);
-        if (math::is_inside(rect, mouse_position_local.xy))
+        if (e->is_visible)
         {
-            if (!hovered)
+            auto inverse_transform = inverse(e->transform_to_root);
+            auto mouse_position_local = inverse_transform * mouse_position;
+
+            math::rectangle2 rect = math::rectangle2::from_center_size(e->position, (float32) d->width, (float32) d->height);
+            if (math::is_inside(rect, mouse_position_local.xy))
             {
-                hovered = make_handle(UI_ELEMENT, d->owner.index);
-                break;
+                if (!hovered)
+                {
+                    hovered = make_handle(UI_ELEMENT, d->owner.index);
+                    break;
+                }
             }
         }
     }
@@ -101,6 +104,9 @@ void render_editor(execution_context *context, system *s, editor *e)
     // if (e->hot)
     for (uint32 element_index = 0; element_index < s->elements.size(); element_index++)
     {
+        auto *element = &s->elements[element_index];
+        if (element->is_visible == false) continue;
+
         auto h = make_handle(UI_ELEMENT, element_index);
         bool32 have_graphics = false;
         for (auto a : iterate_attaches(s, h))
@@ -110,7 +116,6 @@ void render_editor(execution_context *context, system *s, editor *e)
         }
         if (!have_graphics) continue;
 
-        auto *element = &s->elements[element_index];
         auto model = math::to_matrix4(element->transform_to_root);
 
         auto rect = math::rectangle2::from_center_size(V2(0), 100, 100);
