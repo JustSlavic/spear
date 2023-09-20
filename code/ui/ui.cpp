@@ -95,16 +95,13 @@ struct system
 
     // Primary elements
     static_array<element, 32> elements;
+    // The array of linked lists of all the attaches for the particular element
+    static_array<attach *, 32> attaches;
     // Secondary elements
     static_array<drawable, 32> drawables;
     static_array<hoverable, 32> hoverables;
     static_array<clickable, 32> clickables;
     static_array<animation, 32> animations;
-
-    // Hash table for fetching all attachables of an element
-    handle hash_table_k[32];
-    attach hash_table_v[32];
-    attach *hash_table_free_list;
 
     // Rendering stuff
     rs::resource_token rectangle_mesh;
@@ -142,46 +139,29 @@ void push_attach_to_slot(system *s, attach *slot, handle child)
 
 void attach_child(system *s, handle parent, handle child)
 {
-    usize hash = ((usize) parent.type * 41) + ((usize) parent.index * 17);
-    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_k); offset++)
+    if (parent.type == UI_ELEMENT)
     {
-        usize index = (hash + offset) % ARRAY_COUNT(s->hash_table_k);
-        handle k = s->hash_table_k[index];
-
-        if (!k)
+        if (s->attaches[parent.index] == NULL)
         {
-            s->hash_table_k[index] = parent;
+            s->attaches[parent.index] = ALLOCATE(s->ui_allocator, attach);
+            s->attaches[parent.index]->h = child;
         }
-        if (!k || k == parent)
+        else
         {
-            attach *slot = s->hash_table_v + index;
-            push_attach_to_slot(s, slot, child);
-            break;
+            auto *slot = s->attaches[parent.index];
+            while (slot->next)
+            {
+                slot = slot->next;
+            }
+            slot->next = ALLOCATE(s->ui_allocator, attach);
+            slot->next->h = child;
         }
     }
 }
 
 attach_iterator iterate_attaches(system *s, handle parent)
 {
-    attach_iterator result = {};
-
-    usize hash = ((usize) parent.type * 41) + ((usize) parent.index * 17);
-    for (usize offset = 0; offset < ARRAY_COUNT(s->hash_table_k); offset++)
-    {
-        usize index = (hash + offset) % ARRAY_COUNT(s->hash_table_k);
-        handle k = s->hash_table_k[index];
-
-        if (!k)
-        {
-            break;
-        }
-        if (k == parent)
-        {
-            result.p = s->hash_table_v + index;
-            break;
-        }
-    }
-
+    attach_iterator result = { s->attaches[parent.index] };
     return result;
 }
 
