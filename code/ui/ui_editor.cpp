@@ -13,12 +13,15 @@ enum editor_action_type
 
 struct editor_action_move
 {
-
+    handle h;
+    math::vector2 old_position;
+    math::vector2 new_position;
 };
 
 struct editor_action_selection
 {
-
+    handle old_selection;
+    handle new_selection;
 };
 
 struct editor_action
@@ -83,13 +86,64 @@ void update_editor(system *s, editor *editor, input_state *input)
 
     if (hovered)
     {
-        // I found something under the mouse
-        editor->hot = hovered;
+        if (!editor->active)
+        {
+            // I found element under mouse, and no element is active! That's good, I can set myself as hot.
+            if (editor->hot)
+            {
+                // There's something hot already, check if it's what I found.
+                if (editor->hot == hovered)
+                {
+                    // The element I found under the mouse is exactly what I have hot. I will do nothing then.
+                }
+                else
+                {
+                    editor->hot = hovered;
+                }
+            }
+            else
+            {
+                // There's nothing hot yet, let's make our element hot.
+                editor->hot = hovered;
+            }
+        }
+        else
+        {
+            // If there's already something active
+            if (editor->hot == hovered)
+            {
+                // What I found is already hot, do nothing
+            }
+            else if (hovered == editor->active)
+            {
+                // What I found is the thing I have active, but it's not hot, make it hot again
+                editor->hot = hovered;
+            }
+        }
     }
     else
     {
-        // I didn't find anything under the mouse
-        editor->hot = null_handle();
+        if (editor->hot)
+        {
+            // I didn't find anything under the mouse, but I have a hot element? Make it cold again.
+            editor->hot = null_handle();
+        }
+    }
+
+    if (get_hold_count(input->mouse[MOUSE_LEFT]))
+    {
+
+    }
+
+    if (get_press_count(input->mouse[MOUSE_LEFT]))
+    {
+        editor->active = editor->hot;
+        editor->selection = editor->hot;
+    }
+
+    if (get_release_count(input->mouse[MOUSE_LEFT]))
+    {
+        editor->active = null_handle();
     }
 }
 
@@ -101,7 +155,6 @@ void render_editor(execution_context *context, system *s, editor *e)
         math::scaled(V3(2.0/context->letterbox_width, 2.0/context->letterbox_height, 1),
         math::matrix4::identity()));
 
-    // if (e->hot)
     for (uint32 element_index = 0; element_index < s->elements.size(); element_index++)
     {
         auto *element = &s->elements[element_index];
@@ -155,7 +208,11 @@ void render_editor(execution_context *context, system *s, editor *e)
             math::matrix4::identity()));
         draw_frame.view = math::matrix4::identity();
         draw_frame.projection = projection;
-        if (h == e->hot)
+        if (h == e->selection)
+        {
+            draw_frame.color = V4(1.0,0.2,1,1);
+        }
+        else if (h == e->hot)
         {
             draw_frame.color = V4(1.0,0.2,0.2,1);
         }
