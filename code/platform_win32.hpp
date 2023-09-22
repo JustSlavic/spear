@@ -9,6 +9,7 @@
 #include <time.hpp>
 
 #include <windows.h>
+#include <input.hpp>
 
 
 #define MAIN_WINDOW_CALLBACK(NAME) LRESULT CALLBACK NAME(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -264,6 +265,46 @@ void unload_dll(dll *library)
 
 #define THREAD_FUNCTION(NAME) uint32 NAME(void *parameter)
 typedef THREAD_FUNCTION(thread_function_t);
+
+
+keyboard_key map_button_from_virtual_key_code(uint32 vk)
+{
+    switch (vk)
+    {
+        case VK_ESCAPE: return KB_ESC; break;
+        case VK_F1: return KB_F1; break;
+        case VK_SPACE: return KB_SPACE; break;
+        case VK_SHIFT: return KB_SHIFT; break;
+        case VK_CONTROL: return KB_CTRL; break;
+        case 'Q': return KB_Q; break;
+        case 'W': return KB_W; break;
+        case 'E': return KB_E; break;
+        case 'R': return KB_R; break;
+        case 'T': return KB_T; break;
+        case 'Y': return KB_Y; break;
+        case 'U': return KB_U; break;
+        case 'I': return KB_I; break;
+        case 'O': return KB_O; break;
+        case 'P': return KB_P; break;
+        case 'A': return KB_A; break;
+        case 'S': return KB_S; break;
+        case 'D': return KB_D; break;
+        case 'F': return KB_F; break;
+        case 'G': return KB_G; break;
+        case 'H': return KB_H; break;
+        case 'J': return KB_J; break;
+        case 'K': return KB_K; break;
+        case 'L': return KB_L; break;
+        case 'Z': return KB_Z; break;
+        case 'X': return KB_X; break;
+        case 'C': return KB_C; break;
+        case 'V': return KB_V; break;
+        case 'B': return KB_B; break;
+        case 'N': return KB_N; break;
+        case 'M': return KB_M; break;
+    }
+    return KB_NONE;
+}
 
 
 } // namespace win32

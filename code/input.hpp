@@ -55,6 +55,7 @@ INLINE void process_button_state(button_state *button, bool32 is_down)
 
 enum keyboard_key
 {
+    KB_NONE,
     KB_ESC, KB_F1, KB_F2, KB_F3, KB_F4, KB_F5, KB_F6, KB_F7, KB_F8, KB_F9, KB_F10, KB_F11, KB_F12,
     KB_TILDA, KB_1, KB_2, KB_3, KB_4, KB_5, KB_6, KB_7, KB_8, KB_9, KB_0, KB_UNDERSCORE, KB_EQUALS, KB_BACKSPACE,
     KB_TAB, KB_Q, KB_W, KB_E, KB_R, KB_T, KB_Y, KB_U, KB_I, KB_O, KB_P, KB_BRACKET_OPEN, KB_BRACKET_CLOSE, KB_BACKSLASH,
@@ -143,7 +144,6 @@ enum gamepad_key
 
 struct gamepad_device
 {
-
     button_state buttons[GP_KEY_COUNT];
     stick_state left_stick, right_stick;
 

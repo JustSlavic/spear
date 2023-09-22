@@ -138,77 +138,52 @@ void process_pending_messages(input_state *inp)
             case WM_KEYUP:
             {
                 uint32 virtual_key_code  = (uint32) message.wParam;
-                bool32 alt_down = (message.lParam & (1 << 29)) != 0;
                 bool32 was_down = (message.lParam & (1 << 30)) != 0;
                 bool32 is_down  = (message.lParam & (1 << 31)) == 0;
 
-                switch (virtual_key_code)
+                process_button_state(&inp->keyboard[win32::map_button_from_virtual_key_code(virtual_key_code)], is_down);
+
+#if DEBUG
+                if (virtual_key_code == 'K')
                 {
-                    case VK_ESCAPE: process_button_state(&inp->keyboard[KB_ESC], is_down);
-                        break;
-                    case VK_F1: process_button_state(&inp->keyboard[KB_F1], is_down);
-                        break;
-                    case VK_SPACE: process_button_state(&inp->keyboard[KB_SPACE], is_down);
-                        break;
-                    case VK_SHIFT: process_button_state(&inp->keyboard[KB_SHIFT], is_down);
-                        break;
-                    case VK_CONTROL: process_button_state(&inp->keyboard[KB_CTRL], is_down);
-                        break;
-                    case 'W': process_button_state(&inp->keyboard[KB_W], is_down);
-                        break;
-                    case 'A': process_button_state(&inp->keyboard[KB_A], is_down);
-                        break;
-                    case 'S': process_button_state(&inp->keyboard[KB_S], is_down);
-                        break;
-                    case 'D': process_button_state(&inp->keyboard[KB_D], is_down);
-                        break;
-                    case 'Y': process_button_state(&inp->keyboard[KB_Y], is_down);
-                        break;
-                    case 'K':
+                    if (!is_down)
                     {
-#if DEBUG
-                        if (!is_down)
+                        if ((debug_loop_state == DEBUG_LOOP_IDLE) && (debug_loop_inputs.size() > 0))
                         {
-                            if ((debug_loop_state == DEBUG_LOOP_IDLE) && (debug_loop_inputs.size() > 0))
-                            {
-                                debug_loop_current_index = 0;
-                                debug_loop_state = DEBUG_LOOP_REPLAYING;
-                            }
-                            else if (debug_loop_state == DEBUG_LOOP_REPLAYING)
-                            {
-                                // Nullify keyboard such as nothing is pressed on stoping the playback loop
-                                // because if there's something left pressed, it will stay pressed although nothing is
-                                // pressed on the actual keyboard
-                                memory__set(inp, 0, sizeof(input_state));
-                                debug_loop_state = DEBUG_LOOP_IDLE;
-                            }
+                            debug_loop_current_index = 0;
+                            debug_loop_state = DEBUG_LOOP_REPLAYING;
                         }
-#endif // DEBUG
+                        else if (debug_loop_state == DEBUG_LOOP_REPLAYING)
+                        {
+                            // Nullify keyboard such as nothing is pressed on stoping the playback loop
+                            // because if there's something left pressed, it will stay pressed although nothing is
+                            // pressed on the actual keyboard
+                            memory__set(inp, 0, sizeof(input_state));
+                            debug_loop_state = DEBUG_LOOP_IDLE;
+                        }
                     }
-                    break;
-                    case 'L':
-#if DEBUG
-                        if (!is_down)
-                        {
-                            if (debug_loop_state == DEBUG_LOOP_IDLE) {
-                                debug_loop_inputs.clear();
-                                debug_loop_state = DEBUG_LOOP_RECORDING;
-                            } else if (debug_loop_state == DEBUG_LOOP_RECORDING) {
-                                debug_loop_current_index = 0;
-                                debug_loop_state = DEBUG_LOOP_REPLAYING;
-                            } else if (debug_loop_state == DEBUG_LOOP_REPLAYING) {
-                                // Nullify keyboard controller such as nothing is pressed on stoping the playback loop
-                                // because if there's something left pressed, it will stay pressed although nothing is
-                                // pressed on the actual keyboard
-                                *inp = {};
-                                debug_loop_state = DEBUG_LOOP_IDLE;
-                            }
-                        }
-#endif // DEBUG
-                    break;
-                    case 'Z': process_button_state(&inp->keyboard[KB_Z], is_down);
-                    break;
                 }
+
+                if (virtual_key_code == 'L')
+                {
+                    if (!is_down)
+                    {
+                        if (debug_loop_state == DEBUG_LOOP_IDLE) {
+                            debug_loop_inputs.clear();
+                            debug_loop_state = DEBUG_LOOP_RECORDING;
+                        } else if (debug_loop_state == DEBUG_LOOP_RECORDING) {
+                            debug_loop_current_index = 0;
+                            debug_loop_state = DEBUG_LOOP_REPLAYING;
+                        } else if (debug_loop_state == DEBUG_LOOP_REPLAYING) {
+                            // Nullify keyboard controller such as nothing is pressed on stoping the playback loop
+                            // because if there's something left pressed, it will stay pressed although nothing is
+                            // pressed on the actual keyboard
+                            *inp = {};
+                            debug_loop_state = DEBUG_LOOP_IDLE;
+                        }
+                    }
+                }
+#endif // DEBUG
             }
             break;
 
