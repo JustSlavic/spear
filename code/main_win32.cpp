@@ -1,5 +1,6 @@
 // Windows
 #include <platform_win32.hpp>
+#include <xaudio2.h>
 
 // Project headers
 #include <base.h>
@@ -10,6 +11,7 @@
 #include <gfx/renderer.hpp>
 #include <input.hpp>
 #include <rs/resource.hpp>
+#include <audio/wav.h>
 
 #include <stdio.h>
 
@@ -375,6 +377,65 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     float32 last_frame_dt = target_seconds_per_frame;
     timepoint last_timepoint = win32::get_wall_clock();
 
+// --------------------------------------------------------------------------------
+    IXAudio2 *AudioDevice = NULL;
+    HRESULT Result = XAudio2Create(&AudioDevice, 0, XAUDIO2_DEFAULT_PROCESSOR);
+    if (FAILED(Result))
+    {
+        // ErrorBeepBoop("Cannot initialize XAudio2 Device!");
+        return 1;
+    }
+
+    uint32 audio_channel_count = 2;
+    uint32 audio_samples_per_second = 48000;
+
+    IXAudio2MasteringVoice *MasterVoice = NULL;
+    Result = AudioDevice->CreateMasteringVoice(&MasterVoice, audio_channel_count, audio_samples_per_second);
+
+    auto wav_contents = win32::load_file(platform_allocator, "birds.wav");
+    audio__track bg_music = load_wav(wav_contents);
+
+    WAVEFORMATEX wave_format;
+    wave_format.wFormatTag = WAVE_FORMAT_PCM;
+    wave_format.nChannels = (WORD) bg_music.channel_count;
+    wave_format.nSamplesPerSec = bg_music.samples_per_second;
+    wave_format.wBitsPerSample = (WORD) bg_music.bits_per_sample;
+    wave_format.nBlockAlign = (wave_format.nChannels * wave_format.wBitsPerSample) / 8;
+    wave_format.nAvgBytesPerSec = wave_format.nSamplesPerSec * wave_format.nBlockAlign;
+    wave_format.cbSize = 0;
+
+    IXAudio2SourceVoice* SourceVoice = NULL;
+    Result = AudioDevice->CreateSourceVoice(&SourceVoice, (WAVEFORMATEX *) &wave_format);
+    if (FAILED(Result))
+    {
+        // ErrorBeepBoop("Cannot create Source Voice!");
+        return 1;
+    }
+
+    XAUDIO2_BUFFER audio_buffer;
+    ZeroMemory(&audio_buffer, sizeof(audio_buffer));
+    audio_buffer.Flags = XAUDIO2_END_OF_STREAM;
+    audio_buffer.AudioBytes = (uint32) bg_music.size;
+    audio_buffer.pAudioData = (BYTE const *) bg_music.data;
+    audio_buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
+
+    Result = SourceVoice->SubmitSourceBuffer(&audio_buffer);
+    if (FAILED(Result))
+    {
+        // ErrorBeepBoop("Cannot submit audio_buffer for some reason");
+        return 1;
+    }
+
+    SourceVoice->SetVolume(0.1f, XAUDIO2_COMMIT_NOW);
+    Result = SourceVoice->Start(0);
+    if (FAILED(Result))
+    {
+        // ErrorBeepBoop("Cannot play a voice for some reason");
+        return 1;
+    }
+
+// --------------------------------------------------------------------------------
+
     running = true;
     while (running)
     {
@@ -602,3 +663,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>
+#include <audio/wav.c>

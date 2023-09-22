@@ -11,8 +11,6 @@ SET INCLUDES=/I../code /I../code/based
 SET LIBS=User32.lib Gdi32.lib Winmm.lib Xinput.lib opengl32.lib D3D11.lib D3DCompiler.lib
 
 
-IF NOT EXIST build mkdir build
-
 cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fespear ../code/main_win32.cpp /link /PDB:spear.pdb %LINKER_FLAGS% %LIBS%
 
 for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds"') do SET PDB_FILENAME="%%i.pdb"
