@@ -12,6 +12,8 @@
 
 //
 // @todo
+// - ui__id for user saving, that can be turned into internal ui__handle,
+//   so the user will preserve correct ids when parts of UI are deleted.
 // - Ellipse
 // - Gradients
 // - Textures

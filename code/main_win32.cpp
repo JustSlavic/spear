@@ -288,8 +288,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             float32 w, h;
         };
 
-        float32 border_width = (1.0f / 16.0f) * .1f;
-        float32 border_height = (1.0f / 9.0f) * .1f;
         frame_vertex vbo_[] = {
             frame_vertex{ -1.f, -1.f,  0.f,  0.f },
             frame_vertex{  1.f, -1.f,  0.f,  0.f },

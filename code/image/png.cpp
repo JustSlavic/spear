@@ -85,6 +85,8 @@ enum {
     PNG_tIME_ID = PNG_MAGIC_NUMBER('t', 'I', 'M', 'E'),
 };
 
+#undef PNG_MAGIC_NUMBER
+
 
 // LITLEN_symbol - 257 => index in this array
 GLOBAL uint32 LEN_bases[] = {
