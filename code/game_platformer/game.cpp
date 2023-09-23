@@ -149,7 +149,7 @@ ui::handle make_push_button(game_state *gs, math::vector2 position)
 // - execution_context *context;
 // - memory_block game_memory;
 //
-INITIALIZE_MEMORY_FUNCTION(initialize_memory)
+INITIALIZE_MEMORY_FUNCTION()
 {
     using namespace math;
 
@@ -359,7 +359,7 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
 // - memory_block game_memory;
 // - input_state input;
 //
-UPDATE_AND_RENDER_FUNCTION(update_and_render)
+UPDATE_AND_RENDER_FUNCTION()
 {
     using namespace math;
 
