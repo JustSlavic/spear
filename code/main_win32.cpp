@@ -106,7 +106,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
 }
 
 
-void process_pending_messages(input_state *inp)
+void process_pending_messages(input_state *input)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -119,17 +119,17 @@ void process_pending_messages(input_state *inp)
             case WM_MOUSEMOVE:
             break;
 
-            case WM_LBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_LEFT], true);
+            case WM_LBUTTONDOWN: process_button_state(&input->mouse[MOUSE_LEFT], true);
                 break;
-            case WM_LBUTTONUP: process_button_state(&inp->mouse[MOUSE_LEFT], false);
+            case WM_LBUTTONUP: process_button_state(&input->mouse[MOUSE_LEFT], false);
                 break;
-            case WM_MBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_MIDDLE], true);
+            case WM_MBUTTONDOWN: process_button_state(&input->mouse[MOUSE_MIDDLE], true);
                 break;
-            case WM_MBUTTONUP: process_button_state(&inp->mouse[MOUSE_MIDDLE], false);
+            case WM_MBUTTONUP: process_button_state(&input->mouse[MOUSE_MIDDLE], false);
                 break;
-            case WM_RBUTTONDOWN: process_button_state(&inp->mouse[MOUSE_RIGHT], true);
+            case WM_RBUTTONDOWN: process_button_state(&input->mouse[MOUSE_RIGHT], true);
                 break;
-            case WM_RBUTTONUP: process_button_state(&inp->mouse[MOUSE_RIGHT], false);
+            case WM_RBUTTONUP: process_button_state(&input->mouse[MOUSE_RIGHT], false);
                 break;
 
             case WM_SYSKEYDOWN:
@@ -141,7 +141,7 @@ void process_pending_messages(input_state *inp)
                 bool32 was_down = (message.lParam & (1 << 30)) != 0;
                 bool32 is_down  = (message.lParam & (1 << 31)) == 0;
 
-                process_button_state(&inp->keyboard[win32::map_button_from_virtual_key_code(virtual_key_code)], is_down);
+                process_button_state(&input->keyboard[win32::map_button_from_virtual_key_code(virtual_key_code)], is_down);
 
 #if DEBUG
                 if (virtual_key_code == 'K')
@@ -158,7 +158,7 @@ void process_pending_messages(input_state *inp)
                             // Nullify keyboard such as nothing is pressed on stoping the playback loop
                             // because if there's something left pressed, it will stay pressed although nothing is
                             // pressed on the actual keyboard
-                            memory__set(inp, 0, sizeof(input_state));
+                            memory__set(input, 0, sizeof(input_state));
                             debug_loop_state = DEBUG_LOOP_IDLE;
                         }
                     }
@@ -178,7 +178,7 @@ void process_pending_messages(input_state *inp)
                             // Nullify keyboard controller such as nothing is pressed on stoping the playback loop
                             // because if there's something left pressed, it will stay pressed although nothing is
                             // pressed on the actual keyboard
-                            *inp = {};
+                            *input = {};
                             debug_loop_state = DEBUG_LOOP_IDLE;
                         }
                     }
