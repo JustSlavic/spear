@@ -143,6 +143,22 @@ ui::handle make_push_button(game_state *gs, math::vector2 position)
     return button;
 }
 
+rs::resource_token load_texture_resource_from_file(execution_context *context, char const *filename)
+{
+    rs::resource_token result = {};
+
+    memory_block file_content = context->debug_load_file(context->temporary_allocator, filename);
+    if (file_content.memory != NULL)
+    {
+        auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
+        if (bitmap.pixels != NULL)
+        {
+            result = rs::create_texture_resource(&context->resource_storage, bitmap);
+        }
+    }
+
+    return result;
+}
 
 //
 // Arguments:
@@ -232,17 +248,8 @@ INITIALIZE_MEMORY_FUNCTION()
     }
 
     // Load textures
-    {
-        memory_block file_content = context->debug_load_file(context->temporary_allocator, "button_push_1.png");
-        auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
-        gs->button_push_1_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
-    }
-    {
-        memory_block file_content = context->debug_load_file(context->temporary_allocator, "button_push_2.png");
-        auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
-        gs->button_push_2_texture = rs::create_texture_resource(&context->resource_storage, bitmap);
-    }
-
+    gs->button_push_1_texture = load_texture_resource_from_file(context, "button_push_1.png");
+    gs->button_push_2_texture = load_texture_resource_from_file(context, "button_push_2.png");
 
     // UI
     {
