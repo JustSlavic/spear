@@ -118,8 +118,8 @@ void update_editor(system *s, editor *editor, input_state *input)
 
         if (e->is_visible)
         {
-            auto inverse_transform = inverse(e->transform_to_root);
-            auto mouse_position_local = inverse_transform * mouse_position;
+            auto inverse_transform = inverse(e->tm_to_root);
+            auto mouse_position_local = transform_point(inverse_transform, mouse_position);
 
             math::rectangle2 rect = math::rectangle2::from_center_size(e->position, (float32) d->width, (float32) d->height);
             if (math::is_inside(rect, mouse_position_local.xy))
@@ -237,7 +237,7 @@ void render_editor(execution_context *context, system *s, editor *e)
         }
         if (!have_graphics) continue;
 
-        auto model = math::to_matrix4(element->transform_to_root);
+        auto model = transform__to_matrix4(element->tm_to_root);
 
         auto rect = math::rectangle2::from_center_size(V2(0), 100, 100);
         auto tl = model * V4(math::top_left(rect), 0, 1);

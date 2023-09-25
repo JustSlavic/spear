@@ -20,8 +20,8 @@ struct element
     bool32 is_visible;
 
     // Cache
-    math::transform transform;
-    math::transform transform_to_root;
+    transform tm;
+    transform tm_to_root;
 };
 
 struct drawable
@@ -622,20 +622,19 @@ void update_transforms(system *s)
     for (usize i = 0; i < s->elements.size(); i++)
     {
         auto *e = s->elements.data() + i;
-        e->transform =
-            rotated_z(math::to_radians(e->rotation),
-            scaled(V3(e->scale, 1),
-            translated(V3(e->position, 0),
-            math::transform::identity())));
+        e->tm =
+            transform__translate(V3(e->position, 0)) *
+            transform__rotate_z(math::to_radians(e->rotation)) *
+            transform__scale(V3(e->scale, 1));
 
         if (e->parent.type == UI_ROOT)
         {
-            e->transform_to_root = e->transform;
+            e->tm_to_root = e->tm;
         }
         else
         {
             auto *parent = s->elements.data() + e->parent.index;
-            e->transform_to_root = parent->transform_to_root * e->transform;
+            e->tm_to_root = parent->tm_to_root * e->tm;
         }
     }
 }
@@ -655,8 +654,8 @@ void update(system *s, input_state *inp)
         ASSERT(h->owner.type == UI_ELEMENT);
         element *owner = s->elements.data() + h->owner.index;
 
-        auto inverse_transform = inverse(owner->transform_to_root);
-        auto mouse_position_local = inverse_transform * mouse_position;
+        auto inverse_transform = inverse(owner->tm_to_root);
+        auto mouse_position_local = transform_point(inverse_transform, mouse_position);
 
         if (math::is_inside(h->area, mouse_position_local.xy))
         {
@@ -820,7 +819,7 @@ void render(execution_context *context, system *s)
 
         if (drawable->type == UI_SHAPE)
         {
-            auto model = math::to_matrix4(element->transform_to_root) *
+            auto model = transform__to_matrix4(element->tm_to_root) *
                 matrix4__scale(0.5f * drawable->width, 0.5f * drawable->height, 1);
 
             render_command::command_draw_ui command_draw_ui;
@@ -840,7 +839,7 @@ void render(execution_context *context, system *s)
         }
         else if (drawable->type == UI_IMAGE)
         {
-            auto model = math::to_matrix4(element->transform_to_root) *
+            auto model = transform__to_matrix4(element->tm_to_root) *
                 matrix4__scale(0.5f * 100, 0.5f * 100, 1);
 
             render_command::command_draw_ui_texture cmd;
