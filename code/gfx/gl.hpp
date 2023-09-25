@@ -372,7 +372,7 @@ void uniform(shader s, char const *name, matrix4 const& m)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
-    glUniformMatrix4fv(location, 1, GL_FALSE, get_data(m));
+    glUniformMatrix4fv(location, 1, GL_TRUE, get_data(m));
     GL_CHECK_ERRORS();
 }
 #define osOutputDebugString(MSG, ...) \

@@ -808,9 +808,8 @@ void update(system *s, input_state *inp)
 void render(execution_context *context, system *s)
 {
     auto projection =
-        translated(V3(-1, 1, 0),
-        scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
-        matrix4::identity()));
+        matrix4__translate(-1, 1, 0) *
+        matrix4__scale(2.0f/context->letterbox_width, -2.0f/context->letterbox_height, 1);
 
     for (usize index = s->drawables.size() - 1; index < s->drawables.size(); index--)
     {
@@ -821,17 +820,15 @@ void render(execution_context *context, system *s)
 
         if (drawable->type == UI_SHAPE)
         {
-            auto model =
-                scaled(V3(0.5f * drawable->width, 0.5f * drawable->height, 1),
-                math::to_matrix4(element->transform_to_root));
-            transpose(model);
+            auto model = math::to_matrix4(element->transform_to_root) *
+                matrix4__scale(0.5f * drawable->width, 0.5f * drawable->height, 1);
 
             render_command::command_draw_ui command_draw_ui;
             command_draw_ui.mesh_token = s->rectangle_mesh;
             command_draw_ui.shader_token = s->rectangle_shader;
 
             command_draw_ui.model = model; // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
-            command_draw_ui.view = matrix4::identity();
+            command_draw_ui.view = matrix4__identity();
             command_draw_ui.projection = projection;
             command_draw_ui.color = drawable->color;
 
@@ -843,17 +840,16 @@ void render(execution_context *context, system *s)
         }
         else if (drawable->type == UI_IMAGE)
         {
-            auto model =
-                scaled(V3(0.5f * 100, 0.5f * 100, 1),
-                math::to_matrix4(element->transform_to_root));
+            auto model = math::to_matrix4(element->transform_to_root) *
+                matrix4__scale(0.5f * 100, 0.5f * 100, 1);
 
             render_command::command_draw_ui_texture cmd;
             cmd.mesh_token = s->rectangle_mesh_uv;
             cmd.shader_token = s->rectangle_shader_uv;
             cmd.texture_token = drawable->texture_token;
 
-            cmd.model = transposed(model);
-            cmd.view = matrix4::identity();
+            cmd.model = model;
+            cmd.view = matrix4__identity();
             cmd.projection = projection;
 
             push_draw_ui_texture_command(context, cmd);

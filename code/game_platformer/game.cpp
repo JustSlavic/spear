@@ -98,20 +98,6 @@ INLINE entity *get_entity(game_state *gs, uint32 eid)
     return result;
 }
 
-void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 x, float32 y, float32 half_width, float32 half_height, vector4 color)
-{
-    render_command::command_draw_mesh_with_color draw_aligned_rectangle;
-    draw_aligned_rectangle.mesh_token = gs->rectangle_mesh;
-    draw_aligned_rectangle.shader_token = gs->rectangle_shader;
-    draw_aligned_rectangle.model =
-        translated(V3(x, y, 0),
-        scaled(V3(half_width, half_height, 1),
-            matrix4::identity()));
-    draw_aligned_rectangle.color = color;
-
-    push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
-}
-
 
 ui::handle make_push_button(game_state *gs, vector2 position)
 {
@@ -493,150 +479,6 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
                 if (dt_ < EPSILON) break;
             }
         }
-
-        continue;
-        switch (e->type)
-        {
-            case ENTITY_SAM:
-            {
-                float32 blink_phase = gs->blink_time / gs->blink_freq;
-                if (((int) blink_phase) % 2 > 0) continue;
-
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y,
-                    e->width * 0.5f, e->height * 0.5f,
-                    e->collided ? V4(1, 0, 0, 1) :
-                    is(e, ENTITY_ON_GROUND) ? V4(0, 0.8, 0.5, 1) :
-                    porter_color);
-
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x + 0.05f, e->position.y + 1.0f,
-                    e->width * 0.5f, 0.35f,
-                    porter_color);
-
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x + 0.2f, e->position.y + 1.0f,
-                    0.05f, 0.3f,
-                    V4(242.0/255.0, 242.0/255.0, 218.0/255.0, 1));
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x - 0.1f, e->position.y + 0.2f,
-                    0.025f, 0.4f,
-                    V4(0.9, 0.2, 0.2, 1.0));
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y - 0.4f,
-                    0.025f, 0.5f,
-                    V4(0.9, 0.2, 0.2, 1.0));
-
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x + 0.1f, e->position.y - 0.85f,
-                    0.2f, 0.1f,
-                    V4(0, 0, 0, 1));
-
-                // Lou
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x + 0.3f, e->position.y + 0.06f,
-                    lou_width * 0.5f, lou_height * 0.5f,
-                    lou_color);
-
-                // Packages
-                float32 backpack_x_offset = 0.4f;
-                float32 backpack_y_offset = 0.2f;
-
-                for (uint32 i = 0; i < gs->carried_packages; i++)
-                {
-                    if (i < 4)
-                    {
-                        draw_aligned_rectangle(
-                            context, gs,
-                            e->position.x - backpack_x_offset - i * 0.25f, e->position.y + backpack_y_offset,
-                            package_height * 0.5f, package_width * 0.5f,
-                            package_color);
-                    }
-                    else
-                    {
-                        draw_aligned_rectangle(
-                            context, gs,
-                            e->position.x - backpack_x_offset - 0.4f, e->position.y + 0.6f + (i - 4) * 0.25f + backpack_y_offset,
-                            package_width * 0.5f, package_height * 0.5f,
-                            package_color);
-                    }
-                }
-
-                // Scanner
-                {
-                    draw_aligned_rectangle(
-                        context, gs,
-                        e->position.x - 0.4f, e->position.y + 0.5f,
-                        0.175f, 0.05f,
-                        porter_color);
-
-                    draw_aligned_rectangle(
-                        context, gs,
-                        e->position.x - 0.5f, e->position.y + 1.f,
-                        0.05f, 0.5f,
-                        porter_color);
-                    draw_aligned_rectangle(
-                        context, gs,
-                        e->position.x - 0.4f, e->position.y + 1.2f,
-                        0.05f, 0.3f,
-                        V4(1., 1., 1., 1.0f));
-                }
-            }
-            break;
-
-            case ENTITY_GROUND:
-            {
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y,
-                    e->width * 0.5f, e->height * 0.5f,
-                    e->collided ? V4(1, 0, 0, 1) :
-                    ground_color);
-            }
-            break;
-
-            case ENTITY_POSTBOX:
-            {
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y,
-                    e->width * 0.5f, e->height * 0.5f,
-                    porter_color);
-            }
-            break;
-
-            case ENTITY_STONE:
-            {
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y,
-                    e->width * 0.5f, e->height * 0.5f,
-                    stones_color);
-            }
-            break;
-
-            case ENTITY_PACKAGE:
-            {
-                draw_aligned_rectangle(
-                    context, gs,
-                    e->position.x, e->position.y,
-                    e->width * 0.5f, e->height * 0.5f,
-                    is(e, ENTITY_ON_GROUND) ? V4(0.2, 0.9, 0.2, 1.0) :
-                    package_color);
-            }
-            break;
-
-            case ENTITY_INVALID:
-                ASSERT_FAIL();
-            break;
-        }
     }
 
 #if UI_EDITOR_ENABLED
@@ -656,9 +498,9 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
         {
             render_command::command_draw_screen_frame draw_frame;
-            draw_frame.model = matrix4::identity();
-            draw_frame.view = matrix4::identity();
-            draw_frame.projection = matrix4::identity();
+            draw_frame.model = matrix4__identity();
+            draw_frame.view = matrix4__identity();
+            draw_frame.projection = matrix4__identity();
             draw_frame.color = V4(0,0,0,1);
             push_draw_screen_frame(context, draw_frame);
         }
@@ -671,9 +513,9 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     if (gs->near_exit_time > 0)
     {
         render_command::command_draw_screen_frame draw_frame;
-        draw_frame.model = matrix4::identity();
-        draw_frame.view = matrix4::identity();
-        draw_frame.projection = matrix4::identity();
+        draw_frame.model = matrix4__identity();
+        draw_frame.view = matrix4__identity();
+        draw_frame.projection = matrix4__identity();
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
 

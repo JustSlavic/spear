@@ -158,8 +158,8 @@ matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
     result._11 = 2.0f * n / w;
     result._22 = 2.0f * n / h;
     result._33 = -(f + n) / (f - n);
-    result._34 = -1.0f;
-    result._43 = -2.0f * f * n / (f - n);
+    result._34 = -2.0f * f * n / (f - n);
+    result._43 = -1.0f;
 
     return result;
 }
@@ -182,8 +182,8 @@ matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n,
     result._11 = tf2;
     result._22 = tf2 * aspect_ratio;
     result._33 = -(f + n) / (f - n);
-    result._34 = -1.0f;
-    result._43 = -2.0f * f * n / (f - n);
+    result._34 = -2.0f * f * n / (f - n);
+    result._43 = -1.0f;
 
     return result;
 }
@@ -195,7 +195,7 @@ matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
     result._11 = 2.0f / w;
     result._22 = 2.0f / h;
     result._33 = -2.0f / (f - n);
-    result._43 = -(f + n) / (f - n);
+    result._34 = -(f + n) / (f - n);
     result._44 = 1.0f;
 
     return result;
@@ -208,7 +208,7 @@ matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
     result._11 = 1.0f;
     result._22 = 1.0f * aspect_ratio;
     result._33 = -2.0f / (f - n);
-    result._43 = -(f + n) / (f - n);
+    result._34 = -(f + n) / (f - n);
     result._44 = 1.0f;
 
     return result;

@@ -339,7 +339,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         return 1;
     }
 
-    auto view = matrix4::identity();
+    auto view = matrix4__identity();
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
@@ -608,9 +608,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         // if (debug_loop_state == DEBUG_LOOP_RECORDING || debug_loop_state == DEBUG_LOOP_REPLAYING)
         {
-            auto debug_loop_model = math::matrix4::identity();
-            auto debug_loop_view  = math::matrix4::identity();
-            auto debug_loop_projection = math::matrix4::identity();
+            auto debug_loop_model = math::matrix4__identity();
+            auto debug_loop_view  = math::matrix4__identity();
+            auto debug_loop_projection = math::matrix4__identity();
             gfx::draw_polygon_simple(&context,
                 screen_frame_mesh, screen_frame_shader,
                 debug_loop_model, debug_loop_view, debug_loop_projection,
