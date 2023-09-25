@@ -3,7 +3,7 @@
 #include <rs/resource.hpp>
 
 #include <math/integer.hpp>
-#include <math/vector4.hpp>
+#include <g301.hpp>
 #include <math/rectangle2.hpp>
 
 
@@ -151,9 +151,9 @@ void main()
 
 
 
-math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
 
     result._11 = 2.0f * n / w;
     result._22 = 2.0f * n / h;
@@ -164,7 +164,7 @@ math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
     return result;
 }
 
-math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
     //     w/2
     //   +-----+
@@ -177,7 +177,7 @@ math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, floa
 
     float32 tf2 = (1.0f / math::tg(0.5f * fov));
 
-    math::matrix4 result = {};
+    matrix4 result = {};
 
     result._11 = tf2;
     result._22 = tf2 * aspect_ratio;
@@ -188,9 +188,9 @@ math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, floa
     return result;
 }
 
-math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
 
     result._11 = 2.0f / w;
     result._22 = 2.0f / h;
@@ -201,9 +201,9 @@ math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 
     return result;
 }
 
-math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
-    math::matrix4 result;
+    matrix4 result;
 
     result._11 = 1.0f;
     result._22 = 1.0f * aspect_ratio;
@@ -349,7 +349,7 @@ void load_texture(execution_context *context, rs::resource *resource)
     data->aspect_ratio = (float32) resource->texture.texture.width / (float32) resource->texture.texture.height;
 }
 
-void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matrix4 model, math::matrix4 view, math::matrix4 projection, math::vector4 color)
+void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, matrix4 model, matrix4 view, matrix4 projection, vector4 color)
 {
     auto *mesh_render_data = (render_mesh_data *) mesh->render_data.memory;
     auto *shader_render_data = (render_shader_data *) shader->render_data.memory;
@@ -366,7 +366,7 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, math::matr
 }
 
 void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resource *texture,
-                            math::matrix4 model, math::matrix4 view, math::matrix4 projection)
+                            matrix4 model, matrix4 view, matrix4 projection)
 {
     auto *mesh_data = (render_mesh_data *) mesh->render_data.memory;
     auto *shader_data = (render_shader_data *) shader->render_data.memory;

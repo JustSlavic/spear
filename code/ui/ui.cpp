@@ -13,8 +13,8 @@ struct element
 {
     handle parent;
 
-    math::vector2 position;
-    math::vector2 scale;
+    vector2 position;
+    vector2 scale;
     float32 rotation;
 
     bool32 is_visible;
@@ -33,7 +33,7 @@ struct drawable
     type_t type;
     union
     {
-        math::vector4 color;
+        vector4 color;
         rs::resource_token texture_token;
     };
 };
@@ -623,9 +623,9 @@ void update_transforms(system *s)
     {
         auto *e = s->elements.data() + i;
         e->transform =
-            math::rotated_z(math::to_radians(e->rotation),
-            math::scaled(V3(e->scale, 1),
-            math::translated(V3(e->position, 0),
+            rotated_z(math::to_radians(e->rotation),
+            scaled(V3(e->scale, 1),
+            translated(V3(e->position, 0),
             math::transform::identity())));
 
         if (e->parent.type == UI_ROOT)
@@ -808,9 +808,9 @@ void update(system *s, input_state *inp)
 void render(execution_context *context, system *s)
 {
     auto projection =
-        math::translated(V3(-1, 1, 0),
-        math::scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
-        math::matrix4::identity()));
+        translated(V3(-1, 1, 0),
+        scaled(V3(2.0/context->letterbox_width, -2.0/context->letterbox_height, 1),
+        matrix4::identity()));
 
     for (usize index = s->drawables.size() - 1; index < s->drawables.size(); index--)
     {
@@ -822,16 +822,16 @@ void render(execution_context *context, system *s)
         if (drawable->type == UI_SHAPE)
         {
             auto model =
-                math::scaled(V3(0.5f * drawable->width, 0.5f * drawable->height, 1),
+                scaled(V3(0.5f * drawable->width, 0.5f * drawable->height, 1),
                 math::to_matrix4(element->transform_to_root));
-            math::transpose(model);
+            transpose(model);
 
             render_command::command_draw_ui command_draw_ui;
             command_draw_ui.mesh_token = s->rectangle_mesh;
             command_draw_ui.shader_token = s->rectangle_shader;
 
             command_draw_ui.model = model; // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
-            command_draw_ui.view = math::matrix4::identity();
+            command_draw_ui.view = matrix4::identity();
             command_draw_ui.projection = projection;
             command_draw_ui.color = drawable->color;
 
@@ -844,7 +844,7 @@ void render(execution_context *context, system *s)
         else if (drawable->type == UI_IMAGE)
         {
             auto model =
-                math::scaled(V3(0.5f * 100, 0.5f * 100, 1),
+                scaled(V3(0.5f * 100, 0.5f * 100, 1),
                 math::to_matrix4(element->transform_to_root));
 
             render_command::command_draw_ui_texture cmd;
@@ -852,8 +852,8 @@ void render(execution_context *context, system *s)
             cmd.shader_token = s->rectangle_shader_uv;
             cmd.texture_token = drawable->texture_token;
 
-            cmd.model = math::transposed(model);
-            cmd.view = math::matrix4::identity();
+            cmd.model = transposed(model);
+            cmd.view = matrix4::identity();
             cmd.projection = projection;
 
             push_draw_ui_texture_command(context, cmd);
@@ -964,7 +964,7 @@ bool get_visible(system *s, handle h)
     return result;
 }
 
-void set_position(system *s, handle h, math::vector2 position)
+void set_position(system *s, handle h, vector2 position)
 {
     if (h.type == UI_ELEMENT)
     {
@@ -973,7 +973,7 @@ void set_position(system *s, handle h, math::vector2 position)
     }
 }
 
-void set_scale(system *s, handle h, math::vector2 scale)
+void set_scale(system *s, handle h, vector2 scale)
 {
     if (h.type == UI_ELEMENT)
     {
@@ -991,7 +991,7 @@ void set_rotation(system *s, handle h, float32 rotation)
     }
 }
 
-void set_color(system *s, handle h, math::vector4 color)
+void set_color(system *s, handle h, vector4 color)
 {
     for (auto a : iterate_attaches(s, h))
     {

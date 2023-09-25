@@ -4,32 +4,32 @@
 #include <base.h>
 
 
-math::vector2 closest_point_on_segment_to_point(math::vector2 a, math::vector2 b, math::vector2 p)
+vector2 closest_point_on_segment_to_point(vector2 a, vector2 b, vector2 p)
 {
     auto ab = b - a;
-    float32 t = math::clamp(dot(p - a, ab), 0.f, 1.f);
+    float32 t = math::clamp(inner(p - a, ab), 0.f, 1.f);
     return a + ab * t;
 }
 
 
-math::vector2 closest_point_on_segment_to_point(math::vector2 a, math::vector2 b, math::vector2 p, float32 *t)
+vector2 closest_point_on_segment_to_point(vector2 a, vector2 b, vector2 p, float32 *t)
 {
     auto ab = b - a;
-    *t = math::clamp(dot(p - a, ab), 0.f, 1.f);
+    *t = math::clamp(inner(p - a, ab), 0.f, 1.f);
     return a + ab * *t;
 }
 
 
-float32 distance_line_line(math::vector2 p1, math::vector2 d1, math::vector2 p2, math::vector2 d2, float32 *s = NULL, float32 *t = NULL)
+float32 distance_line_line(vector2 p1, vector2 d1, vector2 p2, vector2 d2, float32 *s = NULL, float32 *t = NULL)
 {
     float32 result = 0.f;
 
     auto r = p1 - p2;
-    auto a = dot(d1, d1);
-    auto b = dot(d1, d2);
-    auto c = dot(d1, r);
-    auto e = dot(d2, d2);
-    auto f = dot(d2, r);
+    auto a = inner(d1, d1);
+    auto b = inner(d1, d2);
+    auto c = inner(d1, r);
+    auto e = inner(d2, d2);
+    auto f = inner(d2, r);
 
     auto d = a*c - b*b;
     ASSERT(d > 0);
@@ -38,7 +38,7 @@ float32 distance_line_line(math::vector2 p1, math::vector2 d1, math::vector2 p2,
     {
         // Two lines are parallel
         *s = 0.f;
-        *t = dot(p1 - p2, d2);
+        *t = inner(p1 - p2, d2);
     }
     else
     {
@@ -54,15 +54,15 @@ float32 distance_line_line(math::vector2 p1, math::vector2 d1, math::vector2 p2,
 }
 
 
-float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::vector2 p2, math::vector2 q2,
-                                    float& s, float& t, math::vector2& c1, math::vector2& c2)
+float32 sq_distance_segment_segment(vector2 p1, vector2 q1, vector2 p2, vector2 q2,
+                                    float& s, float& t, vector2& c1, vector2& c2)
 {
     auto d1 = q1 - p1; // Direction of the 1st segment
     auto d2 = q2 - p2; // Direction of the 2nd segment
     auto r = p1 - p2;
-    auto a = dot(d1, d1); // Squared length of the 1st segment
-    auto e = dot(d2, d2); // Squared length of the 2nd segment
-    auto f = dot(d2, r);
+    auto a = inner(d1, d1); // Squared length of the 1st segment
+    auto e = inner(d2, d2); // Squared length of the 2nd segment
+    auto f = inner(d2, r);
 
     // Check if either or both segments degenerate into points
     if (a < EPSILON && e < EPSILON)
@@ -71,7 +71,7 @@ float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::ve
         s = t = 0.f;
         c1 = p1;
         c2 = p2;
-        return dot(c1 - c2, c1 - c2);
+        return inner(c1 - c2, c1 - c2);
     }
     if (a < EPSILON)
     {
@@ -82,7 +82,7 @@ float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::ve
     }
     else
     {
-        auto c = dot(d1, r);
+        auto c = inner(d1, r);
         if (e < EPSILON)
         {
             // Second segment degenerates into a point
@@ -92,7 +92,7 @@ float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::ve
         else
         {
             // The general nondegenerate case starts here
-            auto b = dot(d1, d2);
+            auto b = inner(d1, d2);
             auto denom = a * e - b * b; // Always nonnegative
 
             // If segments not parallel, compute closest point on L1 to L2 and
@@ -107,11 +107,11 @@ float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::ve
             }
 
             // Compute point on L2 closest to S1(s) using
-            // t = dot((P1 + D1*s) - P2, D2) / Dot(D2, D2) = (b*s + f) / e
+            // t = inner((P1 + D1*s) - P2, D2) / inner(D2, D2) = (b*s + f) / e
             t = (b*s + f) / e;
 
             // If t in [0, 1] done. Else clamp t, recompute s for the new value of t using
-            // s = Dot((P2 + D2*t) - P1, D1) / Dot(D1, D1) = (t*b - c) / a
+            // s = inner((P2 + D2*t) - P1, D1) / inner(D1, D1) = (t*b - c) / a
             if (t < 0.f)
             {
                 t = 0.f;
@@ -127,28 +127,28 @@ float32 sq_distance_segment_segment(math::vector2 p1, math::vector2 q1, math::ve
 
     c1 = p1 + d1 * s;
     c2 = p2 + d2 * t;
-    return dot(c1 - c2, c1 - c2);
+    return inner(c1 - c2, c1 - c2);
 }
 
 
-bool32 test_circle2d_point2d(math::vector2 p1, float32 r1, math::vector2 p2)
+bool32 test_circle2d_point2d(vector2 p1, float32 r1, vector2 p2)
 {
-    bool32 result = math::length_squared(p2 - p1) - math::square(r1) < EPSILON;
+    bool32 result = length_squared(p2 - p1) - math::square(r1) < EPSILON;
     return result;
 }
 
 
-bool32 test_circle2d_circle2d(math::vector2 p1, float32 r1, math::vector2 p2, float32 r2)
+bool32 test_circle2d_circle2d(vector2 p1, float32 r1, vector2 p2, float32 r2)
 {
-    bool32 result = math::length_squared(p2 - p1) - math::square(r1 + r2) < EPSILON;
+    bool32 result = length_squared(p2 - p1) - math::square(r1 + r2) < EPSILON;
     return result;
 }
 
-bool32 test_ray_sphere(math::vector2 start, math::vector2 direction, math::vector2 center, float32 radius, float32 *r)
+bool32 test_ray_sphere(vector2 start, vector2 direction, vector2 center, float32 radius, float32 *r)
 {
-    math::vector2 m = start - center;
-    float32 b = dot(m, direction);
-    float32 c = dot(m, m) - radius * radius;
+    vector2 m = start - center;
+    float32 b = inner(m, direction);
+    float32 c = inner(m, m) - radius * radius;
     // Exit if ray_start outside sphere and direction poin away from sphere
     if (c > 0.f && b > 0.f) return false;
 
@@ -163,13 +163,13 @@ bool32 test_ray_sphere(math::vector2 start, math::vector2 direction, math::vecto
     return true;
 }
 
-bool32 test_segment_sphere(math::vector2 start, math::vector2 end, math::vector2 center, float32 radius, float32 *t = NULL)
+bool32 test_segment_sphere(vector2 start, vector2 end, vector2 center, float32 radius, float32 *t = NULL)
 {
-    math::vector2 m = start - center;
-    float32 segment_length = 0.f;
-    math::vector2 d = normalized(end - start, &segment_length);
-    float32 b = dot(m, d);
-    float32 c = dot(m, m) - radius * radius;
+    vector2 m = start - center;
+    float32 segment_length = length(end - start);
+    vector2 d = normalized(end - start);
+    float32 b = inner(m, d);
+    float32 c = inner(m, m) - radius * radius;
     // Exit if ray_start outside sphere and direction poin away from sphere
     if (c > 0.f && b > 0.f) return false;
 
@@ -187,7 +187,7 @@ bool32 test_segment_sphere(math::vector2 start, math::vector2 end, math::vector2
 }
 
 
-float32 square_distance_point_aabb(math::vector2 p, math::rectangle2 aabb)
+float32 square_distance_point_aabb(vector2 p, math::rectangle2 aabb)
 {
     float32 square_distance = 0.f;
     for (uint32 i = 0; i < ARRAY_COUNT(aabb.center.e); i++)
@@ -202,7 +202,7 @@ float32 square_distance_point_aabb(math::vector2 p, math::rectangle2 aabb)
 }
 
 
-bool32 test_sphere_aabb(math::vector2 center, float32 radius, math::rectangle2 aabb)
+bool32 test_sphere_aabb(vector2 center, float32 radius, math::rectangle2 aabb)
 {
 
     return false;
@@ -213,8 +213,8 @@ struct collision_data
 {
     entity *entity1;
     entity *entity2;
-    math::vector2 point;
-    math::vector2 normal;
+    vector2 point;
+    vector2 normal;
     float32 t_in_meters;
 };
 
@@ -227,13 +227,13 @@ collision_data no_collision()
 }
 
 
-collision_data collide_ray_capsule(math::vector2 ray1, math::vector2 ray2,
-                                   math::vector2 cap1, math::vector2 cap2, float32 cap_radius)
+collision_data collide_ray_capsule(vector2 ray1, vector2 ray2,
+                                   vector2 cap1, vector2 cap2, float32 cap_radius)
 {
     collision_data collision = no_collision();
 
     float32 t1, t2;
-    math::vector2 c1, c2;
+    vector2 c1, c2;
     float32 sq_distance = sq_distance_segment_segment(
         ray1, ray2, cap1, cap2,
         t1, t2, c1, c2);

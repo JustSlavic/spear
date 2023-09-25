@@ -3,7 +3,7 @@
 
 #include <base.h>
 #include <array.hpp>
-#include <math/matrix4.hpp>
+#include <g301.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 
@@ -67,63 +67,63 @@ struct render_command
     };
     struct command_setup_projection_matrix
     {
-        math::matrix4 projection;
+        matrix4 projection;
     };
     struct command_setup_camera
     {
-        math::vector3 camera_position;
-        math::vector3 look_at_position;
-        math::vector3 camera_up_direction;
+        vector3 camera_position;
+        vector3 look_at_position;
+        vector3 camera_up_direction;
     };
     struct command_draw_background
     {
         rs::resource_token mesh;
         rs::resource_token shader;
-        math::vector4 color;
+        vector4 color;
     };
     struct command_draw_rectangle
     {
         math::rectangle2 rect;
-        math::matrix4 model;
+        matrix4 model;
     };
     struct command_draw_mesh_with_color
     {
         rs::resource_token mesh_token;
         rs::resource_token shader_token;
-        math::matrix4 model;
-        math::vector4 color;
+        matrix4 model;
+        vector4 color;
     };
     struct command_draw_mesh_with_texture
     {
         rs::resource_token mesh_token;
         rs::resource_token shader_token;
         rs::resource_token texture_token;
-        math::matrix4 model;
+        matrix4 model;
     };
     struct command_draw_screen_frame
     {
-        math::matrix4 model;
-        math::matrix4 view;
-        math::matrix4 projection;
-        math::vector4 color;
+        matrix4 model;
+        matrix4 view;
+        matrix4 projection;
+        vector4 color;
     };
     struct command_draw_ui
     {
         rs::resource_token mesh_token;
         rs::resource_token shader_token;
-        math::matrix4 model;
-        math::matrix4 view;
-        math::matrix4 projection;
-        math::vector4 color;
+        matrix4 model;
+        matrix4 view;
+        matrix4 projection;
+        vector4 color;
     };
     struct command_draw_ui_texture
     {
         rs::resource_token mesh_token;
         rs::resource_token shader_token;
         rs::resource_token texture_token;
-        math::matrix4 model;
-        math::matrix4 view;
-        math::matrix4 projection;
+        matrix4 model;
+        matrix4 view;
+        matrix4 projection;
     };
 
     command_type type;

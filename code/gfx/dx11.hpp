@@ -20,7 +20,7 @@ struct dx11_driver
     ID3D11RasterizerState *RasterizerState;
     ID3D11DepthStencilState *DepthStencilState;
 
-    math::vector4 ClearColor;
+    vector4 ClearColor;
 };
 
 static_assert(sizeof(dx11_driver) <= sizeof(gfx::driver));
@@ -134,7 +134,7 @@ bool32 initialize(win32::window *w, driver *d)
     return true;
 }
 
-void set_clear_color(math::vector4 color)
+void set_clear_color(vector4 color)
 {
     Dx.ClearColor = color;
 }

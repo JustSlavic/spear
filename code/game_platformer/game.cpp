@@ -14,12 +14,13 @@
 #include <math/integer.hpp>
 #include <math/float64.hpp>
 #include <math/rectangle2.hpp>
-#include <math/vector4.hpp>
-#include <math/matrix2.hpp>
-#include <math/matrix4.hpp>
+#include <g2.hpp>
+#include <g301.hpp>
 
 #include <collision.hpp>
 #include <image/png.hpp>
+
+#include <g2.hpp>
 
 #if OS_WINDOWS
 #include <stdio.h>
@@ -65,13 +66,13 @@ GLOBAL float32 lou_width = 0.3f;
 GLOBAL float32 lou_height = 0.5f;
 
 
-GLOBAL math::vector4 sky_color = V4(148.0 / 255.0, 204.0 / 255.0, 209.0 / 255.0, 1.0);
-GLOBAL math::vector4 porter_color = V4(55.0/255.0, 70.0/255.0, 122.0/255.0, 1);
-GLOBAL math::vector4 ground_color = V4(50.0/255.0, 115.0/255.0, 53.0/255.0, 1);
-GLOBAL math::vector4 stones_color = V4(184.0/255.0, 165.0/255.0, 136.0/255.0, 1);
-GLOBAL math::vector4 package_color = V4(255.0/255.0, 255.0/255.0, 0.0/255.0, 1);
-GLOBAL math::vector4 lou_color = V4(247.0/255.0, 180.0/255.0, 54.0/255.0, 1);
-GLOBAL math::vector2 gravity = V2(0, -9.8); // m/s^2
+GLOBAL vector4 sky_color = V4(148.0 / 255.0, 204.0 / 255.0, 209.0 / 255.0, 1.0);
+GLOBAL vector4 porter_color = V4(55.0/255.0, 70.0/255.0, 122.0/255.0, 1);
+GLOBAL vector4 ground_color = V4(50.0/255.0, 115.0/255.0, 53.0/255.0, 1);
+GLOBAL vector4 stones_color = V4(184.0/255.0, 165.0/255.0, 136.0/255.0, 1);
+GLOBAL vector4 package_color = V4(255.0/255.0, 255.0/255.0, 0.0/255.0, 1);
+GLOBAL vector4 lou_color = V4(247.0/255.0, 180.0/255.0, 54.0/255.0, 1);
+GLOBAL vector2 gravity = V2(0, -9.8); // m/s^2
 
 #define NEAR_EXIT_TIME_SECONDS            1.0f
 #define PLAYER_BASE_MOVEMENT_ACCELERATION 50.0f
@@ -97,22 +98,22 @@ INLINE entity *get_entity(game_state *gs, uint32 eid)
     return result;
 }
 
-void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 x, float32 y, float32 half_width, float32 half_height, math::vector4 color)
+void draw_aligned_rectangle(execution_context *context, game_state *gs, float32 x, float32 y, float32 half_width, float32 half_height, vector4 color)
 {
     render_command::command_draw_mesh_with_color draw_aligned_rectangle;
     draw_aligned_rectangle.mesh_token = gs->rectangle_mesh;
     draw_aligned_rectangle.shader_token = gs->rectangle_shader;
     draw_aligned_rectangle.model =
-        math::translated(V3(x, y, 0),
-        math::scaled(V3(half_width, half_height, 1),
-            math::matrix4::identity()));
+        translated(V3(x, y, 0),
+        scaled(V3(half_width, half_height, 1),
+            matrix4::identity()));
     draw_aligned_rectangle.color = color;
 
     push_draw_mesh_with_color_command(context, draw_aligned_rectangle);
 }
 
 
-ui::handle make_push_button(game_state *gs, math::vector2 position)
+ui::handle make_push_button(game_state *gs, vector2 position)
 {
     auto button = ui::make_group(gs->hud);
     ui::set_position(gs->hud, button, position);
@@ -160,12 +161,8 @@ rs::resource_token load_texture_resource_from_file(execution_context *context, c
     return result;
 }
 
-//
-// Arguments:
-// - execution_context *context;
-// - memory_block game_memory;
-//
-INITIALIZE_MEMORY_FUNCTION()
+
+INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 {
     using namespace math;
 
@@ -306,14 +303,14 @@ INITIALIZE_MEMORY_FUNCTION()
 
 struct collision_result
 {
-    math::vector2 normal; // The normal of the surface entity collided with
-    math::vector2 point; // The position of entity when the collision hapened
+    vector2 normal; // The normal of the surface entity collided with
+    vector2 point; // The position of entity when the collision hapened
     float32 t; // The distance in meters entity traversed until collision
 };
 
 
 // Assume that collision volumes of both entities are AABBs
-bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, collision_result *result)
+bool32 do_collision(entity *e1, entity *e2, vector2 p1, vector2 p2, collision_result *result)
 {
     ASSERT(is_not(e1, ENTITY_INVALID));
     ASSERT(is_not(e2, ENTITY_INVALID));
@@ -328,7 +325,7 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
     auto tr = V2(e2->position.x + minkowski_radius_x, e2->position.y + minkowski_radius_y);
     auto br = V2(e2->position.x + minkowski_radius_x, e2->position.y - minkowski_radius_y);
 
-    math::vector2 vertices[5] = { bl, tl, tr, br, bl };
+    vector2 vertices[5] = { bl, tl, tr, br, bl };
 
     float32 min_distance = math::infinity;
 
@@ -339,10 +336,10 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
         auto wall = (w2 - w1);
         auto normal = normalized(V2(-wall.y, wall.x));
 
-        if (dot(p2 - p1, normal) < 0.f)
+        if (inner(p2 - p1, normal) < 0.f)
         {
             float32 t1, t2;
-            math::vector2 c1, c2;
+            vector2 c1, c2;
             float sq_distance = sq_distance_segment_segment(p1, p2, w1, w2, t1, t2, c1, c2);
 
             if ((sq_distance < EPSILON) && (t1 < min_distance))
@@ -360,13 +357,7 @@ bool32 do_collision(entity *e1, entity *e2, math::vector2 p1, math::vector2 p2, 
 }
 
 
-//
-// Arguments:
-// - execution_context *context;
-// - memory_block game_memory;
-// - input_state input;
-//
-UPDATE_AND_RENDER_FUNCTION()
+UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory, input_state input)
 {
     using namespace math;
 
@@ -387,6 +378,8 @@ UPDATE_AND_RENDER_FUNCTION()
             gs->near_exit_time = NEAR_EXIT_TIME_SECONDS;
         }
     }
+
+    auto complex_number = 0.4f + 1.2f * I;
 
 #if UI_EDITOR_ENABLED
     if (get_press_count(input->keyboard[KB_F1]))
@@ -462,7 +455,7 @@ UPDATE_AND_RENDER_FUNCTION()
                 auto new_v = e->velocity + acceleration * dt_;
                 auto new_p = e->position + 0.5f * (old_v + new_v) * dt_;
 
-                auto full_distance = math::length(new_p - old_p);
+                auto full_distance = length(new_p - old_p);
                 auto distance = full_distance;
                 if (distance < EPSILON) break;
 
@@ -487,7 +480,7 @@ UPDATE_AND_RENDER_FUNCTION()
                                 e->collided = true;
                                 set(e, ENTITY_ON_GROUND);
                                 new_p = collision.point + collision.normal * 0.01f;
-                                new_v = new_v - dot(new_v, collision.normal) * collision.normal;
+                                new_v = new_v - inner(new_v, collision.normal) * collision.normal;
                             }
                         }
                     }
@@ -663,9 +656,9 @@ UPDATE_AND_RENDER_FUNCTION()
 
         {
             render_command::command_draw_screen_frame draw_frame;
-            draw_frame.model = math::matrix4::identity();
-            draw_frame.view = math::matrix4::identity();
-            draw_frame.projection = math::matrix4::identity();
+            draw_frame.model = matrix4::identity();
+            draw_frame.view = matrix4::identity();
+            draw_frame.projection = matrix4::identity();
             draw_frame.color = V4(0,0,0,1);
             push_draw_screen_frame(context, draw_frame);
         }
@@ -678,9 +671,9 @@ UPDATE_AND_RENDER_FUNCTION()
     if (gs->near_exit_time > 0)
     {
         render_command::command_draw_screen_frame draw_frame;
-        draw_frame.model = math::matrix4::identity();
-        draw_frame.view = math::matrix4::identity();
-        draw_frame.projection = math::matrix4::identity();
+        draw_frame.model = matrix4::identity();
+        draw_frame.view = matrix4::identity();
+        draw_frame.projection = matrix4::identity();
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
 

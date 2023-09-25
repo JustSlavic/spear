@@ -216,7 +216,7 @@ void set_clear_color(float32 r, float32 g, float32 b, float32 a)
     GL_CHECK_ERRORS();
 }
 
-void set_clear_color(math::vector4 color)
+void set_clear_color(vector4 color)
 {
     set_clear_color(color.r, color.g, color.b, color.a);
 }
@@ -344,7 +344,7 @@ void uniform(shader s, char const *name, float f)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, math::vector2 const& v)
+void uniform(shader s, char const *name, vector2 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -352,7 +352,7 @@ void uniform(shader s, char const *name, math::vector2 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, math::vector3 const& v)
+void uniform(shader s, char const *name, vector3 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -360,7 +360,7 @@ void uniform(shader s, char const *name, math::vector3 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, math::vector4 const& v)
+void uniform(shader s, char const *name, vector4 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -368,11 +368,11 @@ void uniform(shader s, char const *name, math::vector4 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, math::matrix4 const& m)
+void uniform(shader s, char const *name, matrix4 const& m)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
-    glUniformMatrix4fv(location, 1, GL_FALSE, m.data());
+    glUniformMatrix4fv(location, 1, GL_FALSE, get_data(m));
     GL_CHECK_ERRORS();
 }
 #define osOutputDebugString(MSG, ...) \

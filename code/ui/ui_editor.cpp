@@ -14,8 +14,8 @@ enum editor_action_type
 struct editor_action_move
 {
     handle h;
-    math::vector2 old_position;
-    math::vector2 new_position;
+    vector2 old_position;
+    vector2 new_position;
 };
 
 struct editor_action_selection
@@ -220,9 +220,9 @@ void update_editor(system *s, editor *editor, input_state *input)
 void render_editor(execution_context *context, system *s, editor *e)
 {
     auto projection =
-        math::translated(V3(-1, -1, 0),
-        math::scaled(V3(2.0/context->letterbox_width, 2.0/context->letterbox_height, 1),
-        math::matrix4::identity()));
+        translated(V3(-1, -1, 0),
+        scaled(V3(2.0/context->letterbox_width, 2.0/context->letterbox_height, 1),
+        matrix4::identity()));
 
     for (uint32 element_index = 0; element_index < s->elements.size(); element_index++)
     {
@@ -272,10 +272,10 @@ void render_editor(execution_context *context, system *s, editor *e)
 
         render_command::command_draw_screen_frame draw_frame;
         draw_frame.model =
-            math::translated(V3(aabb_center, 0),
-            math::scaled(V3(0.5f * aabb_width, 0.5f * aabb_height, 1),
-            math::matrix4::identity()));
-        draw_frame.view = math::matrix4::identity();
+            translated(V3(aabb_center, 0),
+            scaled(V3(0.5f * aabb_width, 0.5f * aabb_height, 1),
+            matrix4::identity()));
+        draw_frame.view = matrix4::identity();
         draw_frame.projection = projection;
         if (h == e->selection)
         {

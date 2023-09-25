@@ -2,9 +2,8 @@
 #define MATH_TRANSFORM_HPP
 
 #include <base.h>
-#include <math/vector3.hpp>
-#include <math/matrix3.hpp>
-#include <math/matrix4.hpp>
+#include <g3.hpp>
+#include <g301.hpp>
 
 namespace math {
 
@@ -197,21 +196,21 @@ transform scaled_z(transform tm, float32 sz)
     return tm;
 }
 
-void scale(transform & tm, vector3 v)
+void scale(transform & tm, vector3 s)
 {
     // sx  0  0  0     11 12 13 14     sx*11 sx*12 sx*13 sx*14=0
     //  0 sy  0  0  *  21 22 23 24  =  sy*21 sy*22 sy*23 sy*24=0
     //  0  0 sz  0     31 32 33 34     sz*31 sz*32 sz*33 sz*34=0
     //  0  0  0  1     41 42 43 44        41    42    43    44=1
 
-    tm._1 = tm._1 * v.x;
-    tm._2 = tm._2 * v.y;
-    tm._3 = tm._3 * v.z;
+    tm._1 = tm._1 * s.x;
+    tm._2 = tm._2 * s.y;
+    tm._3 = tm._3 * s.z;
 }
 
-transform scaled(vector3 v, transform tm)
+transform scaled(vector3 s, transform tm)
 {
-    scale(tm, v);
+    scale(tm, s);
     return tm;
 }
 

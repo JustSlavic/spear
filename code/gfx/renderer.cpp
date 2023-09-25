@@ -78,7 +78,7 @@ void swap_buffers(void *wnd, void *drv)
     }
 }
 
-math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up)
+matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
 {
     using namespace math;
 
@@ -90,38 +90,38 @@ math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vec
     result._1 = V4(s.x,  u.x,  -f.x, 0);
     result._2 = V4(s.y,  u.y,  -f.y, 0);
     result._3 = V4(s.z,  u.z,  -f.z, 0);
-    result._4 = V4(-dot(s, eye), -dot(u, eye), dot(f, eye), 1);
+    result._4 = V4(-inner(s, eye), -inner(u, eye), inner(f, eye), 1);
 
     return result;
 }
 
-math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
     if (active_api == graphics_api::opengl)
         result = gl::make_projection_matrix(w, h, n, f);
     return result;
 }
 
-math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
     if (active_api == graphics_api::opengl)
         result = gl::make_projection_matrix_fov(fov, aspect_ratio, n, f);
     return result;
 }
 
-math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
     if (active_api == graphics_api::opengl)
         result = gl::make_orthographic_matrix(w, h, n, f);
     return result;
 }
 
-math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
     if (active_api == graphics_api::opengl)
         result = gl::make_orthographic_matrix(aspect_ratio, n, f);
     return result;
@@ -143,19 +143,19 @@ void draw_background(execution_context *context, render_command *cmd)
     draw_polygon_simple(context,
                         cmd->draw_background.mesh,
                         cmd->draw_background.shader,
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
-                        math::matrix4::identity(),
+                        matrix4::identity(),
+                        matrix4::identity(),
+                        matrix4::identity(),
                         cmd->draw_background.color);
 }
 
 void draw_polygon_simple(execution_context *context,
                          rs::resource_token mesh_token,
                          rs::resource_token shader_token,
-                         math::matrix4 model,
-                         math::matrix4 view,
-                         math::matrix4 projection,
-                         math::vector4 color)
+                         matrix4 model,
+                         matrix4 view,
+                         matrix4 projection,
+                         vector4 color)
 {
     rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
     if (mesh->type == rs::resource_type::mesh)
@@ -188,9 +188,9 @@ void draw_rectangle_texture(execution_context *context,
                             rs::resource_token mesh_token,
                             rs::resource_token shader_token,
                             rs::resource_token texture_token,
-                            math::matrix4 model,
-                            math::matrix4 view,
-                            math::matrix4 projection)
+                            matrix4 model,
+                            matrix4 view,
+                            matrix4 projection)
 {
     rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
     if (mesh->type == rs::resource_type::mesh)

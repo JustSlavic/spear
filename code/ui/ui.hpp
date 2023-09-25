@@ -6,7 +6,7 @@
 
 #include <array.hpp>
 #include <execution_context.hpp>
-#include <math/vector2.hpp>
+#include <g2.hpp>
 #include <math/transform.hpp>
 #include <input.hpp>
 
@@ -168,10 +168,10 @@ click_callbacks *make_clickable(system *s, handle owner);
 
 bool get_visible(system *s, handle h);
 
-void set_position(system *s, handle h, math::vector2 position);
-void set_scale(system *s, handle h, math::vector2 scale);
+void set_position(system *s, handle h, vector2 position);
+void set_scale(system *s, handle h, vector2 scale);
 void set_rotation(system *s, handle h, float32 rotation);
-void set_color(system *s, handle h, math::vector4 color);
+void set_color(system *s, handle h, vector4 color);
 void set_texture(system *s, handle h, rs::resource_token token);
 void set_visible(system *s, handle h, bool is_visible);
 

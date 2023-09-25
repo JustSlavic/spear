@@ -10,9 +10,9 @@ namespace gfx {
 namespace dx {
 
 
-INLINE math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+INLINE matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 Result = {};
+    matrix4 Result = {};
 
     Result._11 = 2.0f * n / w;
     Result._22 = 2.0f * n / h;
@@ -23,7 +23,7 @@ INLINE math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, flo
     return Result;
 }
 
-INLINE math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+INLINE matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
     //     w/2
     //   +-----+
@@ -36,7 +36,7 @@ INLINE math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_rati
 
     float32 tf2 = (1.0f / tanf(0.5f * fov));
 
-    math::matrix4 result = {};
+    matrix4 result = {};
 
     result._11 = tf2;
     result._22 = tf2 * aspect_ratio;
@@ -47,9 +47,9 @@ INLINE math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_rati
     return result;
 }
 
-INLINE math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+INLINE matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 {
-    math::matrix4 result = {};
+    matrix4 result = {};
 
     result._11 = 2.0f / w;
     result._22 = 2.0f / h;
@@ -60,9 +60,9 @@ INLINE math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, f
     return result;
 }
 
-INLINE math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
+INLINE matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
-    math::matrix4 result;
+    matrix4 result;
 
     result._11 = 1.0f;
     result._22 = 1.0f * aspect_ratio;

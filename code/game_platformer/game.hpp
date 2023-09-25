@@ -5,8 +5,8 @@
 
 #include <array.hpp>
 #include <math/integer.hpp>
-#include <math/vector2.hpp>
-#include <math/vector3.hpp>
+#include <g2.hpp>
+#include <g3.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 #include <ui/ui.hpp>
@@ -65,8 +65,8 @@ struct entity
     entity_type type;
     uint32 flags;
 
-    math::vector2 position;
-    math::vector2 velocity;
+    vector2 position;
+    vector2 velocity;
     float32 mass;
     float32 width;
     float32 height;
@@ -88,15 +88,15 @@ void unset(entity *e, entity_flags f) { e->flags = (e->flags & ~f); }
 namespace game {
 
 struct camera {
-    math::vector3 position;
+    vector3 position;
 };
 
 } // namespace game
 
 struct sam_move
 {
-    math::vector2 acceleration;
-    math::vector2 velocity;
+    vector2 acceleration;
+    vector2 velocity;
     bool32 jump;
 };
 

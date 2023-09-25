@@ -2,8 +2,8 @@
 #define RENDERER_HPP
 
 #include <base.h>
-#include <math/vector3.hpp>
-#include <math/matrix4.hpp>
+#include <g3.hpp>
+#include <g301.hpp>
 #include <math/rectangle2.hpp>
 #include <gfx/viewport.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
@@ -44,11 +44,11 @@ void clear();
 void set_viewport(viewport vp);
 void swap_buffers(void *window, void *driver);
 
-math::matrix4 make_look_at_matrix(math::vector3 eye, math::vector3 at, math::vector3 up);
-math::matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
-math::matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
-math::matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);
-math::matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f);
+matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up);
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);
+matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f);
 
 void setup_projection_matrix(render_command *cmd);
 void setup_camera(render_command *cmd);
@@ -57,17 +57,17 @@ void draw_background(execution_context *context, render_command *cmd);
 void draw_polygon_simple(execution_context *context,
                          rs::resource_token mesh_token,
                          rs::resource_token shader_token,
-                         math::matrix4 model,
-                         math::matrix4 view,
-                         math::matrix4 projection,
-                         math::vector4 color);
+                         matrix4 model,
+                         matrix4 view,
+                         matrix4 projection,
+                         vector4 color);
 void draw_rectangle_texture(execution_context *context,
                             rs::resource_token mesh_token,
                             rs::resource_token shader_token,
                             rs::resource_token texture_token,
-                            math::matrix4 model,
-                            math::matrix4 view,
-                            math::matrix4 projectoin);
+                            matrix4 model,
+                            matrix4 view,
+                            matrix4 projectoin);
 
 
 } // namespace gfx
