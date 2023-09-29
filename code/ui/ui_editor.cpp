@@ -204,7 +204,7 @@ void update_editor(system *s, editor *editor, input_state *input)
     auto ctrl = get_hold_count(input->keyboard[KB_CTRL]);
     auto shift = get_hold_count(input->keyboard[KB_SHIFT]);
     auto z = get_press_count(input->keyboard[KB_Z]);
-    osOutputDebugString("ctrl=%d, shift=%d, z=%d\n", ctrl, shift, z);
+    
     if (ctrl && !shift && z)
     {
         ui_editor__undo_action(editor);

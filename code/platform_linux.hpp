@@ -2,8 +2,8 @@
 #define PLATFORM_LINUX_HPP
 
 #include <base.h>
-#include <memory/memory.hpp>
-#include <memory/allocator.hpp>
+#include <memory.h>
+#include <memory_allocator.h>
 
 #include <time.hpp>
 #include <time.h>
@@ -15,6 +15,46 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <input.hpp>
+
+
+#define KEYCODE_ESC                  9
+#define KEYCODE_Q                    24
+#define KEYCODE_W                    25
+#define KEYCODE_E                    26
+#define KEYCODE_R                    27
+#define KEYCODE_T                    28
+#define KEYCODE_Y                    29
+#define KEYCODE_U                    30
+#define KEYCODE_I                    31
+#define KEYCODE_O                    32
+#define KEYCODE_P                    33
+#define KEYCODE_BRACKET_OPEN         34
+#define KEYCODE_BRACKET_CLOSE        35
+#define KEYCODE_A                    38
+#define KEYCODE_S                    39
+#define KEYCODE_D                    40
+#define KEYCODE_Z                    52
+#define KEYCODE_SPACE                65
+#define KEYCODE_F1                   67
+#define KEYCODE_F2                   68
+#define KEYCODE_F3                   69
+#define KEYCODE_F4                   70
+#define KEYCODE_F5                   71
+#define KEYCODE_F6                   72
+#define KEYCODE_F7                   73
+#define KEYCODE_F8                   74
+#define KEYCODE_F9                   75
+#define KEYCODE_F10                  76
+#define KEYCODE_F11                  95
+#define KEYCODE_F12                  96
+#define KEYCODE_UP                   111
+#define KEYCODE_LEFT                 113
+#define KEYCODE_RIGHT                114
+#define KEYCODE_DOWN                 116
+#define KEYCODE_CTRL                 37
+#define KEYCODE_SHIFT                50
 
 
 namespace gfx::gl {
@@ -120,7 +160,7 @@ float64 get_seconds(duration d)
 INLINE memory_block allocate_memory(void *base_address, usize size)
 {
     memory_block result;
-    result.memory = mmap(base_address, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    result.memory = (byte *) mmap(base_address, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     result.size = size;
     ASSERT_MSG(result.memory != MAP_FAILED, "mmap failed");
     return result;
@@ -138,7 +178,7 @@ INLINE void free_memory(memory_block block)
     ASSERT_MSG(ec == 0, "munmap failed");
 }
 
-memory_block load_file(memory::allocator *allocator, char const *filename)
+memory_block load_file(memory_allocator allocator, char const *filename)
 {
     memory_block result = {};
 
@@ -155,18 +195,58 @@ memory_block load_file(memory::allocator *allocator, char const *filename)
         return result;
     }
 
-    void *memory = ALLOCATE_BUFFER(allocator, st.st_size);
-    uint32 bytes_read = read(fd, memory, st.st_size);
+    auto block = ALLOCATE_BUFFER(allocator, st.st_size);
+    uint32 bytes_read = read(fd, block.memory, st.st_size);
 
     if (bytes_read < st.st_size)
     {
-        DEALLOCATE(allocator, memory);
+        DEALLOCATE(allocator, block);
         return result;
     }
 
-    result.memory = memory;
-    result.size   = st.st_size;
+    result = block;
     return result;
+}
+
+keyboard_key map_button_from_virtual_key_code(uint32 vk)
+{
+    switch (vk)
+    {
+        case KEYCODE_ESC: return KB_ESC; break;
+        case KEYCODE_Q: return KB_Q; break;
+        case KEYCODE_W: return KB_W; break;
+        case KEYCODE_E: return KB_E; break;
+        case KEYCODE_R: return KB_R; break;
+        case KEYCODE_T: return KB_T; break;
+        case KEYCODE_Y: return KB_Y; break;
+        case KEYCODE_U: return KB_U; break;
+        case KEYCODE_I: return KB_I; break;
+        case KEYCODE_O: return KB_O; break;
+        case KEYCODE_P: return KB_P; break;
+        case KEYCODE_BRACKET_OPEN: return KB_BRACKET_OPEN; break;
+        case KEYCODE_BRACKET_CLOSE: return KB_BRACKET_CLOSE; break;
+        case KEYCODE_A: return KB_A; break;
+        case KEYCODE_S: return KB_S; break;
+        case KEYCODE_D: return KB_D; break;
+        case KEYCODE_Z: return KB_Z; break;
+        case KEYCODE_SPACE: return KB_SPACE; break;
+        case KEYCODE_F1: return KB_F1; break;
+        case KEYCODE_F2: return KB_F2; break;
+        case KEYCODE_F3: return KB_F3; break;
+        case KEYCODE_F4: return KB_F4; break;
+        case KEYCODE_F5: return KB_F5; break;
+        case KEYCODE_F6: return KB_F6; break;
+        case KEYCODE_F7: return KB_F7; break;
+        case KEYCODE_F8: return KB_F8; break;
+        case KEYCODE_F9: return KB_F9; break;
+        case KEYCODE_F10: return KB_F10; break;
+        case KEYCODE_F11: return KB_F11; break;
+        case KEYCODE_F12: return KB_F12; break;
+        case KEYCODE_CTRL: return KB_CTRL; break;
+        case KEYCODE_SHIFT: return KB_SHIFT; break;
+    }
+
+    return KB_NONE;
 }
 
 

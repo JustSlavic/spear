@@ -9,43 +9,6 @@
 #include <input.hpp>
 
 
-#define KEYCODE_ESC                  9
-#define KEYCODE_Q                    24
-#define KEYCODE_W                    25
-#define KEYCODE_E                    26
-#define KEYCODE_R                    27
-#define KEYCODE_T                    28
-#define KEYCODE_Y                    29
-#define KEYCODE_U                    30
-#define KEYCODE_I                    31
-#define KEYCODE_O                    32
-#define KEYCODE_P                    33
-#define KEYCODE_BRACKET_OPEN         34
-#define KEYCODE_BRACKET_CLOSE        35
-#define KEYCODE_A                    38
-#define KEYCODE_S                    39
-#define KEYCODE_D                    40
-#define KEYCODE_Z                    52
-#define KEYCODE_SPACE                65
-#define KEYCODE_F1                   67
-#define KEYCODE_F2                   68
-#define KEYCODE_F3                   69
-#define KEYCODE_F4                   70
-#define KEYCODE_F5                   71
-#define KEYCODE_F6                   72
-#define KEYCODE_F7                   73
-#define KEYCODE_F8                   74
-#define KEYCODE_F9                   75
-#define KEYCODE_F10                  76
-#define KEYCODE_F11                  95
-#define KEYCODE_F12                  96
-#define KEYCODE_UP                   111
-#define KEYCODE_LEFT                 113
-#define KEYCODE_RIGHT                114
-#define KEYCODE_DOWN                 116
-#define KEYCODE_CTRL                 37
-#define KEYCODE_SHIFT                50
-
 #define MOUSE_LMB                    1
 #define MOUSE_MMB                    2
 #define MOUSE_RMB                    3
@@ -135,21 +98,7 @@ void process_pending_messages(linux::window *window, input_state *input)
             case KeyRelease:
             {
                 bool32 is_down = (event.type == KeyPress);
-                switch (event.xkey.keycode)
-                {
-                    case KEYCODE_ESC: process_button_state(&input->keyboard[KB_ESC], is_down);
-                        break;
-                    case KEYCODE_W: process_button_state(&input->keyboard[KB_W], is_down);
-                        break;
-                    case KEYCODE_A: process_button_state(&input->keyboard[KB_A], is_down);
-                        break;
-                    case KEYCODE_S: process_button_state(&input->keyboard[KB_S], is_down);
-                        break;
-                    case KEYCODE_D: process_button_state(&input->keyboard[KB_D], is_down);
-                        break;
-                    case KEYCODE_Y: process_button_state(&input->keyboard[KB_Y], is_down);
-                        break;
-                }
+                process_button_state(&input->keyboard[linux::map_button_from_virtual_key_code(event.xkey.keycode)], is_down);
             }
             break;
 
@@ -204,41 +153,83 @@ int main(int argc, char **argv, char **env)
     int32 monitor_refresh_rate_hz = monitor.refresh_rate;
     gfx::vsync(&window, true);
 
+    execution_context context;
+    memory__set(&context, 0, sizeof(execution_context));
     memory_block global_memory = linux::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
-    memory::allocator global_allocator;
-    memory::initialize_memory_arena(&global_allocator, global_memory);
+    memory_allocator global_allocator = memory_allocator__create_arena_from_memory_block(global_memory);
+    memory_allocator platform_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(20));
+    context.temporary_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(10));
+    context.renderer_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(2));
+    context.resource_storage.heap = memory_allocator__create_arena(global_allocator, MEGABYTES(1));
+    context.strid_storage = initialize_string_id_storage(ALLOCATE_BUFFER(global_allocator, MEGABYTES(1)));
 
-
-    memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
-    memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
-    memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(10));
-    memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
-    memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-
-    memory::allocator platform_allocator = {};
-    memory::initialize_memory_arena(&platform_allocator, platform_memory);
-
-    execution_context context = {};
-    memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
-    memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
-    memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-
-    context.strid_storage = initialize_string_id_storage(string_id_memory);
-
-    context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
-    context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
-    context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
-    create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
+    context.execution_commands = ALLOCATE_ARRAY(platform_allocator, execution_command, 5);
+    context.render_commands = ALLOCATE_ARRAY(context.renderer_allocator, render_command, 1 << 12);
+    context.resource_storage.resources = ALLOCATE_ARRAY(context.renderer_allocator, rs::resource, 32);
+    rs::create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     context.debug_load_file = linux::load_file;
 
+    memory_block game_memory = ALLOCATE_BUFFER(global_allocator, MEGABYTES(5));
     initialize_memory(&context, game_memory);
 
-    auto view = math::matrix4::identity();
+    rs::resource_token screen_frame_mesh = {};
+    rs::resource_token screen_frame_shader = {};
+        {
+        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "frame.shader"));
+
+        // 3--------2
+        // |\      /|
+        // | 7----6 |
+        // | |    | |
+        // | 4----5 |
+        // |/      \|
+        // 0--------1
+
+        struct frame_vertex
+        {
+            float32 x, y;
+            float32 w, h;
+        };
+
+        frame_vertex vbo_[] = {
+            frame_vertex{ -1.f, -1.f,  0.f,  0.f },
+            frame_vertex{  1.f, -1.f,  0.f,  0.f },
+            frame_vertex{  1.f,  1.f,  0.f,  0.f },
+            frame_vertex{ -1.f,  1.f,  0.f,  0.f },
+            frame_vertex{ -1.f, -1.f,  1.f,  1.f },
+            frame_vertex{  1.f, -1.f, -1.f,  1.f },
+            frame_vertex{  1.f,  1.f, -1.f, -1.f },
+            frame_vertex{ -1.f,  1.f,  1.f, -1.f },
+        };
+
+        auto vbo = ALLOCATE_BUFFER_(context.temporary_allocator, sizeof(vbo_));
+        memory__copy(vbo.memory, vbo_, sizeof(vbo_));
+
+        uint32 ibo_[] = {
+            0, 4, 3,
+            3, 4, 7,
+            0, 1, 4,
+            4, 1, 5,
+            5, 1, 2,
+            5, 2, 6,
+            7, 6, 2,
+            7, 2, 3,
+        };
+
+        auto ibo = ALLOCATE_BUFFER_(context.temporary_allocator, sizeof(ibo_));
+        memory__copy(ibo.memory, ibo_, sizeof(ibo_));
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 2);
+        gfx::push_layout_element(&vbl, 2);
+        screen_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
+    }
+
+    auto view = matrix4__identity();
     float32 aspect_ratio = 16.0f / 9.0f;
-    auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = gfx::make_projection_matrix_fov(math::to_radians(static_cast<float32>(60)), aspect_ratio, 0.05f, 100.0f);
 
     input_state input = {};
 
@@ -294,13 +285,13 @@ int main(int argc, char **argv, char **env)
                 break;
             }
         }
+        context.execution_commands.clear();
 
         for (usize cmd_index = 0; cmd_index < context.render_commands.size(); cmd_index++)
         {
             auto *cmd = &context.render_commands[cmd_index];
             switch (cmd->type)
             {
-                case render_command::command_type::draw_mesh_with_texture:
                 case render_command::command_type::setup_projection_matrix:
                 break;
 
@@ -325,21 +316,54 @@ int main(int argc, char **argv, char **env)
                 }
                 break;
 
+                case render_command::command_type::draw_mesh_with_texture:
+                {
+                    gfx::draw_rectangle_texture(&context,
+                        cmd->draw_mesh_with_texture.mesh_token,
+                        cmd->draw_mesh_with_texture.shader_token,
+                        cmd->draw_mesh_with_texture.texture_token,
+                        cmd->draw_mesh_with_texture.model, view, projection);
+                }
+                break;
                 case render_command::command_type::draw_screen_frame:
+                {
+                    gfx::draw_polygon_simple(&context,
+                        screen_frame_mesh,
+                        screen_frame_shader,
+                        cmd->draw_screen_frame.model,
+                        cmd->draw_screen_frame.view,
+                        cmd->draw_screen_frame.projection,
+                        cmd->draw_screen_frame.color);
+                }
                 break;
 
                 case render_command::command_type::draw_ui:
                 {
                     gfx::draw_polygon_simple(&context,
-                        cmd->draw_ui.mesh_token, cmd->draw_ui.shader_token,
-                        cmd->draw_ui.model, cmd->draw_ui.view, cmd->draw_ui.projection,
+                        cmd->draw_ui.mesh_token,
+                        cmd->draw_ui.shader_token,
+                        cmd->draw_ui.model,
+                        cmd->draw_ui.view,
+                        cmd->draw_ui.projection,
                         cmd->draw_ui.color);
+                }
+                break;
+
+                case render_command::command_type::draw_ui_texture:
+                {
+                    gfx::draw_rectangle_texture(&context,
+                        cmd->draw_ui_texture.mesh_token,
+                        cmd->draw_ui_texture.shader_token,
+                        cmd->draw_ui_texture.texture_token,
+                        cmd->draw_ui_texture.model,
+                        cmd->draw_ui_texture.view,
+                        cmd->draw_ui_texture.projection);
                 }
                 break;
             }
         }
         context.render_commands.clear();
-        memory::reset_allocator(&context.temporary_allocator);
+        memory_allocator__reset(context.temporary_allocator);
 
         gfx::swap_buffers(&window, &driver);
 
@@ -353,8 +377,11 @@ int main(int argc, char **argv, char **env)
 }
 
 #include <gfx/renderer.cpp>
-#include <memory/allocator.cpp>
+#include <memory_allocator.h>
 #include <string_id.cpp>
 #include <game_platformer/game.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>
+#include <memory_allocator.c>
+#include <image/png.cpp>
+#include <memory/crc.cpp>

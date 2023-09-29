@@ -22,6 +22,7 @@
 
 #include <g2.hpp>
 
+#ifndef osOutputDebugString
 #if OS_WINDOWS
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,7 @@
 #elif OS_MAC
 #define osOutputDebugString(MSG, ...)
 #endif // OS_*
+#endif
 
 
 float uniform_real(float from, float to)
@@ -59,12 +61,6 @@ int32 uniform_int(int32 from, int32 to)
 debug_time_measurement *global_debug_measurements;
 uint32 global_debug_call_depth;
 #endif
-
-GLOBAL float32 package_width = 0.9f;
-GLOBAL float32 package_height = 0.2f;
-GLOBAL float32 lou_width = 0.3f;
-GLOBAL float32 lou_height = 0.5f;
-
 
 GLOBAL vector4 sky_color = V4(148.0 / 255.0, 204.0 / 255.0, 209.0 / 255.0, 1.0);
 GLOBAL vector4 porter_color = V4(55.0/255.0, 70.0/255.0, 122.0/255.0, 1);
@@ -103,7 +99,6 @@ ui::handle make_push_button(game_state *gs, vector2 position)
 {
     auto button = ui::make_group(gs->hud);
     ui::set_position(gs->hud, button, position);
-    auto hover_callbacks_4 = ui::make_hoverable(gs->hud, button);
     auto click_callbacks_4 = ui::make_clickable(gs->hud, button);
     click_callbacks_4->on_press_internal = [](ui::system *s, ui::handle h)
     {
@@ -364,8 +359,6 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
             gs->near_exit_time = NEAR_EXIT_TIME_SECONDS;
         }
     }
-
-    auto complex_number = 0.4f + 1.2f * I;
 
 #if UI_EDITOR_ENABLED
     if (get_press_count(input->keyboard[KB_F1]))

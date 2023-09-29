@@ -1,7 +1,7 @@
 #ifndef GFX_GL_X11_HPP
 #define GFX_GL_X11_HPP
 
-#include <base.hpp>
+#include <base.h>
 
 #include <X11/Xutil.h>
 #include <GL/gl.h>
@@ -333,6 +333,14 @@ void destroy_window_and_driver(void *window, void *driver)
     XDestroyWindow(linux_window->x_display, linux_window->x_window);
     XFreeColormap(linux_window->x_display, linux_window->x_colormap);
     XCloseDisplay(linux_window->x_display);
+}
+
+void use_texture(uint32 texture_id, uint32 slot)
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    GL_CHECK_ERRORS();
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    GL_CHECK_ERRORS();
 }
 
 

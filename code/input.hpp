@@ -47,7 +47,8 @@ INLINE uint32 get_hold_count(button_state button)
     return result;
 }
 
-INLINE void process_button_state(button_state *button, bool32 is_down)
+// INLINE void process_button_state(button_state *button, bool32 is_down)
+void process_button_state(button_state *button, bool32 is_down)
 {
     button->transition_count += (button->is_down != is_down);
     button->is_down = is_down;
