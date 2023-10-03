@@ -99,6 +99,7 @@ ui::handle make_push_button(game_state *gs, vector2 position)
 {
     auto button = ui::make_group(gs->hud);
     ui::set_position(gs->hud, button, position);
+    ui::make_hoverable(gs->hud, button);
     auto click_callbacks_4 = ui::make_clickable(gs->hud, button);
     click_callbacks_4->on_press_internal = [](ui::system *s, ui::handle h)
     {
