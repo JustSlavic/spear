@@ -525,7 +525,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>
 #include <image/png.cpp>
-#include <memory/crc.cpp>
+#include <crc.cpp>
 #endif // DLL_BUILD
 
 #include <execution_context.cpp>

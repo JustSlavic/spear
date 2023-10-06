@@ -1,6 +1,6 @@
 #include "png.hpp"
 #include <math/integer.hpp>
-#include <memory/crc.hpp>
+#include <crc.hpp>
 
 //
 // PNG (Portable Network Graphics) Specification, Version 1.2
