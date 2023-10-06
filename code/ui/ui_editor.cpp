@@ -147,6 +147,7 @@ void update_editor(system *s, editor *editor, input_state *input)
                 }
                 else
                 {
+                    // There's nothing hot yet, let's make our element hot.
                     editor->hot = hovered;
                 }
             }
@@ -186,14 +187,17 @@ void update_editor(system *s, editor *editor, input_state *input)
 
     if (get_press_count(input->mouse[MOUSE_LEFT]))
     {
-        editor_action action;
-        action.type = UI_EDITOR_ACTION_SELECTION;
-        action.selection.old_selection = editor->selection;
-        action.selection.new_selection = editor->hot;
-        ui_editor__commit_action(editor, action);
+        if (editor->hot != editor->selection)
+        {
+            editor_action action;
+            action.type = UI_EDITOR_ACTION_SELECTION;
+            action.selection.old_selection = editor->selection;
+            action.selection.new_selection = editor->hot;
+            ui_editor__commit_action(editor, action);
 
-        editor->active = editor->hot;
-        editor->selection = editor->hot;
+            editor->active = editor->hot;
+            editor->selection = editor->hot;
+        }
     }
 
     if (get_release_count(input->mouse[MOUSE_LEFT]))
