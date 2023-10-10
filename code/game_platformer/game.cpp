@@ -155,15 +155,16 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
     ASSERT(sizeof(game_state) < game_memory.size);
     ASSERT(context->debug_load_file);
 
-    context->game_allocator = memory_allocator__create_arena_from_memory_block(game_memory);
-    context->game_state = ALLOCATE(context->game_allocator, game_state);
+    memory_allocator game_allocator = memory_allocator__create_arena_from_memory_block(game_memory);
+    game_state *gs = ALLOCATE(game_allocator, game_state);
+    gs->game_allocator = game_allocator;
 
-    game_state *gs = (game_state *) context->game_state;
+    context->game_state = gs;
 
     // Entities
     {
         gs->entities_capacity = 20;
-        memory_block entities = ALLOCATE_BUFFER_ALIGNED(context->game_allocator, sizeof(entity) * gs->entities_capacity, alignof(entity));
+        memory_block entities = ALLOCATE_BUFFER_ALIGNED(gs->game_allocator, sizeof(entity) * gs->entities_capacity, alignof(entity));
         gs->entities = (entity *) entities.memory;
         // @note: let zero-indexed entity be 'null entity' representing lack of entity
         gs->entity_count = 1;
@@ -233,10 +234,10 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
     // UI
     {
-        auto ui_memory = ALLOCATE_BUFFER_(context->game_allocator, MEGABYTES(1));
+        auto ui_memory = ALLOCATE_BUFFER_(gs->game_allocator, MEGABYTES(1));
         gs->hud = ui::initialize(ui_memory);
 #if UI_EDITOR_ENABLED
-        gs->ui_editor = ui::initialize_editor(context->game_allocator);
+        gs->ui_editor = ui::initialize_editor(gs->game_allocator);
 #endif // UI_EDITOR_ENABLED
 
         ui::set_string_id_storage(gs->hud, context->strid_storage);

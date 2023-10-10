@@ -148,7 +148,6 @@ struct execution_context
 
     void *game_state;
 
-    memory_allocator game_allocator;
     memory_allocator temporary_allocator;
     memory_allocator renderer_allocator;
     
