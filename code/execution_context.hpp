@@ -146,8 +146,12 @@ struct execution_context
     array<execution_command> execution_commands;
     array<render_command> render_commands;
 
+    void *game_state;
+
+    memory_allocator game_allocator;
     memory_allocator temporary_allocator;
     memory_allocator renderer_allocator;
+    
     rs::resource_storage resource_storage;
     string_id_storage *strid_storage;
 

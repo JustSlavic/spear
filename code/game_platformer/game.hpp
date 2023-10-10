@@ -102,7 +102,6 @@ struct sam_move
 
 struct game_state
 {
-    memory_allocator game_allocator;
     float32 near_exit_time;
 
     game::camera default_camera;
