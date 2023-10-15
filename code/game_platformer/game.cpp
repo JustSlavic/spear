@@ -258,28 +258,6 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1, 100, 100);
         auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1, 100, 100);
 
-        hover_callbacks_1->on_enter_internal = [](ui::system *s, ui::handle h)
-        {
-            ui::play_animation(s, "shape_1.on_hover.color.r");
-            ui::play_animation(s, "shape_1.on_hover.color.g");
-        };
-
-        hover_callbacks_1->on_leave_internal = [](ui::system *s, ui::handle h)
-        {
-            ui::play_animation(s, "shape_1.on_leave.color.r");
-            ui::play_animation(s, "shape_1.on_leave.color.g");
-        };
-
-        click_callbacks_1->on_press_internal = [](ui::system *s, ui::handle h)
-        {
-            ui::play_animation(s, "button_1.on_click.rotation");
-        };
-
-        click_callbacks_1->on_release_internal = [](ui::system *s, ui::handle h)
-        {
-            ui::play_animation(s, "button_1.on_release.rotation");
-        };
-
         ui::set_position(gs->hud, button_1, V2(100, 100));
         ui::set_color(gs->hud, shape_1, V4(0, 0, 0, 1));
         ui::set_rotation(gs->hud, shape_1, 45.f);

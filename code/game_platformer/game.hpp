@@ -85,13 +85,9 @@ bool32 is_not(entity *e, entity_flags f) { return (e->flags & f) == 0; }
 void set(entity *e, entity_flags f) { e->flags = (e->flags | f); }
 void unset(entity *e, entity_flags f) { e->flags = (e->flags & ~f); }
 
-namespace game {
-
-struct camera {
+struct game__camera {
     vector3 position;
 };
-
-} // namespace game
 
 struct sam_move
 {
@@ -105,17 +101,7 @@ struct game_state
     memory_allocator game_allocator;
     float32 near_exit_time;
 
-    game::camera default_camera;
-
-    entity *sam;
-    entity *postbox;
-    entity *ground;
-
-    uint32 carried_packages;
-    uint32 score;
-
-    float32 blink_time;
-    float32 blink_freq;
+    game__camera default_camera;
 
     resource_token rectangle_mesh;
     resource_token rectangle_shader;
