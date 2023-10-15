@@ -1,6 +1,6 @@
 #include "renderer.hpp"
 #include <gfx/gl.hpp>
-#include <rs/resource.hpp>
+#include <rs/resource_system.hpp>
 
 #include <math/integer.hpp>
 #include <g301.hpp>
@@ -244,20 +244,20 @@ struct render_texture_data
     float32 aspect_ratio;
 };
 
-void load_mesh(execution_context *context, rs::resource *resource)
+void load_mesh(execution_context *context, resource__mesh *mesh)
 {
     uint32 vertex_buffer_id = 0;
     {
         glGenBuffers(1, &vertex_buffer_id);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-        glBufferData(GL_ARRAY_BUFFER, resource->mesh.vbo.size, resource->mesh.vbo.memory, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->vbo.size, mesh->vbo.memory, GL_STATIC_DRAW);
     }
 
     uint32 index_buffer_id = 0;
     {
         glGenBuffers(1, &index_buffer_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, resource->mesh.ibo.size, resource->mesh.ibo.memory, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo.size, mesh->ibo.memory, GL_STATIC_DRAW);
     }
 
     uint32 vertex_array_id = 0;
@@ -267,15 +267,15 @@ void load_mesh(execution_context *context, rs::resource *resource)
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
 
         uint32 stride = 0;
-        for (uint32 attrib_index = 0; attrib_index < resource->mesh.vbl.element_count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.element_count; attrib_index++)
         {
-            stride += (resource->mesh.vbl.elements[attrib_index].count * sizeof(float32));
+            stride += (mesh->vbl.elements[attrib_index].count * sizeof(float32));
         }
 
         usize offset = 0;
-        for (uint32 attrib_index = 0; attrib_index < resource->mesh.vbl.element_count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.element_count; attrib_index++)
         {
-            uint32 count = resource->mesh.vbl.elements[attrib_index].count;
+            uint32 count = mesh->vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
             glVertexAttribPointer(
                 attrib_index,      // Index
@@ -289,39 +289,39 @@ void load_mesh(execution_context *context, rs::resource *resource)
         }
     }
 
-    if (resource->render_data.memory == NULL)
+    if (mesh->render_data.memory == NULL)
     {
-        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_mesh_data);
+        mesh->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_mesh_data);
     }
 
-    auto *data = (render_mesh_data *) resource->render_data.memory;
+    auto *data = (render_mesh_data *) mesh->render_data.memory;
     data->vertex_buffer_id = vertex_buffer_id;
     data->index_buffer_id = index_buffer_id;
     data->vertex_array_id = vertex_array_id;
 }
 
-void load_shader(execution_context *context, rs::resource *resource)
+void load_shader(execution_context *context, resource__shader *shader)
 {
     uint32 vs = 0;
     uint32 fs = 0;
-    if (resource->shader.name == STRID("rectangle.shader"))
+    if (shader->name == STRID("rectangle.shader"))
     {
         // @todo: load this from file
         vs = compile_shader(vs_source, shader::vertex);
         fs = compile_shader(fs_source, shader::fragment);
     }
-    if (resource->shader.name == STRID("circle.shader"))
+    if (shader->name == STRID("circle.shader"))
     {
         // @todo: load this from file
         vs = compile_shader(vs_source, shader::vertex);
         fs = compile_shader(fs_circle_source, shader::fragment);
     }
-    if (resource->shader.name == STRID("rectangle_uv.shader"))
+    if (shader->name == STRID("rectangle_uv.shader"))
     {
         vs = compile_shader(vs_textured_source, shader::vertex);
         fs = compile_shader(fs_textured_source, shader::fragment);
     }
-    if (resource->shader.name == STRID("frame.shader"))
+    if (shader->name == STRID("frame.shader"))
     {
         vs = compile_shader(vs_frame_source, shader::vertex);
         fs = compile_shader(fs_frame_source, shader::fragment);
@@ -329,27 +329,32 @@ void load_shader(execution_context *context, rs::resource *resource)
 
     auto program = link_shader(vs, fs);
 
-    if (resource->render_data.memory == NULL)
-        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_shader_data);
+    if (shader->render_data.memory == NULL)
+        shader->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_shader_data);
 
-    auto *data = (render_shader_data *) resource->render_data.memory;
+    auto *data = (render_shader_data *) shader->render_data.memory;
     data->program = program;
 }
 
-void load_texture(execution_context *context, rs::resource *resource)
+void load_texture(execution_context *context, resource__texture *texture)
 {
-    if (resource->render_data.memory == NULL)
+    if (texture->render_data.memory == NULL)
     {
-        resource->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_texture_data);
+        texture->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, render_texture_data);
     }
 
-    auto *data = (render_texture_data *) resource->render_data.memory;
-    data->texture_id = create_texture(resource->texture.texture);
-    data->is_top_down = resource->texture.texture.top_down;
-    data->aspect_ratio = (float32) resource->texture.texture.width / (float32) resource->texture.texture.height;
+    auto *data = (render_texture_data *) texture->render_data.memory;
+    data->texture_id = create_texture(texture->texture);
+    data->is_top_down = texture->texture.top_down;
+    data->aspect_ratio = (float32) texture->texture.width / (float32) texture->texture.height;
 }
 
-void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, matrix4 model, matrix4 view, matrix4 projection, vector4 color)
+void draw_indexed_triangles(resource__mesh *mesh,
+                            resource__shader *shader,
+                            matrix4 model,
+                            matrix4 view,
+                            matrix4 projection,
+                            vector4 color)
 {
     auto *mesh_render_data = (render_mesh_data *) mesh->render_data.memory;
     auto *shader_render_data = (render_shader_data *) shader->render_data.memory;
@@ -362,16 +367,19 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, matrix4 mo
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
 }
 
-void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resource *texture,
-                            matrix4 model, matrix4 view, matrix4 projection)
+void draw_indexed_triangles(resource__mesh *mesh,
+                            resource__shader *shader,
+                            resource__texture *texture,
+                            matrix4 model,
+                            matrix4 view,
+                            matrix4 projection)
 {
     auto *mesh_data = (render_mesh_data *) mesh->render_data.memory;
     auto *shader_data = (render_shader_data *) shader->render_data.memory;
     auto *texture_data = (render_texture_data *) texture->render_data.memory;
-    UNUSED(texture_data);
 
     use_shader(shader_data->program);
     use_texture(texture_data->texture_id, 0);
@@ -389,7 +397,7 @@ void draw_indexed_triangles(rs::resource *mesh, rs::resource *shader, rs::resour
     // use_texture(texture_data->texture_id, 0);
     glBindVertexArray(mesh_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->mesh.ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
 }
 
 

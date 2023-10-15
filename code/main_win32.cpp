@@ -10,7 +10,6 @@
 #include <g3.hpp>
 #include <gfx/renderer.hpp>
 #include <input.hpp>
-#include <rs/resource.hpp>
 #include <audio/wav.h>
 
 #include <stdio.h>
@@ -228,13 +227,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     memory_allocator platform_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(20));
     context.temporary_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(10));
     context.renderer_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(2));
-    context.resource_storage.heap = memory_allocator__create_arena(global_allocator, MEGABYTES(1));
+    context.rs.heap = memory_allocator__create_arena(global_allocator, MEGABYTES(1));
     context.strid_storage = initialize_string_id_storage(ALLOCATE_BUFFER(global_allocator, MEGABYTES(1)));
 
     context.execution_commands = ALLOCATE_ARRAY(platform_allocator, execution_command, 5);
     context.render_commands = ALLOCATE_ARRAY(context.renderer_allocator, render_command, 1 << 12);
-    context.resource_storage.resources = ALLOCATE_ARRAY(context.renderer_allocator, rs::resource, 32);
-    create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
     context.debug_load_file = win32::load_file;
 
@@ -244,10 +241,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     debug_loop_inputs = ALLOCATE_ARRAY_(platform_allocator, input_state, 60*100);
 #endif // DEBUG
 
-    rs::resource_token screen_frame_mesh = {};
-    rs::resource_token screen_frame_shader = {};
+    resource_token screen_frame_mesh = {};
+    resource_token screen_frame_shader = {};
     {
-        screen_frame_shader = create_shader_resource(&context.resource_storage, make_string_id(context.strid_storage, "frame.shader"));
+        screen_frame_shader = create_shader_resource(&context.rs, make_string_id(context.strid_storage, "frame.shader"));
 
         // 3--------2
         // |\      /|
@@ -294,7 +291,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 2);
         gfx::push_layout_element(&vbl, 2);
-        screen_frame_mesh = create_mesh_resource(&context.resource_storage, vbo, ibo, vbl);
+        screen_frame_mesh = create_mesh_resource(&context.rs, vbo, ibo, vbl);
     }
 
     // Getting CWD

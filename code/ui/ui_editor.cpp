@@ -234,16 +234,22 @@ void render_editor(execution_context *context, system *s, editor *e)
 
         auto h = make_handle(UI_ELEMENT, element_index);
         bool32 have_graphics = false;
+        uint32 width = 0, height = 0;
         for (auto a : iterate_attaches(s, h))
         {
             have_graphics = (a.type == UI_SHAPE || a.type == UI_IMAGE);
-            if (have_graphics) break;
+            if (have_graphics) {
+                auto *d = &s->drawables[a.index];
+                width = d->width;
+                height = d->height;
+                break;
+            }
         }
         if (!have_graphics) continue;
 
         auto model = transform__to_matrix4(element->tm_to_root);
 
-        auto rect = math::rectangle2::from_center_size(V2(0), 100, 100);
+        auto rect = math::rectangle2::from_center_size(V2(0), (float32)width, (float32)height);
         auto tl = model * V4(math::top_left(rect), 0, 1);
         auto bl = model * V4(math::bottom_left(rect), 0, 1);
         auto br = model * V4(math::bottom_right(rect), 0, 1);

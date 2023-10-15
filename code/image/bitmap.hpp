@@ -22,9 +22,6 @@ enum color_t : uint32
 };
 
 
-namespace image {
-
-
 struct bitmap
 {
     uint8 *pixels;
@@ -35,9 +32,6 @@ struct bitmap
     color_t color_type;
     bool32 top_down;
 };
-
-
-} // namespace image
 
 
 #endif // IMAGE_BITMAP_HPP

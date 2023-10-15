@@ -150,19 +150,22 @@ void draw_background(execution_context *context, render_command *cmd)
 }
 
 void draw_polygon_simple(execution_context *context,
-                         rs::resource_token mesh_token,
-                         rs::resource_token shader_token,
+                         resource_token mesh_token,
+                         resource_token shader_token,
                          matrix4 model,
                          matrix4 view,
                          matrix4 projection,
                          vector4 color)
 {
-    rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
-    if (mesh->type == rs::resource_type::mesh)
+    ASSERT(mesh_token.type == RESOURCE_MESH);
+    ASSERT(shader_token.type == RESOURCE_SHADER);
+
+    if (mesh_token.type == RESOURCE_MESH)
     {
-        rs::resource *shader = rs::get_resource(&context->resource_storage, shader_token);
-        if (shader->type == rs::resource_type::shader)
+        resource__mesh *mesh = get_mesh_resource(mesh_token);
+        if (shader_token.type == RESOURCE_SHADER)
         {
+            resource__shader *shader = get_shader_resource(shader_token);
             if (!mesh->render_data.memory)
             {
                 gl::load_mesh(context, mesh);
@@ -185,22 +188,22 @@ void draw_polygon_simple(execution_context *context,
 }
 
 void draw_rectangle_texture(execution_context *context,
-                            rs::resource_token mesh_token,
-                            rs::resource_token shader_token,
-                            rs::resource_token texture_token,
+                            resource_token mesh_token,
+                            resource_token shader_token,
+                            resource_token texture_token,
                             matrix4 model,
                             matrix4 view,
                             matrix4 projection)
 {
-    rs::resource *mesh = rs::get_resource(&context->resource_storage, mesh_token);
-    if (mesh->type == rs::resource_type::mesh)
+    if (mesh_token.type == RESOURCE_MESH)
     {
-        rs::resource *shader = rs::get_resource(&context->resource_storage, shader_token);
-        if (shader->type == rs::resource_type::shader)
+        resource__mesh *mesh = get_mesh_resource(mesh_token);
+        if (shader_token.type == RESOURCE_SHADER)
         {
-            rs::resource *texture = rs::get_resource(&context->resource_storage, texture_token);
-            if (texture->type == rs::resource_type::texture)
+            resource__shader *shader = get_shader_resource(shader_token);
+            if (texture_token.type == RESOURCE_TEXTURE)
             {
+                resource__texture *texture = get_texture_resource(texture_token);
                 if (!mesh->render_data.memory)
                 {
                     gl::load_mesh(context, mesh);

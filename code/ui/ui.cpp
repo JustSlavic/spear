@@ -34,7 +34,7 @@ struct drawable
     union
     {
         vector4 color;
-        rs::resource_token texture_token;
+        resource_token texture_token;
     };
 };
 
@@ -104,10 +104,10 @@ struct system
     static_array<animation, 32> animations;
 
     // Rendering stuff
-    rs::resource_token rectangle_mesh;
-    rs::resource_token rectangle_shader;
-    rs::resource_token rectangle_mesh_uv;
-    rs::resource_token rectangle_shader_uv;
+    resource_token rectangle_mesh;
+    resource_token rectangle_shader;
+    resource_token rectangle_mesh_uv;
+    resource_token rectangle_shader_uv;
 };
 
 system *initialize(memory_block ui_memory)
@@ -170,22 +170,22 @@ void set_string_id_storage(system *s, string_id_storage *storage)
     s->strid_storage = storage;
 }
 
-void set_resource_rectangle_mesh(system *s, rs::resource_token mesh)
+void set_resource_rectangle_mesh(system *s, resource_token mesh)
 {
     s->rectangle_mesh = mesh;
 }
 
-void set_resource_rectangle_shader(system *s, rs::resource_token shader)
+void set_resource_rectangle_shader(system *s, resource_token shader)
 {
     s->rectangle_shader = shader;
 }
 
-void set_resource_rectangle_mesh_uv(system *s, rs::resource_token mesh)
+void set_resource_rectangle_mesh_uv(system *s, resource_token mesh)
 {
     s->rectangle_mesh_uv = mesh;
 }
 
-void set_resource_rectangle_shader_uv(system *s, rs::resource_token shader)
+void set_resource_rectangle_shader_uv(system *s, resource_token shader)
 {
     s->rectangle_shader_uv = shader;
 }
@@ -371,13 +371,13 @@ handle make_image(system *s)
     return result;
 }
 
-hover_callbacks *make_hoverable(system *s, handle owner)
+hover_callbacks *make_hoverable(system *s, handle owner, int32 width, int32 height)
 {
     auto child = push_hoverable(s);
     attach_child(s, owner, child.h);
 
     child.p->owner = owner;
-    child.p->area = math::rectangle2::from_center_size(V2(0), 100, 100);
+    child.p->area = math::rectangle2::from_center_size(V2(0), (float32)width, (float32)height);
     child.p->callbacks.on_enter = callback_stub;
     child.p->callbacks.on_leave = callback_stub;
     child.p->callbacks.on_enter_internal = callback_stub;
@@ -820,7 +820,7 @@ void render(execution_context *context, system *s)
         if (drawable->type == UI_SHAPE)
         {
             auto model = transform__to_matrix4(element->tm_to_root) *
-                matrix4__scale(0.5f * drawable->width, 0.5f * drawable->height, 1);
+                matrix4__scale(0.5f*drawable->width, 0.5f*drawable->height, 1);
 
             render_command::command_draw_ui command_draw_ui;
             command_draw_ui.mesh_token = s->rectangle_mesh;
@@ -839,8 +839,9 @@ void render(execution_context *context, system *s)
         }
         else if (drawable->type == UI_IMAGE)
         {
+            auto scale_factor = 0.5f*(drawable->width > drawable->height ? drawable->width : drawable->height);
             auto model = transform__to_matrix4(element->tm_to_root) *
-                matrix4__scale(0.5f * 100, 0.5f * 100, 1);
+                matrix4__scale(scale_factor, scale_factor, 1);
 
             render_command::command_draw_ui_texture cmd;
             cmd.mesh_token = s->rectangle_mesh_uv;
@@ -998,7 +999,7 @@ void set_color(system *s, handle h, vector4 color)
     }
 }
 
-void set_texture(system *s, handle h, rs::resource_token token)
+void set_texture(system *s, handle h, resource_token token)
 {
     for (auto a : iterate_attaches(s, h))
     {
@@ -1006,6 +1007,9 @@ void set_texture(system *s, handle h, rs::resource_token token)
         {
             drawable *p = s->drawables.data() + a.index;
             p->texture_token = token;
+            auto *r = get_texture_resource(token);
+            p->width = r->texture.width;
+            p->height = r->texture.height;
         }
     }
 }

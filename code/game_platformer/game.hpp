@@ -117,13 +117,13 @@ struct game_state
     float32 blink_time;
     float32 blink_freq;
 
-    rs::resource_token rectangle_mesh;
-    rs::resource_token rectangle_shader;
+    resource_token rectangle_mesh;
+    resource_token rectangle_shader;
 
-    rs::resource_token rectangle_mesh_uv;
-    rs::resource_token rectangle_shader_uv;
-    rs::resource_token button_push_1_texture;
-    rs::resource_token button_push_2_texture;
+    resource_token rectangle_mesh_uv;
+    resource_token rectangle_shader_uv;
+    resource_token button_push_1_texture;
+    resource_token button_push_2_texture;
 
     entity *entities;
     usize entities_capacity;

@@ -77,8 +77,8 @@ struct render_command
     };
     struct command_draw_background
     {
-        rs::resource_token mesh;
-        rs::resource_token shader;
+        resource_token mesh;
+        resource_token shader;
         vector4 color;
     };
     struct command_draw_rectangle
@@ -88,16 +88,16 @@ struct render_command
     };
     struct command_draw_mesh_with_color
     {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
+        resource_token mesh_token;
+        resource_token shader_token;
         matrix4 model;
         vector4 color;
     };
     struct command_draw_mesh_with_texture
     {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
-        rs::resource_token texture_token;
+        resource_token mesh_token;
+        resource_token shader_token;
+        resource_token texture_token;
         matrix4 model;
     };
     struct command_draw_screen_frame
@@ -109,8 +109,8 @@ struct render_command
     };
     struct command_draw_ui
     {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
+        resource_token mesh_token;
+        resource_token shader_token;
         matrix4 model;
         matrix4 view;
         matrix4 projection;
@@ -118,9 +118,9 @@ struct render_command
     };
     struct command_draw_ui_texture
     {
-        rs::resource_token mesh_token;
-        rs::resource_token shader_token;
-        rs::resource_token texture_token;
+        resource_token mesh_token;
+        resource_token shader_token;
+        resource_token texture_token;
         matrix4 model;
         matrix4 view;
         matrix4 projection;
@@ -150,8 +150,8 @@ struct execution_context
 
     memory_allocator temporary_allocator;
     memory_allocator renderer_allocator;
-    
-    rs::resource_storage resource_storage;
+
+    resource_system rs;
     string_id_storage *strid_storage;
 
     uint32 screen_width;

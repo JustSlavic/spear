@@ -55,16 +55,16 @@ void setup_camera(render_command *cmd);
 
 void draw_background(execution_context *context, render_command *cmd);
 void draw_polygon_simple(execution_context *context,
-                         rs::resource_token mesh_token,
-                         rs::resource_token shader_token,
+                         resource_token mesh_token,
+                         resource_token shader_token,
                          matrix4 model,
                          matrix4 view,
                          matrix4 projection,
                          vector4 color);
 void draw_rectangle_texture(execution_context *context,
-                            rs::resource_token mesh_token,
-                            rs::resource_token shader_token,
-                            rs::resource_token texture_token,
+                            resource_token mesh_token,
+                            resource_token shader_token,
+                            resource_token texture_token,
                             matrix4 model,
                             matrix4 view,
                             matrix4 projectoin);

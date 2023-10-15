@@ -380,7 +380,7 @@ void set_viewport(viewport vp)
     GL_CHECK_ERRORS();
     }
 
-uint32 create_texture(image::bitmap bitmap)
+uint32 create_texture(bitmap bitmap)
 {
     uint32 id = 0;
     glGenTextures(1, &id);

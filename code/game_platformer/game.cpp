@@ -97,9 +97,11 @@ INLINE entity *get_entity(game_state *gs, uint32 eid)
 
 ui::handle make_push_button(game_state *gs, vector2 position)
 {
+    auto tex_resource = get_texture_resource(gs->button_push_1_texture);
+
     auto button = ui::make_group(gs->hud);
     ui::set_position(gs->hud, button, position);
-    ui::make_hoverable(gs->hud, button);
+    ui::make_hoverable(gs->hud, button, tex_resource->texture.width, tex_resource->texture.height);
     auto click_callbacks_4 = ui::make_clickable(gs->hud, button);
     click_callbacks_4->on_press_internal = [](ui::system *s, ui::handle h)
     {
@@ -126,9 +128,9 @@ ui::handle make_push_button(game_state *gs, vector2 position)
     return button;
 }
 
-rs::resource_token load_texture_resource_from_file(execution_context *context, char const *filename)
+resource_token load_texture_resource_from_file(execution_context *context, char const *filename)
 {
-    rs::resource_token result = {};
+    resource_token result = {};
 
     memory_block file_content = context->debug_load_file(context->temporary_allocator, filename);
     if (file_content.memory != NULL)
@@ -136,7 +138,7 @@ rs::resource_token load_texture_resource_from_file(execution_context *context, c
         auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
         if (bitmap.pixels != NULL)
         {
-            result = rs::create_texture_resource(&context->resource_storage, bitmap);
+            result = create_texture_resource(&context->rs, bitmap);
         }
     }
 
@@ -195,8 +197,8 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
         memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
-        gs->rectangle_mesh = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
-        gs->rectangle_shader = create_shader_resource(&context->resource_storage, STRID("rectangle.shader"));
+        gs->rectangle_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
+        gs->rectangle_shader = create_shader_resource(&context->rs, STRID("rectangle.shader"));
     }
 
     // Rectangle with UV
@@ -224,8 +226,8 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
         memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
 
-        gs->rectangle_mesh_uv   = create_mesh_resource(&context->resource_storage, vbo, ibo, vbl);
-        gs->rectangle_shader_uv = create_shader_resource(&context->resource_storage, STRID("rectangle_uv.shader"));
+        gs->rectangle_mesh_uv   = create_mesh_resource(&context->rs, vbo, ibo, vbl);
+        gs->rectangle_shader_uv = create_shader_resource(&context->rs, STRID("rectangle_uv.shader"));
     }
 
     // Load textures
@@ -253,7 +255,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
         auto button_1 = ui::make_group(gs->hud);
         auto shape_1 = ui::make_shape(gs->hud, button_1);
-        auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1);
+        auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1, 100, 100);
         auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1);
 
         hover_callbacks_1->on_enter_internal = [](ui::system *s, ui::handle h)
