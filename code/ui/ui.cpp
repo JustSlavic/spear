@@ -386,13 +386,13 @@ hover_callbacks *make_hoverable(system *s, handle owner, int32 width, int32 heig
     return &(child.p->callbacks);
 }
 
-click_callbacks *make_clickable(system *s, handle owner)
+click_callbacks *make_clickable(system *s, handle owner, int32 width, int32 height)
 {
     auto child = push_clickable(s);
     attach_child(s, owner, child.h);
 
     child.p->owner = owner;
-    child.p->area = math::rectangle2::from_center_size(V2(0), 100, 100);
+    child.p->area = math::rectangle2::from_center_size(V2(0), (float32)width, (float32)height);
     child.p->callbacks.on_press = callback_stub;
     child.p->callbacks.on_release = callback_stub;
     child.p->callbacks.on_press_internal = callback_stub;

@@ -164,7 +164,7 @@ handle make_shape(system *s, handle parent);
 handle make_image(system *s);
 handle make_image(system *s, handle parent);
 hover_callbacks *make_hoverable(system *s, handle owner, int32 width, int32 height);
-click_callbacks *make_clickable(system *s, handle owner);
+click_callbacks *make_clickable(system *s, handle owner, int32 width, int32 height);
 
 bool get_visible(system *s, handle h);
 

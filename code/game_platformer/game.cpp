@@ -102,7 +102,7 @@ ui::handle make_push_button(game_state *gs, vector2 position)
     auto button = ui::make_group(gs->hud);
     ui::set_position(gs->hud, button, position);
     ui::make_hoverable(gs->hud, button, tex_resource->texture.width, tex_resource->texture.height);
-    auto click_callbacks_4 = ui::make_clickable(gs->hud, button);
+    auto click_callbacks_4 = ui::make_clickable(gs->hud, button, tex_resource->texture.width, tex_resource->texture.height);
     click_callbacks_4->on_press_internal = [](ui::system *s, ui::handle h)
     {
         auto it = ui::iterate_attaches(s, h);
@@ -256,7 +256,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         auto button_1 = ui::make_group(gs->hud);
         auto shape_1 = ui::make_shape(gs->hud, button_1);
         auto hover_callbacks_1 = ui::make_hoverable(gs->hud, button_1, 100, 100);
-        auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1);
+        auto click_callbacks_1 = ui::make_clickable(gs->hud, button_1, 100, 100);
 
         hover_callbacks_1->on_enter_internal = [](ui::system *s, ui::handle h)
         {
