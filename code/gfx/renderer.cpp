@@ -88,7 +88,7 @@ matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
 
     matrix4 result = {};
     result._1 = V4(s, -inner(s, eye));
-    result._2 = V4(s, -inner(u, eye));
+    result._2 = V4(u, -inner(u, eye));
     result._3 = V4(-f, inner(f, eye));
     result._4 = V4(0, 0, 0, 1);
 
