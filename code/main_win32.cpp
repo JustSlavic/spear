@@ -348,6 +348,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     timepoint last_timepoint = win32::get_wall_clock();
 
 // --------------------------------------------------------------------------------
+#if 0
     IXAudio2 *AudioDevice = NULL;
     HRESULT Result = XAudio2Create(&AudioDevice, 0, XAUDIO2_DEFAULT_PROCESSOR);
     if (FAILED(Result))
@@ -403,7 +404,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         // ErrorBeepBoop("Cannot play a voice for some reason");
         return 1;
     }
-
+#endif
 // --------------------------------------------------------------------------------
 
     running = true;

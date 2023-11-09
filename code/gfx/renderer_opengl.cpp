@@ -385,16 +385,11 @@ void draw_indexed_triangles(resource__mesh *mesh,
     use_texture(texture_data->texture_id, 0);
 
     model._22 *= 1.0f/texture_data->aspect_ratio;
-    // if (!texture_data->is_top_down)
-    // {
-    //     // @todo: aspect ratio have to have the effect different than that for sure
-    // }
     uniform(shader_data->program, "u_model", model);
     uniform(shader_data->program, "u_view", view);
     uniform(shader_data->program, "u_projection", projection);
     uniform(shader_data->program, "u_texture0", 0);
 
-    // use_texture(texture_data->texture_id, 0);
     glBindVertexArray(mesh_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_data->index_buffer_id);
     glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
