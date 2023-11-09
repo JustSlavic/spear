@@ -378,7 +378,7 @@ void set_viewport(viewport vp)
 {
     glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
     GL_CHECK_ERRORS();
-    }
+}
 
 uint32 create_texture(bitmap bitmap)
 {

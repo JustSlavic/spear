@@ -17,7 +17,6 @@ layout (location = 0) in vec3 vertex_position;
 layout (location = 1) in vec3 vertex_color;
 
 out vec4 fragment_color;
-out vec2 fragment_position;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
@@ -28,7 +27,6 @@ void main()
 {
     vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
     fragment_color = vec4(vertex_color, 1.0) + u_color;
-    fragment_position = vertex_position.xy;
     gl_Position = p;
 }
 )GLSL";
@@ -38,7 +36,6 @@ GLOBAL char const *fs_source = R"GLSL(
 #version 400
 
 in vec4 fragment_color;
-in vec2 fragment_screen_position;
 
 out vec4 result_color;
 
@@ -364,6 +361,9 @@ void draw_indexed_triangles(resource__mesh *mesh,
     uniform(shader_render_data->program, "u_view", view);
     uniform(shader_render_data->program, "u_projection", projection);
     uniform(shader_render_data->program, "u_color", color);
+
+    auto a = V4(1, 1, 0, 1) * model * view * projection;
+    auto b = projection * view * model * V4(1, 1, 0, 1);
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);

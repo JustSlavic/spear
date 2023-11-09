@@ -15,9 +15,6 @@
 #endif
 
 
-// namespace game {
-
-
 #if DEBUG
 struct debug_time_measurement;
 extern debug_time_measurement *global_debug_measurements;
@@ -73,7 +70,6 @@ struct entity
 
     bool32 collided;
     bool32 deleted;
-
 };
 
 bool32 is(entity *e, entity_type t) { return e->type == t; }
@@ -87,6 +83,8 @@ void unset(entity *e, entity_flags f) { e->flags = (e->flags & ~f); }
 
 struct game__camera {
     vector3 position;
+    vector3 forward;
+    vector3 up;
 };
 
 struct sam_move
@@ -101,7 +99,7 @@ struct game_state
     memory_allocator game_allocator;
     float32 near_exit_time;
 
-    game__camera default_camera;
+    game__camera camera;
 
     resource_token rectangle_mesh;
     resource_token rectangle_shader;
