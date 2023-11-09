@@ -103,6 +103,7 @@ struct game_state
 
     resource_token rectangle_mesh;
     resource_token rectangle_shader;
+    resource_token cube_mesh;
 
     resource_token rectangle_mesh_uv;
     resource_token rectangle_shader_uv;

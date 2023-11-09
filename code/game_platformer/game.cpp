@@ -222,6 +222,53 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         gs->rectangle_shader_uv = create_shader_resource(&context->rs, STRID("rectangle_uv.shader"));
     }
 
+    // 3D cube
+    {
+        float32 vbo_init[] = {
+            // bottom square
+            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f,  1.0f,
+            // top square
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f,  1.0f,
+        };
+
+        uint32 ibo_init[] = {
+            0, 1, 2,
+            2, 3, 0,
+
+            0, 3, 7,
+            7, 4, 0,
+
+            1, 5, 6,
+            6, 2, 1,
+
+            3, 2, 6,
+            6, 7, 3,
+
+            1, 0, 4,
+            4, 5, 1,
+
+            5, 4, 7,
+            7, 6, 5,
+        };
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
+
+        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
+        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
+
+        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
+        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+        gs->cube_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
+    }
+
     // UI
     {
         auto ui_memory = ALLOCATE_BUFFER_(gs->game_allocator, MEGABYTES(1));
@@ -303,7 +350,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     {
         render_command::command_draw_mesh_with_color draw_mesh;
 
-        draw_mesh.mesh_token = gs->rectangle_mesh;
+        draw_mesh.mesh_token = gs->cube_mesh;
         draw_mesh.shader_token = gs->rectangle_shader;
         draw_mesh.model = matrix4__identity();
         draw_mesh.color = V4(0.3, 0.8, 0.4, 1);
