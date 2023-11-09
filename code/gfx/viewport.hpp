@@ -4,8 +4,6 @@
 #include <base.h>
 
 
-namespace gfx {
-
 struct viewport
 {
     uint32 offset_x;
@@ -14,7 +12,7 @@ struct viewport
     uint32 height;
 };
 
-viewport make_viewport(uint32 width, uint32 height, float32 desired_aspect_ratio)
+viewport gfx__make_viewport(uint32 width, uint32 height, float32 desired_aspect_ratio)
 {
     viewport result;
 
@@ -46,8 +44,6 @@ viewport make_viewport(uint32 width, uint32 height, float32 desired_aspect_ratio
 
     return result;
 }
-
-} // namespace gfx
 
 
 #endif // GFX_VIEWPORT_HPP

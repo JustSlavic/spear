@@ -199,24 +199,24 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    auto chosen_api = gfx::graphics_api::opengl;
+    auto chosen_api = gfx__api::opengl;
     win32::window window = {};
-    gfx::driver driver = {};
+    gfx__driver driver = {};
 
-    if (chosen_api == gfx::graphics_api::opengl)
+    if (chosen_api == gfx__api::opengl)
     {
         win32::create_opengl_window(instance, 1600, 900, window_callback, &window);
-        gfx::initialize_opengl(&driver);
+        gfx__initialize_opengl(&window, &driver);
     }
-    else if (chosen_api == gfx::graphics_api::dx11)
+    else if (chosen_api == gfx__api::dx11)
     {
         win32::create_simple_window(instance, 800, 600, window_callback, &window);
-        // gfx::initialize_dx11(&window, &driver);
+        // gfx__initialize_dx11(&window, &driver);
     }
 
-    gfx::set_clear_color(0, 0, 0, 1);
+    gfx__set_clear_color(0, 0, 0, 1);
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
-    gfx::vsync(&window, true);
+    gfx__vsync(&window, true);
 
     memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
@@ -338,7 +338,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     auto view = matrix4__identity();
     float32 aspect_ratio = 16.0f / 9.0f;
-    auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = gfx__make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
     input_state input = {};
 
@@ -426,8 +426,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (viewport_changed)
         {
-            auto viewport = gfx::make_viewport(current_client_width, current_client_height, aspect_ratio);
-            gfx::set_viewport(viewport);
+            auto viewport = gfx__make_viewport(current_client_width, current_client_height, aspect_ratio);
+            gfx__set_viewport(viewport);
             viewport_changed = false;
 
             // @todo
@@ -441,7 +441,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             context.letterbox_height = viewport.height;
         }
 
-        gfx::clear();
+        gfx__clear();
 
 #if DEBUG
         if (debug_loop_state == DEBUG_LOOP_RECORDING)
@@ -506,19 +506,19 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 case render_command::command_type::setup_camera:
                 {
-                    view = gfx::make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
+                    view = gfx__make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
                 }
                 break;
 
                 case render_command::command_type::draw_background:
                 {
-                    gfx::draw_background(&context, cmd);
+                    gfx__draw_background(&context, cmd);
                 }
                 break;
 
                 case render_command::command_type::draw_mesh_with_color:
                 {
-                    gfx::draw_polygon_simple(&context,
+                    gfx__draw_polygon_simple(&context,
                         cmd->draw_mesh_with_color.mesh_token, cmd->draw_mesh_with_color.shader_token,
                         cmd->draw_mesh_with_color.model, view, projection,
                         cmd->draw_mesh_with_color.color);
@@ -527,7 +527,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 case render_command::command_type::draw_mesh_with_texture:
                 {
-                    gfx::draw_rectangle_texture(&context,
+                    gfx__draw_rectangle_texture(&context,
                         cmd->draw_mesh_with_texture.mesh_token,
                         cmd->draw_mesh_with_texture.shader_token,
                         cmd->draw_mesh_with_texture.texture_token,
@@ -536,7 +536,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 break;
                 case render_command::command_type::draw_screen_frame:
                 {
-                    gfx::draw_polygon_simple(&context,
+                    gfx__draw_polygon_simple(&context,
                         screen_frame_mesh,
                         screen_frame_shader,
                         cmd->draw_screen_frame.model,
@@ -548,7 +548,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 case render_command::command_type::draw_ui:
                 {
-                    gfx::draw_polygon_simple(&context,
+                    gfx__draw_polygon_simple(&context,
                         cmd->draw_ui.mesh_token,
                         cmd->draw_ui.shader_token,
                         cmd->draw_ui.model,
@@ -560,7 +560,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 case render_command::command_type::draw_ui_texture:
                 {
-                    gfx::draw_rectangle_texture(&context,
+                    gfx__draw_rectangle_texture(&context,
                         cmd->draw_ui_texture.mesh_token,
                         cmd->draw_ui_texture.shader_token,
                         cmd->draw_ui_texture.texture_token,
@@ -616,14 +616,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
 #endif // DEBUG
 
-        gfx::swap_buffers(&window, &driver);
+        gfx__swap_buffers(&window, &driver);
 
         timepoint end_of_frame = win32::get_wall_clock();
         last_frame_dt = (float32) win32::get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
     }
 
-    gfx::destroy_window_and_driver(&window, &driver);
+    gfx__destroy_window_and_driver(&window, &driver);
 
     return 0;
 }

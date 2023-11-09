@@ -11,74 +11,65 @@
 // #include <renderer_metal.cpp>
 
 
-namespace gfx
+GLOBAL gfx__api gfx__active_api;
+
+
+bool32 gfx__initialize_opengl(void *window, void *driver)
 {
+    UNUSED(window);
+    UNUSED(driver);
 
-GLOBAL graphics_api active_api;
-
-
-bool32 initialize_opengl(void *d)
-{
-    bool32 result = gl::initialize();
-    if (result) active_api = graphics_api::opengl;
+    bool32 result = gl__initialize();
+    if (result) gfx__active_api = gfx__api::opengl;
     return result;
 }
 
-#if OS_WINDOWS
-bool32 initialize_dx11(win32::window *w, driver *d)
+void gfx__destroy_window_and_driver(void *window, void *driver)
 {
-    bool32 result = dx11::initialize(w, d);
-    if (result) active_api = graphics_api::dx11;
-    return result;
-}
-#endif // OS_WINDOWS
-
-void destroy_window_and_driver(void *window, void *driver)
-{
-    if (active_api == graphics_api::opengl)
-        gl::destroy_window_and_driver(window, driver);
+    if (gfx__active_api == gfx__api::opengl)
+        gl__destroy_window_and_driver(window, driver);
 }
 
-void vsync(void *window, bool32 active)
+void gfx__vsync(void *window, bool32 active)
 {
-    if (active_api == graphics_api::opengl)
-        gl::vsync(window, active);
+    if (gfx__active_api == gfx__api::opengl)
+        gl__vsync(window, active);
 }
 
-void set_clear_color(float32 r, float g, float b, float a)
+void gfx__set_clear_color(float32 r, float g, float b, float a)
 {
-    if (active_api == graphics_api::opengl)
-        gl::set_clear_color(r, g, b, a);
+    if (gfx__active_api == gfx__api::opengl)
+        gl__set_clear_color(r, g, b, a);
 }
 
-void clear()
+void gfx__clear()
 {
-    if (active_api == graphics_api::opengl)
-        gl::clear();
+    if (gfx__active_api == gfx__api::opengl)
+        gl__clear();
 }
 
-void set_viewport(viewport vp)
+void gfx__set_viewport(viewport vp)
 {
-    if (active_api == graphics_api::opengl)
-        gl::set_viewport(vp);
+    if (gfx__active_api == gfx__api::opengl)
+        gl__set_viewport(vp);
     else
         ASSERT_FAIL("NOT IMPLEMENTED");
 }
 
-void swap_buffers(void *wnd, void *drv)
+void gfx__swap_buffers(void *wnd, void *drv)
 {
-    if (active_api == graphics_api::opengl)
+    if (gfx__active_api == gfx__api::opengl)
     {
-        gl::swap_buffers(wnd);
+        gl__swap_buffers(wnd);
     }
-    else if (active_api == graphics_api::dx11)
+    else if (gfx__active_api == gfx__api::dx11)
     {
         // dx::swap_buffers(d);
         ASSERT_FAIL();
     }
 }
 
-matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
+matrix4 gfx__make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
 {
     using namespace math;
 
@@ -95,67 +86,56 @@ matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
     return result;
 }
 
-matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 gfx__make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
     matrix4 result = {};
-    if (active_api == graphics_api::opengl)
-        result = gl::make_projection_matrix(w, h, n, f);
+    if (gfx__active_api == gfx__api::opengl)
+        result = gl__make_projection_matrix(w, h, n, f);
     return result;
 }
 
-matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+matrix4 gfx__make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
     matrix4 result = {};
-    if (active_api == graphics_api::opengl)
-        result = gl::make_projection_matrix_fov(fov, aspect_ratio, n, f);
+    if (gfx__active_api == gfx__api::opengl)
+        result = gl__make_projection_matrix_fov(fov, aspect_ratio, n, f);
     return result;
 }
 
-matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 gfx__make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 {
     matrix4 result = {};
-    if (active_api == graphics_api::opengl)
-        result = gl::make_orthographic_matrix(w, h, n, f);
+    if (gfx__active_api == gfx__api::opengl)
+        result = gl__make_orthographic_matrix(w, h, n, f);
     return result;
 }
 
-matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
+matrix4 gfx__make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
     matrix4 result = {};
-    if (active_api == graphics_api::opengl)
-        result = gl::make_orthographic_matrix(aspect_ratio, n, f);
+    if (gfx__active_api == gfx__api::opengl)
+        result = gl__make_orthographic_matrix(aspect_ratio, n, f);
     return result;
 }
 
-
-void setup_projection_matrix(render_command *cmd)
+void gfx__draw_background(execution_context *context, render_command *cmd)
 {
-
+    gfx__draw_polygon_simple(context,
+                             cmd->draw_background.mesh,
+                             cmd->draw_background.shader,
+                             matrix4__identity(),
+                             matrix4__identity(),
+                             matrix4__identity(),
+                             cmd->draw_background.color);
 }
 
-void setup_camera(render_command *cmd)
-{
-
-}
-
-void draw_background(execution_context *context, render_command *cmd)
-{
-    draw_polygon_simple(context,
-                        cmd->draw_background.mesh,
-                        cmd->draw_background.shader,
-                        matrix4__identity(),
-                        matrix4__identity(),
-                        matrix4__identity(),
-                        cmd->draw_background.color);
-}
-
-void draw_polygon_simple(execution_context *context,
-                         resource_token mesh_token,
-                         resource_token shader_token,
-                         matrix4 model,
-                         matrix4 view,
-                         matrix4 projection,
-                         vector4 color)
+void gfx__draw_polygon_simple(execution_context *context,
+                              resource_token mesh_token,
+                              resource_token shader_token,
+                              matrix4 model,
+                              matrix4 view,
+                              matrix4 projection,
+                              vector4 color)
 {
     ASSERT(mesh_token.type == RESOURCE_MESH);
     ASSERT(shader_token.type == RESOURCE_SHADER);
@@ -168,13 +148,13 @@ void draw_polygon_simple(execution_context *context,
             resource__shader *shader = get_shader_resource(shader_token);
             if (!mesh->render_data.memory)
             {
-                gl::load_mesh(context, mesh);
+                gl__load_mesh(context, mesh);
             }
             if (!shader->render_data.memory)
             {
-                gl::load_shader(context, shader);
+                gl__load_shader(context, shader);
             }
-            gl::draw_indexed_triangles(mesh, shader, model, view, projection, color);
+            gl__draw_indexed_triangles(mesh, shader, model, view, projection, color);
         }
         else
         {
@@ -187,13 +167,13 @@ void draw_polygon_simple(execution_context *context,
     }
 }
 
-void draw_rectangle_texture(execution_context *context,
-                            resource_token mesh_token,
-                            resource_token shader_token,
-                            resource_token texture_token,
-                            matrix4 model,
-                            matrix4 view,
-                            matrix4 projection)
+void gfx__draw_rectangle_texture(execution_context *context,
+                                 resource_token mesh_token,
+                                 resource_token shader_token,
+                                 resource_token texture_token,
+                                 matrix4 model,
+                                 matrix4 view,
+                                 matrix4 projection)
 {
     if (mesh_token.type == RESOURCE_MESH)
     {
@@ -206,17 +186,17 @@ void draw_rectangle_texture(execution_context *context,
                 resource__texture *texture = get_texture_resource(texture_token);
                 if (!mesh->render_data.memory)
                 {
-                    gl::load_mesh(context, mesh);
+                    gl__load_mesh(context, mesh);
                 }
                 if (!shader->render_data.memory)
                 {
-                    gl::load_shader(context, shader);
+                    gl__load_shader(context, shader);
                 }
                 if (!texture->render_data.memory)
                 {
-                    gl::load_texture(context, texture);
+                    gl__load_texture(context, texture);
                 }
-                gl::draw_indexed_triangles(mesh, shader, texture, model, view, projection);
+                gl__draw_indexed_triangles(mesh, shader, texture, model, view, projection);
             }
         }
         else
@@ -229,6 +209,3 @@ void draw_rectangle_texture(execution_context *context,
         // @todo: mesh resource is not valid
     }
 }
-
-
-} // namespace gfx

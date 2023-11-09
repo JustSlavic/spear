@@ -41,10 +41,7 @@ typedef void glActiveTextureType(GLenum texture);
 GLOBAL glActiveTextureType *glActiveTexture;
 
 
-namespace gfx {
-namespace gl {
-
-bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w)
+bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w)
 {
     auto *win32_window = (win32::window *) w;
 
@@ -193,7 +190,7 @@ bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientH
     return true;
 }
 
-bool32 initialize()
+bool32 gl__initialize()
 {
     glGenFramebuffers = (glGenFramebuffersType *) wglGetProcAddress("glGenFramebuffers");
     glBindFramebuffer = (glBindFramebufferType *) wglGetProcAddress("glBindFramebuffer");
@@ -233,22 +230,22 @@ bool32 initialize()
     return true;
 }
 
-void vsync(void *window, bool turn_on)
+void gl__vsync(void *window, bool turn_on)
 {
     wglSwapIntervalEXT(turn_on ? 1 : 0);
 }
 
-void swap_buffers(void *window)
+void gl__swap_buffers(void *window)
 {
     auto *win32_window = (win32::window *) window;
     SwapBuffers(win32_window->device_context);
 }
 
-void destroy_window_and_driver(void *window, void *driver)
+void gl__destroy_window_and_driver(void *window, void *driver)
 {
 }
 
-void use_texture(uint32 texture_id, uint32 slot)
+void gl__use_texture(uint32 texture_id, uint32 slot)
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     GL_CHECK_ERRORS();
@@ -256,8 +253,5 @@ void use_texture(uint32 texture_id, uint32 slot)
     GL_CHECK_ERRORS();
 }
 
-
-} // namespace gfx
-} // namespace gl
 
 #endif // GFX_GL_WIN32_HPP

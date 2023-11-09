@@ -15,9 +15,7 @@
 #define MAIN_WINDOW_CALLBACK(NAME) LRESULT CALLBACK NAME(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
-namespace gfx::gl {
-bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w);
-}
+bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w);
 
 namespace win32 {
 
@@ -41,7 +39,7 @@ struct window
 
 bool32 create_opengl_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, window *w)
 {
-    bool32 result = gfx::gl::create_opengl_window(Instance, ClientWidth, ClientHeight, WindowCallback, w);
+    bool32 result = gl__create_window(Instance, ClientWidth, ClientHeight, WindowCallback, w);
     return result;
 }
 

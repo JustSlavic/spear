@@ -57,9 +57,7 @@
 #define KEYCODE_SHIFT                50
 
 
-namespace gfx::gl {
-bool32 create_opengl_window(int32, int32, void *, void *);
-}
+bool32 gl__create_window(int32, int32, void *, void *);
 
 
 namespace linux

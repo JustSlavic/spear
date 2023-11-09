@@ -186,15 +186,17 @@ GLOBAL glUniform4fType *glUniform4f;
 GLOBAL glUniformMatrix4fvType *glUniformMatrix4fv;
 GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
 
+#if DEBUG
 #define GL_CHECK_ERRORS(...) { \
     auto err = glGetError();   \
     if (err) { ASSERT_FAIL(); } \
 } void(0)
+#else
+#define GL_CHECK_ERRORS(...)
+#endif
 
-namespace gfx {
-namespace gl {
 
-char const *gl_error_string(GLenum ec)
+char const *gl__error_string(GLenum ec)
 {
     switch (ec) {
         case GL_INVALID_ENUM: return "Error: GL_INVALID_ENUM: An unacceptable value is specified for an enumerated argument.";
@@ -210,25 +212,25 @@ char const *gl_error_string(GLenum ec)
     return (char const *) NULL;
 }
 
-void set_clear_color(float32 r, float32 g, float32 b, float32 a)
+void gl__set_clear_color(float32 r, float32 g, float32 b, float32 a)
 {
     glClearColor(r, g, b, a);
     GL_CHECK_ERRORS();
 }
 
-void set_clear_color(vector4 color)
+void gl__set_clear_color(vector4 color)
 {
-    set_clear_color(color.r, color.g, color.b, color.a);
+    gl__set_clear_color(color.r, color.g, color.b, color.a);
 }
 
-void clear()
+void gl__clear()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     GL_CHECK_ERRORS();
 }
 
 
-struct shader
+struct gl__shader
 {
     uint32 id;
     uint32 vertex_shader;
@@ -242,7 +244,7 @@ struct shader
 };
 
 
-bool32 is_shader_program_valid(uint32 program)
+bool32 gl__is_shader_program_valid(uint32 program)
 {
     glValidateProgram(program);
     GL_CHECK_ERRORS();
@@ -253,7 +255,7 @@ bool32 is_shader_program_valid(uint32 program)
     return program_valid;
 }
 
-uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
+uint32 gl__compile_shader(char const *source_code, gl__shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
     GL_CHECK_ERRORS();
@@ -288,7 +290,7 @@ uint32 compile_shader(char const *source_code, shader::shader_type shader_type)
     return id;
 }
 
-shader link_shader(uint32 vs, uint32 fs)
+gl__shader gl__link_shader(uint32 vs, uint32 fs)
 {
     uint32 id = glCreateProgram();
     GL_CHECK_ERRORS();
@@ -305,8 +307,8 @@ shader link_shader(uint32 vs, uint32 fs)
     glDetachShader(id, fs);
     GL_CHECK_ERRORS();
 
-    shader result = {};
-    if (is_shader_program_valid(id))
+    gl__shader result = {};
+    if (gl__is_shader_program_valid(id))
     {
         result.id = id;
         result.vertex_shader = vs;
@@ -320,13 +322,13 @@ shader link_shader(uint32 vs, uint32 fs)
     return result;
 }
 
-void use_shader(shader s)
+void gl__use_shader(gl__shader s)
 {
     glUseProgram(s.id);
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, int32 n)
+void gl__uniform(gl__shader s, char const *name, int32 n)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -334,7 +336,7 @@ void uniform(shader s, char const *name, int32 n)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, float f)
+void gl__uniform(gl__shader s, char const *name, float f)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -342,7 +344,7 @@ void uniform(shader s, char const *name, float f)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, vector2 const& v)
+void gl__uniform(gl__shader s, char const *name, vector2 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -350,7 +352,7 @@ void uniform(shader s, char const *name, vector2 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, vector3 const& v)
+void gl__uniform(gl__shader s, char const *name, vector3 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -358,7 +360,7 @@ void uniform(shader s, char const *name, vector3 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, vector4 const& v)
+void gl__uniform(gl__shader s, char const *name, vector4 const& v)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -366,7 +368,7 @@ void uniform(shader s, char const *name, vector4 const& v)
     GL_CHECK_ERRORS();
 }
 
-void uniform(shader s, char const *name, matrix4 const& m)
+void gl__uniform(gl__shader s, char const *name, matrix4 const& m)
 {
     auto location = glGetUniformLocation(s.id, name);
     GL_CHECK_ERRORS();
@@ -374,13 +376,13 @@ void uniform(shader s, char const *name, matrix4 const& m)
     GL_CHECK_ERRORS();
 }
 
-void set_viewport(viewport vp)
+void gl__set_viewport(viewport vp)
 {
     glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
     GL_CHECK_ERRORS();
 }
 
-uint32 create_texture(bitmap bitmap)
+uint32 gl__create_texture(bitmap bitmap)
 {
     uint32 id = 0;
     glGenTextures(1, &id);
@@ -422,8 +424,6 @@ uint32 create_texture(bitmap bitmap)
 }
 
 
-} // namespace gfx
-} // namespace gl
 
 #if OS_WINDOWS
 #include "gl_win32.hpp"

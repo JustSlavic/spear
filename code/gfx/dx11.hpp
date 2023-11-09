@@ -23,7 +23,7 @@ struct dx11_driver
     vector4 ClearColor;
 };
 
-static_assert(sizeof(dx11_driver) <= sizeof(gfx::driver));
+static_assert(sizeof(dx11_driver) <= sizeof(gfx__driver));
 
 struct render_target
 {
@@ -47,7 +47,7 @@ struct shader
 GLOBAL dx11_driver Dx;
 
 
-bool32 initialize(win32::window *w, driver *d)
+bool32 initialize(win32::window *w, gfx__driver *d)
 {
     HRESULT Result;
 
