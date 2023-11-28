@@ -229,6 +229,19 @@ void gl__clear()
     GL_CHECK_ERRORS();
 }
 
+void gl__depth_test(bool32 do_depth_test)
+{
+    if (do_depth_test)
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+    }
+}
+
+void gl__write_depth(bool32 write_depth)
+{
+    glDepthMask(write_depth ? GL_TRUE : GL_FALSE);
+}
 
 struct gl__shader
 {

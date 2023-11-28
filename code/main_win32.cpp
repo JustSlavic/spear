@@ -217,6 +217,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     gfx__set_clear_color(0, 0, 0, 1);
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
     gfx__vsync(&window, true);
+    gfx__depth_test(&driver, true);
+    gfx__write_depth(&driver, true);
 
     memory_block global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
 
@@ -512,7 +514,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 case render_command::command_type::draw_background:
                 {
+                    gfx__write_depth(&driver, false);
                     gfx__draw_background(&context, cmd);
+                    gfx__write_depth(&driver, true);
                 }
                 break;
 

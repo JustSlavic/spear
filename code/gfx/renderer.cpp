@@ -48,6 +48,18 @@ void gfx__clear()
         gl__clear();
 }
 
+void gfx__depth_test(void *driver, bool32 do_depth_test)
+{
+    if (gfx__active_api == gfx__api::opengl)
+        gl__depth_test(do_depth_test);
+}
+
+void gfx__write_depth(void *driver, bool32 write_depth)
+{
+    if (gfx__active_api == gfx__api::opengl)
+        gl__write_depth(write_depth);
+}
+
 void gfx__set_viewport(viewport vp)
 {
     if (gfx__active_api == gfx__api::opengl)

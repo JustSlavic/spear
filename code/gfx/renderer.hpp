@@ -38,6 +38,8 @@ void gfx__destroy_window_and_driver(void *window, void *driver);
 void gfx__vsync(void *window, bool32 active);
 void gfx__set_clear_color(float32 r, float32 g, float32 b, float32 a);
 void gfx__clear();
+void gfx__depth_test(void *driver, bool32 do_depth_test);
+void gfx__write_depth(void *driver, bool32 write_depth);
 void gfx__set_viewport(viewport vp);
 void gfx__swap_buffers(void *window, void *driver);
 
