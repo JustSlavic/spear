@@ -53,6 +53,7 @@ struct game_state
 
     resource_token rectangle_mesh;
     resource_token circle_mesh;
+    resource_token triangle_mesh;
     resource_token rectangle_shader;
 
     resource_token rectangle_mesh_uv;
@@ -146,10 +147,19 @@ GLOBAL vector2 gravity = V2(0, -9.8); // m/s^2
 #define BASE_FRICTION_COEFFICIENT         5.f
 
 
+#define GLOBAL_SCALE  0.2f
+
+
+void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z);
+void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p, vector4 color);
+void pga2__draw_triangle(execution_context *context, game_state *gs, vector2 p, float32 angle, vector4 color);
+void pga2__draw_segment(execution_context *context, game_state *gs, vector2 p, vector2 q, vector4 color);
+void pga2__draw_vector(execution_context *context, game_state *gs, vector2 p, vector4 color);
+// void pga2__draw_vector(execution_context *context, game_state *gs, pga2::point q, pga2::point p, vector4 color);
+
 
 void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z = 0.f)
 {
-    // Find points intersecting the right and left borders of the screen:
     // line: ax + by + c = 0
     // let x =  1 => y = -c/b - a/b
     // let x = -1 => y = -c/b + a/b
@@ -160,38 +170,108 @@ void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line
     // let x = 0 => y = -c/b
 
     // The rotation around z is going to be such:
-    auto n = normalized(V2(line.a, line.b));
-    auto angle = atan2f(-n.x, n.y);
+    auto angle = atan2f(-line.a, line.b);
     auto d = line.c / math::square_root(line.a * line.a + line.b * line.b);
+
+    auto n = normalized(V2(line.a, line.b));
 
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->rectangle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
     draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(math::near_zero(line.a) ? 0 : -0.2f * n.x * d)
-                    * matrix4__translate_y(math::near_zero(line.b) ? 0 : -0.2f * n.y * d)
+                    * matrix4__translate_x(-GLOBAL_SCALE * n.x * d)
+                    * matrix4__translate_y(-GLOBAL_SCALE * n.y * d)
                     * matrix4__translate_z(z)
                     * matrix4__rotate_z(angle)
-                    * matrix4__scale(10.f, 0.004f, 1)
-                    ;
+                    * matrix4__scale(10.f, 0.004f, 1);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
 
 
+void pga2__draw_line_and_dual(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z = 0.f)
+{
+    auto d = dual(line);
+    d.x = d.x / d.w;
+    d.y = d.y / d.w;
+    d.w = 1.f;
+
+    pga2__draw_line(context, gs, line, color, z);
+    pga2__draw_point(context, gs, d, 0.3f * color);
+}
+
 void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p, vector4 color)
 {
+    if (math::near_zero(p.w, 0.005f))
+    {
+        pga2__draw_vector(context, gs, p.vector, color);
+        return;
+    }
+
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->circle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
     draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(0.2f * p.x / p.c)
-                    * matrix4__translate_y(0.2f * p.y / p.c)
-                    * matrix4__scale(.03f, .03f, 1)
-                    ;
+                    * matrix4__translate_x(GLOBAL_SCALE * p.x / p.w)
+                    * matrix4__translate_y(GLOBAL_SCALE * p.y / p.w)
+                    * matrix4__scale(.03f, .03f, 1);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
+
+void pga2__draw_point_and_dual(execution_context *context, game_state *gs, pga2::point p, vector4 color)
+{
+    pga2__draw_point(context, gs, p, color);
+    pga2__draw_line(context, gs, dual(p), 0.3f * color);
+}
+
+void pga2__draw_segment(execution_context *context, game_state *gs, vector2 start, vector2 end, vector4 color)
+{
+    auto c = 0.5f * (start + end);
+
+    auto d = end - start;
+    auto angle = atan2f(d.y, d.x);
+
+    render_command::command_draw_mesh_with_color draw_mesh;
+    draw_mesh.mesh_token = gs->rectangle_mesh;
+    draw_mesh.shader_token = gs->rectangle_shader;
+    draw_mesh.model = matrix4__identity()
+                    * matrix4__translate_x(GLOBAL_SCALE * c.x)
+                    * matrix4__translate_y(GLOBAL_SCALE * c.y)
+                    * matrix4__rotate_z(angle)
+                    * matrix4__scale(0.5f * GLOBAL_SCALE * length(d), 0.5f * GLOBAL_SCALE * 0.1f, 1.f);
+    draw_mesh.color = color;
+    push_draw_mesh_with_color_command(context, draw_mesh);
+}
+
+void pga2__draw_triangle(execution_context *context, game_state *gs, vector2 p, float32 angle, vector4 color)
+{
+    render_command::command_draw_mesh_with_color draw_mesh;
+    draw_mesh.mesh_token = gs->triangle_mesh;
+    draw_mesh.shader_token = gs->rectangle_shader;
+    draw_mesh.model = matrix4__identity()
+                    * matrix4__translate_x(GLOBAL_SCALE * p.x)
+                    * matrix4__translate_y(GLOBAL_SCALE * p.y)
+                    * matrix4__rotate_z(angle)
+                    * matrix4__scale(GLOBAL_SCALE * 0.5f, GLOBAL_SCALE * 0.4f * 0.5f, 1.f);
+    draw_mesh.color = color;
+    push_draw_mesh_with_color_command(context, draw_mesh);
+}
+
+void pga2__draw_vector(execution_context *context, game_state *gs, vector2 p, vector4 color)
+{
+    auto q = p - 0.5f * normalized(p);
+    pga2__draw_segment(context, gs, V2(0), q, color);
+    pga2__draw_triangle(context, gs, q, atan2f(p.y, p.x), color);
+}
+
+// void pga2__draw_vector(execution_context *context, game_state *gs, pga2::point r, pga2::point p, vector4 color)
+// {
+//     auto q = V2(p.x, p.y) - 0.5f * normalized(V2(p.x, p.y));
+//     pga2__draw_segment(context, gs, pga2::make_point(r.x, r.y), pga2::make_point(r.x + p.x, r.y + p.y), color);
+//     pga2__draw_triangle(context, gs, pga2::make_point(q.x + r.x, q.y + r.y), atan2f(p.y, p.x), color);
+// }
+
 
 
 INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
@@ -239,6 +319,30 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
         gs->rectangle_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
         gs->rectangle_shader = create_shader_resource(&context->rs, STRID("rectangle.shader"));
+    }
+
+    // Init triangle mesh
+    {
+        float32 vbo_init[] = {
+            0.0f,  1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            1.0f,  0.0f, 0.0f,
+        };
+
+        uint32 ibo_init[] = {
+            0, 1, 2,
+        };
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
+
+        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
+        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
+
+        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
+        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+        gs->triangle_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
     }
 
     // Init circle mesh
@@ -385,36 +489,213 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.02f);
     }
 
+    pga2__draw_line(context, gs, pga2::Ox, V4(0.5, 0, 0, 1), -0.01f);
+    pga2__draw_line(context, gs, pga2::Oy, V4(0.1, 0.5, 0.1, 1), -0.01f);
+
+#define PGA2_CASE 8
+    // 1: Lines and their dual points, and vice versa
+    // 2: Draw a line through two points
+    // 3: Perpendicular and parallel lines to another line through a point
+    // 4: Reflection of a line across another line
+    // 5: Reflect a point across a line
+    // 6: Rotate a line around a point
+    // 7: Rotate point around another point
+    // 8: Duals of lines that go though the origin are _vectors_ (points at infinity)
+
+    auto red    = V4(0.9, 0.1, 0.1, 1.f);
+    auto orange = V4(0.8, 0.4, 0.2, 1.f);
+    auto green  = V4(0.4, 0.8, 0.2, 1.f);
+    auto blue   = V4(0.4, 0.4, 1.0, 1.f);
+    auto purple = V4(0.8, 0.2, 0.8, 1.f);
+
+    auto x = (float32)  input->mouse.x / context->letterbox_width  - 0.5f;
+    auto y = (float32) -input->mouse.y / context->letterbox_height + 0.5f;
+
+    osOutputDebugString("(%f, %f)\n", x, y);
+
+#if (PGA2_CASE == 1)
     {
-        pga2::line line_Ox = {};
-        line_Ox.b = 1;
-        pga2__draw_line(context, gs, line_Ox, V4(0.5, 0, 0, 1), -0.01f);
+        auto p1 = pga2::make_point(-1, 1);
+        auto p2 = pga2::make_point(2, 2);
 
-        pga2::line line_Oy = {};
-        line_Oy.a = 1;
-        pga2__draw_line(context, gs, line_Oy, V4(0.1, 0.5, 0.1, 1), -0.01f);
+        auto l1 = dual(p1);
+        auto l2 = dual(p2);
+
+        if (x > 0.f)
+        {
+            pga2__draw_point_and_dual(context, gs, p1, green);
+            pga2__draw_point_and_dual(context, gs, p2, blue);
+        }
+        else
+        {
+            pga2__draw_line_and_dual(context, gs, l1, green);
+            pga2__draw_line_and_dual(context, gs, l2, blue);
+        }
     }
+#endif
 
+#if (PGA2_CASE == 2)
+    // Draw a line through two points
     {
-        pga2::line l1 = {};
-        l1.a = -23.f;
-        l1.b = 1.f;
-        l1.c = 10.f;
-        pga2__draw_line(context, gs, l1, V4(0.8, 0.5, 0.2, 1));
+        auto p1 = pga2::make_point(-5.f, 3.f);
+        auto p2 = pga2::make_point(3.f, 1.f);
+        auto result_line = join(p1, p2);
 
-        pga2::line l2 = {};
-        l2.a = -1.f;
-        l2.b = 7.f;
-        l2.c = 1.f;
-        pga2__draw_line(context, gs, l2, V4(0.2, 0.8, 0.7, 1));
-
-        pga2::line l12 = l1 + l2;
-        pga2__draw_line(context, gs, l12, V4(0.6, 0.3, 0.8, 1));
-
-        pga2::point p = meet(l1, l2);
-        pga2__draw_point(context, gs, p, V4(1, 0, 0, 1));
+        pga2__draw_point_and_dual(context, gs, p1, orange);
+        pga2__draw_point_and_dual(context, gs, p2, blue);
+        pga2__draw_line_and_dual(context, gs, result_line, green);
     }
+#endif
 
+#if (PGA2_CASE == 3)
+    // Perpendicular and parallel lines to another line through a point
+    {
+        auto p1 = pga2::make_point(2.f, 2.f);
+        auto l1 = pga2::make_line(-1.f, 2.f, 3.f);
+
+        pga2__draw_point(context, gs, p1, red);
+        pga2__draw_line(context, gs, l1, orange);
+
+        auto l_perpendicular = inner(l1, p1);
+        pga2__draw_line(context, gs, l_perpendicular, green);
+
+        auto l_parallel = inner(l_perpendicular, p1);
+        pga2__draw_line(context, gs, l_parallel, blue);
+    }
+#endif
+
+#if (PGA2_CASE == 4)
+    // Reflection of a line across another line
+    {
+        auto a = pga2::make_line(-1.f, 3.f, -2.f);
+        auto l1 = pga2::make_line(-1.f, 1.f, -2.f);
+        auto l2 = get_line(a * l1 * a);
+
+        pga2__draw_line(context, gs, a, blue);
+        pga2__draw_line(context, gs, l1, green);
+        pga2__draw_line(context, gs, l2, green);
+    }
+#endif
+
+#if (PGA2_CASE == 5)
+    // Reflect a point across a line
+    {
+        auto a = pga2::make_line(-1.f, 3.f, -2.f);
+        pga2__draw_line(context, gs, a, blue);
+
+        auto l1 = pga2::make_line(1, 2, -5);
+        auto l2 = pga2::make_line(-3, 1, 0);
+        pga2__draw_line(context, gs, l1, blue);
+        pga2__draw_line(context, gs, l2, blue);
+
+        auto pt1 = outer(l1, l2);
+        pga2__draw_point(context, gs, pt1, orange);
+
+        auto l1_r = get_line(a * l1 * a);
+        auto l2_r = get_line(a * l2 * a);
+
+        pga2__draw_line(context, gs, l1_r, orange);
+        pga2__draw_line(context, gs, l2_r, orange);
+
+        auto pt3 = get_point(a * pt1 * a);
+        pga2__draw_point(context, gs, pt3, red);
+
+        auto l_perpendicular = inner(a, pt1);
+        pga2__draw_line(context, gs, l_perpendicular, green);
+    }
+#endif
+
+#if (PGA2_CASE == 6)
+    // Rotate a line around a point
+    {
+        auto p = pga2::make_point(3.0f, 3.0f);
+        auto l1 = pga2::make_line(3.f, 2.f, -2.f);
+
+        auto alpha = 6.f * x;
+
+        auto p1 = p + V2(0, 1);
+        auto p2 = p + math::cos(alpha) * V2(1, 0) + math::sin(alpha) * V2(0, 1);
+
+        auto a = join(p, p1);
+        auto b = join(p, p2);
+
+        pga2__draw_line(context, gs, a, blue);
+        pga2__draw_line(context, gs, b, blue);
+
+        auto motor = a * b;
+
+        auto l2 = get_line(conjugated(motor) * l1 * motor);
+
+        pga2__draw_point(context, gs, p, red);
+        pga2__draw_line(context, gs, l1, red);
+        pga2__draw_line(context, gs, l2, red);
+    }
+#endif
+
+#if (PGA2_CASE == 7)
+    // Rotate point around another point
+    {
+        auto p = pga2::make_point(3.0f, 3.0f);
+        pga2__draw_point(context, gs, p, red);
+
+        auto alpha = 6.f * x;
+
+        auto p1 = p + V2(0, 1);
+        auto p2 = p + math::cos(alpha) * V2(1, 0) + math::sin(alpha) * V2(0, 1);
+
+        auto a = join(p, p1);
+        auto b = join(p, p2);
+
+        pga2__draw_line(context, gs, a, blue);
+        pga2__draw_line(context, gs, b, blue);
+
+        auto motor = a * b;
+
+        auto pt1 = pga2::make_point(-1.f, 1.f);
+        auto pt2 = get_point(conjugated(motor) * pt1 * motor);
+
+        pga2__draw_point(context, gs, pt1, green);
+        pga2__draw_point(context, gs, pt2, green);
+    }
+#endif
+
+#if (PGA2_CASE == 8)
+    // Duals of lines that go though the origin are _vectors_ (points at infinity)
+    {
+        auto a = pga2::make_line(1, x, x);
+        auto p = dual(a);
+
+        pga2__draw_line(context, gs, a, orange);
+        pga2__draw_point(context, gs, p, orange);
+    }
+#endif
+
+#if (PGA2_CASE == 9)
+    {
+        auto a = pga2::make_line(1.f, 5.f * y, -1.f);
+        auto b = a + 5.f * x * pga2::e0;
+
+        pga2__draw_line(context, gs, a, orange);
+        pga2__draw_line(context, gs, b, orange);
+
+        auto motor = a * b;
+
+        auto l1 = pga2::make_line(1.1f, 1.f, 0.f);
+        auto l2 = get_line(conjugated(motor) * l1 * motor);
+
+        pga2__draw_line(context, gs, l1, blue);
+        pga2__draw_line(context, gs, l2, blue);
+
+
+        auto pt1 = outer(line_Ox, a);
+        auto line_perpendicular = inner(pt1, a);
+        auto pt2 = outer(b, line_perpendicular);
+
+        pga2__draw_point(context, gs, pt1, green);
+        pga2__draw_point(context, gs, pt2, green);
+        pga2__draw_segment(context, gs, pt1, pt2, green);
+    }
+#endif
 
 
 #if UI_EDITOR_ENABLED
