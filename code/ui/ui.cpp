@@ -624,7 +624,7 @@ void update_transforms(system *s)
         auto *e = s->elements.data() + i;
         e->tm =
             transform__translate(V3(e->position, 0)) *
-            transform__rotate_z(math::to_radians(e->rotation)) *
+            transform__rotate_z(to_radians(e->rotation)) *
             transform__scale(V3(e->scale, 1));
 
         if (e->parent.type == UI_ROOT)

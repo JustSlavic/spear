@@ -340,7 +340,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     auto view = matrix4__identity();
     float32 aspect_ratio = 16.0f / 9.0f;
-    auto projection = gfx__make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = gfx__make_projection_matrix_fov(to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
     input_state input = {};
 

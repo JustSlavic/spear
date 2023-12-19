@@ -145,8 +145,8 @@ bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeig
                     WGL_COLOR_BITS_ARB, 32,
                     WGL_DEPTH_BITS_ARB, 24,
                     WGL_STENCIL_BITS_ARB, 8,
-                    // WGL_SAMPLE_BUFFERS_ARB, 1,
-                    // WGL_SAMPLES_ARB, 1,
+                    WGL_SAMPLE_BUFFERS_ARB, 1,
+                    WGL_SAMPLES_ARB, 4,
                     0, // End
                 };
 

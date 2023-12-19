@@ -51,8 +51,11 @@ struct game_state
 
     game__camera camera;
 
+    float32 camera_rotation_t;
+
     resource_token rectangle_mesh;
     resource_token circle_mesh;
+    resource_token cilinder_mesh;
     resource_token triangle_mesh;
     resource_token rectangle_shader;
 
@@ -89,8 +92,8 @@ struct game_state
 
 #include <image/png.hpp>
 
-#include <g2.hpp>
-#include <g201.hpp>
+#include <pga2.hpp>
+#include <pga3.hpp>
 
 #ifndef osOutputDebugString
 #if OS_WINDOWS
@@ -132,7 +135,8 @@ debug_time_measurement *global_debug_measurements;
 uint32 global_debug_call_depth;
 #endif
 
-GLOBAL vector4 sky_color = V4(148.0 / 255.0, 204.0 / 255.0, 209.0 / 255.0, 1.0);
+GLOBAL vector4 background_color = V4(15.0 / 255.0, 20.0 / 255.0, 20.0 / 255.0, 1.0);
+
 GLOBAL vector4 porter_color = V4(55.0/255.0, 70.0/255.0, 122.0/255.0, 1);
 GLOBAL vector4 ground_color = V4(50.0/255.0, 115.0/255.0, 53.0/255.0, 1);
 GLOBAL vector4 stones_color = V4(184.0/255.0, 165.0/255.0, 136.0/255.0, 1);
@@ -188,16 +192,10 @@ void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
 
-
 void pga2__draw_line_and_dual(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z = 0.f)
 {
-    auto d = dual(line);
-    d.x = d.x / d.w;
-    d.y = d.y / d.w;
-    d.w = 1.f;
-
     pga2__draw_line(context, gs, line, color, z);
-    pga2__draw_point(context, gs, d, 0.3f * color);
+    pga2__draw_point(context, gs, dual(line), 0.3f * color);
 }
 
 void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p, vector4 color)
@@ -265,12 +263,67 @@ void pga2__draw_vector(execution_context *context, game_state *gs, vector2 p, ve
     pga2__draw_triangle(context, gs, q, atan2f(p.y, p.x), color);
 }
 
-// void pga2__draw_vector(execution_context *context, game_state *gs, pga2::point r, pga2::point p, vector4 color)
-// {
-//     auto q = V2(p.x, p.y) - 0.5f * normalized(V2(p.x, p.y));
-//     pga2__draw_segment(context, gs, pga2::make_point(r.x, r.y), pga2::make_point(r.x + p.x, r.y + p.y), color);
-//     pga2__draw_triangle(context, gs, pga2::make_point(q.x + r.x, q.y + r.y), atan2f(p.y, p.x), color);
-// }
+void pga2__draw_vector(execution_context *context, game_state *gs, vector2 r, pga2::point p, vector4 color)
+{
+    auto q = to_vector2(p) - 0.5f * normalized(V2(p.x, p.y));
+    pga2__draw_segment(context, gs, r, r + to_vector2(p), color);
+    pga2__draw_triangle(context, gs, r + q, atan2f(p.y, p.x), color);
+}
+
+
+void pga3__draw_line(execution_context *context, game_state *gs, vector4 color)
+{
+    render_command::command_draw_mesh_with_color draw_mesh;
+    draw_mesh.mesh_token = gs->cilinder_mesh;
+    draw_mesh.shader_token = gs->rectangle_shader;
+    draw_mesh.model = matrix4__identity()
+                    * matrix4__scale(0.02f * GLOBAL_SCALE, 0.02f * GLOBAL_SCALE, 100 * GLOBAL_SCALE)
+                    * matrix4__translate_z(-0.5f)
+                    ;
+    draw_mesh.color = color;
+    push_draw_mesh_with_color_command(context, draw_mesh);
+}
+
+void pga3__draw_segment(execution_context *context, game_state *gs, vector3 a, vector3 b, vector4 color)
+{
+    auto n = (b - a);
+
+    auto q = normalized(V3(0, 0, 1) * bisector(V3(0, 0, 1), n));
+    auto R = to_matrix4(q);
+
+    render_command::command_draw_mesh_with_color draw_mesh;
+    draw_mesh.mesh_token = gs->cilinder_mesh;
+    draw_mesh.shader_token = gs->rectangle_shader;
+    draw_mesh.model = matrix4__identity()
+                    * matrix4__translate(GLOBAL_SCALE * a)
+                    * R
+                    * matrix4__scale(0.02f * GLOBAL_SCALE, 0.02f * GLOBAL_SCALE, length(b - a) * GLOBAL_SCALE)
+                    ;
+    draw_mesh.color = color;
+    push_draw_mesh_with_color_command(context, draw_mesh);
+}
+
+void pga3__draw_plane(execution_context *context, game_state *gs, plane3 p, vector4 color)
+{
+    auto q = normalized(V3(0, 0, 1) * bisector(V3(0, 0, 1), p.normal));
+    auto R = to_matrix4(q);
+
+    auto d = -normalized(p.normal) * p.w;
+
+    render_command::command_draw_mesh_with_color draw_mesh;
+    draw_mesh.mesh_token = gs->rectangle_mesh;
+    draw_mesh.shader_token = gs->rectangle_shader;
+    draw_mesh.model = matrix4__identity()
+                    * matrix4__translate(d * GLOBAL_SCALE)
+                    * R
+                    * matrix4__scale(GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE)
+                    ;
+    draw_mesh.color = color;
+    push_draw_mesh_with_color_command(context, draw_mesh);
+
+    pga3__draw_segment(context, gs, d, d + p.normal, color * 0.5f);
+}
+
 
 
 
@@ -388,6 +441,123 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         gs->circle_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
     }
 
+    // Init cilinder mesh
+    {
+        constexpr uint32 n_gram = 20;
+
+        float32 vbo_init[2*3*n_gram];
+        uint32 ibo_init[2*3*(n_gram - 2) + 2*3*n_gram];
+
+        auto d_angle = 2.0f * math::pi / n_gram;
+        auto angle = 0.f;
+        int i = 0;
+        int j = 0;
+        int vertex_index = 0;
+
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 0.f;
+
+            vertex_index += 1;
+        }
+
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 0.f;
+
+            vertex_index += 1;
+        }
+
+        for (int k = vertex_index; k < n_gram; k++)
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 0.f;
+
+            ibo_init[j++] = 0;
+            ibo_init[j++] = vertex_index - 1;
+            ibo_init[j++] = vertex_index;
+
+            vertex_index += 1;
+        }
+
+        angle = 0.f;
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 1.f;
+
+            vertex_index += 1;
+        }
+
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 1.f;
+
+            vertex_index += 1;
+        }
+
+        for (int k = vertex_index; k < 2*n_gram; k++)
+        {
+            auto v = V2(math::cos(angle), math::sin(angle));
+            angle += d_angle;
+
+            vbo_init[i++] = v.x;
+            vbo_init[i++] = v.y;
+            vbo_init[i++] = 1.f;
+
+            ibo_init[j++] = n_gram;
+            ibo_init[j++] = vertex_index - 1;
+            ibo_init[j++] = vertex_index;
+
+            vertex_index += 1;
+        }
+
+        vertex_index = 1;
+        while (vertex_index < n_gram)
+        {
+            ibo_init[j++] = vertex_index;
+            ibo_init[j++] = vertex_index - 1;
+            ibo_init[j++] = vertex_index + n_gram;
+
+            ibo_init[j++] = vertex_index + n_gram;
+            ibo_init[j++] = vertex_index - 1;
+            ibo_init[j++] = vertex_index - 1 + n_gram;
+
+            vertex_index += 1;
+        }
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
+
+        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
+        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
+
+        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
+        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+
+        gs->cilinder_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
+    }
+
+
 
     // Rectangle with UV
     {
@@ -458,6 +628,17 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     }
 #endif // UI_EDITOR_ENABLED
 
+#define PGA3
+    auto red    = V4(0.9, 0.1, 0.1, 1.f);
+    auto orange = V4(0.8, 0.4, 0.2, 1.f);
+    auto green  = V4(0.4, 0.8, 0.2, 1.f);
+    auto blue   = V4(0.4, 0.4, 1.0, 1.f);
+    auto purple = V4(0.8, 0.2, 0.8, 1.f);
+
+    auto x = (float32)  input->mouse.x / context->letterbox_width  - 0.5f;
+    auto y = (float32) -input->mouse.y / context->letterbox_height + 0.5f;
+
+#ifdef PGA2
     // Setup camera
     {
         render_command::command_setup_camera setup_camera;
@@ -466,6 +647,14 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         setup_camera.camera_up_direction = gs->camera.up;
 
         push_setup_camera_command(context, setup_camera);
+    }
+    // Background
+    {
+        render_command::command_draw_background draw_background;
+        draw_background.mesh = gs->rectangle_mesh;
+        draw_background.shader = gs->rectangle_shader;
+        draw_background.color = background_color;
+        push_draw_background_command(context, draw_background);
     }
 
     int32 grid_size = 30;
@@ -492,7 +681,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     pga2__draw_line(context, gs, pga2::Ox, V4(0.5, 0, 0, 1), -0.01f);
     pga2__draw_line(context, gs, pga2::Oy, V4(0.1, 0.5, 0.1, 1), -0.01f);
 
-#define PGA2_CASE 8
+#define PGA2_CASE 9
     // 1: Lines and their dual points, and vice versa
     // 2: Draw a line through two points
     // 3: Perpendicular and parallel lines to another line through a point
@@ -501,15 +690,6 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     // 6: Rotate a line around a point
     // 7: Rotate point around another point
     // 8: Duals of lines that go though the origin are _vectors_ (points at infinity)
-
-    auto red    = V4(0.9, 0.1, 0.1, 1.f);
-    auto orange = V4(0.8, 0.4, 0.2, 1.f);
-    auto green  = V4(0.4, 0.8, 0.2, 1.f);
-    auto blue   = V4(0.4, 0.4, 1.0, 1.f);
-    auto purple = V4(0.8, 0.2, 0.8, 1.f);
-
-    auto x = (float32)  input->mouse.x / context->letterbox_width  - 0.5f;
-    auto y = (float32) -input->mouse.y / context->letterbox_height + 0.5f;
 
     osOutputDebugString("(%f, %f)\n", x, y);
 
@@ -569,7 +749,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     {
         auto a = pga2::make_line(-1.f, 3.f, -2.f);
         auto l1 = pga2::make_line(-1.f, 1.f, -2.f);
-        auto l2 = get_line(a * l1 * a);
+        auto l2 = to_line(a * l1 * a);
 
         pga2__draw_line(context, gs, a, blue);
         pga2__draw_line(context, gs, l1, green);
@@ -591,13 +771,13 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         auto pt1 = outer(l1, l2);
         pga2__draw_point(context, gs, pt1, orange);
 
-        auto l1_r = get_line(a * l1 * a);
-        auto l2_r = get_line(a * l2 * a);
+        auto l1_r = to_line(a * l1 * a);
+        auto l2_r = to_line(a * l2 * a);
 
         pga2__draw_line(context, gs, l1_r, orange);
         pga2__draw_line(context, gs, l2_r, orange);
 
-        auto pt3 = get_point(a * pt1 * a);
+        auto pt3 = to_point(a * pt1 * a);
         pga2__draw_point(context, gs, pt3, red);
 
         auto l_perpendicular = inner(a, pt1);
@@ -624,7 +804,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
         auto motor = a * b;
 
-        auto l2 = get_line(conjugated(motor) * l1 * motor);
+        auto l2 = to_line(conjugated(motor) * l1 * motor);
 
         pga2__draw_point(context, gs, p, red);
         pga2__draw_line(context, gs, l1, red);
@@ -652,7 +832,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         auto motor = a * b;
 
         auto pt1 = pga2::make_point(-1.f, 1.f);
-        auto pt2 = get_point(conjugated(motor) * pt1 * motor);
+        auto pt2 = to_point(conjugated(motor) * pt1 * motor);
 
         pga2__draw_point(context, gs, pt1, green);
         pga2__draw_point(context, gs, pt2, green);
@@ -671,31 +851,121 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 #endif
 
 #if (PGA2_CASE == 9)
+    // Parallel translation of the line could be done with the motor
     {
-        auto a = pga2::make_line(1.f, 5.f * y, -1.f);
-        auto b = a + 5.f * x * pga2::e0;
+        auto a = pga2::make_line(1.f, 5.f, -1.f);
+        auto b = a + V2(3, 2);
 
-        pga2__draw_line(context, gs, a, orange);
-        pga2__draw_line(context, gs, b, orange);
+        pga2__draw_line_and_dual(context, gs, a, orange);
+        pga2__draw_line_and_dual(context, gs, b, orange);
 
         auto motor = a * b;
 
         auto l1 = pga2::make_line(1.1f, 1.f, 0.f);
-        auto l2 = get_line(conjugated(motor) * l1 * motor);
+        auto l2 = to_line(conjugated(motor) * l1 * motor);
 
-        pga2__draw_line(context, gs, l1, blue);
-        pga2__draw_line(context, gs, l2, blue);
-
-
-        auto pt1 = outer(line_Ox, a);
-        auto line_perpendicular = inner(pt1, a);
-        auto pt2 = outer(b, line_perpendicular);
-
-        pga2__draw_point(context, gs, pt1, green);
-        pga2__draw_point(context, gs, pt2, green);
-        pga2__draw_segment(context, gs, pt1, pt2, green);
+        pga2__draw_line_and_dual(context, gs, l1, blue);
+        pga2__draw_line_and_dual(context, gs, l2, blue);
     }
 #endif
+
+#endif // #ifdef PGA2
+
+
+#ifdef PGA3
+    // Setup camera
+    {
+        auto R = 2.f;
+        auto H = 2.f;
+        auto c = math::cos(gs->camera_rotation_t);
+        auto s = math::sin(gs->camera_rotation_t);
+
+        gs->camera_rotation_t += 0.25f * dt;
+        if (gs->camera_rotation_t > 2 * math::pi)
+        {
+            gs->camera_rotation_t -= 2 * math::pi;
+        }
+
+        auto r = V3(R * c, R * s, H);
+        auto v = V3(-s, c, 0);
+
+        gs->camera.position = r;
+        gs->camera.forward = normalized(-gs->camera.position);
+        gs->camera.up = normalized(cross(r, v));
+
+        render_command::command_setup_camera setup_camera;
+        setup_camera.camera_position = gs->camera.position;
+        setup_camera.look_at_position = gs->camera.position + gs->camera.forward;
+        setup_camera.camera_up_direction = gs->camera.up;
+
+        push_setup_camera_command(context, setup_camera);
+    }
+
+    int32 grid_size = 30;
+    for (int32 i = -grid_size; i < grid_size; i++)
+    {
+        pga2::line l = {};
+        l.a = (float32) 1;
+        l.c = (float32) i;
+        pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.002f);
+    }
+
+    for (int32 i = -grid_size; i < grid_size; i++)
+    {
+        pga2::line l = {};
+        l.b = (float32) 1;
+        l.c = (float32) i;
+        pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.002f);
+    }
+
+    pga3__draw_segment(context, gs, V3(0), V3(10, 0, 0), red);
+    pga3__draw_segment(context, gs, V3(0), V3(0, 10, 0), green);
+    pga3__draw_segment(context, gs, V3(0), V3(0, 0, 10), blue);
+
+
+#define PGA3_CASE 1
+
+
+#if PGA3_CASE == 1
+    {
+        auto p = make_plane3(x, y, 0, y);
+        pga3__draw_plane(context, gs, p, orange);
+    }
+#endif
+
+#if PGA3_CASE == 2
+    {
+        auto p1 = make_plane3(x, y, 0, 0);
+        pga3__draw_plane(context, gs, p1, blue * 0.9f);
+    }
+#endif
+
+#if PGA3_CASE == 3
+
+#endif
+
+#if PGA3_CASE == 4
+
+#endif
+
+#if PGA3_CASE == 5
+
+#endif
+
+#if PGA3_CASE == 6
+
+#endif
+
+#if PGA3_CASE == 7
+
+#endif
+
+#if PGA3_CASE == 8
+
+#endif
+
+#endif // #ifdef PGA3
+
 
 
 #if UI_EDITOR_ENABLED

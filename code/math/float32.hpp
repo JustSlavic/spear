@@ -6,10 +6,26 @@
 
 
 namespace math {
-
-
 GLOBAL constexpr float32 pi = 3.14159265358979323846f;
+GLOBAL constexpr float32 half_pi = 0.5f * pi;
 GLOBAL constexpr float32 infinity = HUGE_VALF;
+}
+
+
+float32 to_radians(float32 degrees)
+{
+    float32 result = degrees * math::pi / 180.0f;
+    return result;
+}
+
+float32 to_degrees(float32 radians)
+{
+    float32 result = radians * 180.0f / math::pi;
+    return result;
+}
+
+
+namespace math {
 
 
 float32 absolute(float32 x)
@@ -83,18 +99,6 @@ float32 square_root(float32 x)
     return result;
 }
 
-float32 to_radians(float32 degrees)
-{
-    float32 result = degrees * pi / 180.0f;
-    return result;
-}
-
-float32 to_degrees(float32 radians)
-{
-    float32 result = radians * 180.0f / pi;
-    return result;
-}
-
 float32 sin(float32 x)
 {
     float32 result = sinf(x);
@@ -143,14 +147,14 @@ float32 tan(angle a)
 math::angle operator ""_degrees (uint64 degrees)
 {
     math::angle result;
-    result.radians = math::to_radians((float32)degrees);
+    result.radians = to_radians((float32)degrees);
     return result;
 }
 
 math::angle operator ""_degrees (long double degrees)
 {
     math::angle result;
-    result.radians = math::to_radians((float32)degrees);
+    result.radians = to_radians((float32)degrees);
     return result;
 }
 
