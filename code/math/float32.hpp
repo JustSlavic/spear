@@ -24,6 +24,12 @@ float32 to_degrees(float32 radians)
     return result;
 }
 
+bool32 near_zero(float32 x, float32 eps = EPSILON)
+{
+    bool32 result = (-eps < x) && (x < eps);
+    return result;
+}
+
 
 namespace math {
 
@@ -53,12 +59,6 @@ int32 truncate_to_int32(float32 x)
 int32 round_to_int32(float32 x)
 {
     int32 result = (int32) (x + sign(x) * 0.5f);
-    return result;
-}
-
-bool32 near_zero(float32 x, float32 eps = EPSILON)
-{
-    bool32 result = (-eps < x) && (x < eps);
     return result;
 }
 
