@@ -273,19 +273,6 @@ void pga2__draw_vector(execution_context *context, game_state *gs, vector2 r, pg
 }
 
 
-void pga3__draw_line(execution_context *context, game_state *gs, vector4 color)
-{
-    render_command::command_draw_mesh_with_color draw_mesh;
-    draw_mesh.mesh_token = gs->cilinder_mesh;
-    draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__scale(0.02f * GLOBAL_SCALE, 0.02f * GLOBAL_SCALE, 100 * GLOBAL_SCALE)
-                    * matrix4__translate_z(-0.5f)
-                    ;
-    draw_mesh.color = color;
-    push_draw_mesh_with_color_command(context, draw_mesh);
-}
-
 void pga3__draw_segment(execution_context *context, game_state *gs, vector3 a, vector3 b, vector4 color)
 {
     auto n = (b - a);
@@ -310,7 +297,7 @@ void pga3__draw_plane(execution_context *context, game_state *gs, plane3 p, vect
     auto q = normalized(V3(0, 0, 1) * bisector(V3(0, 0, 1), p.normal));
     auto R = to_matrix4(q);
 
-    auto d = -normalized(p.normal) * math::absolute(p.w) / norm(p.normal);
+    auto d = -normalized(p.normal) * p.w / norm(p.normal);
 
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->rectangle_mesh;
@@ -326,17 +313,30 @@ void pga3__draw_plane(execution_context *context, game_state *gs, plane3 p, vect
     pga3__draw_segment(context, gs, d, d + p.normal, color * 0.5f);
 }
 
-void pga3__draw_point(execution_context *context, game_state *gs, vector3 p, vector4 color)
+void pga3__draw_point(execution_context *context, game_state *gs, point3 pt, vector4 color)
 {
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->cilinder_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
     draw_mesh.model = matrix4__identity()
-                    * matrix4__translate(p*GLOBAL_SCALE)
+                    * matrix4__translate((pt.vector / pt.w) *GLOBAL_SCALE)
                     * matrix4__scale(GLOBAL_SCALE*0.1f)
                     ;
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
+}
+
+void pga3__draw_line(execution_context *context, game_state *gs, line3 l, vector4 color)
+{
+    auto d = norm(to_vector3(l.moment)) / norm(l.direction);
+    auto dv = d * normalized(cross(l.direction, to_vector3(l.moment)));
+    pga3__draw_segment(context, gs, -3.f*l.direction + dv, 3.f*l.direction + dv, color);
+}
+
+void pga3__draw_plane_and_dual(execution_context *context, game_state *gs, plane3 p, vector4 color)
+{
+    pga3__draw_plane(context, gs, p, color);
+    pga3__draw_point(context, gs, dual(p), color * 0.3f);
 }
 
 
@@ -648,6 +648,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     auto green  = V4(0.4, 0.8, 0.2, 1.f);
     auto blue   = V4(0.4, 0.4, 1.0, 1.f);
     auto purple = V4(0.8, 0.2, 0.8, 1.f);
+    auto yellow = V4(0.8, 0.8, 0.1, 1.f);
 
     auto x = (float32)  input->mouse.x / context->letterbox_width  - 0.5f;
     auto y = (float32) -input->mouse.y / context->letterbox_height + 0.5f;
@@ -937,71 +938,124 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     pga3__draw_segment(context, gs, V3(0), V3(0, 0, 10), blue);
 
 
-#define PGA3_CASE 2
+#define PGA3_CASE 8
 
 
 #if PGA3_CASE == 1
     {
         auto p = make_plane3(x, 1, 0, y);
-        pga3__draw_plane(context, gs, p, orange);
+        pga3__draw_plane_and_dual(context, gs, p, orange);
     }
 #endif
 
 #if PGA3_CASE == 2
     {
-        auto p1 = make_plane3(0, 2, 2, 0);
+        auto p1 = make_plane3(0, x, 3, 2);
         pga3__draw_plane(context, gs, p1, blue * 0.9f);
 
-        auto p2 = make_plane3(1, 0, 1, 1);
+        auto p2 = make_plane3(1, 0, -2, -2);
         pga3__draw_plane(context, gs, p2, orange * 0.9f);
 
         auto l = outer(p1, p2);
-
-        auto d = norm(to_vector3(l.moment)) / norm(l.direction);
-        auto dv = d * normalized(cross(l.direction, to_vector3(l.moment)));
-
-        // pga3__draw_segment(context, gs, V3(0), dv, green);
-        // pga3__draw_segment(context, gs, -3.f*l.direction + dv, 3.f*l.direction + dv, red);
-
-        pga3__draw_segment(context, gs, V3(-10, -9, 9), V3(10, 11, -11), red);
-
-        console_print("d: %f direction = (%f, %f, %f); moment = (yz=%f, zx=%f, xy=%f)\n",
-            d,
-            l.direction.x, l.direction.y, l.direction.z,
-            l.moment.yz, l.moment.zx, l.moment.xy);
-
-        // auto i = inner(l.moment, l.direction);
-        // osOutputDebugString("%f %f %f\n", i.x, i.y, i.z);
-
-        // vector3 pl1 = get_point_on_line(l);
-        // osOutputDebugString("%f, %f, %f\n", pl1.x, pl1.y, pl1.z);
-
-        // pga3__draw_point(context, gs, pl1, red);
+        pga3__draw_line(context, gs, l, red);
     }
 #endif
 
 #if PGA3_CASE == 3
+    {
+        auto p1 = make_plane3(0, 1, 3, 2);
+        auto p2 = make_plane3(1, 0, -2, -2);
+        auto l = outer(p1, p2);
+        pga3__draw_line(context, gs, l, red);
 
+        auto p3 = make_plane3(x, y, 0, 1);
+        pga3__draw_plane(context, gs, p3, blue);
+
+        auto p = outer(outer(p1, p2), p3);
+        pga3__draw_point(context, gs, p, yellow);
+    }
 #endif
 
 #if PGA3_CASE == 4
+    {
+        auto pt1 = make_point3(1, 1, 0);
+        auto pt2 = make_point3(3, 0, 2);
+        pga3__draw_point(context, gs, pt1, yellow);
+        pga3__draw_point(context, gs, pt2, yellow);
 
+        auto l = join(pt1, pt2);
+        pga3__draw_line(context, gs, l, red);
+    }
 #endif
 
 #if PGA3_CASE == 5
+    {
+        auto pt1 = make_point3(1, 1, 0);
+        auto pt2 = make_point3(3, 0, 2);
+        auto pt3 = make_point3(-2, 1, 0);
+        pga3__draw_point(context, gs, pt1, yellow);
+        pga3__draw_point(context, gs, pt2, yellow);
+        pga3__draw_point(context, gs, pt3, yellow);
 
+        auto l = join(pt1, pt2);
+        pga3__draw_line(context, gs, l, red);
+
+        auto p = join(l, pt3);
+        pga3__draw_plane(context, gs, p, blue);
+    }
 #endif
 
 #if PGA3_CASE == 6
+    {
+        // inner(plane, line) => plane
+        // makes a new plane, the line goes through it,
+        // and perpendicular to the first plane
+        auto p = make_plane3(1, 0, 0, 0);
+        pga3__draw_plane(context, gs, p, blue);
 
+        auto pt1 = make_point3(1, 1, 0);
+        auto pt2 = make_point3(3, 0, 2);
+        auto l = join(pt1, pt2);
+        pga3__draw_line(context, gs, l, orange);
+
+        auto p2 = inner(p, l);
+        pga3__draw_plane(context, gs, p2, green);
+    }
 #endif
 
 #if PGA3_CASE == 7
+    {
+        // inner(point, line) => plane
+        // makes a new plane, perpendicular to the line,
+        // and that goes through the point
+        auto pt1 = make_point3(1, 1, 0);
+        auto pt2 = make_point3(3, 0, 2);
+        auto pt3 = make_point3(-2, 1, 0);
+        pga3__draw_point(context, gs, pt1, yellow);
+        pga3__draw_point(context, gs, pt2, yellow);
+        pga3__draw_point(context, gs, pt3, yellow);
+        auto l = join(pt2, pt3);
+        pga3__draw_line(context, gs, l, orange);
 
+        auto p = inner(pt1, l);
+        pga3__draw_plane(context, gs, p, green);
+    }
 #endif
 
 #if PGA3_CASE == 8
+    {
+        // inner(plane, point) => line
+        // makes a new line, perpendicular to the plane,
+        // and that goes through the point
+        auto p = make_plane3(1, 0, 2, 0);
+        pga3__draw_plane(context, gs, p, green);
 
+        auto pt = make_point3(1, 1, 0);
+        pga3__draw_point(context, gs, pt, yellow);
+
+        auto l = inner(p, pt);
+        pga3__draw_line(context, gs, l, red);
+    }
 #endif
 
 #endif // #ifdef PGA3

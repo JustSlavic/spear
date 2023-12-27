@@ -598,7 +598,7 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allo
             uint16 LEN = (uint16) get_bits(decoder, 16);
             uint16 NLEN = (uint16) get_bits(decoder, 16);
 
-            if (LEN != ~NLEN)
+            if (LEN != ((uint16) ~NLEN))
             {
                 // @todo: something wrong
                 ASSERT_FAIL();
