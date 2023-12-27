@@ -1,6 +1,6 @@
 #include "png.hpp"
-#include <math/integer.hpp>
 #include <crc.hpp>
+#include <integer.h>
 
 //
 // PNG (Portable Network Graphics) Specification, Version 1.2
@@ -267,10 +267,10 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
         //
 
         png__chunk_header chunk_header = *PNG_CONSUME_STRUCT(data, png__chunk_header);
-        chunk_header.size_of_data = change_endianness(chunk_header.size_of_data);
+        chunk_header.size_of_data = uint32__change_endianness(chunk_header.size_of_data);
 
         auto chunk_type_size = sizeof(chunk_header.type);
-        png::crc_t computed_crc = change_endianness(compute_crc(data - chunk_type_size, chunk_header.size_of_data + chunk_type_size));
+        png::crc_t computed_crc = uint32__change_endianness(compute_crc(data - chunk_type_size, chunk_header.size_of_data + chunk_type_size));
 
         if (chunk_header.type == PNG_IHDR_ID)
         {
@@ -325,8 +325,8 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
                 return {};
             }
 
-            result.width  = change_endianness(ihdr->width);
-            result.height = change_endianness(ihdr->height);
+            result.width  = uint32__change_endianness(ihdr->width);
+            result.height = uint32__change_endianness(ihdr->height);
             // @note additional + height for filter types at the start of each scanline
             result.size = result.width * result.height * (result.bits_per_pixel / 8) + result.height;
             result.pixels = (uint8 *) ALLOCATE_BUFFER_ALIGNED(allocator, result.size, alignof(uint32)).memory;
@@ -352,7 +352,7 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
         }
         else if (chunk_header.type == PNG_gAMA_ID)
         {
-            uint32 gamma_ = change_endianness(*PNG_CONSUME_STRUCT(data, uint32));
+            uint32 gamma_ = uint32__change_endianness(*PNG_CONSUME_STRUCT(data, uint32));
             gamma = ((float64) gamma_) / 100000.0;
             // Gamma should have no effect on the alpha channel, which is always linear
             // fraction of full opacity.

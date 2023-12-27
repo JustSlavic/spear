@@ -3,7 +3,6 @@
 #include <rs/resource_system.hpp>
 
 #include <math/integer.hpp>
-#include <g301.hpp>
 #include <math/rectangle2.hpp>
 
 
@@ -194,7 +193,7 @@ matrix4 gl__make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float3
     //   |/  tg(fov / 2) = (w/2) / n
     //   +   => 2n / w = 1 / tg(fov / 2)
 
-    float32 tf2 = (1.0f / math::tg(0.5f * fov));
+    float32 tf2 = (1.0f / tanf(0.5f * fov));
 
     matrix4 result = {};
 

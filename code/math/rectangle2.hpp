@@ -2,7 +2,7 @@
 #define MATH_RECTANGLE2_HPP
 
 #include <base.h>
-#include <g2.hpp>
+#include <vector2.hpp>
 
 
 namespace math
@@ -106,15 +106,15 @@ bool32 is_inside(rectangle2 a, vector2 p)
     return result;
 }
 
-bool32 is_intersecting(rectangle2 a, rectangle2 b)
+} // namespace math
+
+
+bool32 is_intersecting(math::rectangle2 a, math::rectangle2 b)
 {
-    if (math::absolute(a.center.x - b.center.x) > (a.radii.x + b.radii.x)) return false;
-    if (math::absolute(a.center.y - b.center.y) > (a.radii.y + b.radii.y)) return false;
+    if (absolute(a.center.x - b.center.x) > (a.radii.x + b.radii.x)) return false;
+    if (absolute(a.center.y - b.center.y) > (a.radii.y + b.radii.y)) return false;
     return true;
 }
-
-
-} // namespace math
 
 
 #endif // MATH_RECTANGLE2_HPP

@@ -7,7 +7,6 @@
 #include <game_interface.hpp>
 #include <string.hpp>
 #include <string_id.hpp>
-#include <g3.hpp>
 #include <gfx/renderer.hpp>
 #include <input.hpp>
 #include <audio/wav.h>
@@ -338,7 +337,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         return 1;
     }
 
-    auto view = matrix4__identity();
+    auto view = matrix4::identity();
     float32 aspect_ratio = 16.0f / 9.0f;
     auto projection = gfx__make_projection_matrix_fov(to_radians(60), aspect_ratio, 0.05f, 100.0f);
 

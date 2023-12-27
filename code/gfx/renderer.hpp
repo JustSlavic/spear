@@ -2,8 +2,6 @@
 #define RENDERER_HPP
 
 #include <base.h>
-#include <g3.hpp>
-#include <g301.hpp>
 #include <math/rectangle2.hpp>
 #include <gfx/viewport.hpp>
 #include <gfx/vertex_buffer_layout.hpp>

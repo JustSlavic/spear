@@ -455,7 +455,7 @@ void update_animations(system *s, float32 dt)
         }
 
         a->current_time = t;
-        float32 value = math::lerp(a->start_value, a->final_value, a->current_time / a->duration_seconds);
+        float32 value = lerp(a->start_value, a->final_value, a->current_time / a->duration_seconds);
 
         switch (prop)
         {
@@ -623,9 +623,9 @@ void update_transforms(system *s)
     {
         auto *e = s->elements.data() + i;
         e->tm =
-            transform__translate(V3(e->position, 0)) *
-            transform__rotate_z(to_radians(e->rotation)) *
-            transform__scale(V3(e->scale, 1));
+            transform::translate(V3(e->position, 0)) *
+            transform::rotate_z(to_radians(e->rotation)) *
+            transform::scale(V3(e->scale, 1));
 
         if (e->parent.type == UI_ROOT)
         {
@@ -807,8 +807,8 @@ void update(system *s, input_state *inp)
 void render(execution_context *context, system *s)
 {
     auto projection =
-        matrix4__translate(-1, 1, 0) *
-        matrix4__scale(2.0f/context->letterbox_width, -2.0f/context->letterbox_height, 1);
+        matrix4::translate(-1, 1, 0) *
+        matrix4::scale(2.0f/context->letterbox_width, -2.0f/context->letterbox_height, 1);
 
     for (usize index = s->drawables.size() - 1; index < s->drawables.size(); index--)
     {
@@ -819,15 +819,15 @@ void render(execution_context *context, system *s)
 
         if (drawable->type == UI_SHAPE)
         {
-            auto model = transform__to_matrix4(element->tm_to_root) *
-                matrix4__scale(0.5f*drawable->width, 0.5f*drawable->height, 1);
+            auto model = to_matrix4(element->tm_to_root) *
+                matrix4::scale(0.5f*drawable->width, 0.5f*drawable->height, 1);
 
             render_command::command_draw_ui command_draw_ui;
             command_draw_ui.mesh_token = s->rectangle_mesh;
             command_draw_ui.shader_token = s->rectangle_shader;
 
             command_draw_ui.model = model; // @todo: remove transpose after I make all matrix4 be m * v instead of v * m as for now
-            command_draw_ui.view = matrix4__identity();
+            command_draw_ui.view = matrix4::identity();
             command_draw_ui.projection = projection;
             command_draw_ui.color = drawable->color;
 
@@ -840,8 +840,8 @@ void render(execution_context *context, system *s)
         else if (drawable->type == UI_IMAGE)
         {
             auto scale_factor = 0.5f*(drawable->width > drawable->height ? drawable->width : drawable->height);
-            auto model = transform__to_matrix4(element->tm_to_root) *
-                matrix4__scale(scale_factor, scale_factor, 1);
+            auto model = to_matrix4(element->tm_to_root) *
+                matrix4::scale(scale_factor, scale_factor, 1);
 
             render_command::command_draw_ui_texture cmd;
             cmd.mesh_token = s->rectangle_mesh_uv;
@@ -849,7 +849,7 @@ void render(execution_context *context, system *s)
             cmd.texture_token = drawable->texture_token;
 
             cmd.model = model;
-            cmd.view = matrix4__identity();
+            cmd.view = matrix4::identity();
             cmd.projection = projection;
 
             push_draw_ui_texture_command(context, cmd);

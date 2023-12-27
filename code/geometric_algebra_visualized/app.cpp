@@ -2,8 +2,7 @@
 
 #include <array.hpp>
 #include <math/integer.hpp>
-#include <g2.hpp>
-#include <g3.hpp>
+#include <vector2.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 #include <ui/ui.hpp>
@@ -85,15 +84,13 @@ struct game_state
 
 
 #include <math/integer.hpp>
-#include <math/float64.hpp>
 #include <math/rectangle2.hpp>
-#include <g2.hpp>
-#include <g301.hpp>
+#include <vector2.hpp>
 
 #include <image/png.hpp>
 
-#include <pga2.hpp>
-#include <pga3.hpp>
+#include <projective_geometry2.hpp>
+#include <projective_geometry3.hpp>
 
 #ifndef osOutputDebugString
 #if OS_WINDOWS
@@ -156,15 +153,15 @@ GLOBAL vector2 gravity = V2(0, -9.8); // m/s^2
 #define GLOBAL_SCALE  0.2f
 
 
-void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z);
-void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p, vector4 color);
+void pga2__draw_line(execution_context *context, game_state *gs, line2 line, vector4 color, float32 z);
+void pga2__draw_point(execution_context *context, game_state *gs, point2 p, vector4 color);
 void pga2__draw_triangle(execution_context *context, game_state *gs, vector2 p, float32 angle, vector4 color);
 void pga2__draw_segment(execution_context *context, game_state *gs, vector2 p, vector2 q, vector4 color);
 void pga2__draw_vector(execution_context *context, game_state *gs, vector2 p, vector4 color);
-// void pga2__draw_vector(execution_context *context, game_state *gs, pga2::point q, pga2::point p, vector4 color);
+// void pga2__draw_vector(execution_context *context, game_state *gs, point2 q, point2 p, vector4 color);
 
 
-void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z = 0.f)
+void pga2__draw_line(execution_context *context, game_state *gs, line2 line, vector4 color, float32 z = 0.f)
 {
     // line: ax + by + c = 0
     // let x =  1 => y = -c/b - a/b
@@ -177,30 +174,30 @@ void pga2__draw_line(execution_context *context, game_state *gs, pga2::line line
 
     // The rotation around z is going to be such:
     auto angle = atan2f(-line.a, line.b);
-    auto d = line.c / math::square_root(line.a * line.a + line.b * line.b);
+    auto d = line.c / square_root(line.a * line.a + line.b * line.b);
 
     auto n = normalized(V2(line.a, line.b));
 
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->rectangle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(-GLOBAL_SCALE * n.x * d)
-                    * matrix4__translate_y(-GLOBAL_SCALE * n.y * d)
-                    * matrix4__translate_z(z)
-                    * matrix4__rotate_z(angle)
-                    * matrix4__scale(10.f, 0.004f, 1);
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate_x(-GLOBAL_SCALE * n.x * d)
+                    * matrix4::translate_y(-GLOBAL_SCALE * n.y * d)
+                    * matrix4::translate_z(z)
+                    * matrix4::rotate_z(angle)
+                    * matrix4::scale(10.f, 0.004f, 1);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
 
-void pga2__draw_line_and_dual(execution_context *context, game_state *gs, pga2::line line, vector4 color, float32 z = 0.f)
+void pga2__draw_line_and_dual(execution_context *context, game_state *gs, line2 line, vector4 color, float32 z = 0.f)
 {
     pga2__draw_line(context, gs, line, color, z);
     pga2__draw_point(context, gs, dual(line), 0.3f * color);
 }
 
-void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p, vector4 color)
+void pga2__draw_point(execution_context *context, game_state *gs, point2 p, vector4 color)
 {
     if (near_zero(p.w, 0.005f))
     {
@@ -211,15 +208,15 @@ void pga2__draw_point(execution_context *context, game_state *gs, pga2::point p,
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->circle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(GLOBAL_SCALE * p.x / p.w)
-                    * matrix4__translate_y(GLOBAL_SCALE * p.y / p.w)
-                    * matrix4__scale(.03f, .03f, 1);
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate_x(GLOBAL_SCALE * p.x / p.w)
+                    * matrix4::translate_y(GLOBAL_SCALE * p.y / p.w)
+                    * matrix4::scale(.03f, .03f, 1);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
 
-void pga2__draw_point_and_dual(execution_context *context, game_state *gs, pga2::point p, vector4 color)
+void pga2__draw_point_and_dual(execution_context *context, game_state *gs, point2 p, vector4 color)
 {
     pga2__draw_point(context, gs, p, color);
     pga2__draw_line(context, gs, dual(p), 0.3f * color);
@@ -235,11 +232,11 @@ void pga2__draw_segment(execution_context *context, game_state *gs, vector2 star
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->rectangle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(GLOBAL_SCALE * c.x)
-                    * matrix4__translate_y(GLOBAL_SCALE * c.y)
-                    * matrix4__rotate_z(angle)
-                    * matrix4__scale(0.5f * GLOBAL_SCALE * length(d), 0.5f * GLOBAL_SCALE * 0.1f, 1.f);
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate_x(GLOBAL_SCALE * c.x)
+                    * matrix4::translate_y(GLOBAL_SCALE * c.y)
+                    * matrix4::rotate_z(angle)
+                    * matrix4::scale(0.5f * GLOBAL_SCALE * norm(d), 0.5f * GLOBAL_SCALE * 0.1f, 1.f);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
@@ -249,11 +246,11 @@ void pga2__draw_triangle(execution_context *context, game_state *gs, vector2 p, 
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->triangle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate_x(GLOBAL_SCALE * p.x)
-                    * matrix4__translate_y(GLOBAL_SCALE * p.y)
-                    * matrix4__rotate_z(angle)
-                    * matrix4__scale(GLOBAL_SCALE * 0.5f, GLOBAL_SCALE * 0.4f * 0.5f, 1.f);
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate_x(GLOBAL_SCALE * p.x)
+                    * matrix4::translate_y(GLOBAL_SCALE * p.y)
+                    * matrix4::rotate_z(angle)
+                    * matrix4::scale(GLOBAL_SCALE * 0.5f, GLOBAL_SCALE * 0.4f * 0.5f, 1.f);
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
 }
@@ -265,7 +262,7 @@ void pga2__draw_vector(execution_context *context, game_state *gs, vector2 p, ve
     pga2__draw_triangle(context, gs, q, atan2f(p.y, p.x), color);
 }
 
-void pga2__draw_vector(execution_context *context, game_state *gs, vector2 r, pga2::point p, vector4 color)
+void pga2__draw_vector(execution_context *context, game_state *gs, vector2 r, point2 p, vector4 color)
 {
     auto q = to_vector2(p) - 0.5f * normalized(V2(p.x, p.y));
     pga2__draw_segment(context, gs, r, r + to_vector2(p), color);
@@ -283,10 +280,10 @@ void pga3__draw_segment(execution_context *context, game_state *gs, vector3 a, v
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->cilinder_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate(GLOBAL_SCALE * a)
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate(GLOBAL_SCALE * a)
                     * R
-                    * matrix4__scale(0.02f * GLOBAL_SCALE, 0.02f * GLOBAL_SCALE, length(b - a) * GLOBAL_SCALE)
+                    * matrix4::scale(0.02f * GLOBAL_SCALE, 0.02f * GLOBAL_SCALE, norm(b - a) * GLOBAL_SCALE)
                     ;
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
@@ -302,10 +299,10 @@ void pga3__draw_plane(execution_context *context, game_state *gs, plane3 p, vect
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->rectangle_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate(d * GLOBAL_SCALE)
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate(d * GLOBAL_SCALE)
                     * R
-                    * matrix4__scale(GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE)
+                    * matrix4::scale(GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE * norm(p.normal), GLOBAL_SCALE)
                     ;
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
@@ -318,9 +315,9 @@ void pga3__draw_point(execution_context *context, game_state *gs, point3 pt, vec
     render_command::command_draw_mesh_with_color draw_mesh;
     draw_mesh.mesh_token = gs->cilinder_mesh;
     draw_mesh.shader_token = gs->rectangle_shader;
-    draw_mesh.model = matrix4__identity()
-                    * matrix4__translate((pt.vector / pt.w) *GLOBAL_SCALE)
-                    * matrix4__scale(GLOBAL_SCALE*0.1f)
+    draw_mesh.model = matrix4::identity()
+                    * matrix4::translate((pt.vector / pt.w) *GLOBAL_SCALE)
+                    * matrix4::scale(GLOBAL_SCALE*0.1f)
                     ;
     draw_mesh.color = color;
     push_draw_mesh_with_color_command(context, draw_mesh);
@@ -328,8 +325,8 @@ void pga3__draw_point(execution_context *context, game_state *gs, point3 pt, vec
 
 void pga3__draw_line(execution_context *context, game_state *gs, line3 l, vector4 color)
 {
-    auto d = norm(to_vector3(l.moment)) / norm(l.direction);
-    auto dv = d * normalized(cross(l.direction, to_vector3(l.moment)));
+    auto d = norm(l.moment) / norm(l.direction);
+    auto dv = d * normalized(cross(l.direction, l.moment));
     pga3__draw_segment(context, gs, -3.f*l.direction + dv, 3.f*l.direction + dv, color);
 }
 
@@ -421,12 +418,12 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         vbo_init[1] = 0.f;
         vbo_init[2] = 0.f;
 
-        auto d_angle = 2.0f * math::pi / n_gram;
+        auto d_angle = 2.0f * pi / n_gram;
         auto angle = 0.f;
 
         for (int i = 3; i < ARRAY_COUNT(vbo_init);)
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             vbo_init[i++] = v.x;
             vbo_init[i++] = v.y;
             vbo_init[i++] = 0.f;
@@ -462,14 +459,14 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         float32 vbo_init[2*3*n_gram];
         uint32 ibo_init[2*3*(n_gram - 2) + 2*3*n_gram];
 
-        auto d_angle = 2.0f * math::pi / n_gram;
+        auto d_angle = 2.0f * pi / n_gram;
         auto angle = 0.f;
         int i = 0;
         int j = 0;
         int vertex_index = 0;
 
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -480,7 +477,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         }
 
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -492,7 +489,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
         for (int k = vertex_index; k < n_gram; k++)
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -508,7 +505,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
         angle = 0.f;
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -519,7 +516,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         }
 
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -531,7 +528,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 
         for (int k = vertex_index; k < 2*n_gram; k++)
         {
-            auto v = V2(math::cos(angle), math::sin(angle));
+            auto v = V2(cos(angle), sin(angle));
             angle += d_angle;
 
             vbo_init[i++] = v.x;
@@ -677,7 +674,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     {
         if (i == 0) continue;
 
-        pga2::line l = {};
+        line2 l = {};
         l.a = (float32) 1;
         l.c = (float32) i;
         pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.02f);
@@ -687,7 +684,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     {
         if (i == 0) continue;
 
-        pga2::line l = {};
+        line2 l = {};
         l.b = (float32) 1;
         l.c = (float32) i;
         pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.02f);
@@ -809,7 +806,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         auto alpha = 6.f * x;
 
         auto p1 = p + V2(0, 1);
-        auto p2 = p + math::cos(alpha) * V2(1, 0) + math::sin(alpha) * V2(0, 1);
+        auto p2 = p + cos(alpha) * V2(1, 0) + sin(alpha) * V2(0, 1);
 
         auto a = join(p, p1);
         auto b = join(p, p2);
@@ -836,7 +833,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
         auto alpha = 6.f * x;
 
         auto p1 = p + V2(0, 1);
-        auto p2 = p + math::cos(alpha) * V2(1, 0) + math::sin(alpha) * V2(0, 1);
+        auto p2 = p + cos(alpha) * V2(1, 0) + sin(alpha) * V2(0, 1);
 
         auto a = join(p, p1);
         auto b = join(p, p2);
@@ -892,13 +889,13 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     {
         auto R = 2.f;
         auto H = 2.f;
-        auto c = math::cos(gs->camera_rotation_t);
-        auto s = math::sin(gs->camera_rotation_t);
+        auto c = cos(gs->camera_rotation_t);
+        auto s = sin(gs->camera_rotation_t);
 
         gs->camera_rotation_t += 0.25f * dt;
-        if (gs->camera_rotation_t > 2 * math::pi)
+        if (gs->camera_rotation_t > 2 * pi)
         {
-            gs->camera_rotation_t -= 2 * math::pi;
+            gs->camera_rotation_t -= 2 * pi;
         }
 
         auto r = V3(R * c, R * s, H);
@@ -919,7 +916,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     int32 grid_size = 30;
     for (int32 i = -grid_size; i < grid_size; i++)
     {
-        pga2::line l = {};
+        line2 l = {};
         l.a = (float32) 1;
         l.c = (float32) i;
         pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.002f);
@@ -927,7 +924,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
     for (int32 i = -grid_size; i < grid_size; i++)
     {
-        pga2::line l = {};
+        line2 l = {};
         l.b = (float32) 1;
         l.c = (float32) i;
         pga2__draw_line(context, gs, l, V4(0.2, 0.2, 0.2, 1), -0.002f);
@@ -938,7 +935,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     pga3__draw_segment(context, gs, V3(0), V3(0, 0, 10), blue);
 
 
-#define PGA3_CASE 8
+#define PGA3_CASE 9
 
 
 #if PGA3_CASE == 1
@@ -1058,6 +1055,25 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     }
 #endif
 
+#if PGA3_CASE == 9
+    {
+        auto v = normalized(V3(1, 1, 0));
+        auto w = normalized(V3(-1, 1, 0));
+
+        pga3__draw_segment(context, gs, V3(0), v, yellow);
+        pga3__draw_segment(context, gs, V3(0), w, orange);
+
+        auto bs = normalized(bisector(v, w));
+
+        auto q = (v * bs);
+        auto V = V3(1, 1, 2);
+        auto W = apply_quaternion(q, V);
+
+        pga3__draw_segment(context, gs, V3(0), V, yellow);
+        pga3__draw_segment(context, gs, V3(0), W, orange);
+    }
+#endif
+
 #endif // #ifdef PGA3
 
 
@@ -1079,9 +1095,9 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
         {
             render_command::command_draw_screen_frame draw_frame;
-            draw_frame.model = matrix4__identity();
-            draw_frame.view = matrix4__identity();
-            draw_frame.projection = matrix4__identity();
+            draw_frame.model = matrix4::identity();
+            draw_frame.view = matrix4::identity();
+            draw_frame.projection = matrix4::identity();
             draw_frame.color = V4(0,0,0,1);
             push_draw_screen_frame(context, draw_frame);
         }
@@ -1094,9 +1110,9 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     if (gs->near_exit_time > 0)
     {
         render_command::command_draw_screen_frame draw_frame;
-        draw_frame.model = matrix4__identity();
-        draw_frame.view = matrix4__identity();
-        draw_frame.projection = matrix4__identity();
+        draw_frame.model = matrix4::identity();
+        draw_frame.view = matrix4::identity();
+        draw_frame.projection = matrix4::identity();
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
 

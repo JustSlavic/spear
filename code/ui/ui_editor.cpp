@@ -224,8 +224,8 @@ void update_editor(system *s, editor *editor, input_state *input)
 void render_editor(execution_context *context, system *s, editor *e)
 {
     auto projection =
-        matrix4__translate(-1, -1, 0) *
-        matrix4__scale(2.f/context->letterbox_width, 2.f/context->letterbox_height, 1.f);
+        matrix4::translate(-1, -1, 0) *
+        matrix4::scale(2.f/context->letterbox_width, 2.f/context->letterbox_height, 1.f);
 
     for (uint32 element_index = 0; element_index < s->elements.size(); element_index++)
     {
@@ -247,7 +247,7 @@ void render_editor(execution_context *context, system *s, editor *e)
         }
         if (!have_graphics) continue;
 
-        auto model = transform__to_matrix4(element->tm_to_root);
+        auto model = to_matrix4(element->tm_to_root);
 
         auto rect = math::rectangle2::from_center_size(V2(0), (float32)width, (float32)height);
         auto tl = model * V4(math::top_left(rect), 0, 1);
@@ -281,9 +281,9 @@ void render_editor(execution_context *context, system *s, editor *e)
 
         render_command::command_draw_screen_frame draw_frame;
         draw_frame.model =
-            matrix4__translate(V3(aabb_center, 0)) *
-            matrix4__scale(0.5f * aabb_width, 0.5f * aabb_height, 1);
-        draw_frame.view = matrix4__identity();
+            matrix4::translate(V3(aabb_center, 0)) *
+            matrix4::scale(0.5f * aabb_width, 0.5f * aabb_height, 1);
+        draw_frame.view = matrix4::identity();
         draw_frame.projection = projection;
         if (h == e->selection)
         {

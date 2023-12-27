@@ -135,9 +135,9 @@ void gfx__draw_background(execution_context *context, render_command *cmd)
     gfx__draw_polygon_simple(context,
                              cmd->draw_background.mesh,
                              cmd->draw_background.shader,
-                             matrix4__identity(),
-                             matrix4__identity(),
-                             matrix4__identity(),
+                             matrix4::identity(),
+                             matrix4::identity(),
+                             matrix4::identity(),
                              cmd->draw_background.color);
 }
 
