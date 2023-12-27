@@ -935,7 +935,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     pga3__draw_segment(context, gs, V3(0), V3(0, 0, 10), blue);
 
 
-#define PGA3_CASE 9
+#define PGA3_CASE 15
 
 
 #if PGA3_CASE == 1
@@ -1057,16 +1057,16 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
 #if PGA3_CASE == 9
     {
-        auto v = normalized(V3(1, 1, 0));
-        auto w = normalized(V3(-1, 1, 0));
+        auto v = V3(1, 1, 0);
+        auto w = V3(-1, 1, 0);
 
         pga3__draw_segment(context, gs, V3(0), v, yellow);
         pga3__draw_segment(context, gs, V3(0), w, orange);
 
-        auto bs = normalized(bisector(v, w));
+        auto bs = bisector(v, w);
 
         auto q = (v * bs);
-        auto V = V3(1, 1, 2);
+        auto V = V3(1, 0, 2);
         auto W = apply_quaternion(q, V);
 
         pga3__draw_segment(context, gs, V3(0), V, yellow);
@@ -1074,7 +1074,97 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     }
 #endif
 
+#if PGA3_CASE == 10
+    {
+        auto p = make_plane3(1, 0, -1, 1);
+        pga3__draw_plane(context, gs, p, green);
+
+        auto l = make_line3(V3(3, 0, -5), V3(1, 1, 0));
+        pga3__draw_line(context, gs, l, blue);
+
+        auto p2 = project(p, l);
+        pga3__draw_plane(context, gs, p2, yellow);
+    }
+#endif
+
+#if PGA3_CASE == 11
+    {
+        auto p = make_plane3(1, 0, -1, 1);
+        pga3__draw_plane(context, gs, p, green);
+
+        auto l = make_line3(V3(3, 0, -5), V3(1, 1, 0));
+        pga3__draw_line(context, gs, l, blue);
+
+        auto l2 = project(l, p);
+        pga3__draw_line(context, gs, l2, yellow);
+    }
+#endif
+
+#if PGA3_CASE == 12
+    {
+        auto pt = make_point3(1, 0, 1);
+        pga3__draw_point(context, gs, pt, green);
+
+        auto l = make_line3(V3(3, 0, -5), V3(1, 1, 0));
+        pga3__draw_line(context, gs, l, blue);
+
+        auto l2 = project(l, pt);
+        pga3__draw_line(context, gs, l2, yellow);
+    }
+#endif
+
+#if PGA3_CASE == 13
+    {
+        auto pt = make_point3(1, 0, 1);
+        pga3__draw_point(context, gs, pt, green);
+
+        auto l = make_line3(V3(3, 0, -5), V3(1, 1, 0));
+        pga3__draw_line(context, gs, l, blue);
+
+        auto pt2 = project(pt, l);
+        pga3__draw_point(context, gs, pt2, yellow);
+    }
+#endif
+
+#if PGA3_CASE == 14
+    {
+        auto pt = make_point3(1, 0, 1);
+        pga3__draw_point(context, gs, pt, green);
+
+        auto p = make_plane3(1, 0, -1, 1);
+        pga3__draw_plane(context, gs, p, blue);
+
+        auto pt2 = project(pt, p);
+        pga3__draw_point(context, gs, pt2, yellow);
+    }
+#endif
+
+#if PGA3_CASE == 15
+    {
+        auto pt = make_point3(1, 0, 1);
+        pga3__draw_point(context, gs, pt, green);
+
+        auto p = make_plane3(1, 0, -1, 1);
+        pga3__draw_plane(context, gs, p, blue);
+
+        auto p2 = project(p, pt);
+        pga3__draw_plane(context, gs, p2, yellow);
+    }
+#endif
+
+
 #endif // #ifdef PGA3
+
+    auto mm = matrix4::identity();
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            console_print("%4.2f ", mm[i][j]);
+        }
+        console_print("\n");
+    }
+    console_print("\n");
 
 
 
