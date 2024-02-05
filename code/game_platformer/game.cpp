@@ -342,6 +342,14 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     //     push_draw_background_command(context, draw_background);
     // }
 
+    {
+        render_command::command_setup_camera setup_camera;
+        setup_camera.camera_position = gs->camera.position;
+        setup_camera.look_at_position = gs->camera.position + gs->camera.forward;
+        setup_camera.camera_up_direction = gs->camera.up;
+
+        push_setup_camera_command(context, setup_camera);
+    }
 
 
     // Throw ray to intersect XY-plane
