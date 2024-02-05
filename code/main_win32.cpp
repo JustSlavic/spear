@@ -5,7 +5,7 @@
 // Project headers
 #include <base.h>
 #include <game_interface.hpp>
-#include <string.hpp>
+#include <string_view.hpp>
 #include <string_id.hpp>
 #include <gfx/renderer.hpp>
 #include <input.hpp>
@@ -224,12 +224,12 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     execution_context context;
     memory__set(&context, 0, sizeof(execution_context));
 
-    memory_allocator global_allocator = memory_allocator__create_arena_from_memory_block(global_memory);
-    memory_allocator platform_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(20));
-    context.temporary_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(10));
-    context.renderer_allocator = memory_allocator__create_arena(global_allocator, MEGABYTES(2));
-    context.rs.heap = memory_allocator__create_arena(global_allocator, MEGABYTES(1));
-    context.strid_storage = initialize_string_id_storage(ALLOCATE_BUFFER(global_allocator, MEGABYTES(1)));
+    memory_allocator global_allocator = make_memory_arena(global_memory);
+    memory_allocator platform_allocator = allocate_memory_arena(global_allocator, MEGABYTES(20));
+    context.temporary_allocator = allocate_memory_arena(global_allocator, MEGABYTES(10));
+    context.renderer_allocator = allocate_memory_arena(global_allocator, MEGABYTES(2));
+    context.rs.heap = allocate_memory_arena(global_allocator, MEGABYTES(1));
+    context.strid_storage = string_id::initialize(allocate_memory_arena(global_allocator, MEGABYTES(1)));
 
     context.execution_commands = ALLOCATE_ARRAY(platform_allocator, execution_command, 5);
     context.render_commands = ALLOCATE_ARRAY(context.renderer_allocator, render_command, 1 << 12);
@@ -245,7 +245,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     resource_token screen_frame_mesh = {};
     resource_token screen_frame_shader = {};
     {
-        screen_frame_shader = create_shader_resource(&context.rs, make_string_id(context.strid_storage, "frame.shader"));
+        screen_frame_shader = create_shader_resource(&context.rs, string_id::from(&context.strid_storage, "frame.shader"));
 
         // 3--------2
         // |\      /|
@@ -324,7 +324,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // Load the game code and initialize the memory
 
-    game_dll game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
+    game_dll game = load_game_dll(
+        string_view::from(game_dll_buffer),
+        string_view::from(temp_dll_buffer),
+        string_view::from(lock_tmp_buffer));
 
     if (game.initialize_memory)
     {
@@ -422,7 +425,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         if (dll_file_time > game.dll.timestamp)
         {
             unload_game_dll(&game);
-            game = load_game_dll(game_dll_buffer, temp_dll_buffer, lock_tmp_buffer);
+            game = load_game_dll(
+                string_view::from(game_dll_buffer),
+                string_view::from(temp_dll_buffer),
+                string_view::from(lock_tmp_buffer));
         }
 
         if (viewport_changed)
@@ -576,7 +582,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         context.render_commands.clear();
 
-        memory_allocator__reset(context.temporary_allocator);
+        memory_arena__reset(context.temporary_allocator);
 
 #if DEBUG & 0
         // @todo: this things should be abstract so no code from the game should appear here

@@ -84,7 +84,7 @@ struct system
 
     // Memory
     memory_allocator ui_allocator;
-    string_id_storage *strid_storage;
+    string_id::storage *strid_storage;
 
     // Root
     element root;
@@ -112,7 +112,7 @@ struct system
 
 system *initialize(memory_block ui_memory)
 {
-    memory_allocator arena = memory_allocator__create_arena_from_memory_block(ui_memory);
+    memory_allocator arena = make_memory_arena(ui_memory);
 
     system *s = ALLOCATE(arena, system);
     s->ui_allocator = arena;
@@ -165,7 +165,7 @@ attach_iterator iterate_attaches(system *s, handle parent)
     return result;
 }
 
-void set_string_id_storage(system *s, string_id_storage *storage)
+void set_string_id_storage(system *s, string_id::storage *storage)
 {
     s->strid_storage = storage;
 }
@@ -1042,7 +1042,7 @@ void animate(system *s, handle h, string_id id, uint32 a, uint32 duration_frames
 
 void play_animation(system *s, char const *cstr)
 {
-    play_animation(s, make_string_id(s->strid_storage, cstr));
+    play_animation(s, string_id::from(s->strid_storage, cstr));
 }
 
 void play_animation(system *s, string_id id)
@@ -1062,7 +1062,7 @@ void play_animation(system *s, string_id id)
 
 void stop_animation(system *s, char const *cstr)
 {
-    stop_animation(s, make_string_id(s->strid_storage, cstr));
+    stop_animation(s, string_id::from(s->strid_storage, cstr));
 }
 
 void stop_animation(system *s, string_id id)

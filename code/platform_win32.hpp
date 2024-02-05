@@ -211,7 +211,7 @@ INLINE memory_block load_file(memory_allocator allocator, char const *filename)
 
     if (ReadFileResult == FALSE)
     {
-        DEALLOCATE(allocator, Memory);
+        DEALLOCATE_BLOCK(allocator, Memory);
         return result;
     }
 

@@ -149,7 +149,7 @@ attach_iterator end(attach_iterator it);
 attach_iterator iterate_attaches(system *s, handle parent);
 
 system *initialize(memory_block ui_memory);
-void set_string_id_storage(system *s, string_id_storage *storage);
+void set_string_id_storage(system *s, string_id::storage *storage);
 void set_resource_rectangle_mesh(system *s, resource_token mesh);
 void set_resource_rectangle_shader(system *s, resource_token shader);
 void set_resource_rectangle_mesh_uv(system *s, resource_token mesh);

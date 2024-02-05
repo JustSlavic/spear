@@ -292,24 +292,24 @@ void gl__load_shader(execution_context *context, resource__shader *shader)
 {
     uint32 vs = 0;
     uint32 fs = 0;
-    if (shader->name == STRID("rectangle.shader"))
+    if (shader->name == string_id::from(&context->strid_storage, "rectangle.shader"))
     {
         // @todo: load this from file
         vs = gl__compile_shader(gfx::gl::vs_source, gl__shader::vertex);
         fs = gl__compile_shader(gfx::gl::fs_source, gl__shader::fragment);
     }
-    if (shader->name == STRID("circle.shader"))
+    if (shader->name == string_id::from(&context->strid_storage, "circle.shader"))
     {
         // @todo: load this from file
         vs = gl__compile_shader(gfx::gl::vs_source, gl__shader::vertex);
         fs = gl__compile_shader(gfx::gl::fs_circle_source, gl__shader::fragment);
     }
-    if (shader->name == STRID("rectangle_uv.shader"))
+    if (shader->name == string_id::from(&context->strid_storage, "rectangle_uv.shader"))
     {
         vs = gl__compile_shader(gfx::gl::vs_textured_source, gl__shader::vertex);
         fs = gl__compile_shader(gfx::gl::fs_textured_source, gl__shader::fragment);
     }
-    if (shader->name == STRID("frame.shader"))
+    if (shader->name == string_id::from(&context->strid_storage, "frame.shader"))
     {
         vs = gl__compile_shader(gfx::gl::vs_frame_source, gl__shader::vertex);
         fs = gl__compile_shader(gfx::gl::fs_frame_source, gl__shader::fragment);

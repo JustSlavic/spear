@@ -11,6 +11,9 @@
 // + draw the score number as roman numerals
 
 
+#define STRID(CSTR) string_id::from(&context->strid_storage, CSTR)
+
+
 #include <integer.h>
 #include <math/rectangle2.hpp>
 #include <vector2.hpp>
@@ -153,7 +156,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
     ASSERT(sizeof(game_state) < game_memory.size);
     ASSERT(context->debug_load_file);
 
-    memory_allocator game_allocator = memory_allocator__create_arena_from_memory_block(game_memory);
+    memory_allocator game_allocator = make_memory_arena(game_memory);
     game_state *gs = ALLOCATE(game_allocator, game_state);
     gs->game_allocator = game_allocator;
     context->game_state = gs;
