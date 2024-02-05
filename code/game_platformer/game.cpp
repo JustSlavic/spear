@@ -11,16 +11,12 @@
 // + draw the score number as roman numerals
 
 
-#include <math/integer.hpp>
-#include <math/float64.hpp>
+#include <integer.h>
 #include <math/rectangle2.hpp>
-#include <g2.hpp>
-#include <g301.hpp>
+#include <vector2.hpp>
 
 #include <collision.hpp>
 #include <image/png.hpp>
-
-#include <g2.hpp>
 
 #ifndef osOutputDebugString
 #if OS_WINDOWS
@@ -309,138 +305,140 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     }
 #endif // UI_EDITOR_ENABLED
 
-    if (get_hold_count(input->keyboard[KB_A]))
-    {
-        gs->camera.position -= V3(1, 0, 0) * dt;
-    }
-    if (get_hold_count(input->keyboard[KB_D]))
-    {
-        gs->camera.position += V3(1, 0, 0) * dt;
-    }
-    if (get_hold_count(input->keyboard[KB_W]))
-    {
-        gs->camera.position += V3(0, 1, 0) * dt;
-    }
-    if (get_hold_count(input->keyboard[KB_S]))
-    {
-        gs->camera.position -= V3(0, 1, 0) * dt;
-    }
-    if (get_hold_count(input->keyboard[KB_R]))
-    {
-        gs->camera.position += V3(0, 0, 1) * dt;
-    }
-    if (get_hold_count(input->keyboard[KB_F]))
-    {
-        gs->camera.position -= V3(0, 0, 1) * dt;
-    }
+    // if (get_hold_count(input->keyboard[KB_A]))
+    // {
+    //     gs->camera.position -= V3(1, 0, 0) * dt;
+    // }
+    // if (get_hold_count(input->keyboard[KB_D]))
+    // {
+    //     gs->camera.position += V3(1, 0, 0) * dt;
+    // }
+    // if (get_hold_count(input->keyboard[KB_W]))
+    // {
+    //     gs->camera.position += V3(0, 1, 0) * dt;
+    // }
+    // if (get_hold_count(input->keyboard[KB_S]))
+    // {
+    //     gs->camera.position -= V3(0, 1, 0) * dt;
+    // }
+    // if (get_hold_count(input->keyboard[KB_R]))
+    // {
+    //     gs->camera.position += V3(0, 0, 1) * dt;
+    // }
+    // if (get_hold_count(input->keyboard[KB_F]))
+    // {
+    //     gs->camera.position -= V3(0, 0, 1) * dt;
+    // }
 
     // Background
-    {
-        render_command::command_draw_background draw_background;
-        draw_background.mesh = gs->rectangle_mesh;
-        draw_background.shader = gs->rectangle_shader;
-        draw_background.color = sky_color;
-        push_draw_background_command(context, draw_background);
-    }
+    // {
+    //     render_command::command_draw_background draw_background;
+    //     draw_background.mesh = gs->rectangle_mesh;
+    //     draw_background.shader = gs->rectangle_shader;
+    //     draw_background.color = sky_color;
+    //     push_draw_background_command(context, draw_background);
+    // }
+
+
 
     // Throw ray to intersect XY-plane
-    bool32 intersection_found = false;
-    vector3 intersection = V3(0);
+    // bool32 intersection_found = false;
+    // vector3 intersection = V3(0);
 
-    auto mouse_x = clamp(((float32) input->mouse.x + context->letterbox_width * 0.5f) * 2.f / context->letterbox_width - 2.f, -1.f, 1.f);
-    auto mouse_y = clamp(-((float32) input->mouse.y + context->letterbox_height * 0.5f) * 2.f / context->letterbox_height + 2.f, -1.f, 1.f);
+    // auto mouse_x = clamp(((float32) input->mouse.x + context->letterbox_width * 0.5f) * 2.f / context->letterbox_width - 2.f, -1.f, 1.f);
+    // auto mouse_y = clamp(-((float32) input->mouse.y + context->letterbox_height * 0.5f) * 2.f / context->letterbox_height + 2.f, -1.f, 1.f);
 
 // X = (x + w*0.5)*2/w - 2
 
-    osOutputDebugString("mouse: (x, y) = (%4.2f, %4.2f)\n", mouse_x, mouse_y);
+    // osOutputDebugString("mouse: (x, y) = (%4.2f, %4.2f)\n", mouse_x, mouse_y);
 
-    {
-        auto ratio = ((float32) context->letterbox_width / context->letterbox_height);
+    // {
+    //     auto ratio = ((float32) context->letterbox_width / context->letterbox_height);
 
-        auto NEAR_CLIP_DIST = 0.05f;
-        auto clip_width = NEAR_CLIP_DIST;
-        auto clip_height = NEAR_CLIP_DIST / ratio;
+    //     auto NEAR_CLIP_DIST = 0.05f;
+    //     auto clip_width = NEAR_CLIP_DIST;
+    //     auto clip_height = NEAR_CLIP_DIST / ratio;
 
-        auto clip_mouse_x = mouse_x * clip_width * 0.5f;
-        auto clip_mouse_y = mouse_y * clip_height * 0.5f;
+    //     auto clip_mouse_x = mouse_x * clip_width * 0.5f;
+    //     auto clip_mouse_y = mouse_y * clip_height * 0.5f;
 
-        auto camera_right = normalized(cross(gs->camera.forward, gs->camera.up));
+    //     auto camera_right = normalized(cross(gs->camera.forward, gs->camera.up));
 
-        auto near_plane_center = gs->camera.position + gs->camera.forward * NEAR_CLIP_DIST;
-        auto near_plane_point  = near_plane_center +
-                                 camera_right * clip_mouse_x +
-                                 gs->camera.up * clip_mouse_y;
+    //     auto near_plane_center = gs->camera.position + gs->camera.forward * NEAR_CLIP_DIST;
+    //     auto near_plane_point  = near_plane_center +
+    //                              camera_right * clip_mouse_x +
+    //                              gs->camera.up * clip_mouse_y;
 
-        osOutputDebugString("clip plane: (%f, %f)\n", clip_width, clip_height);
+    //     osOutputDebugString("clip plane: (%f, %f)\n", clip_width, clip_height);
 
-        osOutputDebugString("clip mouse: (%f, %f)\n", clip_mouse_x, clip_mouse_y);
+    //     osOutputDebugString("clip mouse: (%f, %f)\n", clip_mouse_x, clip_mouse_y);
 
-        {
-            render_command::command_draw_mesh_with_color draw_mesh;
-            draw_mesh.mesh_token = gs->rectangle_mesh;
-            draw_mesh.shader_token = gs->rectangle_shader;
-            draw_mesh.model = matrix4__identity()
-                            * matrix4__translate(near_plane_center + gs->camera.forward * 0.001f)
-                            * matrix4__rotate_x(math::to_radians(45.f))
-                            * matrix4__scale(0.0005f, 0.0005f, 0.005f);
-            draw_mesh.color = V4(1, 0, 1, 1);
-            push_draw_mesh_with_color_command(context, draw_mesh);
-        }
+    //     {
+    //         render_command::command_draw_mesh_with_color draw_mesh;
+    //         draw_mesh.mesh_token = gs->rectangle_mesh;
+    //         draw_mesh.shader_token = gs->rectangle_shader;
+    //         draw_mesh.model = matrix4::identity()
+    //                         * matrix4::translate(near_plane_center + gs->camera.forward * 0.001f)
+    //                         * matrix4::rotate_x(to_radians(45.f))
+    //                         * matrix4::scale(0.0005f, 0.0005f, 0.005f);
+    //         draw_mesh.color = V4(1, 0, 1, 1);
+    //         push_draw_mesh_with_color_command(context, draw_mesh);
+    //     }
 
-        {
-            render_command::command_draw_mesh_with_color draw_mesh;
-            draw_mesh.mesh_token = gs->rectangle_mesh;
-            draw_mesh.shader_token = gs->rectangle_shader;
-            draw_mesh.model = matrix4__identity()
-                            * matrix4__translate(near_plane_point)
-                            * matrix4__rotate_x(math::to_radians(45.f))
-                            * matrix4__scale(0.0002f, 0.0002f, 0.002f);
-            draw_mesh.color = V4(1, 1, 1, 1);
-            push_draw_mesh_with_color_command(context, draw_mesh);
-        }
+    //     {
+    //         render_command::command_draw_mesh_with_color draw_mesh;
+    //         draw_mesh.mesh_token = gs->rectangle_mesh;
+    //         draw_mesh.shader_token = gs->rectangle_shader;
+    //         draw_mesh.model = matrix4::identity()
+    //                         * matrix4::translate(near_plane_point)
+    //                         * matrix4::rotate_x(to_radians(45.f))
+    //                         * matrix4::scale(0.0002f, 0.0002f, 0.002f);
+    //         draw_mesh.color = V4(1, 1, 1, 1);
+    //         push_draw_mesh_with_color_command(context, draw_mesh);
+    //     }
 
-        auto ray_start = gs->camera.position;
-        auto ray_direction = normalized(near_plane_point - gs->camera.position);
+    //     auto ray_start = gs->camera.position;
+    //     auto ray_direction = normalized(near_plane_point - gs->camera.position);
 
-        // Line-plane intersection
+    //     // Line-plane intersection
 
-        // Plane is z=0
+    //     // Plane is z=0
 
-        // let n be
-        auto n = V3(0, 0, 1);
+    //     // let n be
+    //     auto n = V3(0, 0, 1);
 
-        // let p0 be a known point on a plane
-        auto p0 = V3(0);
+    //     // let p0 be a known point on a plane
+    //     auto p0 = V3(0);
 
-        // thus dot(p - p0, n) = 0
+    //     // thus dot(p - p0, n) = 0
 
-        // let point on the line be p = l0 + l * d,
-        // where l is direction, l0 is known point on the line
+    //     // let point on the line be p = l0 + l * d,
+    //     // where l is direction, l0 is known point on the line
 
-        // thus
-        // dot(l0 + l*d - p0, n) = 0
-        // dot(ld, n) + dot(l0 - p0, n) = 0
-        // d * dot(l, n) + dot(l0 - p0, n) = 0
-        // d = dot(p0 - l0, n) / dot(l, n)
+    //     // thus
+    //     // dot(l0 + l*d - p0, n) = 0
+    //     // dot(ld, n) + dot(l0 - p0, n) = 0
+    //     // d * dot(l, n) + dot(l0 - p0, n) = 0
+    //     // d = dot(p0 - l0, n) / dot(l, n)
 
-        auto l = ray_direction;
-        auto l0 = ray_start;
+    //     auto l = ray_direction;
+    //     auto l0 = ray_start;
 
-        auto denom = inner(l, n);
-        if (absolute(denom) < EPSILON)
-        {
-            intersection_found = false;
-        }
-        else
-        {
-            intersection_found = true;
-            float32 d = inner(p0 - l0, n) / denom;
+    //     auto denom = inner(l, n);
+    //     if (absolute(denom) < EPSILON)
+    //     {
+    //         intersection_found = false;
+    //     }
+    //     else
+    //     {
+    //         intersection_found = true;
+    //         float32 d = inner(p0 - l0, n) / denom;
 
-            intersection = ray_start + ray_direction * d;
+    //         intersection = ray_start + ray_direction * d;
 
-            osOutputDebugString("intersection: (%4.2f, %4.2f)\n", intersection.x, intersection.y);
-        }
-    }
+    //         osOutputDebugString("intersection: (%4.2f, %4.2f)\n", intersection.x, intersection.y);
+    //     }
+    // }
 
     // Draw ground
     for (int32 x = -2; x <= 2; x++)
@@ -451,10 +449,10 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 
             draw_mesh.mesh_token = gs->rectangle_mesh;
             draw_mesh.shader_token = gs->rectangle_shader;
-            draw_mesh.model = matrix4__identity()
-                            * matrix4__translate_x((float32) x)
-                            * matrix4__translate_y((float32) y)
-                            * matrix4__scale(0.48f, 0.48f, 0.1f);
+            draw_mesh.model = matrix4::identity()
+                            * matrix4::translate_x((float32) x)
+                            * matrix4::translate_y((float32) y)
+                            * matrix4::scale(0.48f, 0.48f, 0.1f);
             draw_mesh.color = V4(0.4 * (x * 0.25f + 0.25f), 0.8 * (y * 0.25f + 0.5f), 0.4, 1);
 
             // if (truncate_to_int32(intersection.x - 0.5f) == x &&
@@ -468,54 +466,65 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
     }
 
 
-    {
-        render_command::command_draw_mesh_with_color draw_mesh;
-        draw_mesh.mesh_token = gs->rectangle_mesh;
-        draw_mesh.shader_token = gs->rectangle_shader;
-        draw_mesh.model = matrix4__identity()
-                        * matrix4__translate_x((float32) intersection.x)
-                        * matrix4__translate_y((float32) intersection.y)
-                        * matrix4__translate_z(0.01f)
-                        * matrix4__scale(0.05f, 0.05f, 0.1f);
-        draw_mesh.color = V4(1, 0, 0, 1);
-        push_draw_mesh_with_color_command(context, draw_mesh);
-    }
+    //         // if (truncate_to_int32(intersection.x - 0.5f) == x &&
+    //         //     truncate_to_int32(intersection.y - 0.5f) == y)
+    //         // {
+    //         //    draw_mesh.color = V4(1, 0, 0, 1);
+    //         // }
 
-#if UI_EDITOR_ENABLED
-    if (gs->ui_editor_enabled)
-    {
-        ui::update_editor(gs->hud, gs->ui_editor, input);
-        // Reset s-> hot, active, pressed
-    }
-    else
-    {
-        ui::update(gs->hud, input);
-    }
-    ui::render(context, gs->hud);
-    if (gs->ui_editor_enabled)
-    {
-        ui::render_editor(context, gs->hud, gs->ui_editor);
+            // push_draw_mesh_with_color_command(context, draw_mesh);
+    //     }
+    // }
 
-        {
-            render_command::command_draw_screen_frame draw_frame;
-            draw_frame.model = matrix4__identity();
-            draw_frame.view = matrix4__identity();
-            draw_frame.projection = matrix4__identity();
-            draw_frame.color = V4(0,0,0,1);
-            push_draw_screen_frame(context, draw_frame);
-        }
-    }
-#else // UI_EDITOR_ENABLED
-    ui::update(gs->hud, input);
-    ui::render(context, gs->hud);
-#endif // UI_EDITOR_ENABLED
+
+    // {
+    //     render_command::command_draw_mesh_with_color draw_mesh;
+    //     draw_mesh.mesh_token = gs->rectangle_mesh;
+    //     draw_mesh.shader_token = gs->rectangle_shader;
+    //     draw_mesh.model = matrix4::identity()
+    //                     * matrix4::translate_x((float32) intersection.x)
+    //                     * matrix4::translate_y((float32) intersection.y)
+    //                     * matrix4::translate_z(0.01f)
+    //                     * matrix4::scale(0.05f, 0.05f, 0.1f);
+    //     draw_mesh.color = V4(1, 0, 0, 1);
+    //     push_draw_mesh_with_color_command(context, draw_mesh);
+    // }
+
+// #if UI_EDITOR_ENABLED
+//     if (gs->ui_editor_enabled)
+//     {
+//         ui::update_editor(gs->hud, gs->ui_editor, input);
+//         // Reset s-> hot, active, pressed
+//     }
+//     else
+//     {
+//         ui::update(gs->hud, input);
+//     }
+//     ui::render(context, gs->hud);
+//     if (gs->ui_editor_enabled)
+//     {
+//         ui::render_editor(context, gs->hud, gs->ui_editor);
+
+//         {
+//             render_command::command_draw_screen_frame draw_frame;
+//             draw_frame.model = matrix4::identity();
+//             draw_frame.view = matrix4::identity();
+//             draw_frame.projection = matrix4::identity();
+//             draw_frame.color = V4(0,0,0,1);
+//             push_draw_screen_frame(context, draw_frame);
+//         }
+//     }
+// #else // UI_EDITOR_ENABLED
+//     ui::update(gs->hud, input);
+//     ui::render(context, gs->hud);
+// #endif // UI_EDITOR_ENABLED
 
     if (gs->near_exit_time > 0)
     {
         render_command::command_draw_screen_frame draw_frame;
-        draw_frame.model = matrix4__identity();
-        draw_frame.view = matrix4__identity();
-        draw_frame.projection = matrix4__identity();
+        draw_frame.model = matrix4::identity();
+        draw_frame.view = matrix4::identity();
+        draw_frame.projection = matrix4::identity();
         draw_frame.color = V4(1,0,0,1);
         push_draw_screen_frame(context, draw_frame);
 

@@ -176,8 +176,8 @@ matrix4 gl__make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
     result._11 = 2.0f * n / w;
     result._22 = 2.0f * n / h;
     result._33 = -(f + n) / (f - n);
-    result._34 = -2.0f * f * n / (f - n);
-    result._43 = -1.0f;
+    result._43 = -2.0f * f * n / (f - n);
+    result._34 = -1.0f;
 
     return result;
 }
@@ -200,8 +200,8 @@ matrix4 gl__make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float3
     result._11 = tf2;
     result._22 = tf2 * aspect_ratio;
     result._33 = -(f + n) / (f - n);
-    result._34 = -2.0f * f * n / (f - n);
-    result._43 = -1.0f;
+    result._43 = -2.0f * f * n / (f - n);
+    result._34 = -1.0f;
 
     return result;
 }
@@ -352,9 +352,6 @@ void gl__draw_indexed_triangles(resource__mesh *mesh,
     gl__uniform(shader_render_data->program, "u_view", view);
     gl__uniform(shader_render_data->program, "u_projection", projection);
     gl__uniform(shader_render_data->program, "u_color", color);
-
-    auto a = V4(1, 1, 0, 1) * model * view * projection;
-    auto b = projection * view * model * V4(1, 1, 0, 1);
 
     glBindVertexArray(mesh_render_data->vertex_array_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);

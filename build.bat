@@ -15,6 +15,6 @@ cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fespear ../code/main_win32.cpp 
 
 for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds"') do SET PDB_FILENAME="%%i.pdb"
 echo WAITING FOR PDB > lock.tmp
-cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/geometric_algebra_visualized/app.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
-rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game_platformer/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
+rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/geometric_algebra_visualized/app.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
+cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game_platformer/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
 del lock.tmp

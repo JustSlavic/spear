@@ -5,8 +5,8 @@
 
 #include <array.hpp>
 #include <math/integer.hpp>
-#include <g2.hpp>
-#include <g3.hpp>
+#include <vector2.hpp>
+#include <vector3.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 #include <ui/ui.hpp>
