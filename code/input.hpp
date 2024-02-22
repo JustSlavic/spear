@@ -2,6 +2,7 @@
 #define INPUT_HPP
 
 #include <base.h>
+#include <time.hpp>
 
 
 //
@@ -166,7 +167,7 @@ struct input_state
     mouse_device mouse;
     gamepad_device gamepads[4];
     float32 dt;
-    float32 time;
+    timepoint time;
 };
 
 

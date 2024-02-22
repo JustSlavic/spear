@@ -2,17 +2,16 @@
 #define GAME_HPP
 
 #include <base.h>
-#include <memory.h>
-
+#include <memory_buffer.hpp>
 #include <input.hpp>
-#include <execution_context.hpp>
+#include <context.hpp>
 
 
-#define INITIALIZE_MEMORY_FUNCTION_T(NAME) void NAME(execution_context *context, memory_block game_memory)
+#define INITIALIZE_MEMORY_FUNCTION_T(NAME) void NAME(context *ctx, memory_buffer game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION_T(initialize_memory_t);
 #define INITIALIZE_MEMORY_FUNCTION(...) INITIALIZE_MEMORY_FUNCTION_T(initialize_memory)
 
-#define UPDATE_AND_RENDER_FUNCTION_T(NAME) void NAME(execution_context *context, memory_block game_memory, input_state *input)
+#define UPDATE_AND_RENDER_FUNCTION_T(NAME) void NAME(context *ctx, memory_buffer game_memory, input_state *input)
 typedef UPDATE_AND_RENDER_FUNCTION_T(update_and_render_t);
 #define UPDATE_AND_RENDER_FUNCTION(...) UPDATE_AND_RENDER_FUNCTION_T(update_and_render)
 

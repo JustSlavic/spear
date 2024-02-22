@@ -39,13 +39,13 @@ enum
 #undef WAV_MAGIC_NUMBER
 
 
-audio__track load_wav(memory_block raw_data)
+audio__track load_wav(memory_buffer raw_data)
 {
     audio__track result = {};
 
     if (raw_data.size > 0)
     {
-        byte *data = raw_data.memory;
+        byte *data = raw_data.data;
 
         wav__header *wav_header = NULL;
         wav__format *wav_format = NULL;

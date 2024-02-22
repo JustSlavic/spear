@@ -10,7 +10,7 @@
 namespace image {
 
 
-bitmap load_bmp(memory_allocator a, memory_block memory);
+bitmap load_bmp(memory_allocator a, memory_buffer memory);
 
 
 } // namespace image

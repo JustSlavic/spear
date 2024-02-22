@@ -1,175 +1,16 @@
-#include "renderer.hpp"
-#include <gfx/gl.hpp>
-#include <rs/resource_system.hpp>
+#include "renderer_opengl.hpp"
 
-#include <math/integer.hpp>
-#include <math/rectangle2.hpp>
+#include <integer.h>
+
+#include "gl.hpp"
+
+#include "static_shaders.cpp"
 
 
-struct gl__render_mesh_data
+namespace gl
 {
-    uint32 vertex_buffer_id;
-    uint32 index_buffer_id;
-    uint32 vertex_array_id;
-};
 
-struct gl__render_shader_data
-{
-    gl__shader program;
-};
-
-struct gl__render_texture_data
-{
-    uint32 texture_id;
-    bool32 is_top_down;
-    float32 aspect_ratio;
-};
-
-
-namespace gfx {
-namespace gl {
-
-GLOBAL char const *vs_source = R"GLSL(
-#version 400
-
-layout (location = 0) in vec3 vertex_position;
-layout (location = 1) in vec3 vertex_color;
-
-out vec4 fragment_color;
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-uniform vec4 u_color;
-
-void main()
-{
-    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
-    fragment_color = vec4(vertex_color, 1.0) + u_color;
-    gl_Position = p;
-}
-)GLSL";
-
-
-GLOBAL char const *fs_source = R"GLSL(
-#version 400
-
-in vec4 fragment_color;
-
-out vec4 result_color;
-
-void main()
-{
-    result_color = fragment_color;
-}
-)GLSL";
-
-
-GLOBAL char const *fs_circle_source = R"GLSL(
-#version 400
-#define lerp mix
-
-in vec4 fragment_color;
-in vec2 fragment_position;
-
-out vec4 result_color;
-
-void main()
-{
-    if (dot(fragment_position, fragment_position) < 1.0)
-        result_color = fragment_color;
-    else
-        result_color = vec4(0, 0, 0, 0);
-    // result_color = lerp(fragment_color, vec4(1, 1, 1, 1), dot(fragment_position, fragment_position));
-}
-
-)GLSL";
-
-GLOBAL char const *vs_textured_source = R"GLSL(
-#version 400
-
-layout (location = 0) in vec3 vertex_position;
-layout (location = 1) in vec2 uv_coordinates;
-
-out vec2 position;
-out vec2 uv;
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-
-void main()
-{
-    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
-    position = vertex_position.xy;
-    uv = uv_coordinates;
-    gl_Position = p;
-}
-)GLSL";
-
-GLOBAL char const *fs_textured_source = R"GLSL(
-#version 400
-
-in vec2 position;
-in vec2 uv;
-
-out vec4 result_color;
-
-uniform sampler2D u_texture0;
-
-void main()
-{
-    vec4 texture_color = texture(u_texture0, uv);
-    result_color = texture_color;
-}
-)GLSL";
-
-GLOBAL char const *vs_frame_source = R"GLSL(
-#version 400
-
-#define BORDER_WIDTH  (1.0 / 16.0) * 0.1
-#define BORDER_HEIGHT (1.0 /  9.0) * 0.1
-
-layout (location = 0) in vec2 vertex_position;
-layout (location = 1) in vec2 vertex_add_sign;
-
-out vec4 fragment_color;
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-uniform vec4 u_color;
-
-void main()
-{
-    vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 0.0, 1.0);
-    p = p + vec4(vertex_add_sign.x * BORDER_WIDTH, vertex_add_sign.y * BORDER_HEIGHT, 0, 0);
-    // Accounting to the fact that UI is Y-top-down, but I draw AABB in the Y-down-top
-    p.y *= -1.0;
-
-    fragment_color = u_color;
-    gl_Position = p;
-}
-)GLSL";
-
-
-GLOBAL char const *fs_frame_source = R"GLSL(
-#version 400
-
-in vec4 fragment_color;
-out vec4 result_color;
-
-void main()
-{
-    result_color = fragment_color;
-}
-)GLSL";
-
-} // namespace gfx
-} // namespace gl
-
-
-matrix4 gl__make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
     matrix4 result = {};
 
@@ -182,7 +23,7 @@ matrix4 gl__make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
     return result;
 }
 
-matrix4 gl__make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
     //     w/2
     //   +-----+
@@ -206,7 +47,7 @@ matrix4 gl__make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float3
     return result;
 }
 
-matrix4 gl__make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 {
     matrix4 result = {};
 
@@ -219,7 +60,7 @@ matrix4 gl__make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
     return result;
 }
 
-matrix4 gl__make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
     matrix4 result;
 
@@ -232,20 +73,31 @@ matrix4 gl__make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
     return result;
 }
 
-void gl__load_mesh(execution_context *context, resource__mesh *mesh)
+// ======================================================================
+
+struct mesh_render_data
+{
+    uint32 vbo_id;
+    uint32 ibo_id;
+    uint32 vao_id;
+
+    uint32 count;
+};
+
+mesh_render_data *load_mesh(rs::mesh *mesh)
 {
     uint32 vertex_buffer_id = 0;
     {
         glGenBuffers(1, &vertex_buffer_id);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-        glBufferData(GL_ARRAY_BUFFER, mesh->vbo.size, mesh->vbo.memory, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->vbo.size, mesh->vbo.data, GL_STATIC_DRAW);
     }
 
     uint32 index_buffer_id = 0;
     {
         glGenBuffers(1, &index_buffer_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo.size, mesh->ibo.memory, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo.size, mesh->ibo.data, GL_STATIC_DRAW);
     }
 
     uint32 vertex_array_id = 0;
@@ -255,13 +107,13 @@ void gl__load_mesh(execution_context *context, resource__mesh *mesh)
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
 
         uint32 stride = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.element_count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.count; attrib_index++)
         {
             stride += (mesh->vbl.elements[attrib_index].count * sizeof(float32));
         }
 
         usize offset = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.element_count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.count; attrib_index++)
         {
             uint32 count = mesh->vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
@@ -277,109 +129,84 @@ void gl__load_mesh(execution_context *context, resource__mesh *mesh)
         }
     }
 
-    if (mesh->render_data.memory == NULL)
+    if (mesh->render_data == NULL)
     {
-        mesh->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, gl__render_mesh_data);
+        mesh->render_data = mallocator().allocate<mesh_render_data>();
     }
 
-    auto *data = (gl__render_mesh_data *) mesh->render_data.memory;
-    data->vertex_buffer_id = vertex_buffer_id;
-    data->index_buffer_id = index_buffer_id;
-    data->vertex_array_id = vertex_array_id;
+    auto mrd = (mesh_render_data *) mesh->render_data;
+    mrd->vbo_id = vertex_buffer_id;
+    mrd->ibo_id = index_buffer_id;
+    mrd->vao_id = vertex_array_id;
+    mrd->count  = truncate_to_int32(mesh->ibo.size / sizeof(int32));
+
+    return mrd;
 }
 
-void gl__load_shader(execution_context *context, resource__shader *shader)
+struct shader_render_data
+{
+    uint32 program_id;
+    uint32 vs_id;
+    uint32 fs_id;
+};
+
+shader_render_data *load_shader(rs::shader *s)
 {
     uint32 vs = 0;
     uint32 fs = 0;
-    if (shader->name == string_id::from(&context->strid_storage, "rectangle.shader"))
+
+    // For now use only one shader
     {
-        // @todo: load this from file
-        vs = gl__compile_shader(gfx::gl::vs_source, gl__shader::vertex);
-        fs = gl__compile_shader(gfx::gl::fs_source, gl__shader::fragment);
-    }
-    if (shader->name == string_id::from(&context->strid_storage, "circle.shader"))
-    {
-        // @todo: load this from file
-        vs = gl__compile_shader(gfx::gl::vs_source, gl__shader::vertex);
-        fs = gl__compile_shader(gfx::gl::fs_circle_source, gl__shader::fragment);
-    }
-    if (shader->name == string_id::from(&context->strid_storage, "rectangle_uv.shader"))
-    {
-        vs = gl__compile_shader(gfx::gl::vs_textured_source, gl__shader::vertex);
-        fs = gl__compile_shader(gfx::gl::fs_textured_source, gl__shader::fragment);
-    }
-    if (shader->name == string_id::from(&context->strid_storage, "frame.shader"))
-    {
-        vs = gl__compile_shader(gfx::gl::vs_frame_source, gl__shader::vertex);
-        fs = gl__compile_shader(gfx::gl::fs_frame_source, gl__shader::fragment);
+        vs = gl::compile_shader(memory_buffer::from(vs_single_color), gl::shader::vertex);
+        fs = gl::compile_shader(memory_buffer::from(fs_pass_color), gl::shader::fragment);
     }
 
-    auto program = gl__link_shader(vs, fs);
+    auto program = gl::link_shader(vs, fs);
 
-    if (shader->render_data.memory == NULL)
-        shader->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, gl__render_shader_data);
+    if (s->render_data == NULL)
+    {
+        s->render_data = mallocator().allocate<shader_render_data>();
+    }
 
-    auto *data = (gl__render_shader_data *) shader->render_data.memory;
-    data->program = program;
+    auto *rsd = (shader_render_data *) s->render_data;
+    rsd->program_id = program;
+    rsd->vs_id = vs;
+    rsd->fs_id = fs;
+
+    return rsd;
 }
 
-void gl__load_texture(execution_context *context, resource__texture *texture)
+void draw_indexed_triangles(matrix4 model, matrix4 view, matrix4 proj, mesh_render_data *mesh_rd, shader_render_data *shader_rd, vector4 color)
 {
-    if (texture->render_data.memory == NULL)
-    {
-        texture->render_data = ALLOCATE_TYPE_IN_BLOCK(context->renderer_allocator, gl__render_texture_data);
-    }
+    shader s = { shader_rd->program_id, shader_rd->vs_id, shader_rd->fs_id };
+    use_shader(s);
 
-    auto *data = (gl__render_texture_data *) texture->render_data.memory;
-    data->texture_id = gl__create_texture(texture->texture);
-    data->is_top_down = texture->texture.top_down;
-    data->aspect_ratio = (float32) texture->texture.width / (float32) texture->texture.height;
+    s.uniform("u_model", model);
+    s.uniform("u_view", view);
+    s.uniform("u_projection", proj);
+    s.uniform("u_color", color);
+
+    auto m = proj * view * model * V4(1, 1, 0, 1);
+
+    glBindVertexArray(mesh_rd->vao_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
+    glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
 }
 
-void gl__draw_indexed_triangles(resource__mesh *mesh,
-                            resource__shader *shader,
-                            matrix4 model,
-                            matrix4 view,
-                            matrix4 projection,
-                            vector4 color)
+void render_mesh_single_color(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh_token, rs::token shader_token, vector4 color)
 {
-    auto *mesh_render_data = (gl__render_mesh_data *) mesh->render_data.memory;
-    auto *shader_render_data = (gl__render_shader_data *) shader->render_data.memory;
+    ASSERT(mesh_token.kind == rs::resource_kind::mesh);
 
-    gl__use_shader(shader_render_data->program);
-    gl__uniform(shader_render_data->program, "u_model", model);
-    gl__uniform(shader_render_data->program, "u_view", view);
-    gl__uniform(shader_render_data->program, "u_projection", projection);
-    gl__uniform(shader_render_data->program, "u_color", color);
+    if (mesh_token.kind != rs::resource_kind::mesh) { return; }
+    if (shader_token.kind != rs::resource_kind::shader) { return; }
 
-    glBindVertexArray(mesh_render_data->vertex_array_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_render_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
+    auto mesh = ctx->rs->get_mesh(mesh_token);
+    auto mesh_rd = mesh->render_data ? (mesh_render_data *) mesh->render_data : gl::load_mesh(mesh);
+
+    auto shader = ctx->rs->get_shader(shader_token);
+    auto shader_rd = shader->render_data ? (shader_render_data *) shader->render_data : gl::load_shader(shader);
+
+    draw_indexed_triangles(model, view, proj, mesh_rd, shader_rd, color);
 }
 
-
-void gl__draw_indexed_triangles(resource__mesh *mesh,
-                                resource__shader *shader,
-                                resource__texture *texture,
-                                matrix4 model,
-                                matrix4 view,
-                                matrix4 projection)
-{
-    auto *mesh_data = (gl__render_mesh_data *) mesh->render_data.memory;
-    auto *shader_data = (gl__render_shader_data *) shader->render_data.memory;
-    auto *texture_data = (gl__render_texture_data *) texture->render_data.memory;
-
-    gl__use_shader(shader_data->program);
-    gl__use_texture(texture_data->texture_id, 0);
-
-    model._22 *= 1.0f/texture_data->aspect_ratio;
-    gl__uniform(shader_data->program, "u_model", model);
-    gl__uniform(shader_data->program, "u_view", view);
-    gl__uniform(shader_data->program, "u_projection", projection);
-    gl__uniform(shader_data->program, "u_texture0", 0);
-
-    glBindVertexArray(mesh_data->vertex_array_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_data->index_buffer_id);
-    glDrawElements(GL_TRIANGLES, truncate_to_int32(mesh->ibo.size) / sizeof(int32), GL_UNSIGNED_INT, NULL);
-}
+} // namespace gl

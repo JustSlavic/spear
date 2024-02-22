@@ -131,8 +131,8 @@ resource_token load_texture_resource_from_file(execution_context *context, char 
 {
     resource_token result = {};
 
-    memory_block file_content = context->debug_load_file(context->temporary_allocator, filename);
-    if (file_content.memory != NULL)
+    memory_buffer file_content = context->debug_load_file(context->temporary_allocator, filename);
+    if (file_content.data != NULL)
     {
         auto bitmap = image::load_png(context->temporary_allocator, context->temporary_allocator, file_content);
         if (bitmap.pixels != NULL)
@@ -145,7 +145,7 @@ resource_token load_texture_resource_from_file(execution_context *context, char 
 }
 
 
-INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
+INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_buffer game_memory)
 {
     using namespace math;
 
@@ -156,8 +156,8 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
     ASSERT(sizeof(game_state) < game_memory.size);
     ASSERT(context->debug_load_file);
 
-    memory_allocator game_allocator = make_memory_arena(game_memory);
-    game_state *gs = ALLOCATE(game_allocator, game_state);
+    memory_allocator game_allocator = memory_allocator::make_arena(game_memory);
+    game_state *gs = game_allocator.allocate<game_state>();
     gs->game_allocator = game_allocator;
     context->game_state = gs;
 
@@ -182,11 +182,8 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
 
-        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
-        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
-
-        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
-        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+        auto vbo = context->temporary_allocator.allocate_copy(vbo_init, sizeof(vbo_init));
+        auto ibo = context->temporary_allocator.allocate_copy(ibo_init, sizeof(ibo_init));
 
         gs->rectangle_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
         gs->rectangle_shader = create_shader_resource(&context->rs, STRID("rectangle.shader"));
@@ -211,11 +208,8 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         gfx::push_layout_element(&vbl, 3); // XYZ
         gfx::push_layout_element(&vbl, 2); // UV
 
-        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
-        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
-
-        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
-        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+        auto vbo = context->temporary_allocator.allocate_copy(vbo_init, sizeof(vbo_init));
+        auto ibo = context->temporary_allocator.allocate_copy(ibo_init, sizeof(ibo_init));
 
         gs->rectangle_mesh_uv   = create_mesh_resource(&context->rs, vbo, ibo, vbl);
         gs->rectangle_shader_uv = create_shader_resource(&context->rs, STRID("rectangle_uv.shader"));
@@ -259,18 +253,15 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
 
-        auto vbo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(vbo_init));
-        memory__copy(vbo.memory, vbo_init, sizeof(vbo_init));
-
-        auto ibo = ALLOCATE_BUFFER_(context->temporary_allocator, sizeof(ibo_init));
-        memory__copy(ibo.memory, ibo_init, sizeof(ibo_init));
+        auto vbo = context->temporary_allocator.allocate_copy(vbo_init, sizeof(vbo_init));
+        auto ibo = context->temporary_allocator.allocate_copy(ibo_init, sizeof(ibo_init));
 
         gs->cube_mesh = create_mesh_resource(&context->rs, vbo, ibo, vbl);
     }
 
     // UI
     {
-        auto ui_memory = ALLOCATE_BUFFER_(gs->game_allocator, MEGABYTES(1));
+        auto ui_memory = gs->game_allocator.allocate_buffer(MEGABYTES(1));
         gs->hud = ui::initialize(ui_memory);
 #if UI_EDITOR_ENABLED
         gs->ui_editor = ui::initialize_editor(gs->game_allocator);
@@ -279,7 +270,7 @@ INITIALIZE_MEMORY_FUNCTION(execution_context *context, memory_block game_memory)
 }
 
 
-UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory, input_state input)
+UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_buffer game_memory, input_state input)
 {
     using namespace math;
 
@@ -534,7 +525,7 @@ UPDATE_AND_RENDER_FUNCTION(execution_context *context, memory_block game_memory,
 }
 
 #if DLL_BUILD
-#include <memory_allocator.c>
+#include <memory_allocator.cpp>
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/bmp.cpp>

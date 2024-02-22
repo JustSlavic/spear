@@ -1,6 +1,6 @@
 #include "ui.hpp"
 
-#include <memory_allocator.h>
+#include <memory_allocator.hpp>
 
 
 namespace ui {
@@ -110,11 +110,11 @@ struct system
     resource_token rectangle_shader_uv;
 };
 
-system *initialize(memory_block ui_memory)
+system *initialize(memory_buffer ui_memory)
 {
-    memory_allocator arena = make_memory_arena(ui_memory);
+    memory_allocator arena = memory_allocator::make_arena(ui_memory);
 
-    system *s = ALLOCATE(arena, system);
+    system *s = arena.allocate<system>();
     s->ui_allocator = arena;
 
     return s;
@@ -128,7 +128,7 @@ void push_attach_to_slot(system *s, attach *slot, handle child)
     }
     if (slot->h)
     {
-        slot->next = ALLOCATE(s->ui_allocator, attach);
+        slot->next = s->ui_allocator.allocate<attach>();
         slot->next->h = child;
     }
     else
@@ -143,7 +143,7 @@ void attach_child(system *s, handle parent, handle child)
     {
         if (s->attaches[parent.index] == NULL)
         {
-            s->attaches[parent.index] = ALLOCATE(s->ui_allocator, attach);
+            s->attaches[parent.index] = s->ui_allocator.allocate<attach>();
             s->attaches[parent.index]->h = child;
         }
         else
@@ -153,7 +153,7 @@ void attach_child(system *s, handle parent, handle child)
             {
                 slot = slot->next;
             }
-            slot->next = ALLOCATE(s->ui_allocator, attach);
+            slot->next = s->ui_allocator.allocate<attach>();
             slot->next->h = child;
         }
     }
@@ -198,12 +198,12 @@ struct element_ref
 
 element_ref push_element(system *s)
 {
-    ASSERT(s->elements.size() < s->elements.capacity());
+    ASSERT(s->elements.size < s->elements.capacity());
 
     element_ref result;
     result.h.type = UI_ELEMENT;
-    result.h.index = (uint32) s->elements.size();
-    result.p = s->elements.push();
+    result.h.index = (uint32) s->elements.size;
+    result.p = s->elements.push_back();
     result.p->is_visible = true;
     return result;
 }
@@ -216,23 +216,23 @@ struct drawable_ref
 
 drawable_ref push_shape(system *s)
 {
-    ASSERT(s->drawables.size() < s->drawables.capacity());
+    ASSERT(s->drawables.size < s->drawables.capacity());
 
     drawable_ref result;
     result.h.type = UI_SHAPE;
-    result.h.index = (uint32) s->drawables.size();
-    result.p = s->drawables.push();
+    result.h.index = (uint32) s->drawables.size;
+    result.p = s->drawables.push_back();
     return result;
 }
 
 drawable_ref push_image(system *s)
 {
-    ASSERT(s->drawables.size() < s->drawables.capacity());
+    ASSERT(s->drawables.size < s->drawables.capacity());
 
     drawable_ref result;
     result.h.type = UI_IMAGE;
-    result.h.index = (uint32) s->drawables.size();
-    result.p = s->drawables.push();
+    result.h.index = (uint32) s->drawables.size;
+    result.p = s->drawables.push_back();
     return result;
 }
 
@@ -244,12 +244,12 @@ struct hoverable_ref
 
 hoverable_ref push_hoverable(system *s)
 {
-    ASSERT(s->hoverables.size() < s->hoverables.capacity());
+    ASSERT(s->hoverables.size < s->hoverables.capacity());
 
     hoverable_ref result;
     result.h.type = UI_HOVERABLE;
-    result.h.index = (uint32) s->hoverables.size();
-    result.p = s->hoverables.push();
+    result.h.index = (uint32) s->hoverables.size;
+    result.p = s->hoverables.push_back();
     return result;
 }
 
@@ -261,12 +261,12 @@ struct clickable_ref
 
 clickable_ref push_clickable(system *s)
 {
-    ASSERT(s->clickables.size() < s->clickables.capacity());
+    ASSERT(s->clickables.size < s->clickables.capacity());
 
     clickable_ref result;
     result.h.type = UI_CLICKABLE;
-    result.h.index = (uint32) s->clickables.size();
-    result.p = s->clickables.push();
+    result.h.index = (uint32) s->clickables.size;
+    result.p = s->clickables.push_back();
     return result;
 }
 

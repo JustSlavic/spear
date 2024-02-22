@@ -1,11 +1,10 @@
-#ifndef GFX_GL_WIN32_HPP
-#define GFX_GL_WIN32_HPP
+#ifndef GFX__GL_WIN32_HPP
+#define GFX__GL_WIN32_HPP
 
 #include <base.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
 
 #define WGL_DRAW_TO_WINDOW_ARB            0x2001
 #define WGL_ACCELERATION_ARB              0x2003
@@ -41,7 +40,50 @@ typedef void glActiveTextureType(GLenum texture);
 GLOBAL glActiveTextureType *glActiveTexture;
 
 
-bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w)
+namespace gl
+{
+
+bool32 initialize()
+{
+    glGenFramebuffers = (glGenFramebuffersType *) wglGetProcAddress("glGenFramebuffers");
+    glBindFramebuffer = (glBindFramebufferType *) wglGetProcAddress("glBindFramebuffer");
+    glFramebufferTexture2D = (glFramebufferTexture2DType *) wglGetProcAddress("glFramebufferTexture2D");
+    glBlitFramebuffer = (glBlitFramebufferType *) wglGetProcAddress("glBlitFramebuffer");
+    glClearBufferiv = (glClearBufferivType *) wglGetProcAddress("glClearBufferiv");
+    glActiveTexture = (glActiveTextureType *) wglGetProcAddress("glActiveTexture");
+    glGenBuffers = (glGenBuffersType *) wglGetProcAddress("glGenBuffers");
+    glBindBuffer = (glBindBufferType *) wglGetProcAddress("glBindBuffer");
+    glBufferData = (glBufferDataType *) wglGetProcAddress("glBufferData");
+    glGenVertexArrays = (glGenVertexArraysType *) wglGetProcAddress("glGenVertexArrays");
+    glBindVertexArray = (glBindVertexArrayType *) wglGetProcAddress("glBindVertexArray");
+    glVertexAttribPointer = (glVertexAttribPointerType *) wglGetProcAddress("glVertexAttribPointer");
+    glEnableVertexAttribArray = (glEnableVertexAttribArrayType *) wglGetProcAddress("glEnableVertexAttribArray");
+    glCreateShader = (glCreateShaderType *) wglGetProcAddress("glCreateShader");
+    glShaderSource = (glShaderSourceType *) wglGetProcAddress("glShaderSource");
+    glCompileShader = (glCompileShaderType *) wglGetProcAddress("glCompileShader");
+    glCreateProgram = (glCreateProgramType *) wglGetProcAddress("glCreateProgram");
+    glAttachShader = (glAttachShaderType *) wglGetProcAddress("glAttachShader");
+    glDetachShader = (glDetachShaderType *) wglGetProcAddress("glDetachShader");
+    glLinkProgram = (glLinkProgramType *) wglGetProcAddress("glLinkProgram");
+    glUseProgram = (glUseProgramType *) wglGetProcAddress("glUseProgram");
+    glGetShaderiv = (glGetShaderivType *) wglGetProcAddress("glGetShaderiv");
+    glGetShaderInfoLog = (glGetShaderInfoLogType *) wglGetProcAddress("glGetShaderInfoLog");
+    glDeleteShader = (glDeleteShaderType *) wglGetProcAddress("glDeleteShader");
+    glValidateProgram = (glValidateProgramType *) wglGetProcAddress("glValidateProgram");
+    glGetProgramiv = (glGetProgramivType *) wglGetProcAddress("glGetProgramiv");
+    glGetUniformLocation = (glGetUniformLocationType *) wglGetProcAddress("glGetUniformLocation");
+    glUniform1i = (glUniform1iType *) wglGetProcAddress("glUniform1i");
+    glUniform1f = (glUniform1fType *) wglGetProcAddress("glUniform1f");
+    glUniform2f = (glUniform2fType *) wglGetProcAddress("glUniform2f");
+    glUniform3f = (glUniform3fType *) wglGetProcAddress("glUniform3f");
+    glUniform4f = (glUniform4fType *) wglGetProcAddress("glUniform4f");
+    glUniformMatrix4fv = (glUniformMatrix4fvType *) wglGetProcAddress("glUniformMatrix4fv");
+    glTexImage2DMultisample = (glTexImage2DMultisampleType *) wglGetProcAddress("glTexImage2DMultisample");
+
+    return true;
+}
+
+bool create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, MainWindowCallbackType *WindowCallback, void *w)
 {
     auto *win32_window = (win32::window *) w;
 
@@ -66,7 +108,7 @@ bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeig
         return false;
     }
 
-    RECT WindowRectangle = { 0, 0, ClientWidth, ClientHeight };
+    RECT WindowRectangle = { 0, 0, (int) ClientWidth, (int) ClientHeight };
     if (!AdjustWindowRect(&WindowRectangle, WS_OVERLAPPEDWINDOW, false))
     {
         MessageBeep(MB_ICONERROR);
@@ -190,68 +232,13 @@ bool32 gl__create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeig
     return true;
 }
 
-bool32 gl__initialize()
+void swap_buffers(void *w)
 {
-    glGenFramebuffers = (glGenFramebuffersType *) wglGetProcAddress("glGenFramebuffers");
-    glBindFramebuffer = (glBindFramebufferType *) wglGetProcAddress("glBindFramebuffer");
-    glFramebufferTexture2D = (glFramebufferTexture2DType *) wglGetProcAddress("glFramebufferTexture2D");
-    glBlitFramebuffer = (glBlitFramebufferType *) wglGetProcAddress("glBlitFramebuffer");
-    glClearBufferiv = (glClearBufferivType *) wglGetProcAddress("glClearBufferiv");
-    glActiveTexture = (glActiveTextureType *) wglGetProcAddress("glActiveTexture");
-    glGenBuffers = (glGenBuffersType *) wglGetProcAddress("glGenBuffers");
-    glBindBuffer = (glBindBufferType *) wglGetProcAddress("glBindBuffer");
-    glBufferData = (glBufferDataType *) wglGetProcAddress("glBufferData");
-    glGenVertexArrays = (glGenVertexArraysType *) wglGetProcAddress("glGenVertexArrays");
-    glBindVertexArray = (glBindVertexArrayType *) wglGetProcAddress("glBindVertexArray");
-    glVertexAttribPointer = (glVertexAttribPointerType *) wglGetProcAddress("glVertexAttribPointer");
-    glEnableVertexAttribArray = (glEnableVertexAttribArrayType *) wglGetProcAddress("glEnableVertexAttribArray");
-    glCreateShader = (glCreateShaderType *) wglGetProcAddress("glCreateShader");
-    glShaderSource = (glShaderSourceType *) wglGetProcAddress("glShaderSource");
-    glCompileShader = (glCompileShaderType *) wglGetProcAddress("glCompileShader");
-    glCreateProgram = (glCreateProgramType *) wglGetProcAddress("glCreateProgram");
-    glAttachShader = (glAttachShaderType *) wglGetProcAddress("glAttachShader");
-    glDetachShader = (glDetachShaderType *) wglGetProcAddress("glDetachShader");
-    glLinkProgram = (glLinkProgramType *) wglGetProcAddress("glLinkProgram");
-    glUseProgram = (glUseProgramType *) wglGetProcAddress("glUseProgram");
-    glGetShaderiv = (glGetShaderivType *) wglGetProcAddress("glGetShaderiv");
-    glGetShaderInfoLog = (glGetShaderInfoLogType *) wglGetProcAddress("glGetShaderInfoLog");
-    glDeleteShader = (glDeleteShaderType *) wglGetProcAddress("glDeleteShader");
-    glValidateProgram = (glValidateProgramType *) wglGetProcAddress("glValidateProgram");
-    glGetProgramiv = (glGetProgramivType *) wglGetProcAddress("glGetProgramiv");
-    glGetUniformLocation = (glGetUniformLocationType *) wglGetProcAddress("glGetUniformLocation");
-    glUniform1i = (glUniform1iType *) wglGetProcAddress("glUniform1i");
-    glUniform1f = (glUniform1fType *) wglGetProcAddress("glUniform1f");
-    glUniform2f = (glUniform2fType *) wglGetProcAddress("glUniform2f");
-    glUniform3f = (glUniform3fType *) wglGetProcAddress("glUniform3f");
-    glUniform4f = (glUniform4fType *) wglGetProcAddress("glUniform4f");
-    glUniformMatrix4fv = (glUniformMatrix4fvType *) wglGetProcAddress("glUniformMatrix4fv");
-    glTexImage2DMultisample = (glTexImage2DMultisampleType *) wglGetProcAddress("glTexImage2DMultisample");
-
-    return true;
-}
-
-void gl__vsync(void *window, bool turn_on)
-{
-    wglSwapIntervalEXT(turn_on ? 1 : 0);
-}
-
-void gl__swap_buffers(void *window)
-{
-    auto *win32_window = (win32::window *) window;
+    auto *win32_window = (win32::window *) w;
     SwapBuffers(win32_window->device_context);
 }
 
-void gl__destroy_window_and_driver(void *window, void *driver)
-{
-}
 
-void gl__use_texture(uint32 texture_id, uint32 slot)
-{
-    glActiveTexture(GL_TEXTURE0 + slot);
-    GL_CHECK_ERRORS();
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    GL_CHECK_ERRORS();
-}
+} // namespace gl
 
-
-#endif // GFX_GL_WIN32_HPP
+#endif // GFX__GL_WIN32_HPP

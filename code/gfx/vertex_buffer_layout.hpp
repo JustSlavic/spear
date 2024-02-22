@@ -15,15 +15,14 @@ struct vertex_buffer_layout_element
 
 struct vertex_buffer_layout
 {
+    uint32 count;
     vertex_buffer_layout_element elements[8];
-    uint32 element_count;
 };
 
 INLINE void push_layout_element(vertex_buffer_layout *vbl, uint32 count)
 {
-    ASSERT(vbl->element_count < ARRAY_COUNT(vbl->elements));
-
-    vbl->elements[vbl->element_count++].count = count;
+    ASSERT(vbl->count < ARRAY_COUNT(vbl->elements));
+    vbl->elements[vbl->count++].count = count;
 }
 
 

@@ -1,28 +1,13 @@
-#ifndef GFX_GL_HPP
-#define GFX_GL_HPP
+#ifndef GFX__GL_HPP
+#define GFX__GL_HPP
 
 #include <base.h>
-#if OS_MAC
-#define GL_SILENCE_DEPRECATION
-// #include <OpenGL/gl.h>
+#include <memory_buffer.hpp>
+#include <memory_allocator.hpp>
+#include "viewport.hpp"
 
-#define GL_TEXTURE_2D                     0x0DE1
-
-/* TextureMagFilter */
-#define GL_NEAREST                        0x2600
-#define GL_LINEAR                         0x2601
-
-/* TextureParameterName */
-#define GL_TEXTURE_MAG_FILTER             0x2800
-#define GL_TEXTURE_MIN_FILTER             0x2801
-#define GL_TEXTURE_WRAP_S                 0x2802
-#define GL_TEXTURE_WRAP_T                 0x2803
-
-#define GL_RGB8                           0x8051
-
-#else // OS_MAC
 #include <GL/gl.h>
-#endif // OS_MAC
+
 
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 #define GL_UNSIGNED_INT_8_8_8_8           0x8035
@@ -107,17 +92,6 @@ typedef uint32 GLenum;
 typedef uint32 GLbitfield;
 typedef float32 GLclampf;
 
-// extern void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-// extern void glClear(GLbitfield mask);
-// extern GLenum glGetError(void);
-// extern void glViewport(int32 x, int32 y, isize width, isize height);
-// extern void glDrawArrays(GLenum mode, int32 first, isize count);
-// extern void glDrawElements(GLenum mode, isize count, GLenum type, void const *indices);
-// extern void glGenTextures(isize n, uint32 *textures);
-// extern void glBindTexture(GLenum target, uint32 texture);
-// extern void glTexParameteri(GLenum target, GLenum pname, int32 param);
-// extern void glTexParameteriv(GLenum target, GLenum pname, int32 const *params);
-
 typedef void glGenFramebuffersType(isize n, uint32 *ids);
 typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
 typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
@@ -196,83 +170,109 @@ GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
 #endif
 
 
-char const *gl__error_string(GLenum ec)
+namespace gl
 {
-    switch (ec) {
-        case GL_INVALID_ENUM: return "Error: GL_INVALID_ENUM: An unacceptable value is specified for an enumerated argument.";
-        case GL_INVALID_VALUE: return "Error: GL_INVALID_VALUE: A numeric argument is out of range.";
-        case GL_INVALID_OPERATION: return "Error: GL_INVALID_OPERATION: The specified operation is not allowed in the current state.";
-        case GL_INVALID_FRAMEBUFFER_OPERATION: return "Error: GL_INVALID_FRAMEBUFFER_OPERATION: The framebuffer object is not complete.";
-        case GL_OUT_OF_MEMORY: return "Error: GL_OUT_OF_MEMORY: There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.";
-        case GL_STACK_UNDERFLOW: return "Error: GL_STACK_UNDERFLOW: An attempt has been made to perform an operation that would cause an internal stack to underflow.";
-        case GL_STACK_OVERFLOW: return "Error: GL_STACK_OVERFLOW: An attempt has been made to perform an operation that would cause an internal stack to overflow.";
-        case GL_NO_ERROR: return (char const *) NULL;  // No error has been recorded. The value of this symbolic constant is guaranteed to be 0.
-    }
 
-    return (char const *) NULL;
-}
-
-void gl__set_clear_color(float32 r, float32 g, float32 b, float32 a)
+void clear_color(float32 r, float32 g, float32 b, float32 a)
 {
     glClearColor(r, g, b, a);
     GL_CHECK_ERRORS();
 }
 
-void gl__set_clear_color(vector4 color)
+void clear_color(vector4 color)
 {
-    gl__set_clear_color(color.r, color.g, color.b, color.a);
+    clear_color(color.r, color.g, color.b, color.a);
 }
 
-void gl__clear()
+void clear()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     GL_CHECK_ERRORS();
 }
 
-void gl__depth_test(bool32 do_depth_test)
+void set_viewport(gfx::viewport vp)
 {
-    if (do_depth_test)
-    {
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-    }
+    glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
+    GL_CHECK_ERRORS();
 }
 
-void gl__write_depth(bool32 write_depth)
-{
-    glDepthMask(write_depth ? GL_TRUE : GL_FALSE);
-}
-
-struct gl__shader
+struct shader
 {
     uint32 id;
-    uint32 vertex_shader;
-    uint32 fragment_shader;
+    uint32 vs_id;
+    uint32 fs_id;
 
     enum shader_type
     {
         vertex = GL_VERTEX_SHADER,
         fragment = GL_FRAGMENT_SHADER,
     };
+
+    void uniform(char const *name, int32 n)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniform1i(location, n);
+        GL_CHECK_ERRORS();
+    }
+
+    void uniform(char const *name, float f)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniform1f(location, f);
+        GL_CHECK_ERRORS();
+    }
+
+    void uniform(char const *name, vector2 const& v)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniform2f(location, v.x, v.y);
+        GL_CHECK_ERRORS();
+    }
+
+    void uniform(char const *name, vector3 const& v)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniform3f(location, v.x, v.y, v.z);
+        GL_CHECK_ERRORS();
+    }
+
+    void uniform(char const *name, vector4 const& v)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniform4f(location, v.x, v.y, v.z, v.w);
+        GL_CHECK_ERRORS();
+    }
+
+    void uniform(char const *name, matrix4 const& m)
+    {
+        auto location = glGetUniformLocation(id, name);
+        GL_CHECK_ERRORS();
+        glUniformMatrix4fv(location, 1, GL_TRUE, get_data(m));
+        GL_CHECK_ERRORS();
+    }
 };
 
-
-bool32 gl__is_shader_program_valid(uint32 program)
+bool is_shader_program_valid(uint32 id)
 {
-    glValidateProgram(program);
+    glValidateProgram(id);
     GL_CHECK_ERRORS();
-    int32 program_valid;
-    glGetProgramiv(program, GL_VALIDATE_STATUS, &program_valid);
+    int32 is_program_valid;
+    glGetProgramiv(id, GL_VALIDATE_STATUS, &is_program_valid);
     GL_CHECK_ERRORS();
 
-    return program_valid;
+    return is_program_valid;
 }
 
-uint32 gl__compile_shader(char const *source_code, gl__shader::shader_type shader_type)
+uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
     GL_CHECK_ERRORS();
-    glShaderSource(id, 1, &source_code, (int const *) NULL);
+    glShaderSource(id, 1, (char const **) &source_code.data, (int const *) NULL);
     GL_CHECK_ERRORS();
     glCompileShader(id);
     GL_CHECK_ERRORS();
@@ -287,15 +287,16 @@ uint32 gl__compile_shader(char const *source_code, gl__shader::shader_type shade
         GL_CHECK_ERRORS();
 
         // @todo: use transient memory for that
-        char* message = new char[length + 1];
-        memory__set(message, 0, length + 1);
+        auto message = mallocator().allocate_buffer(length + 1);
+        memset(message.data, 0, length + 1);
 
-        glGetShaderInfoLog(id, length, &length, message);
+        glGetShaderInfoLog(id, length, &length, (char *) message.data);
         GL_CHECK_ERRORS();
 
         glDeleteShader(id);
         GL_CHECK_ERRORS();
-        delete[] message;
+
+        mallocator().deallocate(message);
 
         return 0;
     }
@@ -303,7 +304,7 @@ uint32 gl__compile_shader(char const *source_code, gl__shader::shader_type shade
     return id;
 }
 
-gl__shader gl__link_shader(uint32 vs, uint32 fs)
+uint32 link_shader(uint32 vs, uint32 fs)
 {
     uint32 id = glCreateProgram();
     GL_CHECK_ERRORS();
@@ -320,134 +321,25 @@ gl__shader gl__link_shader(uint32 vs, uint32 fs)
     glDetachShader(id, fs);
     GL_CHECK_ERRORS();
 
-    gl__shader result = {};
-    if (gl__is_shader_program_valid(id))
+    if (is_shader_program_valid(id))
     {
-        result.id = id;
-        result.vertex_shader = vs;
-        result.fragment_shader = fs;
+        return id;
     }
-    else
-    {
-        // @todo: process error
-    }
-
-    return result;
+    return 0;
 }
 
-void gl__use_shader(gl__shader s)
+void use_shader(shader s)
 {
     glUseProgram(s.id);
     GL_CHECK_ERRORS();
 }
 
-void gl__uniform(gl__shader s, char const *name, int32 n)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniform1i(location, n);
-    GL_CHECK_ERRORS();
-}
 
-void gl__uniform(gl__shader s, char const *name, float f)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniform1f(location, f);
-    GL_CHECK_ERRORS();
-}
-
-void gl__uniform(gl__shader s, char const *name, vector2 const& v)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniform2f(location, v.x, v.y);
-    GL_CHECK_ERRORS();
-}
-
-void gl__uniform(gl__shader s, char const *name, vector3 const& v)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniform3f(location, v.x, v.y, v.z);
-    GL_CHECK_ERRORS();
-}
-
-void gl__uniform(gl__shader s, char const *name, vector4 const& v)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniform4f(location, v.x, v.y, v.z, v.w);
-    GL_CHECK_ERRORS();
-}
-
-void gl__uniform(gl__shader s, char const *name, matrix4 const& m)
-{
-    auto location = glGetUniformLocation(s.id, name);
-    GL_CHECK_ERRORS();
-    glUniformMatrix4fv(location, 1, GL_TRUE, get_data(m));
-    GL_CHECK_ERRORS();
-}
-
-void gl__set_viewport(viewport vp)
-{
-    glViewport(vp.offset_x, vp.offset_y, vp.width, vp.height);
-    GL_CHECK_ERRORS();
-}
-
-uint32 gl__create_texture(bitmap bitmap)
-{
-    uint32 id = 0;
-    glGenTextures(1, &id);
-    GL_CHECK_ERRORS();
-    glBindTexture(GL_TEXTURE_2D, id);
-    GL_CHECK_ERRORS();
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    GL_CHECK_ERRORS();
-
-    if (bitmap.color_type == IMAGE_RGBA)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
-    }
-    else if (bitmap.color_type == IMAGE_RGB)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
-    }
-    // else if (bitmap.color_type == IMAGE_BGR)
-    // {
-    //     int32 swizzle_mask[4];
-    //     swizzle_mask[0] = GL_BLUE;
-    //     swizzle_mask[1] = GL_GREEN;
-    //     swizzle_mask[2] = GL_RED;
-    //     swizzle_mask[3] = GL_ONE;
-    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
-    // }
-    else
-    {
-        ASSERT_FAIL("Unsupported color type!");
-    }
-    GL_CHECK_ERRORS();
-
-    return id;
-}
-
+} // namespace gl
 
 
 #if OS_WINDOWS
 #include "gl_win32.hpp"
 #endif
 
-#if OS_LINUX
-#include "gl_x11.hpp"
-#endif
-
-#if OS_MAC
-#include "gl_sdl.hpp"
-#endif
-
-#endif // GFX_GL_HPP
+#endif // GFX__GL_HPP

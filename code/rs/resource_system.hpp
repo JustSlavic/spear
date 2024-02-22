@@ -2,68 +2,54 @@
 #define RESOURCE_SYSTEM_HPP
 
 #include <base.h>
-#include <array.hpp>
-#include <string_id.hpp>
-
-#include <memory_allocator.h>
 #include <gfx/vertex_buffer_layout.hpp>
 
-#include <image/bitmap.hpp>
 
-
-struct resource_system;
-
-enum resource_type : uint32
+namespace rs
 {
-    RESOURCE_NONE,
-    RESOURCE_MESH,
-    RESOURCE_SHADER,
-    RESOURCE_TEXTURE,
+
+enum class resource_kind
+{
+    none,
+    mesh,
+    shader,
+    texture,
 };
 
-struct resource_token
+struct mesh
 {
-    resource_system *system;
-    resource_type type;
+    memory_buffer vbo;
+    memory_buffer ibo;
+    gfx::vertex_buffer_layout vbl;
+    void *render_data;
+};
+
+struct shader
+{
+    // ???
+    void *render_data;
+};
+
+struct token
+{
+    resource_kind kind;
     uint32 index;
 };
 
-struct resource__mesh
+struct storage
 {
-    memory_block vbo;
-    memory_block ibo;
-    gfx::vertex_buffer_layout vbl;
-    memory_block render_data;
+    static_array<mesh, 10> meshes;
+    static_array<shader, 10> shaders;
+    // static_array<resource__texture, 10> textures;
+
+    mesh *get_mesh(token t);
+    shader *get_shader(token t);
 };
 
-struct resource__shader
-{
-    string_id name;
-    memory_block render_data;
-};
+token create_mesh(storage *s, memory_buffer vbo, memory_buffer ibo, gfx::vertex_buffer_layout vbl);
+token create_shader(storage *s);
 
-struct resource__texture
-{
-    bitmap texture;
-    memory_block render_data;
-};
 
-struct resource_system
-{
-    memory_allocator heap;
-
-    static_array<resource__mesh, 10> meshes;
-    static_array<resource__shader, 10> shaders;
-    static_array<resource__texture, 10> textures;
-};
-
-resource__mesh *get_mesh_resource(resource_token token);
-resource__shader *get_shader_resource(resource_token token);
-resource__texture *get_texture_resource(resource_token token);
-
-resource_token create_mesh_resource(resource_system *system, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl);
-resource_token create_shader_resource(resource_system *system, string_id name);
-resource_token create_texture_resource(resource_system *system, bitmap texture);
-
+} // namespace rs
 
 #endif // RESOURCE_SYSTEM_HPP

@@ -1,76 +1,51 @@
-#include <rs/resource_system.hpp>
+#include "resource_system.hpp"
 
 
-resource__mesh *get_mesh_resource(resource_token token)
+namespace rs
 {
-    resource__mesh *result = token.system->meshes.data() + token.index;
+
+
+token create_mesh(storage *s, memory_buffer vbo, memory_buffer ibo, gfx::vertex_buffer_layout vbl)
+{
+    mesh m;
+    m.vbo = mallocator().allocate_copy(vbo.data, vbo.size);
+    m.ibo = mallocator().allocate_copy(ibo.data, ibo.size);
+    m.vbl = vbl;
+    m.render_data = NULL;
+
+    s->meshes.push_back(m);
+
+    token result;
+    result.kind = resource_kind::mesh;
+    result.index = (uint32) s->meshes.size() - 1;
+
     return result;
 }
 
-resource__shader *get_shader_resource(resource_token token)
+token create_shader(storage *s)
 {
-    resource__shader *result = token.system->shaders.data() + token.index;
+    shader sh = {};
+    s->shaders.push_back(sh);
+
+    token result;
+    result.kind = resource_kind::shader;
+    result.index = (uint32) s->shaders.size() - 1;
+
     return result;
 }
 
-resource__texture *get_texture_resource(resource_token token)
+
+mesh *storage::get_mesh(token t)
 {
-    resource__texture *result = token.system->textures.data() + token.index;
+    auto result = meshes.data() + t.index;
     return result;
 }
 
-resource_token create_mesh_resource(resource_system *system, memory_block vbo, memory_block ibo, gfx::vertex_buffer_layout vbl)
+shader *storage::get_shader(token t)
 {
-    resource_token token = {};
-
-    if (system->meshes.size() < system->meshes.capacity())
-    {
-        resource__mesh resource;
-        resource.vbo = ALLOCATE_COPY(system->heap, vbo);
-        resource.ibo = ALLOCATE_COPY(system->heap, ibo);
-        resource.vbl = vbl;
-        resource.render_data = memory__empty_block();
-
-        token.system = system;
-        token.type = RESOURCE_MESH;
-        token.index = (uint32) system->meshes.size();
-        system->meshes.push(resource);
-    }
-    return token;
+    auto result = shaders.data() + t.index;
+    return result;
 }
 
-resource_token create_shader_resource(resource_system *system, string_id name)
-{
-    resource_token token = {};
 
-    if (system->shaders.size() < system->shaders.capacity())
-    {
-        resource__shader resource;
-        resource.name = name;
-        resource.render_data = memory__empty_block();
-
-        token.system = system;
-        token.type = RESOURCE_SHADER;
-        token.index = (uint32) system->shaders.size();
-        system->shaders.push(resource);
-    }
-    return token;
-}
-
-resource_token create_texture_resource(resource_system *system, bitmap texture)
-{
-    resource_token token = {};
-
-    if (system->textures.size() < system->textures.capacity())
-    {
-        resource__texture resource;
-        resource.texture = texture;
-        resource.render_data = memory__empty_block();
-
-        token.system = system;
-        token.type = RESOURCE_TEXTURE;
-        token.index = (uint32) system->textures.size();
-        system->textures.push(resource);
-    }
-    return token;
-}
+} // namespace rs
