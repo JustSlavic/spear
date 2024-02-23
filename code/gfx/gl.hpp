@@ -196,6 +196,16 @@ void set_viewport(gfx::viewport vp)
     GL_CHECK_ERRORS();
 }
 
+void depth_test(bool do_test)
+{
+    do_test ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+}
+
+void write_depth(bool do_write)
+{
+    glDepthMask(do_write ? GL_TRUE : GL_FALSE);
+}
+
 struct shader
 {
     uint32 id;

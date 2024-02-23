@@ -15,8 +15,10 @@ struct game_state
     memory_allocator allocator;
 
     game::camera camera;
+    float32 camera_speed;
 
     rs::token rect_mesh;
+    rs::token cube_mesh;
     rs::token the_only_shader;
 
     timepoint exit_press_time;

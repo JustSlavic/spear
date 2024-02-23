@@ -34,6 +34,8 @@ struct driver
     void clear_color(vector4 color);
     void clear();
     void set_viewport(viewport vp);
+    void depth_test(bool do_test);
+    void write_depth(bool do_write);
 
     void swap_buffers(void *w);
 

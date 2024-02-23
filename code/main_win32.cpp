@@ -167,6 +167,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
     driver.clear_color(0, 0, 0, 1);
 
+    driver.depth_test(true);
+    driver.write_depth(true);
+
     // ======================================================================
 
     char cwd[256] = {};

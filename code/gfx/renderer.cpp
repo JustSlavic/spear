@@ -42,6 +42,17 @@ void driver::set_viewport(viewport vp)
         gl::set_viewport(vp);
 }
 
+void driver::depth_test(bool do_test)
+{
+    if (m_api == api::opengl) gl::depth_test(do_test);
+}
+
+void driver::write_depth(bool do_write)
+{
+    if (m_api == api::opengl) gl::write_depth(do_write);
+}
+
+
 void driver::swap_buffers(void *w)
 {
     if (m_api == api::opengl)
