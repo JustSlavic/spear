@@ -52,6 +52,10 @@ void driver::write_depth(bool do_write)
     if (m_api == api::opengl) gl::write_depth(do_write);
 }
 
+void driver::vsync(bool do_vsync)
+{
+    if (m_api == api::opengl) gl::vsync(do_vsync);
+}
 
 void driver::swap_buffers(void *w)
 {

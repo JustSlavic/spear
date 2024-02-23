@@ -36,7 +36,7 @@ struct driver
     void set_viewport(viewport vp);
     void depth_test(bool do_test);
     void write_depth(bool do_write);
-
+    void vsync(bool do_vsync);
     void swap_buffers(void *w);
 
     matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up);

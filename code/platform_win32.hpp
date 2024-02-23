@@ -71,12 +71,12 @@ struct dll
         return result;
     }
 
-    void unload(dll *library)
+    void unload()
     {
-        if (library->handle)
+        if (handle)
         {
-            FreeLibrary(library->handle);
-            library->handle = NULL;
+            FreeLibrary(handle);
+            handle = NULL;
         }
     }
 

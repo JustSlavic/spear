@@ -121,7 +121,7 @@ game_dll load_game_dll(string_view dll_path, string_view temp_dll_path, string_v
     {
         CopyFile(dll_path.data, temp_dll_path.data, FALSE);
 
-        result.dll = win32::dll::load(dll_path.data);
+        result.dll = win32::dll::load(temp_dll_path.data);
 
         if (result.dll.handle)
         {
@@ -131,6 +131,13 @@ game_dll load_game_dll(string_view dll_path, string_view temp_dll_path, string_v
     }
 
     return result;
+}
+
+void unload_game_dll(game_dll *library)
+{
+    library->dll.unload();
+    library->initialize_memory = NULL;
+    library->update_and_render = NULL;
 }
 
 
@@ -169,6 +176,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     driver.depth_test(true);
     driver.write_depth(true);
+    driver.vsync(true);
 
     // ======================================================================
 
@@ -230,6 +238,15 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
+        uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
+        if (dll_file_time > game.dll.timestamp)
+        {
+            unload_game_dll(&game);
+            game = load_game_dll(string_view::from(game_dll_buffer),
+                                 string_view::from(temp_dll_buffer),
+                                 string_view::from(lock_tmp_buffer));
+        }
+
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         process_pending_messages(&input);

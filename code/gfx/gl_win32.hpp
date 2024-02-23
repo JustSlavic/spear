@@ -232,6 +232,12 @@ bool create_window(HINSTANCE Instance, int32 ClientWidth, int32 ClientHeight, Ma
     return true;
 }
 
+void vsync(bool turn_on)
+{
+    wglSwapIntervalEXT(turn_on ? 1 : 0);
+}
+
+
 void swap_buffers(void *w)
 {
     auto *win32_window = (win32::window *) w;
