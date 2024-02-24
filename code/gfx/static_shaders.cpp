@@ -12,8 +12,8 @@ uniform vec4 u_color;
 
 void main()
 {
-    fragment_color = u_color;
-    gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);;
+    fragment_color = u_color; // * ((u_model * vec4(vertex_position, 1.0)).z + 0.5);
+    gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
 }
 )GLSL";
 

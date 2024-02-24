@@ -33,6 +33,15 @@ struct window
 {
     HWND handle;
     HDC device_context;
+
+    void get_mouse_pos(int32 *x, int32 *y)
+    {
+        POINT pos;
+        GetCursorPos(&pos);
+        ScreenToClient(handle, &pos);
+        *x = pos.x;
+        *y = pos.y;
+    }
 };
 
 void create_opengl_window(HINSTANCE instance, int32 width, int32 height, MainWindowCallbackType cb, window *w)

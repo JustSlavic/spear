@@ -172,6 +172,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     gfx::driver driver = gfx::driver::initialize_opengl();
 
     int32 monitor_refresh_rate_hz = GetDeviceCaps(((win32::window *) &window)->device_context, VREFRESH);
+    ctx.screen_width = GetDeviceCaps(((win32::window *) &window)->device_context, HORZRES);
+    ctx.screen_height = GetDeviceCaps(((win32::window *) &window)->device_context, VERTRES);
     driver.clear_color(0, 0, 0, 1);
 
     driver.depth_test(true);
@@ -221,10 +223,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    float32 aspect_ratio = 16.0f / 9.0f;
+    ctx.aspect_ratio = 16.0f / 9.0f;
+    ctx.near_clip_dist = 0.05f;
+    ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
+    ctx.far_clip_dist = 100.f;
 
     auto view = matrix4::identity();
-    auto projection = driver.make_projection_matrix_fov(to_radians(60), aspect_ratio, 0.05f, 100.0f);
+    auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
 
     // ======================================================================
 
@@ -250,24 +256,22 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         process_pending_messages(&input);
+        window.get_mouse_pos(&input.mouse.x, &input.mouse.y);
+
         input.dt   = last_frame_dt;
         input.time = last_timepoint;
 
         if (viewport_changed)
         {
-            auto viewport = gfx::viewport::make(current_client_width, current_client_height, aspect_ratio);
+            auto viewport = gfx::viewport::make(current_client_width, current_client_height, ctx.aspect_ratio);
             driver.set_viewport(viewport);
             viewport_changed = false;
 
-            // @todo
-            // context.screen_width = 0;
-            // context.screen_height = 0;
+            ctx.window_width = current_client_width;
+            ctx.window_height = current_client_height;
 
-            // context.window_width = current_client_width;
-            // context.window_height = current_client_height;
-
-            // context.letterbox_width = viewport.width;
-            // context.letterbox_height = viewport.height;
+            ctx.letterbox_width = viewport.width;
+            ctx.letterbox_height = viewport.height;
         }
 
         if (game.update_and_render)

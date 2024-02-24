@@ -21,8 +21,8 @@ struct camera
 
         camera result;
         result.position = p;
-        result.forward = f;
-        result.up = cross(s, f);;
+        result.forward = normalized(f);
+        result.up = normalized(cross(s, f));
         return result;
     }
 

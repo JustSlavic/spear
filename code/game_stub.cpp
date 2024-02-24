@@ -1,8 +1,24 @@
 #include "game_stub.hpp"
 #include "game_interface.hpp"
 
+#include <float32.h>
+
 #include <gfx/vertex_buffer_layout.hpp>
 
+#include <projective_geometry3.hpp>
+#include <collision.hpp>
+
+#include <rectangle3.hpp>
+
+
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+
+float32 cvt(float32 x, float32 a, float32 b, float32 c, float32 d)
+{
+    float32 y = (clamp(x, a, b) - a) * (d - c) / (b - a) + c;
+    return y;
+}
 
 
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
@@ -125,14 +141,63 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
     ctx->setup_camera(gs->camera.position, gs->camera.forward, gs->camera.up);
 
+    vector3 ray_direction;
+    vector3 intersection;
+    {
+        auto mouse_pos_x =  cvt((float32) input->mouse.x, 0.f, (float32) ctx->window_width, -1.f, 1.f);
+        auto mouse_pos_y = -cvt((float32) input->mouse.y, 0.f, (float32) ctx->window_height, -1.f, 1.f);
+
+        auto clip_d = ctx->near_clip_dist;
+        auto clip_w = ctx->near_clip_width;
+        auto clip_h = ctx->near_clip_height;
+
+        auto up = gs->camera.up;
+        auto right = cross(gs->camera.forward, gs->camera.up);
+
+        auto clip_c = gs->camera.position + gs->camera.forward * clip_d;
+        auto clip_p = clip_c + mouse_pos_x * 0.5f * clip_w * right +
+                               mouse_pos_y * 0.5f * clip_h * up;
+        ray_direction = normalized(clip_p - gs->camera.position);
+
+        auto Oxy = make_plane3(0, 0, 1, 0);
+        auto line = make_line3(ray_direction, clip_p);
+        auto intersection_p = outer(Oxy, line);
+        intersection = intersection_p.vector / intersection_p.w;
+    }
+
+    bool32 intersected = false;
+    float32 intersect_t = infinity;
+    int intersect_x = 0, intersect_y = 0;
     for (int x = -2; x <= 2; x++)
     {
         for (int y = -2; y <= 2; y++)
         {
-            auto m = matrix4::translate_x((float32)x) *
-                     matrix4::translate_y((float32)y) *
-                     matrix4::scale(0.4f);
-            ctx->render_mesh(m, gs->cube_mesh, gs->the_only_shader, V4(0.3 - 0.1f * x, 0 + 0.2f * y, 0.3 + 0.1f * x, 1));
+            rectangle3 aabb = rectangle3::from_center_radius(V3(x + 1.3f*x, y + 1.3f*y, 0), 1, 1, 1);
+
+            float tmin;
+            vector3 q;
+            int intersect_cube = intersect_ray_aabb(gs->camera.position, ray_direction, aabb, &tmin, &q);
+
+            if (intersect_cube && tmin < intersect_t)
+            {
+                intersected = true;
+                intersect_t = tmin;
+                intersect_x = x;
+                intersect_y = y;
+            }
+        }
+    }
+
+    for (int x = -2; x <= 2; x++)
+    {
+        for (int y = -2; y <= 2; y++)
+        {
+            auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
+            if (intersected && x == intersect_x && y == intersect_y) c = V4(1, 0, 0, 1);
+
+            auto m = matrix4::translate_x((float32)x + 1.3f*x) *
+                     matrix4::translate_y((float32)y + 1.3f*y);
+            ctx->render_mesh(m, gs->cube_mesh, gs->the_only_shader, c);
         }
     }
 }
@@ -142,3 +207,4 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <memory_bucket.cpp>
 #include <memory_allocator.cpp>
 #include <rs/resource_system.cpp>
+#include <collision.cpp>

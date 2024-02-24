@@ -18,6 +18,21 @@ struct context
     rs::storage *rs;
     void *game_state;
 
+    uint32 screen_width;
+    uint32 screen_height;
+
+    uint32 window_width;
+    uint32 window_height;
+
+    uint32 letterbox_width;
+    uint32 letterbox_height;
+
+    float32 aspect_ratio;
+    float32 near_clip_dist;
+    float32 near_clip_width;
+    float32 near_clip_height;
+    float32 far_clip_dist;
+
     static_array<exec_command, 10> exec_commands;
     static_array<rend_command, 100> rend_commands;
 
