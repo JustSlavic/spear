@@ -105,7 +105,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->the_only_shader = rs::create_shader(ctx->rs);
 
-    gs->camera = game::camera::look_at(V3(0, -5, 10), V3(0, 0, 0), V3(0, 0, 1));
+    gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 }
 
@@ -130,12 +130,19 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     // Move camera
     {
         auto camera_move_direction = V3(0, 0, 0);
-        if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0) * dt;
-        if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0) * dt;
-        if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0) * dt;
-        if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0) * dt;
-        if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1) * dt;
-        if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1) * dt;
+        if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
+        if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
+        if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
+        if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
+        if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
+        if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
+
+        if (input->mouse.scroll != 0)
+        {
+            float k = 15.f * gs->camera.position.z;
+            camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
+        }
+
         gs->camera.position += normalized(camera_move_direction) * gs->camera_speed * dt;
     }
 
@@ -172,11 +179,11 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         for (int y = -2; y <= 2; y++)
         {
-            rectangle3 aabb = rectangle3::from_center_radius(V3(x + 1.3f*x, y + 1.3f*y, 0), 1, 1, 1);
+            auto center = V3(x + 1.3f*x, y + 1.3f*y, 0);
+            rectangle3 aabb = rectangle3::from_center_radius(center, 1, 1, 1);
 
             float tmin;
-            vector3 q;
-            int intersect_cube = intersect_ray_aabb(gs->camera.position, ray_direction, aabb, &tmin, &q);
+            int intersect_cube = intersect_ray_aabb(gs->camera.position, ray_direction, aabb, &tmin);
 
             if (intersect_cube && tmin < intersect_t)
             {

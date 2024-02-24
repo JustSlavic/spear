@@ -8,7 +8,7 @@ void swap(T & a, T & b)
     b = tmp;
 }
 
-int intersect_ray_aabb(vector3 p, vector3 d, rectangle3 aabb, float *t, vector3 *q)
+int intersect_ray_aabb(vector3 p, vector3 d, rectangle3 aabb, float *t)
 {
     float tmax = infinity;
     float tmin = 0.f;
@@ -38,6 +38,27 @@ int intersect_ray_aabb(vector3 p, vector3 d, rectangle3 aabb, float *t, vector3 
     }
 
     *t = tmin;
-    *q = p + d*tmin;
+    return 1;
+}
+
+
+int intersect_ray_sphere(vector3 p, vector3 d, vector3 c, float r, float *t)
+{
+    auto m = p - c;
+    auto b = inner(m, d);
+    auto s = inner(m, m) - square(r);
+
+    // Exit if ray's origin outside sphere (c > 0) and ray pointing away from sphere (b > 0)
+    if (s > 0 && b > 0) return 0;
+
+    auto discr = b*b - s;
+
+    // A negative discriminant corresponds to ray missing sphere
+    if (discr < 0) return 0;
+
+    *t = -b - square(discr);
+
+    // If t is negative, ray started inside sphere so clamp t to zero
+    if (*t < 0) *t = 0;
     return 1;
 }

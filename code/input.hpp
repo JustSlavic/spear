@@ -108,6 +108,7 @@ struct mouse_device
 
     button_state buttons[MOUSE_KEY_COUNT];
     int32 x, y;
+    int32 scroll;
 
     button_state& operator [] (mouse_key k)
     {

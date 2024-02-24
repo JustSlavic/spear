@@ -67,7 +67,10 @@ void process_pending_messages(input_state *input)
         switch (message.message)
         {
             case WM_MOUSEMOVE:
-            break;
+                break;
+
+            case WM_MOUSEWHEEL: input->mouse.scroll += GET_WHEEL_DELTA_WPARAM(message.wParam);
+                break;
 
             case WM_LBUTTONDOWN: process_button_state(&input->mouse[MOUSE_LEFT], true);
                 break;
@@ -255,6 +258,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
+        input.mouse.scroll = 0;
+
         process_pending_messages(&input);
         window.get_mouse_pos(&input.mouse.x, &input.mouse.y);
 
