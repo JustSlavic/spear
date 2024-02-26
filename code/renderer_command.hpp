@@ -13,6 +13,7 @@ struct rend_command
     {
         setup_camera,
         render_mesh_single_color,
+        render_mesh_texture,
     };
     rend_command_kind kind;
 
@@ -29,7 +30,11 @@ struct rend_command
             matrix4 model;
             rs::token mesh_token;
             rs::token shader_token;
-            vector4 color;
+            union
+            {
+                vector4 color;
+                rs::token texture_token;
+            };
         };
     };
 };

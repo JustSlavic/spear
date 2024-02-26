@@ -115,7 +115,6 @@ struct xinput
         process_button(&gamepad->buttons[GP_SELECT], XGamepad.wButtons, XINPUT_GAMEPAD_BACK);
         process_button(&gamepad->buttons[GP_START], XGamepad.wButtons, XINPUT_GAMEPAD_START);
 
-        // @todo: process sticks
         gamepad->left_stick.x = process_stick_deadzone(XGamepad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
         gamepad->left_stick.y = process_stick_deadzone(XGamepad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
 

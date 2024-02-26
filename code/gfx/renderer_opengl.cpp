@@ -84,7 +84,7 @@ struct mesh_render_data
     uint32 count;
 };
 
-mesh_render_data *load_mesh(rs::mesh *mesh)
+mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
 {
     uint32 vertex_buffer_id = 0;
     {
@@ -131,7 +131,7 @@ mesh_render_data *load_mesh(rs::mesh *mesh)
 
     if (mesh->render_data == NULL)
     {
-        mesh->render_data = mallocator().allocate<mesh_render_data>();
+        mesh->render_data = ctx->renderer_allocator.allocate<mesh_render_data>();
     }
 
     auto mrd = (mesh_render_data *) mesh->render_data;
@@ -150,22 +150,27 @@ struct shader_render_data
     uint32 fs_id;
 };
 
-shader_render_data *load_shader(rs::shader *s)
+shader_render_data *load_shader(context *ctx, rs::shader *s)
 {
     uint32 vs = 0;
     uint32 fs = 0;
 
-    // For now use only one shader
+    if (s->name == string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"))
     {
         vs = gl::compile_shader(memory_buffer::from(vs_single_color), gl::shader::vertex);
         fs = gl::compile_shader(memory_buffer::from(fs_pass_color), gl::shader::fragment);
+    }
+    else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"))
+    {
+        vs = gl::compile_shader(memory_buffer::from(vs_uv_coords), gl::shader::vertex);
+        fs = gl::compile_shader(memory_buffer::from(fs_apply_texture), gl::shader::fragment);
     }
 
     auto program = gl::link_shader(vs, fs);
 
     if (s->render_data == NULL)
     {
-        s->render_data = mallocator().allocate<shader_render_data>();
+        s->render_data = ctx->renderer_allocator.allocate<shader_render_data>();
     }
 
     auto *rsd = (shader_render_data *) s->render_data;
@@ -176,7 +181,27 @@ shader_render_data *load_shader(rs::shader *s)
     return rsd;
 }
 
-void draw_indexed_triangles(matrix4 model, matrix4 view, matrix4 proj, mesh_render_data *mesh_rd, shader_render_data *shader_rd, vector4 color)
+struct texture_render_data
+{
+    uint32 texture_id;
+};
+
+texture_render_data *load_texture(context *ctx, rs::texture *tx)
+{
+    uint32 tex_id = gl::load_texture(tx->data);
+
+    if (tx->render_data == NULL)
+    {
+        tx->render_data = ctx->renderer_allocator.allocate<texture_render_data>();
+    }
+
+    auto *trd = (texture_render_data *) tx->render_data;
+    trd->texture_id = tex_id;
+
+    return trd;
+}
+
+void draw_indexed_triangles_color(matrix4 model, matrix4 view, matrix4 proj, mesh_render_data *mesh_rd, shader_render_data *shader_rd, vector4 color)
 {
     shader s = { shader_rd->program_id, shader_rd->vs_id, shader_rd->fs_id };
     use_shader(s);
@@ -186,7 +211,20 @@ void draw_indexed_triangles(matrix4 model, matrix4 view, matrix4 proj, mesh_rend
     s.uniform("u_projection", proj);
     s.uniform("u_color", color);
 
-    auto m = proj * view * model * V4(1, 1, 0, 1);
+    glBindVertexArray(mesh_rd->vao_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
+    glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
+}
+
+void draw_indexed_triangles_texture(matrix4 model, matrix4 view, matrix4 proj, mesh_render_data *mesh_rd, shader_render_data *shader_rd, texture_render_data *texture_rd)
+{
+    shader s = { shader_rd->program_id, shader_rd->vs_id, shader_rd->fs_id };
+    use_shader(s);
+    use_texture(texture_rd->texture_id, 0);
+
+    s.uniform("u_model", model);
+    s.uniform("u_view", view);
+    s.uniform("u_projection", proj);
 
     glBindVertexArray(mesh_rd->vao_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
@@ -196,17 +234,41 @@ void draw_indexed_triangles(matrix4 model, matrix4 view, matrix4 proj, mesh_rend
 void render_mesh_single_color(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh_token, rs::token shader_token, vector4 color)
 {
     ASSERT(mesh_token.kind == rs::resource_kind::mesh);
+    ASSERT(shader_token.kind == rs::resource_kind::shader);
 
     if (mesh_token.kind != rs::resource_kind::mesh) { return; }
     if (shader_token.kind != rs::resource_kind::shader) { return; }
 
     auto mesh = ctx->rs->get_mesh(mesh_token);
-    auto mesh_rd = mesh->render_data ? (mesh_render_data *) mesh->render_data : gl::load_mesh(mesh);
+    auto mesh_rd = mesh->render_data ? (mesh_render_data *) mesh->render_data : gl::load_mesh(ctx, mesh);
 
     auto shader = ctx->rs->get_shader(shader_token);
-    auto shader_rd = shader->render_data ? (shader_render_data *) shader->render_data : gl::load_shader(shader);
+    auto shader_rd = shader->render_data ? (shader_render_data *) shader->render_data : gl::load_shader(ctx, shader);
 
-    draw_indexed_triangles(model, view, proj, mesh_rd, shader_rd, color);
+    draw_indexed_triangles_color(model, view, proj, mesh_rd, shader_rd, color);
 }
+
+void render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh_token, rs::token shader_token, rs::token texture_token)
+{
+    ASSERT(mesh_token.kind == rs::resource_kind::mesh);
+    ASSERT(shader_token.kind == rs::resource_kind::shader);
+    ASSERT(texture_token.kind == rs::resource_kind::texture);
+
+    if (mesh_token.kind != rs::resource_kind::mesh) { return; }
+    if (shader_token.kind != rs::resource_kind::shader) { return; }
+    if (texture_token.kind != rs::resource_kind::texture) { return; }
+
+    auto mesh = ctx->rs->get_mesh(mesh_token);
+    auto mesh_rd = mesh->render_data ? (mesh_render_data *) mesh->render_data : gl::load_mesh(ctx, mesh);
+
+    auto shader = ctx->rs->get_shader(shader_token);
+    auto shader_rd = shader->render_data ? (shader_render_data *) shader->render_data : gl::load_shader(ctx, shader);
+
+    auto texture = ctx->rs->get_texture(texture_token);
+    auto texture_rd = texture->render_data ? (texture_render_data *) texture->render_data : gl::load_texture(ctx, texture);
+
+    draw_indexed_triangles_texture(model, view, proj, mesh_rd, shader_rd, texture_rd);
+}
+
 
 } // namespace gl

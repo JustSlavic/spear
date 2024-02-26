@@ -1,4 +1,5 @@
 #include <base.h>
+#include <string_id.hpp>
 #include <string_view.hpp>
 
 #define WIN32_LEAN_AND_MEAN
@@ -150,14 +151,19 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    auto global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
+    auto global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(100));
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
+    auto resource_allocator = global_arena.allocate_arena(MEGABYTES(10));
+    auto renderer_allocator = global_arena.allocate_arena(MEGABYTES(10));
+    auto string_id_allocator = global_arena.allocate_arena(KILOBYTES(10));
     auto execution_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
     auto render_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
 
-    auto temporary_arena = global_arena.allocate_arena(MEGABYTES(5));
+    auto temporary_arena = global_arena.allocate_arena(MEGABYTES(50));
+
+    auto string_id_storage = string_id::initialize(string_id_allocator);
 
     // ======================================================================
 
@@ -167,6 +173,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     context ctx;
     memset(&ctx, 0, sizeof(ctx));
     ctx.temporary_allocator = temporary_arena;
+    ctx.resource_allocator = resource_allocator;
+    ctx.renderer_allocator = renderer_allocator;
+    ctx.strids = &string_id_storage;
     ctx.rs = &rs;
 
     // ======================================================================
@@ -184,6 +193,18 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     driver.depth_test(true);
     driver.write_depth(true);
     driver.vsync(true);
+
+    // ======================================================================
+
+    ctx.aspect_ratio = 16.0f / 9.0f;
+    ctx.near_clip_dist = 0.05f;
+    ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
+    ctx.far_clip_dist = 100.f;
+    ctx.debug_load_file = win32::load_file;
+
+    auto view = matrix4::identity();
+    auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
 
     // ======================================================================
 
@@ -232,17 +253,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    ctx.aspect_ratio = 16.0f / 9.0f;
-    ctx.near_clip_dist = 0.05f;
-    ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
-    ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
-    ctx.far_clip_dist = 100.f;
-
-    auto view = matrix4::identity();
-    auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
-
-    // ======================================================================
-
     input_state input = {};
 
     int32 game_update_frequency_hz = monitor_refresh_rate_hz;
@@ -269,14 +279,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         window.get_mouse_pos(&input.mouse.x, &input.mouse.y);
         for (int i = 0; i < 4; i++)
             xinput.process_gamepad_state(input.gamepads + i, i);
-
-        char buffer[512];
-        sprintf(buffer, "L(%f, %f) R(%f, %f)\n",
-            input.gamepads[0].left_stick.x,
-            input.gamepads[0].left_stick.y,
-            input.gamepads[0].right_stick.x,
-            input.gamepads[0].right_stick.y);
-        OutputDebugStringA(buffer);
 
         input.dt   = last_frame_dt;
         input.time = last_timepoint;
@@ -312,6 +314,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 view = driver.make_look_at_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
             if (cmd.kind == rend_command::render_mesh_single_color)
                 driver.render_mesh_single_color(&ctx, cmd.model, view, projection, cmd.mesh_token, cmd.shader_token, cmd.color);
+            if (cmd.kind == rend_command::render_mesh_texture)
+                driver.render_mesh_texture(&ctx, cmd.model, view, projection, cmd.mesh_token, cmd.shader_token, cmd.texture_token);
         }
         ctx.rend_commands.clear();
 
@@ -330,6 +334,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
 #include <memory_bucket.cpp>
 #include <memory_allocator.cpp>
+#include <string_id.cpp>
+#include <image/png.cpp>
+#include <crc.cpp>
 
 #include "gfx/renderer.cpp"
 #include "rs/resource_system.cpp"

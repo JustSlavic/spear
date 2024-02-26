@@ -19,7 +19,12 @@ struct game_state
 
     rs::token rect_mesh;
     rs::token cube_mesh;
-    rs::token the_only_shader;
+    rs::token rect_mesh_uv;
+
+    rs::token shader_single_color;
+    rs::token shader_draw_texture;
+
+    rs::token font_texture;
 
     timepoint exit_press_time;
 };

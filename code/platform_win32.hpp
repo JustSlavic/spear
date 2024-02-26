@@ -67,6 +67,39 @@ uint64 get_file_time(char const *file_path)
     return result;
 }
 
+memory_buffer load_file(memory_allocator allocator, char const *filename)
+{
+    memory_buffer result = memory_buffer::make();
+
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        return result;
+    }
+
+    LARGE_INTEGER FileSize;
+    BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
+    if (GetSizeResult == FALSE)
+    {
+        return result;
+    }
+
+    memory_buffer Memory = allocator.allocate_buffer(FileSize.QuadPart);
+
+    DWORD BytesRead;
+    BOOL ReadFileResult = ReadFile(FileHandle, Memory.data, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
+
+    if (ReadFileResult == FALSE)
+    {
+        allocator.deallocate(Memory);
+        return result;
+    }
+
+    result.data = Memory.data;
+    result.size = FileSize.QuadPart;
+    return result;
+}
+
 struct dll
 {
     HMODULE  handle;

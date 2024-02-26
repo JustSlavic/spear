@@ -113,7 +113,15 @@ matrix4 driver::make_orthographic_matrix(float32 aspect_ratio, float32 n, float3
 
 void driver::render_mesh_single_color(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh, rs::token shader, vector4 color)
 {
-    if (m_api == api::opengl) gl::render_mesh_single_color(ctx, model, view, proj, mesh, shader, color);
+    if (m_api == api::opengl)
+        gl::render_mesh_single_color(ctx, model, view, proj, mesh, shader, color);
+}
+
+
+void driver::render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh, rs::token shader, rs::token texture)
+{
+    if (m_api == api::opengl)
+        gl::render_mesh_texture(ctx, model, view, proj, mesh, shader, texture);
 }
 
 
@@ -140,57 +148,6 @@ void driver::render_mesh_single_color(context *ctx, matrix4 model, matrix4 view,
 // {
 //     if (gfx__active_api == gfx__api::opengl)
 //         gl__destroy_window_and_driver(window, driver);
-// }
-
-// void gfx__vsync(void *window, bool32 active)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__vsync(window, active);
-// }
-
-// void gfx__set_clear_color(float32 r, float g, float b, float a)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__set_clear_color(r, g, b, a);
-// }
-
-// void gfx__clear()
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__clear();
-// }
-
-// void gfx__depth_test(void *driver, bool32 do_depth_test)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__depth_test(do_depth_test);
-// }
-
-// void gfx__write_depth(void *driver, bool32 write_depth)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__write_depth(write_depth);
-// }
-
-// void gfx__set_viewport(viewport vp)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//         gl__set_viewport(vp);
-//     else
-//         ASSERT_FAIL("NOT IMPLEMENTED");
-// }
-
-// void gfx__swap_buffers(void *wnd, void *drv)
-// {
-//     if (gfx__active_api == gfx__api::opengl)
-//     {
-//         gl__swap_buffers(wnd);
-//     }
-//     else if (gfx__active_api == gfx__api::dx11)
-//     {
-//         // dx::swap_buffers(d);
-//         ASSERT_FAIL();
-//     }
 // }
 
 // void gfx__draw_background(execution_context *context, render_command *cmd)

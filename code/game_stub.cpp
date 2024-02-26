@@ -30,7 +30,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->allocator = arena;
     ctx->game_state = gs;
 
-    // Init rectangle mesh
+    // Rectangle mesh
     {
         float32 vbo_data[] = {
             -1.0f, -1.0f, 0.0f,
@@ -53,7 +53,34 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
 
-        gs->rect_mesh = rs::create_mesh(ctx->rs, vbo, ibo, vbl);
+        gs->rect_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
+    }
+
+    // Rectangle mesh with UV
+    {
+        float32 vbo_data[] = {
+            -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
+             1.0f, -1.0f, 0.0f,   1.0f, 0.0f,
+             1.0f,  1.0f, 0.0f,   1.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,
+        };
+        memory_buffer vbo;
+        vbo.data = (byte *) vbo_data;
+        vbo.size = sizeof(vbo_data);
+
+        uint32 ibo_data[] = {
+            0, 1, 2, // first triangle
+            2, 3, 0, // second triangle
+        };
+        memory_buffer ibo;
+        ibo.data = (byte *) ibo_data;
+        ibo.size = sizeof(ibo_data);
+
+        gfx::vertex_buffer_layout vbl = {};
+        gfx::push_layout_element(&vbl, 3);
+        gfx::push_layout_element(&vbl, 2);
+
+        gs->rect_mesh_uv = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
     }
 
     // 3D cube
@@ -100,10 +127,13 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         gfx::vertex_buffer_layout vbl = {};
         gfx::push_layout_element(&vbl, 3);
 
-        gs->cube_mesh = rs::create_mesh(ctx->rs, vbo, ibo, vbl);
+        gs->cube_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
     }
 
-    gs->the_only_shader = rs::create_shader(ctx->rs);
+    gs->shader_single_color = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"));
+    gs->shader_draw_texture = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"));
+
+    gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
 
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
@@ -213,14 +243,19 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
             auto m = matrix4::translate_x((float32)x + 1.3f*x) *
                      matrix4::translate_y((float32)y + 1.3f*y);
-            ctx->render_mesh(m, gs->cube_mesh, gs->the_only_shader, c);
+            ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, c);
         }
     }
+
+    ctx->render_mesh_texture(matrix4::translate(0, 0, 3) * matrix4::scale(3, -3, 3), gs->rect_mesh_uv, gs->shader_draw_texture, gs->font_texture);
 }
 
 
 #include <context.cpp>
+#include <string_id.cpp>
 #include <memory_bucket.cpp>
 #include <memory_allocator.cpp>
 #include <rs/resource_system.cpp>
 #include <collision.cpp>
+#include <image/png.cpp>
+#include <crc.cpp>

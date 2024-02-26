@@ -1,5 +1,6 @@
 #include "png.hpp"
 #include <crc.hpp>
+#include <float32.h>
 #include <integer.h>
 
 //
@@ -218,9 +219,9 @@ int paeth_predictor(int a, int b, int c)
 {
     // a - left, b - above, c - upper left
     int p = a + b - c; // initial estimate
-    int pa = math::absolute(p - a); // distances to a, b, c
-    int pb = math::absolute(p - b);
-    int pc = math::absolute(p - c);
+    int pa = absolute(p - a); // distances to a, b, c
+    int pb = absolute(p - b);
+    int pc = absolute(p - c);
     // return nearest of a, b, c,
     // breaking ties in order a, b, c.
     if ((pa <= pb) && (pa <= pc)) return a;
@@ -236,6 +237,8 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allo
 bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_buffer contents)
 {
     bitmap result = {};
+
+    auto zlib_stream = memory_bucket::from(temporary.allocate_buffer(contents.size));
 
     uint8 *data = (uint8 *) contents.data;
 
@@ -337,15 +340,16 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
         }
         else if (chunk_header.type == PNG_IDAT_ID)
         {
-            decoder.input = zlib::create_stream(data, chunk_header.size_of_data);
-
-            decode_idat_chunk(&decoder, temporary);
+            zlib_stream.append((void *) data, (usize) chunk_header.size_of_data);
             data += chunk_header.size_of_data;
         }
         else if (chunk_header.type == PNG_IEND_ID)
         {
             // IEND chunk has no data.
             is_end = true;
+
+            decoder.input = zlib::create_stream(zlib_stream.data, zlib_stream.used);
+            decode_idat_chunk(&decoder, temporary);
         }
         else if (chunk_header.type == PNG_sRGB_ID)
         {
@@ -501,7 +505,7 @@ array<huffman_entry> compute_huffman(memory_allocator temporary_allocator,
                                      usize code_lengths_count);
 uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
 {
-    usize A = 0, B = huffman.size;
+    usize A = 0, B = huffman.size();
 
     uint32 consumed_bits = 0;
     while (huffman[A] != huffman[B - 1])
@@ -646,7 +650,7 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allo
                 auto clen_huffman = compute_huffman(temporary_allocator, CLEN_code_lengths, ARRAY_COUNT(CLEN_code_lengths));
 
                 auto LITLEN_DIST_code_lengths = temporary_allocator.allocate_array<uint32>(HLIT + HDIST);
-                LITLEN_DIST_code_lengths.resize(LITLEN_DIST_code_lengths.capacity);
+                LITLEN_DIST_code_lengths.resize(LITLEN_DIST_code_lengths.capacity());
 
                 uint32 index = 0;
                 while (index < HLIT + HDIST)
@@ -680,8 +684,8 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allo
                         }
                     }
                 }
-                litlen_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data, HLIT);
-                dist_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data + HLIT, HDIST);
+                litlen_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data(), HLIT);
+                dist_huffman = compute_huffman(temporary_allocator, LITLEN_DIST_code_lengths.data() + HLIT, HDIST);
             }
 
             while (true)
@@ -747,15 +751,15 @@ uint32 reverse_bits(uint32 t, uint32 n)
 
 array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_lengths, usize code_lengths_count)
 {
-    auto bl_count = a.allocate_array_<uint32>(17);
-    auto next_code = a.allocate_array_<uint32>(16);
+    auto bl_count = a.allocate_array_open<uint32>(17);
+    auto next_code = a.allocate_array_open<uint32>(16);
     struct huffman_table_entry
     {
         uint32 symbol;
         uint32 code_length;
         uint32 code;
     };
-    auto huffman_table = a.allocate_array_<huffman_table_entry>(code_lengths_count);
+    auto huffman_table = a.allocate_array_open<huffman_table_entry>(code_lengths_count);
 
     // Count the number of codes for each code length.  Let
     // bl_count[N] be the number of codes of length N, N >= 1.
@@ -804,7 +808,7 @@ array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_leng
             maximum_code_length = code_lengths[index];
         }
     }
-    auto huffman = a.allocate_array_<huffman_entry>(1ull << maximum_code_length);
+    auto huffman = a.allocate_array_open<huffman_entry>(1ull << maximum_code_length);
     {
         for (uint32 symbol = 0; symbol < code_lengths_count; symbol++)
         {
@@ -814,7 +818,7 @@ array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_leng
             uint32 code = huffman_table[symbol].code;
             code = reverse_bits(code, code_length);
 
-            usize A = 0, B = huffman.size;
+            usize A = 0, B = huffman.size();
             for (uint32 i = 0; i < code_length; i++)
             {
                 uint32 bit = (code & 1);

@@ -26,3 +26,14 @@ void context::render_mesh(matrix4 model, rs::token mesh, rs::token shader, vecto
 
     rend_commands.push_back(cmd);
 }
+
+void context::render_mesh_texture(matrix4 model, rs::token mesh, rs::token shader, rs::token texture)
+{
+    rend_command cmd = { rend_command::render_mesh_texture };
+    cmd.model = model;
+    cmd.mesh_token = mesh;
+    cmd.shader_token = shader;
+    cmd.texture_token = texture;
+
+    rend_commands.push_back(cmd);
+}

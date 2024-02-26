@@ -6,6 +6,7 @@
 
 enum color_t : uint32
 {
+    IMAGE_INVALID,
     // W - white (when grayscale)
     // R - Red
     // G - Green
@@ -19,6 +20,9 @@ enum color_t : uint32
     IMAGE_ABGR,
     IMAGE_RGBA,
     IMAGE_BGRA,
+
+    IMAGE_GRAYSCALE = IMAGE_W,
+    IMAGE_GRAYSCALE_ALPHA = IMAGE_WA,
 };
 
 

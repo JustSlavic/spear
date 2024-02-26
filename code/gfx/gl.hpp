@@ -8,7 +8,6 @@
 
 #include <GL/gl.h>
 
-
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 #define GL_UNSIGNED_INT_8_8_8_8           0x8035
 #define GL_MULTISAMPLE                    0x809D
@@ -86,6 +85,9 @@
 #define GL_UNSIGNED_INT                   0x1405
 #define GL_FLOAT                          0x1406
 #define GL_FIXED                          0x140C
+
+#define GL_LUMINANCE                      0x1909
+#define GL_LUMINANCE_ALPHA                0x190A
 
 typedef uint8  GLboolean;
 typedef uint32 GLenum;
@@ -292,7 +294,7 @@ uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type
     GL_CHECK_ERRORS();
     if (successful == GL_FALSE)
     {
-        int64 length;
+        int64 length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int32 *) &length);
         GL_CHECK_ERRORS();
 
@@ -342,6 +344,56 @@ void use_shader(shader s)
 {
     glUseProgram(s.id);
     GL_CHECK_ERRORS();
+}
+
+
+uint32 load_texture(bitmap bitmap)
+{
+    uint32 id = 0;
+    glGenTextures(1, &id);
+    GL_CHECK_ERRORS();
+    glBindTexture(GL_TEXTURE_2D, id);
+    GL_CHECK_ERRORS();
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    GL_CHECK_ERRORS();
+
+    if (bitmap.color_type == IMAGE_RGBA)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    else if (bitmap.color_type == IMAGE_RGB)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    else if (bitmap.color_type == IMAGE_GRAYSCALE)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    else if (bitmap.color_type == IMAGE_GRAYSCALE_ALPHA)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+    }
+    // else if (bitmap.color_type == IMAGE_BGR)
+    // {
+    //     int32 swizzle_mask[4];
+    //     swizzle_mask[0] = GL_BLUE;
+    //     swizzle_mask[1] = GL_GREEN;
+    //     swizzle_mask[2] = GL_RED;
+    //     swizzle_mask[3] = GL_ONE;
+    //     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+    // }
+    else
+    {
+        ASSERT_FAIL("Unsupported color type!");
+    }
+    GL_CHECK_ERRORS();
+
+    return id;
 }
 
 

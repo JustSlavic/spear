@@ -46,6 +46,7 @@ struct driver
     matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f);
 
     void render_mesh_single_color(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh, rs::token shader, vector4 color);
+    void render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh, rs::token shader, rs::token texture);
 };
 
 
