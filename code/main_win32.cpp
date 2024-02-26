@@ -11,6 +11,8 @@
 #include "gfx/viewport.hpp"
 #include "rs/resource_system.hpp"
 
+#include "xinput.hpp"
+#include <stdio.h>
 
 GLOBAL bool32 running;
 GLOBAL uint32 current_client_width;
@@ -185,6 +187,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
+    auto xinput = win32::xinput::load();
+
+    // ======================================================================
+
     char cwd[256] = {};
     uint32 program_path_size = win32::get_program_path(instance, cwd, ARRAY_COUNT(cwd));
     {
@@ -259,9 +265,18 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         input.mouse.scroll = 0;
-
         process_pending_messages(&input);
         window.get_mouse_pos(&input.mouse.x, &input.mouse.y);
+        for (int i = 0; i < 4; i++)
+            xinput.process_gamepad_state(input.gamepads + i, i);
+
+        char buffer[512];
+        sprintf(buffer, "L(%f, %f) R(%f, %f)\n",
+            input.gamepads[0].left_stick.x,
+            input.gamepads[0].left_stick.y,
+            input.gamepads[0].right_stick.x,
+            input.gamepads[0].right_stick.y);
+        OutputDebugStringA(buffer);
 
         input.dt   = last_frame_dt;
         input.time = last_timepoint;

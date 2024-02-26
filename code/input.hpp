@@ -130,7 +130,6 @@ struct stick_state
     //        |
     //        |
     //       -1
-    float32 previous_x, previous_y;
     float32 x, y;
 };
 

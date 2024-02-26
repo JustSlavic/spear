@@ -1,3 +1,6 @@
+#ifndef PLATFORM_WIN32_HPP
+#define PLATFORM_WIN32_HPP
+
 #include <base.h>
 #include <input.hpp>
 
@@ -170,3 +173,5 @@ struct wall_clock
 };
 
 } // namespace win32
+
+#endif // PLATFORM_WIN32_HPP
