@@ -23,6 +23,7 @@ struct game_state
 
     rs::token shader_single_color;
     rs::token shader_draw_texture;
+    rs::token shader_draw_text;
 
     rs::token font_texture;
 

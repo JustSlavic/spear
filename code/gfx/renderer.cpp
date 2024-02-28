@@ -125,6 +125,13 @@ void driver::render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matr
 }
 
 
+void driver::render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token shader_token, rs::token texture_token, string_view text, vector4 color)
+{
+    if (m_api == api::opengl)
+        gl::render_text(ctx, proj, mesh_token, shader_token, texture_token, text, color);
+}
+
+
 } // namespace gfx
 
 

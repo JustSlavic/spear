@@ -48,6 +48,7 @@ struct context
     void setup_camera(vector3 p, vector3 f, vector3 u);
     void render_mesh(matrix4 model, rs::token mesh, rs::token shader, vector4 color);
     void render_mesh_texture(matrix4 model, rs::token mesh, rs::token shader, rs::token texture);
+    void render_text(rs::token font_texture, rs::token mesh, rs::token shader, string_view text, vector4 color);
 };
 
 

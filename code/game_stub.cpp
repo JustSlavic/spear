@@ -132,6 +132,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->shader_single_color = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"));
     gs->shader_draw_texture = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"));
+    gs->shader_draw_text = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXT"));
 
     gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
 
@@ -247,7 +248,9 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    ctx->render_mesh_texture(matrix4::translate(0, 0, 3) * matrix4::scale(3, -3, 3), gs->rect_mesh_uv, gs->shader_draw_texture, gs->font_texture);
+
+
+    ctx->render_text(gs->font_texture, gs->rect_mesh_uv, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
 }
 
 

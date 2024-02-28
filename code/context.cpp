@@ -37,3 +37,16 @@ void context::render_mesh_texture(matrix4 model, rs::token mesh, rs::token shade
 
     rend_commands.push_back(cmd);
 }
+
+void context::render_text(rs::token font_texture, rs::token mesh, rs::token shader, string_view text, vector4 color)
+{
+    rend_command cmd = { rend_command::render_text };
+    cmd.mesh_token = mesh;
+    cmd.shader_token = shader;
+    cmd.texture_token = font_texture;
+    cmd.text = text;
+    cmd.color = color;
+
+    rend_commands.push_back(cmd);
+}
+

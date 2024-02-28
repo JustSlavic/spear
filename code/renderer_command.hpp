@@ -14,29 +14,22 @@ struct rend_command
         setup_camera,
         render_mesh_single_color,
         render_mesh_texture,
+        render_text,
     };
     rend_command_kind kind;
 
-    union
-    {
-        struct
-        {
-            vector3 position;
-            vector3 forward;
-            vector3 up;
-        };
-        struct
-        {
-            matrix4 model;
-            rs::token mesh_token;
-            rs::token shader_token;
-            union
-            {
-                vector4 color;
-                rs::token texture_token;
-            };
-        };
-    };
+    vector3 position;
+    vector3 forward;
+    vector3 up;
+
+    matrix4 model;
+
+    rs::token mesh_token;
+    rs::token shader_token;
+    rs::token texture_token;
+
+    vector4 color;
+    string_view text;
 };
 
 #endif // RENDERER_COMMAND_HPP

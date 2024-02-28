@@ -62,7 +62,7 @@ matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
 
 matrix4 make_orthographic_matrix(float32 aspect_ratio, float32 n, float32 f)
 {
-    matrix4 result;
+    matrix4 result = {};
 
     result._11 = 1.0f;
     result._22 = 1.0f * aspect_ratio;
@@ -157,13 +157,18 @@ shader_render_data *load_shader(context *ctx, rs::shader *s)
 
     if (s->name == string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"))
     {
-        vs = gl::compile_shader(memory_buffer::from(vs_single_color), gl::shader::vertex);
-        fs = gl::compile_shader(memory_buffer::from(fs_pass_color), gl::shader::fragment);
+        vs = compile_shader(memory_buffer::from(vs_single_color), shader::vertex);
+        fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
     }
     else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"))
     {
-        vs = gl::compile_shader(memory_buffer::from(vs_uv_coords), gl::shader::vertex);
-        fs = gl::compile_shader(memory_buffer::from(fs_apply_texture), gl::shader::fragment);
+        vs = compile_shader(memory_buffer::from(vs_uv_coords), shader::vertex);
+        fs = compile_shader(memory_buffer::from(fs_apply_texture), shader::fragment);
+    }
+    else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_TEXT"))
+    {
+        vs = compile_shader(memory_buffer::from(vs_text_shader), shader::vertex);
+        fs = compile_shader(memory_buffer::from(fs_text_shader), shader::fragment);
     }
 
     auto program = gl::link_shader(vs, fs);
@@ -268,6 +273,68 @@ void render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matrix4 proj
     auto texture_rd = texture->render_data ? (texture_render_data *) texture->render_data : gl::load_texture(ctx, texture);
 
     draw_indexed_triangles_texture(model, view, proj, mesh_rd, shader_rd, texture_rd);
+}
+
+#include <gen/font.hpp>
+
+void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token shader_token, rs::token texture_token, string_view text, vector4 color)
+{
+    char buffer[1024];
+    sprintf(buffer, "Render text: %.*s\n", (int) text.size, text.data);
+
+    OutputDebugStringA(buffer);
+
+    if (mesh_token.kind != rs::resource_kind::mesh) { return; }
+    if (shader_token.kind != rs::resource_kind::shader) { return; }
+
+    auto mesh = ctx->rs->get_mesh(mesh_token);
+    auto mesh_rd = mesh->render_data ? (mesh_render_data *) mesh->render_data : gl::load_mesh(ctx, mesh);
+
+    auto shader_ = ctx->rs->get_shader(shader_token);
+    auto shader_rd = shader_->render_data ? (shader_render_data *) shader_->render_data : gl::load_shader(ctx, shader_);
+
+    auto texture = ctx->rs->get_texture(texture_token);
+    auto texture_rd = texture->render_data ? (texture_render_data *) texture->render_data : gl::load_texture(ctx, texture);
+
+    auto model = matrix4::identity();
+    auto view = matrix4::identity();
+
+    shader s = { shader_rd->program_id, shader_rd->vs_id, shader_rd->fs_id };
+    use_shader(s);
+    s.uniform("u_projection", proj);
+    s.uniform("u_color", color);
+
+    use_texture(texture_rd->texture_id, 0);
+
+    int32 posx = 0;
+    int32 posy = 0;
+
+    for (int char_index = 0; char_index < text.size; char_index++)
+    {
+        char c = text.data[char_index];
+        for (int i = 0; i < font_Arial.characterCount; i++)
+        {
+            auto glyph = font_Arial.characters[i];
+            if (glyph.codePoint == c)
+            {
+                float32 vbo_data[] = {
+                     (float32) (posx - glyph.originX), (float32) (posy - glyph.originY), 0.0f,                                  (float32) glyph.x / (float32) font_Arial.width,                 (float32) glyph.y / (float32) font_Arial.height,
+                     (float32) (posx - glyph.originX + glyph.width), (float32) (posy - glyph.originY), 0.0f,                  (float32) (glyph.x + glyph.width) / (float32) font_Arial.width, (float32) glyph.y / (float32) font_Arial.height,
+                     (float32) (posx - glyph.originX + glyph.width), (float32) (posy - glyph.originY + glyph.height), 0.0f, (float32) (glyph.x + glyph.width) / (float32) font_Arial.width, (float32) (glyph.y + glyph.height) / (float32) font_Arial.height,
+                     (float32) (posx - glyph.originX), (float32) (posy - glyph.originY + glyph.height), 0.0f,                 (float32) glyph.x / (float32) font_Arial.width,                 (float32) (glyph.y + glyph.height) / (float32) font_Arial.height,
+                };
+
+                posx += glyph.width;
+
+                glBindBuffer(GL_ARRAY_BUFFER, mesh_rd->vbo_id);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data), vbo_data, GL_STATIC_DRAW);
+
+                glBindVertexArray(mesh_rd->vao_id);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
+                glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
+            }
+        }
+    }
 }
 
 

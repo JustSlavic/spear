@@ -67,3 +67,36 @@ void main()
     result_color = texture(u_texture0, uv);;
 }
 )GLSL";
+
+
+GLOBAL char const *vs_text_shader = R"GLSL(
+#version 400
+layout (location = 0) in vec3 ui_coordinates;
+layout (location = 1) in vec2 uv_coordinates;
+
+out vec2 uv;
+
+uniform mat4 u_projection;
+
+void main()
+{
+    uv = uv_coordinates;
+    gl_Position = u_projection * vec4(ui_coordinates, 1.);
+}
+)GLSL";
+
+
+GLOBAL char const *fs_text_shader = R"GLSL(
+#version 400
+
+in vec2 uv;
+out vec4 result_color;
+
+uniform vec4 u_color;
+uniform sampler2D u_texture0;
+
+void main()
+{
+    result_color = u_color * texture(u_texture0, uv);
+}
+)GLSL";

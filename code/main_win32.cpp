@@ -205,6 +205,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     auto view = matrix4::identity();
     auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
+    auto projection_ui = matrix4::identity();
 
     // ======================================================================
 
@@ -294,6 +295,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
             ctx.letterbox_width = viewport.width;
             ctx.letterbox_height = viewport.height;
+
+            projection_ui =
+                matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1) * matrix4::translate(-1, 1, 0);
         }
 
         if (game.update_and_render)
@@ -311,11 +315,25 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         for (auto cmd : ctx.rend_commands)
         {
             if (cmd.kind == rend_command::setup_camera)
+            {
                 view = driver.make_look_at_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
-            if (cmd.kind == rend_command::render_mesh_single_color)
+            }
+            else if (cmd.kind == rend_command::render_mesh_single_color)
+            {
                 driver.render_mesh_single_color(&ctx, cmd.model, view, projection, cmd.mesh_token, cmd.shader_token, cmd.color);
-            if (cmd.kind == rend_command::render_mesh_texture)
+            }
+            else if (cmd.kind == rend_command::render_mesh_texture)
+            {
+                driver.write_depth(false);
                 driver.render_mesh_texture(&ctx, cmd.model, view, projection, cmd.mesh_token, cmd.shader_token, cmd.texture_token);
+                driver.write_depth(true);
+            }
+            else if (cmd.kind == rend_command::render_text)
+            {
+                driver.write_depth(false);
+                driver.render_text(&ctx, projection_ui, cmd.mesh_token, cmd.shader_token, cmd.texture_token, cmd.text, cmd.color);
+                driver.write_depth(true);
+            }
         }
         ctx.rend_commands.clear();
 
