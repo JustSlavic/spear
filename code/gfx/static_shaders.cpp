@@ -71,7 +71,7 @@ void main()
 
 GLOBAL char const *vs_text_shader = R"GLSL(
 #version 400
-layout (location = 0) in vec3 ui_coordinates;
+layout (location = 0) in vec2 ui_coordinates;
 layout (location = 1) in vec2 uv_coordinates;
 
 out vec2 uv;
@@ -81,7 +81,7 @@ uniform mat4 u_projection;
 void main()
 {
     uv = uv_coordinates;
-    gl_Position = u_projection * vec4(ui_coordinates, 1.);
+    gl_Position = u_projection * vec4(ui_coordinates, 0., 1.);
 }
 )GLSL";
 

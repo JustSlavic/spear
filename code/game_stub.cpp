@@ -50,8 +50,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         ibo.data = (byte *) ibo_data;
         ibo.size = sizeof(ibo_data);
 
-        gfx::vertex_buffer_layout vbl = {};
-        gfx::push_layout_element(&vbl, 3);
+        auto vbl = gfx::vertex_buffer_layout::make();
+        vbl.push<float>(3);
 
         gs->rect_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
     }
@@ -76,11 +76,22 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         ibo.data = (byte *) ibo_data;
         ibo.size = sizeof(ibo_data);
 
-        gfx::vertex_buffer_layout vbl = {};
-        gfx::push_layout_element(&vbl, 3);
-        gfx::push_layout_element(&vbl, 2);
+        auto vbl = gfx::vertex_buffer_layout::make();
+        vbl.push<float>(3);
+        vbl.push<float>(2);
 
         gs->rect_mesh_uv = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
+    }
+
+    // Buffers for text
+    {
+        auto vbo = memory_buffer::make();
+        auto ibo = memory_buffer::make();
+        auto vbl = gfx::vertex_buffer_layout::make();
+        vbl.push<float>(2);
+        vbl.push<float>(2);
+
+        gs->text_buffers = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
     }
 
     // 3D cube
@@ -124,8 +135,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         ibo.data = (byte *) ibo_data;
         ibo.size = sizeof(ibo_data);
 
-        gfx::vertex_buffer_layout vbl = {};
-        gfx::push_layout_element(&vbl, 3);
+        auto vbl = gfx::vertex_buffer_layout::make();
+        vbl.push<float>(3);
 
         gs->cube_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
     }
@@ -250,7 +261,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
 
 
-    ctx->render_text(gs->font_texture, gs->rect_mesh_uv, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
+    ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
 }
 
 

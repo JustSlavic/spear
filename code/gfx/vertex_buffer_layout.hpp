@@ -11,19 +11,28 @@ namespace gfx {
 struct vertex_buffer_layout_element
 {
     uint32 count;
+    // @todo: other types of elements other than floats
 };
 
 struct vertex_buffer_layout
 {
-    uint32 count;
+    uint32 size;
     vertex_buffer_layout_element elements[8];
+
+    static vertex_buffer_layout make()
+    {
+        vertex_buffer_layout result = {};
+        return result;
+    }
+
+    template <typename T>
+    void push(uint32 count)
+    {
+        ASSERT(count < ARRAY_COUNT(elements));
+        elements[size++].count = count;
+    }
 };
 
-INLINE void push_layout_element(vertex_buffer_layout *vbl, uint32 count)
-{
-    ASSERT(vbl->count < ARRAY_COUNT(vbl->elements));
-    vbl->elements[vbl->count++].count = count;
-}
 
 
 } // namespace gfx

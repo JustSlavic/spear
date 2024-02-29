@@ -107,13 +107,13 @@ mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
 
         uint32 stride = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.size; attrib_index++)
         {
             stride += (mesh->vbl.elements[attrib_index].count * sizeof(float32));
         }
 
         usize offset = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.count; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh->vbl.size; attrib_index++)
         {
             uint32 count = mesh->vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
@@ -309,6 +309,11 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
     int32 posx = 0;
     int32 posy = 0;
 
+    auto vbo_data_buffer = ctx->temporary_allocator.allocate_buffer(sizeof(float32) * 24 * text.size);
+    auto vbo_bucket = memory_bucket::from(vbo_data_buffer);
+    uint32 count = 0;
+
+
     for (int char_index = 0; char_index < text.size; char_index++)
     {
         char c = text.data[char_index];
@@ -317,24 +322,40 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
             auto glyph = font_Arial.characters[i];
             if (glyph.codePoint == c)
             {
+                float32 px = (float32) posx - glyph.originX;
+                float32 py = (float32) posy - glyph.originY;
+                float32 w  = (float32) glyph.width;
+                float32 h  = (float32) glyph.height;
+
+                float32 uv_x = (float32) glyph.x / font_Arial.width;
+                float32 uv_y = (float32) glyph.y / font_Arial.height;
+                float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
+                float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+
                 float32 vbo_data[] = {
-                     (float32) (posx - glyph.originX), (float32) (posy - glyph.originY), 0.0f,                                  (float32) glyph.x / (float32) font_Arial.width,                 (float32) glyph.y / (float32) font_Arial.height,
-                     (float32) (posx - glyph.originX + glyph.width), (float32) (posy - glyph.originY), 0.0f,                  (float32) (glyph.x + glyph.width) / (float32) font_Arial.width, (float32) glyph.y / (float32) font_Arial.height,
-                     (float32) (posx - glyph.originX + glyph.width), (float32) (posy - glyph.originY + glyph.height), 0.0f, (float32) (glyph.x + glyph.width) / (float32) font_Arial.width, (float32) (glyph.y + glyph.height) / (float32) font_Arial.height,
-                     (float32) (posx - glyph.originX), (float32) (posy - glyph.originY + glyph.height), 0.0f,                 (float32) glyph.x / (float32) font_Arial.width,                 (float32) (glyph.y + glyph.height) / (float32) font_Arial.height,
+                     px,     py,       uv_x,  uv_y,
+                     px + w, py,       uv_x1, uv_y,
+                     px    , py + h,   uv_x,  uv_y1,
+
+                     px + w, py,       uv_x1, uv_y,
+                     px + w, py + h,   uv_x1, uv_y1,
+                     px,     py + h,   uv_x,  uv_y1,
                 };
+                vbo_bucket.append(vbo_data, sizeof(vbo_data));
 
                 posx += glyph.width;
-
-                glBindBuffer(GL_ARRAY_BUFFER, mesh_rd->vbo_id);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data), vbo_data, GL_STATIC_DRAW);
-
-                glBindVertexArray(mesh_rd->vao_id);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
-                glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
+                count += 6;
             }
         }
     }
+
+    glBindVertexArray(mesh_rd->vao_id);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh_rd->vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, vbo_bucket.used, vbo_bucket.data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, count);
 }
 
 
