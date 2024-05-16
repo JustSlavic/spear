@@ -2,8 +2,8 @@
 #define CONTEXT_HPP
 
 #include <base.h>
-#include <matrix4.hpp>
-#include <memory_allocator.hpp>
+#include <math/matrix4.hpp>
+#include <memory/allocator.hpp>
 
 #include "execution_command.hpp"
 #include "renderer_command.hpp"

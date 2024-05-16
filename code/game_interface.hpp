@@ -2,7 +2,7 @@
 #define GAME_HPP
 
 #include <base.h>
-#include <memory_buffer.hpp>
+#include <memory/buffer.hpp>
 #include <input.hpp>
 #include <context.hpp>
 

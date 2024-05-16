@@ -2,7 +2,7 @@
 #define MATH_RECTANGLE2_HPP
 
 #include <base.h>
-#include <vector2.hpp>
+#include <math/vector2.hpp>
 
 
 namespace math

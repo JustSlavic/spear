@@ -4,6 +4,7 @@
 // My library
 #include <base.h>
 #include <memory/memory.hpp>
+#include <memory/buffer.hpp>
 // Standard library
 #include <stdlib.h>
 
@@ -11,12 +12,12 @@
 namespace sdl {
 
 
-INLINE memory_block allocate_memory(void *base_address, usize size)
+INLINE memory_buffer allocate_memory(void *base_address, usize size)
 {
-    memory_block result;
-    result.memory = malloc(size);
-    result.size   = size;
-    memory::set(result.memory, 0, size);
+    memory_buffer result;
+    result.data = (byte *) malloc(size);
+    result.size = size;
+    memset(result.data, 0, size);
 
     return result;
 }

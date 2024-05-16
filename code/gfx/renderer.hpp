@@ -2,9 +2,9 @@
 #define RENDERER_HPP
 
 #include <base.h>
-#include <vector3.hpp>
-#include <vector4.hpp>
-#include <matrix4.hpp>
+#include <math/vector3.hpp>
+#include <math/vector4.hpp>
+#include <math/matrix4.hpp>
 #include <rs/resource_system.hpp>
 #include "viewport.hpp"
 

@@ -24,10 +24,10 @@ macos_debug_build() {
     command=$1
 
     CXX_FLAGS="-std=c++14 -g"
-    WARNINGS="-Wall -Werror"
+    WARNINGS="-Wall -Werror -Wno-unused-variable"
     DEFINES="-DDEBUG=1 -DOS_MAC=1"
-    INCLUDES="-I../code -I/opt/homebrew/Cellar/sdl2/2.26.5/include"
-    LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.26.5/lib"
+    INCLUDES="-I../code -I../code/based -I/opt/homebrew/Cellar/sdl2/2.28.5/include"
+    LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.28.5/lib"
 
     clang++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_sdl.cpp -o spear $LIBS -framework OpenGL
 

@@ -2,11 +2,16 @@
 #define GFX__GL_HPP
 
 #include <base.h>
-#include <memory_buffer.hpp>
-#include <memory_allocator.hpp>
+#include <memory/buffer.hpp>
+#include <memory/allocator.hpp>
 #include "viewport.hpp"
 
+#if OS_MAC
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 #define GL_UNSIGNED_INT_8_8_8_8           0x8035
@@ -128,39 +133,39 @@ typedef void glUniform4fType(int32 location, float32 v0, float32 v1, float32 v2,
 typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose, float32 const *value);
 typedef void glTexImage2DMultisampleType(GLenum target, isize samples, GLenum internalformat, isize width, isize height, GLboolean fixedsamplelocations);
 
-GLOBAL glGenFramebuffersType *glGenFramebuffers;
-GLOBAL glBindFramebufferType *glBindFramebuffer;
-GLOBAL glFramebufferTexture2DType *glFramebufferTexture2D;
-GLOBAL glBlitFramebufferType *glBlitFramebuffer;
-GLOBAL glClearBufferivType *glClearBufferiv;
-GLOBAL glGenBuffersType *glGenBuffers;
-GLOBAL glBindBufferType *glBindBuffer;
-GLOBAL glBufferDataType *glBufferData;
-GLOBAL glGenVertexArraysType *glGenVertexArrays;
-GLOBAL glBindVertexArrayType *glBindVertexArray;
-GLOBAL glVertexAttribPointerType *glVertexAttribPointer;
-GLOBAL glEnableVertexAttribArrayType *glEnableVertexAttribArray;
-GLOBAL glCreateShaderType *glCreateShader;
-GLOBAL glShaderSourceType *glShaderSource;
-GLOBAL glCompileShaderType *glCompileShader;
-GLOBAL glCreateProgramType *glCreateProgram;
-GLOBAL glAttachShaderType *glAttachShader;
-GLOBAL glDetachShaderType *glDetachShader;
-GLOBAL glLinkProgramType *glLinkProgram;
-GLOBAL glUseProgramType *glUseProgram;
-GLOBAL glGetShaderivType *glGetShaderiv;
-GLOBAL glGetShaderInfoLogType *glGetShaderInfoLog;
-GLOBAL glDeleteShaderType *glDeleteShader;
-GLOBAL glValidateProgramType *glValidateProgram;
-GLOBAL glGetProgramivType *glGetProgramiv;
-GLOBAL glGetUniformLocationType *glGetUniformLocation;
-GLOBAL glUniform1iType *glUniform1i;
-GLOBAL glUniform1fType *glUniform1f;
-GLOBAL glUniform2fType *glUniform2f;
-GLOBAL glUniform3fType *glUniform3f;
-GLOBAL glUniform4fType *glUniform4f;
-GLOBAL glUniformMatrix4fvType *glUniformMatrix4fv;
-GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
+// GLOBAL glGenFramebuffersType *glGenFramebuffers;
+// GLOBAL glBindFramebufferType *glBindFramebuffer;
+// GLOBAL glFramebufferTexture2DType *glFramebufferTexture2D;
+// GLOBAL glBlitFramebufferType *glBlitFramebuffer;
+// GLOBAL glClearBufferivType *glClearBufferiv;
+// GLOBAL glGenBuffersType *glGenBuffers;
+// GLOBAL glBindBufferType *glBindBuffer;
+// GLOBAL glBufferDataType *glBufferData;
+// GLOBAL glGenVertexArraysType *glGenVertexArrays;
+// GLOBAL glBindVertexArrayType *glBindVertexArray;
+// GLOBAL glVertexAttribPointerType *glVertexAttribPointer;
+// GLOBAL glEnableVertexAttribArrayType *glEnableVertexAttribArray;
+// GLOBAL glCreateShaderType *glCreateShader;
+// GLOBAL glShaderSourceType *glShaderSource;
+// GLOBAL glCompileShaderType *glCompileShader;
+// GLOBAL glCreateProgramType *glCreateProgram;
+// GLOBAL glAttachShaderType *glAttachShader;
+// GLOBAL glDetachShaderType *glDetachShader;
+// GLOBAL glLinkProgramType *glLinkProgram;
+// GLOBAL glUseProgramType *glUseProgram;
+// GLOBAL glGetShaderivType *glGetShaderiv;
+// GLOBAL glGetShaderInfoLogType *glGetShaderInfoLog;
+// GLOBAL glDeleteShaderType *glDeleteShader;
+// GLOBAL glValidateProgramType *glValidateProgram;
+// GLOBAL glGetProgramivType *glGetProgramiv;
+// GLOBAL glGetUniformLocationType *glGetUniformLocation;
+// GLOBAL glUniform1iType *glUniform1i;
+// GLOBAL glUniform1fType *glUniform1f;
+// GLOBAL glUniform2fType *glUniform2f;
+// GLOBAL glUniform3fType *glUniform3f;
+// GLOBAL glUniform4fType *glUniform4f;
+// GLOBAL glUniformMatrix4fvType *glUniformMatrix4fv;
+// GLOBAL glTexImage2DMultisampleType *glTexImage2DMultisample;
 
 #if DEBUG
 #define GL_CHECK_ERRORS(...) { \
@@ -294,12 +299,12 @@ uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type
     GL_CHECK_ERRORS();
     if (successful == GL_FALSE)
     {
-        int64 length = 0;
+        int32 length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int32 *) &length);
         GL_CHECK_ERRORS();
 
         // @todo: use transient memory for that
-        auto message = mallocator().allocate_buffer(length + 1);
+        auto message = mallocator()->allocate_buffer(length + 1);
         memset(message.data, 0, length + 1);
 
         glGetShaderInfoLog(id, length, &length, (char *) message.data);
@@ -308,7 +313,7 @@ uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type
         glDeleteShader(id);
         GL_CHECK_ERRORS();
 
-        mallocator().deallocate(message);
+        mallocator()->deallocate(message);
 
         return 0;
     }
@@ -402,6 +407,10 @@ uint32 load_texture(bitmap bitmap)
 
 #if OS_WINDOWS
 #include "gl_win32.hpp"
+#endif
+
+#if OS_MAC
+#include "gl_sdl.hpp"
 #endif
 
 #endif // GFX__GL_HPP

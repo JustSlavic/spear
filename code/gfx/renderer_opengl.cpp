@@ -1,9 +1,6 @@
 #include "renderer_opengl.hpp"
-
-#include <integer.h>
-
+#include <math/integer.h>
 #include "gl.hpp"
-
 #include "static_shaders.cpp"
 
 

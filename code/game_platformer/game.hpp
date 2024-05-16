@@ -4,9 +4,9 @@
 #include <base.h>
 
 #include <array.hpp>
-#include <math/integer.hpp>
-#include <vector2.hpp>
-#include <vector3.hpp>
+#include <math/integer.h>
+#include <math/vector2.hpp>
+#include <math/vector3.hpp>
 #include <math/rectangle2.hpp>
 #include <rs/resource_system.hpp>
 #include <ui/ui.hpp>

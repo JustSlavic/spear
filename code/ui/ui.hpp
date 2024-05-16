@@ -5,9 +5,9 @@
 #include <memory.h>
 
 #include <array.hpp>
-#include <execution_context.hpp>
-#include <vector2.hpp>
-#include <transform.hpp>
+#include <context.hpp>
+#include <math/vector2.hpp>
+#include <math/transform.hpp>
 #include <input.hpp>
 
 //

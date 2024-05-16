@@ -4,7 +4,7 @@
 #include <base.h>
 
 #include <array.hpp>
-#include <math/integer.hpp>
+#include <math/integer.h>
 #include <math/vector2.hpp>
 #include <math/vector3.hpp>
 #include <math/rectangle2.hpp>
