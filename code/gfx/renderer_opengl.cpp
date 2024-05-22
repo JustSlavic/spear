@@ -2,6 +2,7 @@
 #include <math/integer.h>
 #include "gl.hpp"
 #include "static_shaders.cpp"
+#include <memory_bucket.hpp>
 
 
 namespace gl
@@ -276,10 +277,10 @@ void render_mesh_texture(context *ctx, matrix4 model, matrix4 view, matrix4 proj
 
 void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token shader_token, rs::token texture_token, string_view text, vector4 color)
 {
-    char buffer[1024];
-    sprintf(buffer, "Render text: %.*s\n", (int) text.size, text.data);
+    // char buffer[1024];
+    // snprintf(buffer, sizeof(buffer), "Render text: %.*s\n", (int) text.size, text.data);
 
-    OutputDebugStringA(buffer);
+    // OutputDebugStringA(buffer);
 
     if (mesh_token.kind != rs::resource_kind::mesh) { return; }
     if (shader_token.kind != rs::resource_kind::shader) { return; }

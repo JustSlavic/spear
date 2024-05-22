@@ -1,7 +1,7 @@
 #include "png.hpp"
 #include <crc.hpp>
-#include <float32.h>
-#include <integer.h>
+#include <math/float32.h>
+#include <math/integer.h>
 
 //
 // PNG (Portable Network Graphics) Specification, Version 1.2
@@ -253,7 +253,9 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
 
     png__ihdr_header *ihdr;
     png__rendering_intent *rendering_intent;
+    UNUSED(rendering_intent);
     float64 gamma = 0.f;
+    UNUSED(gamma);
 
     zlib::decoder decoder = {};
 

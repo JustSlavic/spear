@@ -2,7 +2,7 @@
 #define GAME_CAMERA_HPP
 
 #include <base.h>
-#include <vector3.hpp>
+#include <math/vector3.hpp>
 
 
 namespace game

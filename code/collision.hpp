@@ -2,8 +2,8 @@
 #define COLLISION_HPP
 
 #include <base.h>
-#include <vector3.hpp>
-#include <rectangle3.hpp>
+#include <math/vector3.hpp>
+#include <math/rectangle3.hpp>
 
 // Intersect ray R(t) = p + t*d against AABB a.
 // When intersecting, return intersection distance t.

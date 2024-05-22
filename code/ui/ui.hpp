@@ -9,6 +9,7 @@
 #include <math/vector2.hpp>
 #include <math/transform.hpp>
 #include <input.hpp>
+#include <rs/resource_system.hpp>
 
 //
 // @todo
@@ -150,12 +151,12 @@ attach_iterator iterate_attaches(system *s, handle parent);
 
 system *initialize(memory_buffer ui_memory);
 void set_string_id_storage(system *s, string_id::storage *storage);
-void set_resource_rectangle_mesh(system *s, resource_token mesh);
-void set_resource_rectangle_shader(system *s, resource_token shader);
-void set_resource_rectangle_mesh_uv(system *s, resource_token mesh);
-void set_resource_rectangle_shader_uv(system *s, resource_token shader);
+void set_resource_rectangle_mesh(system *s, rs::token mesh);
+void set_resource_rectangle_shader(system *s, rs::token shader);
+void set_resource_rectangle_mesh_uv(system *s, rs::token mesh);
+void set_resource_rectangle_shader_uv(system *s, rs::token shader);
 void update(system *s, input_state *input);
-void render(execution_context *context, system *s);
+void render(context *ctx, system *s);
 
 handle make_group(system *s);
 handle make_group(system *s, handle parent);
@@ -172,7 +173,7 @@ void set_position(system *s, handle h, vector2 position);
 void set_scale(system *s, handle h, vector2 scale);
 void set_rotation(system *s, handle h, float32 rotation);
 void set_color(system *s, handle h, vector4 color);
-void set_texture(system *s, handle h, resource_token token);
+void set_texture(system *s, handle h, rs::token token);
 void set_visible(system *s, handle h, bool is_visible);
 
 void animate(system *s, handle h, string_id id, uint32 a, uint32 duration_frames, float32 start_value, float32 final_value);

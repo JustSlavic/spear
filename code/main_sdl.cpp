@@ -1,9 +1,8 @@
-#include <SDL2/SDL.h>
-
 #include <base.h>
 #include <time.hpp>
 #include <input.hpp>
-// #include <gfx/renderer.hpp>
+#include <platform.hpp>
+#include <gfx/renderer.hpp>
 #include <game_interface.hpp>
 #include <platform_sdl.hpp>
 
@@ -41,50 +40,91 @@ void process_pending_messages(input_state *input)
 }
 
 
+#include <ecs/entity_manager.hpp>
+
+
 int main()
 {
-    // current_client_width = 800;
-    // current_client_height = 600;
+    auto global_memory = sdl::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
+    auto global_arena  = memory_allocator::make_arena(global_memory);
 
-    // int32 err = SDL_Init(SDL_INIT_VIDEO);
-    // UNUSED(err);
-    // SDL_Window *window = SDL_CreateWindow(
-    //             "window",
-    //             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-    //             current_client_width, current_client_height,
-    //             SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-    // SDL_Surface* surface = SDL_GetWindowSurface(window);
-    // UNUSED(surface);
-    // SDL_GLContext opengl_context = SDL_GL_CreateContext(window);
-    // gfx::driver driver = {};
-    // gfx::initialize_opengl(&driver);
+    auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
+    auto resource_allocator = global_arena.allocate_arena(MEGABYTES(10));
+    auto renderer_allocator = global_arena.allocate_arena(MEGABYTES(10));
+    auto string_id_allocator = global_arena.allocate_arena(KILOBYTES(10));
+    auto execution_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
+    auto render_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
 
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    auto temporary_arena = global_arena.allocate_arena(MEGABYTES(50));
+    auto string_id_storage = string_id::initialize(string_id_allocator);
 
-    // SDL_version compiled;
-    // SDL_VERSION(&compiled);
-    // UNUSED(compiled);
+    // ======================================================================
 
-    // SDL_version linked;
-    // SDL_GetVersion(&linked);
-    // UNUSED(linked);
+    rs::storage rs;
+    memset(&rs, 0, sizeof(rs));
 
-    // memory_block global_memory = sdl::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
+    context ctx;
+    memset(&ctx, 0, sizeof(ctx));
 
-    // memory::allocator global_allocator;
-    // memory::initialize_memory_arena(&global_allocator, global_memory);
+    ctx.temporary_allocator = temporary_arena;
+    ctx.resource_allocator = resource_allocator;
+    ctx.renderer_allocator = renderer_allocator;
+    ctx.strids = &string_id_storage;
+    ctx.rs = &rs;
 
-    // memory_block platform_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(20));
-    // memory_block game_memory       = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(5));
-    // memory_block scratchpad_memory = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    // memory_block renderer_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(2));
-    // memory_block resource_memory   = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
-    // memory_block string_id_memory  = ALLOCATE_BLOCK_(&global_allocator, MEGABYTES(1));
+    // ======================================================================
 
-    // memory::allocator platform_allocator = {};
-    // memory::initialize_memory_arena(&platform_allocator, platform_memory);
+    sdl::window window;
+    sdl::create_opengl_window(800, 600, &window);
+
+    gfx::driver driver = gfx::driver::initialize_opengl();
+
+    driver.clear_color(0, 0, 0, 1);
+    driver.depth_test(true);
+    driver.write_depth(true);
+    driver.vsync(true);
+
+    // ======================================================================
+
+    // ctx.aspect_ratio = 16.0f / 9.0f;
+    // ctx.near_clip_dist = 0.05f;
+    // ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    // ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
+    // ctx.far_clip_dist = 100.f;
+    // ctx.debug_load_file = NULL;
+
+    // auto view = matrix4::identity();
+    // auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
+    // auto projection_ui = matrix4::identity();
+
+    // ======================================================================
+
+    // auto manager = ecs::entity_manager::create();
+
+    // auto eid1 = manager.create_entity();
+    // auto eid2 = manager.create_entity();
+    // auto eid3 = manager.create_entity();
+    // auto eid4 = manager.create_entity();
+
+    // printf("eid2 exists = %s\n", manager.is_entity_exists(eid2) ? "true" : "false");
+    // manager.destroy_entity(eid2);
+    // printf("eid2 exists = %s\n", manager.is_entity_exists(eid2) ? "true" : "false");
+
+    // auto eid5 = manager.create_entity();
+    // printf("eid = %d\n", eid1.id);
+
+    // rs::storage rs;
+    // memset(&rs, 0, sizeof(rs));
+
+    // context ctx;
+    // memset(&ctx, 0, sizeof(ctx));
+    // ctx.temporary_allocator = temporary_arena;
+    // ctx.resource_allocator = resource_allocator;
+    // ctx.renderer_allocator = renderer_allocator;
+    // ctx.strids = &string_id_storage;
+    // ctx.rs = &rs;
+
+    // // ======================================================================
 
     // execution_context context = {};
     // memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
@@ -98,25 +138,25 @@ int main()
     // context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
     // create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
 
-    // initialize_memory(&context, game_memory);
+    initialize_memory(&ctx, game_memory);
 
     // auto view = math::matrix4::identity();
     // float32 aspect_ratio = 16.0f / 9.0f;
     // auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
 
-    // input_state input = {};
+    input_state input = {};
 
     // float32 last_frame_dt = 60.f;
     // timepoint last_timepoint;
     // last_timepoint.counts = SDL_GetTicks64();
 
-    // running = true;
-    // while (running)
-    // {
+    running = true;
+    while (running)
+    {
     //     reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
     //     reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
-    //     process_pending_messages(&input);
-    //     // win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
+        process_pending_messages(&input);
+    //     // sdl::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
     //     input.dt = last_frame_dt;
     //     input.time = ((float32) last_timepoint.counts) / 1000000.f;
 
@@ -187,25 +227,32 @@ int main()
     //     }
     //     context.render_commands.clear();
 
-    //     SDL_GL_SwapWindow(window);
+        driver.swap_buffers(&window);
 
     //     timepoint end_of_frame;
     //     end_of_frame.counts = SDL_GetTicks64();
 
     //     last_frame_dt =( (float32) (end_of_frame.counts - last_timepoint.counts)) / 1000000.f;
     //     last_timepoint = end_of_frame;
-    // }
+    }
 
-    // SDL_GL_DeleteContext(opengl_context);
-    // SDL_DestroyWindow(window);
+    SDL_GL_DeleteContext(window.context);
+    SDL_DestroyWindow(window.handle);
 
-    // SDL_Quit();
+    SDL_Quit();
     return 0;
 }
 
-// #include <gfx/renderer.cpp>
+#include <gfx/renderer.cpp>
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
-// #include <rs/resource_system.cpp>
+#include <rs/resource_system.cpp>
+#include <image/png.cpp>
+#include <game_stub.cpp>
+#include <crc.cpp>
+#include <os/platform_posix.cpp>
+#include <ecs/entity_manager.cpp>
+#include <collision.cpp>
+#include <context.cpp>
 
-// #include <game_platformer/game.cpp>
+#include <memory_bucket.cpp>

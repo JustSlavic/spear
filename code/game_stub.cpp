@@ -1,14 +1,14 @@
 #include "game_stub.hpp"
 #include "game_interface.hpp"
 
-#include <float32.h>
+#include <math/float32.h>
 
 #include <gfx/vertex_buffer_layout.hpp>
 
-#include <projective_geometry3.hpp>
+#include <math/projective_geometry3.hpp>
 #include <collision.hpp>
 
-#include <rectangle3.hpp>
+#include <math/rectangle3.hpp>
 
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -145,7 +145,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->shader_draw_texture = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"));
     gs->shader_draw_text = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXT"));
 
-    gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
+    // gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
 
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
@@ -259,17 +259,16 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-
-
-    ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
+    // ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
 }
 
-
+#if DLL_BUILD
 #include <context.cpp>
 #include <string_id.cpp>
 #include <memory_bucket.cpp>
-#include <memory_allocator.cpp>
+#include <memory/allocator.cpp>
 #include <rs/resource_system.cpp>
 #include <collision.cpp>
 #include <image/png.cpp>
 #include <crc.cpp>
+#endif // DLL_BUILD

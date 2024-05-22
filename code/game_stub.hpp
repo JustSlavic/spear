@@ -3,7 +3,7 @@
 
 #include <base.h>
 #include <time.hpp>
-#include <memory_allocator.hpp>
+#include <memory/allocator.hpp>
 
 #include "rs/resource_system.hpp"
 
