@@ -1,258 +1,220 @@
-#include <base.h>
-#include <time.hpp>
-#include <input.hpp>
-#include <platform.hpp>
-#include <gfx/renderer.hpp>
-#include <game_interface.hpp>
-#include <platform_sdl.hpp>
+#include <stdio.h>
+#include <SDL2/SDL.h>
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl3.h>
 
 
-GLOBAL bool32 running;
-GLOBAL uint32 current_client_width;
-GLOBAL uint32 current_client_height;
+char const *vertex_shader_source = R"GLSL(
+#version 410
 
+layout (location = 0) in vec2 vertex_position;
 
-void process_pending_messages(input_state *input)
+void main()
 {
-    SDL_Event event;
-    while (SDL_PollEvent(&event) != 0) {
-        switch (event.type)
-        {
-            case SDL_QUIT:
-                running = false;
-            break;
+    gl_Position = vec4(vertex_position, 0.0, 1.0);
+}
+)GLSL";
 
-            case SDL_KEYUP:
-            case SDL_KEYDOWN:
-            {
-                switch (event.key.keysym.scancode)
-                {
-                    case SDL_SCANCODE_ESCAPE: process_button_state(&input->keyboard[KB_ESC], event.type == SDL_KEYDOWN);
-                        break;
+char const *fragment_shader_source = R"GLSL(
+#version 410
 
-                    default:
-                        break;
-                }
-            }
-            break;
-        }
+out vec4 result_color;
+
+void main()
+{
+    result_color = vec4(1.0, 0.0, 1.0, 1.0);
+}
+)GLSL";
+
+
+int compile_shader(char const *source_code, int shader_type)
+{
+    int id = glCreateShader(shader_type);
+    glShaderSource(id, 1, (char const **) &source_code, (int const *) NULL);
+    glCompileShader(id);
+
+    int successful;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
+    if (successful == GL_FALSE)
+    {
+        int length = 0;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int *) &length);
+
+        auto message = malloc(length + 1);
+        memset(message, 0, length + 1);
+
+        glGetShaderInfoLog(id, length, &length, (char *) message);
+        glDeleteShader(id);
+
+        printf("Could not compile shader: \"%s\"\n", (char *)message);
+        free(message);
+
+        return 0;
     }
+
+    return id;
 }
 
+int compile_shaders()
+{
+    int vs = compile_shader(vertex_shader_source, GL_VERTEX_SHADER);
+    int fs = compile_shader(fragment_shader_source, GL_FRAGMENT_SHADER);
 
-#include <ecs/entity_manager.hpp>
+    int id = glCreateProgram();
+    glUseProgram(0);
+    glAttachShader(id, vs);
+    glAttachShader(id, fs);
+    glLinkProgram(id);
+    glDetachShader(id, vs);
+    glDetachShader(id, fs);
+
+    // glValidateProgram(id);
+    // int is_program_valid;
+    // glGetProgramiv(id, GL_VALIDATE_STATUS, &is_program_valid);
+
+    // if (!is_program_valid)
+    // {
+    //     printf("Program validation failed!!!\n");
+    //     return 0;
+    // }
+
+    return id;
+}
 
 
 int main()
 {
-    auto global_memory = sdl::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
-    auto global_arena  = memory_allocator::make_arena(global_memory);
+    int width = 800;
+    int height = 600;
 
-    auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
-    auto resource_allocator = global_arena.allocate_arena(MEGABYTES(10));
-    auto renderer_allocator = global_arena.allocate_arena(MEGABYTES(10));
-    auto string_id_allocator = global_arena.allocate_arena(KILOBYTES(10));
-    auto execution_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
-    auto render_commands_memory = global_arena.allocate_buffer(KILOBYTES(10));
-
-    auto temporary_arena = global_arena.allocate_arena(MEGABYTES(50));
-    auto string_id_storage = string_id::initialize(string_id_allocator);
-
-    // ======================================================================
-
-    rs::storage rs;
-    memset(&rs, 0, sizeof(rs));
-
-    context ctx;
-    memset(&ctx, 0, sizeof(ctx));
-
-    ctx.temporary_allocator = temporary_arena;
-    ctx.resource_allocator = resource_allocator;
-    ctx.renderer_allocator = renderer_allocator;
-    ctx.strids = &string_id_storage;
-    ctx.rs = &rs;
-
-    // ======================================================================
-
-    sdl::window window;
-    sdl::create_opengl_window(800, 600, &window);
-
-    gfx::driver driver = gfx::driver::initialize_opengl();
-
-    driver.clear_color(0, 0, 0, 1);
-    driver.depth_test(true);
-    driver.write_depth(true);
-    driver.vsync(true);
-
-    // ======================================================================
-
-    // ctx.aspect_ratio = 16.0f / 9.0f;
-    // ctx.near_clip_dist = 0.05f;
-    // ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
-    // ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
-    // ctx.far_clip_dist = 100.f;
-    // ctx.debug_load_file = NULL;
-
-    // auto view = matrix4::identity();
-    // auto projection = driver.make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
-    // auto projection_ui = matrix4::identity();
-
-    // ======================================================================
-
-    // auto manager = ecs::entity_manager::create();
-
-    // auto eid1 = manager.create_entity();
-    // auto eid2 = manager.create_entity();
-    // auto eid3 = manager.create_entity();
-    // auto eid4 = manager.create_entity();
-
-    // printf("eid2 exists = %s\n", manager.is_entity_exists(eid2) ? "true" : "false");
-    // manager.destroy_entity(eid2);
-    // printf("eid2 exists = %s\n", manager.is_entity_exists(eid2) ? "true" : "false");
-
-    // auto eid5 = manager.create_entity();
-    // printf("eid = %d\n", eid1.id);
-
-    // rs::storage rs;
-    // memset(&rs, 0, sizeof(rs));
-
-    // context ctx;
-    // memset(&ctx, 0, sizeof(ctx));
-    // ctx.temporary_allocator = temporary_arena;
-    // ctx.resource_allocator = resource_allocator;
-    // ctx.renderer_allocator = renderer_allocator;
-    // ctx.strids = &string_id_storage;
-    // ctx.rs = &rs;
-
-    // // ======================================================================
-
-    // execution_context context = {};
-    // memory::initialize_memory_arena(&context.temporary_allocator, scratchpad_memory);
-    // memory::initialize_memory_arena(&context.renderer_allocator, renderer_memory);
-    // memory::initialize_memory_heap(&context.resource_storage.heap, resource_memory);
-
-    // context.strid_storage = initialize_string_id_storage(string_id_memory);
-
-    // context.execution_commands = ALLOCATE_ARRAY(&platform_allocator, execution_command, 5);
-    // context.render_commands = ALLOCATE_ARRAY(&context.renderer_allocator, render_command, 1 << 12);
-    // context.resource_storage.resources = ALLOCATE_ARRAY(&context.renderer_allocator, rs::resource, 32);
-    // create_null_resource(&context.resource_storage); // Consider 0 resource being null-resource, indicating the lack of it.
-
-    initialize_memory(&ctx, game_memory);
-
-    // auto view = math::matrix4::identity();
-    // float32 aspect_ratio = 16.0f / 9.0f;
-    // auto projection = gfx::make_projection_matrix_fov(math::to_radians(60), aspect_ratio, 0.05f, 100.0f);
-
-    input_state input = {};
-
-    // float32 last_frame_dt = 60.f;
-    // timepoint last_timepoint;
-    // last_timepoint.counts = SDL_GetTicks64();
-
-    running = true;
-    while (running)
+    int err = SDL_Init(SDL_INIT_VIDEO);
+    if (err < 0)
     {
-    //     reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
-    //     reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
-        process_pending_messages(&input);
-    //     // sdl::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
-    //     input.dt = last_frame_dt;
-    //     input.time = ((float32) last_timepoint.counts) / 1000000.f;
-
-    //     update_and_render(&context, game_memory, &input);
-
-    //     for (usize cmd_index = 0; cmd_index < context.execution_commands.size(); cmd_index++)
-    //     {
-    //         auto cmd = context.execution_commands[cmd_index];
-    //         switch (cmd.type)
-    //         {
-    //             case execution_command::exit:
-    //             {
-    //                 running = false;
-    //             }
-    //             break;
-    //         }
-    //     }
-    //     context.execution_commands.clear();
-
-    //     for (usize cmd_index = 0; cmd_index < context.render_commands.size(); cmd_index++)
-    //     {
-    //         auto *cmd = &context.render_commands[cmd_index];
-    //         switch (cmd->type)
-    //         {
-    //             case render_command::command_type::setup_projection_matrix:
-    //             break;
-
-    //             case render_command::command_type::setup_camera:
-    //             {
-    //                 view = gfx::make_look_at_matrix(cmd->setup_camera.camera_position, cmd->setup_camera.look_at_position, cmd->setup_camera.camera_up_direction);
-    //             }
-    //             break;
-
-    //             case render_command::command_type::draw_background:
-    //             {
-    //                 gfx::draw_background(&context, cmd);
-    //             }
-    //             break;
-
-    //             case render_command::command_type::draw_mesh_with_color:
-    //             {
-    //                 gfx::draw_polygon_simple(&context,
-    //                     cmd->draw_mesh_with_color.mesh_token, cmd->draw_mesh_with_color.shader_token,
-    //                     cmd->draw_mesh_with_color.model, view, projection,
-    //                     cmd->draw_mesh_with_color.color);
-    //             }
-    //             break;
-
-    //             case render_command::command_type::draw_screen_frame:
-    //             case render_command::command_type::draw_mesh_with_texture:
-    //             {
-    //                 // gfx::draw_polygon_simple(&context,
-    //                 //     screen_frame_mesh, screen_frame_shader,
-    //                 //     math::matrix4::identity(), math::matrix4::identity(), math::matrix4::identity(),
-    //                 //     cmd->draw_screen_frame.color);
-    //             }
-    //             break;
-
-    //             case render_command::command_type::draw_ui:
-    //             {
-    //                 gfx::draw_polygon_simple(&context,
-    //                     cmd->draw_ui.mesh_token, cmd->draw_ui.shader_token,
-    //                     cmd->draw_ui.model, cmd->draw_ui.view, cmd->draw_ui.projection,
-    //                     cmd->draw_ui.color);
-    //             }
-    //             break;
-    //         }
-    //     }
-    //     context.render_commands.clear();
-
-        driver.swap_buffers(&window);
-
-    //     timepoint end_of_frame;
-    //     end_of_frame.counts = SDL_GetTicks64();
-
-    //     last_frame_dt =( (float32) (end_of_frame.counts - last_timepoint.counts)) / 1000000.f;
-    //     last_timepoint = end_of_frame;
+        printf("Could not initialize SDL2: \"%s\"\n", SDL_GetError());
+        exit(1);
     }
 
-    SDL_GL_DeleteContext(window.context);
-    SDL_DestroyWindow(window.handle);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    auto window = SDL_CreateWindow(
+        "window",
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        width, height,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    if (window == NULL)
+    {
+        printf("Could not create SDL Window: \"%s\"\n", SDL_GetError());
+        exit(2);
+    }
+
+    auto context = SDL_GL_CreateContext(window);
+    if (context == NULL)
+    {
+        printf("Could not create OpenGL context: \"%s\"\n", SDL_GetError());
+        exit(4);
+    }
+
+    SDL_GL_MakeCurrent(window, context);
+
+    SDL_version compiled;
+    SDL_VERSION(&compiled);
+    printf("Compiled against SDL2 v.%d.%d.%d\n", (int)compiled.major, (int)compiled.minor, (int)compiled.patch);
+
+    SDL_version linked;
+    SDL_GetVersion(&linked);
+    printf("Linked against SDL2 v.%d.%d.%d\n", (int)linked.major, (int)linked.minor, (int)linked.patch);
+
+    printf("glGetString(GL_SHADING_LANGUAGE_VERSION) -> %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    GLubyte const *v = glGetString(GL_VERSION);
+    printf("glGetString(GL_VERSION) -> %s\n", v);
+
+    int shader_program = compile_shaders();
+
+    GLuint vertex_array_id = 0;
+    GLuint vertex_buffer_id = 0;
+    GLuint index_buffer_id = 0;
+
+    // Rectangle mesh
+    {
+        float vbo_data[] = {
+            -1.0f, -1.0f,
+             1.0f, -1.0f,
+             0.0f,  1.0f,
+        };
+
+        int ibo_data[] = {
+            0, 1, 2, // first triangle
+        };
+
+        glGenBuffers(1, &vertex_buffer_id);
+        printf("vertex_buffer_id = %d\n", vertex_buffer_id);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data), vbo_data, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &index_buffer_id);
+        printf("index_buffer_id = %d\n", index_buffer_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ibo_data), ibo_data, GL_STATIC_DRAW);
+
+        glGenVertexArrays(1, &vertex_array_id);
+        printf("vertex_array_id = %d\n", vertex_array_id);
+        glBindVertexArray(vertex_array_id);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(
+                0,                 // Index
+                2,                 // Count
+                GL_FLOAT,          // Type
+                GL_FALSE,          // Normalized?
+                2*sizeof(float),   // Stride
+                (void *) 0);       // Offset
+    }
+
+    bool running = true;
+    while (running)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event) != 0)
+        {
+            switch (event.type)
+            {
+                case SDL_QUIT:
+                    running = false;
+                break;
+
+                case SDL_KEYUP:
+                case SDL_KEYDOWN:
+                {
+                    switch (event.key.keysym.scancode)
+                    {
+                        case SDL_SCANCODE_ESCAPE:
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                break;
+            }
+        }
+
+        glUseProgram(shader_program);
+        glBindVertexArray(vertex_array_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
+
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+
+        SDL_GL_SwapWindow(window);
+    }
+
+
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
 
     SDL_Quit();
     return 0;
 }
-
-#include <gfx/renderer.cpp>
-#include <memory/allocator.cpp>
-#include <string_id.cpp>
-#include <rs/resource_system.cpp>
-#include <image/png.cpp>
-#include <game_stub.cpp>
-#include <crc.cpp>
-#include <os/platform_posix.cpp>
-#include <ecs/entity_manager.cpp>
-#include <collision.cpp>
-#include <context.cpp>
-
-#include <memory_bucket.cpp>

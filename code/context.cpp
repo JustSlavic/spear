@@ -50,3 +50,15 @@ void context::render_text(rs::token font_texture, rs::token mesh, rs::token shad
     rend_commands.push_back(cmd);
 }
 
+void context::render_ui(matrix4 model, rs::token mesh, rs::token shader, vector4 color)
+{
+    rend_command cmd = { rend_command::render_ui_single_color };
+    cmd.model = model;
+    cmd.mesh_token = mesh;
+    cmd.shader_token = shader;
+    cmd.color = color;
+
+    rend_commands.push_back(cmd);
+}
+
+

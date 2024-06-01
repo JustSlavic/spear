@@ -63,6 +63,12 @@ void driver::swap_buffers(void *w)
         gl::swap_buffers(w);
 }
 
+void driver::enable_debug_layer()
+{
+    if (m_api == api::opengl)
+        gl::enable_debug_layer(this);
+}
+
 matrix4 driver::make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
 {
     vector3 f = normalized(at - eye);

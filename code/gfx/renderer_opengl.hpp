@@ -10,6 +10,8 @@
 namespace gl
 {
 
+void enable_debug_layer(void *d);
+
 matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
 matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
 matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);

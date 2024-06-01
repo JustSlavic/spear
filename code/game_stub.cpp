@@ -10,15 +10,11 @@
 
 #include <math/rectangle3.hpp>
 
+#include <game/systems.hpp>
+
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
-
-float32 cvt(float32 x, float32 a, float32 b, float32 c, float32 d)
-{
-    float32 y = (clamp(x, a, b) - a) * (d - c) / (b - a) + c;
-    return y;
-}
 
 
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
@@ -169,59 +165,20 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    // Move camera
-    {
-        auto camera_move_direction = V3(0, 0, 0);
-        if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
-        if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
-        if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
-        if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
-        if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
-        if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
-
-        if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);
-        if (get_hold_count(input->gamepads[0][GP_DPAD_RIGHT])) camera_move_direction += V3(1, 0, 0);
-        if (get_hold_count(input->gamepads[0][GP_DPAD_UP])) camera_move_direction += V3(0, 1, 0);
-        if (get_hold_count(input->gamepads[0][GP_DPAD_DOWN])) camera_move_direction -= V3(0, 1, 0);
-        if (get_hold_count(input->gamepads[0][GP_LEFT_SHOULDER])) camera_move_direction += V3(0, 0, 1);
-        if (get_hold_count(input->gamepads[0][GP_RIGHT_SHOULDER])) camera_move_direction -= V3(0, 0, 1);
-
-        camera_move_direction += V3(input->gamepads[0].left_stick.x, input->gamepads[0].left_stick.y, 0);
-
-        if (input->mouse.scroll != 0)
-        {
-            float k = 15.f * gs->camera.position.z;
-            camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
-        }
-
-        gs->camera.position += normalized(camera_move_direction) * gs->camera_speed * dt;
-    }
-
+    game::move_camera(gs, input);
     ctx->setup_camera(gs->camera.position, gs->camera.forward, gs->camera.up);
 
-    vector3 ray_direction;
+    vector3 ray_direction = game::compute_pointer_ray(ctx, gs, input);
     vector3 intersection;
     {
-        auto mouse_pos_x =  cvt((float32) input->mouse.x, 0.f, (float32) ctx->window_width, -1.f, 1.f);
-        auto mouse_pos_y = -cvt((float32) input->mouse.y, 0.f, (float32) ctx->window_height, -1.f, 1.f);
-
-        auto clip_d = ctx->near_clip_dist;
-        auto clip_w = ctx->near_clip_width;
-        auto clip_h = ctx->near_clip_height;
-
-        auto up = gs->camera.up;
-        auto right = cross(gs->camera.forward, gs->camera.up);
-
-        auto clip_c = gs->camera.position + gs->camera.forward * clip_d;
-        auto clip_p = clip_c + mouse_pos_x * 0.5f * clip_w * right +
-                               mouse_pos_y * 0.5f * clip_h * up;
-        ray_direction = normalized(clip_p - gs->camera.position);
-
         auto Oxy = make_plane3(0, 0, 1, 0);
-        auto line = make_line3(ray_direction, clip_p);
+        auto line = make_line3(ray_direction, gs->camera.position);
         auto intersection_p = outer(Oxy, line);
         intersection = intersection_p.vector / intersection_p.w;
     }
+
+    // printf("mouse = (%d, %d)\n", input->mouse.x, input->mouse.y);
+    // printf("ray_direction = (%f, %f, %f)\n", ray_direction.x, ray_direction.y, ray_direction.z);
 
     bool32 intersected = false;
     float32 intersect_t = infinity;
@@ -245,6 +202,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             }
         }
     }
+
+    ctx->render_ui(matrix4::identity(), gs->rect_mesh, gs->shader_single_color, V4(0.0, 7.0, 9.0, 1.0));
 
     for (int x = -2; x <= 2; x++)
     {

@@ -8,7 +8,7 @@
 
 #if OS_MAC
 #define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
 #endif
@@ -138,11 +138,13 @@ void set_viewport(gfx::viewport vp)
 void depth_test(bool do_test)
 {
     do_test ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+    GL_CHECK_ERRORS();
 }
 
 void write_depth(bool do_write)
 {
     glDepthMask(do_write ? GL_TRUE : GL_FALSE);
+    GL_CHECK_ERRORS();
 }
 
 struct shader
@@ -220,6 +222,7 @@ bool is_shader_program_valid(uint32 id)
 uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
+    printf("id = %d\n", id);
     GL_CHECK_ERRORS();
     glShaderSource(id, 1, (char const **) &source_code.data, (int const *) NULL);
     GL_CHECK_ERRORS();
@@ -244,6 +247,8 @@ uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type
 
         glDeleteShader(id);
         GL_CHECK_ERRORS();
+
+        printf("Could not compile shader: \"%s\"\n", (char *)message.data);
 
         mallocator()->deallocate(message);
 
@@ -301,18 +306,22 @@ uint32 load_texture(bitmap bitmap)
     if (bitmap.color_type == IMAGE_RGBA)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+        GL_CHECK_ERRORS();
     }
     else if (bitmap.color_type == IMAGE_RGB)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.pixels);
+        GL_CHECK_ERRORS();
     }
     else if (bitmap.color_type == IMAGE_GRAYSCALE)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+        GL_CHECK_ERRORS();
     }
     else if (bitmap.color_type == IMAGE_GRAYSCALE_ALPHA)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.pixels);
+        GL_CHECK_ERRORS();
     }
     // else if (bitmap.color_type == IMAGE_BGR)
     // {
@@ -328,7 +337,6 @@ uint32 load_texture(bitmap bitmap)
     {
         ASSERT_FAIL("Unsupported color type!");
     }
-    GL_CHECK_ERRORS();
 
     return id;
 }

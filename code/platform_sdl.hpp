@@ -28,7 +28,6 @@ INLINE memory_buffer allocate_memory(void *base_address, usize size)
 struct window
 {
     SDL_Window *handle;
-    // SDL_Surface* surface;
     SDL_GLContext context;
 };
 
@@ -42,11 +41,15 @@ void create_opengl_window(int32 width, int32 height, window *w)
         exit(1);
     }
 
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
     auto window = SDL_CreateWindow(
         "window",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         width, height,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     if (window == NULL)
     {
         printf("Could not create SDL Window: \"%s\"\n", SDL_GetError());
@@ -71,12 +74,7 @@ void create_opengl_window(int32 width, int32 height, window *w)
     }
 
     w->handle  = window;
-    // w->surface = surface;
     w->context = context;
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     SDL_version compiled;
     SDL_VERSION(&compiled);
@@ -85,6 +83,12 @@ void create_opengl_window(int32 width, int32 height, window *w)
     SDL_version linked;
     SDL_GetVersion(&linked);
     printf("Linked against SDL2 v.%d.%d.%d\n", (int)linked.major, (int)linked.minor, (int)linked.patch);
+}
+
+
+void get_mouse_pos(int *x, int *y)
+{
+    SDL_GetMouseState(x, y);
 }
 
 

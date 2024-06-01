@@ -2,7 +2,7 @@
 #define ECS_ENTITY_MANAGER_HPP
 
 #include <base.h>
-#include "entity.hpp"
+#include "entity_id.hpp"
 #include "event.hpp"
 
 /*
@@ -17,23 +17,59 @@
 
 namespace ecs {
 
-#define ECS_MAX_ENTITIES_POWER_OF_2 2 // 2^15 = 32768
-#define ECS_MAX_ENTITIES (1 << ECS_MAX_ENTITIES_POWER_OF_2)
-
 struct entity_manager
 {
     uint16 generations[ECS_MAX_ENTITIES];
     uint16 empty_slots[ECS_MAX_ENTITIES];
     uint64 p_read;
     uint64 p_write;
-    // ring_buffer<event> event_queue;
+
+    event_registry events;
 
     static entity_manager create();
 
     entity_id create_entity();
     void destroy_entity(entity_id);
     bool is_entity_exists(entity_id);
+
+    template <uint32 EventTypeHash, typename Fn>
+    void register_system(Fn *fn);
+
+    template <typename EventType>
+    void send_event(EventType &&evt);
+
+    template <typename EventType>
+    void send_event_immediate(EventType &&evt);
 };
+
+
+template <uint32 EventTypeHash, typename Fn>
+void entity_manager::register_system(Fn *fn)
+{
+    event_id_t id = events.find_event<EventTypeHash>();
+    if (id == INVALID_EVENT_ID)
+        id = events.register_event<EventTypeHash>();
+
+    // @todo: ???
+}
+
+template <typename EventType>
+void entity_manager::send_event(EventType &&evt)
+{
+    event_id_t id = events.find_event<EventType>();
+    if (id == INVALID_EVENT_ID) return;
+
+    // @todo: push back the event into a queue
+}
+
+template <typename EventType>
+void entity_manager::send_event_immediate(EventType &&evt)
+{
+    event_id_t id = events.find_event<EventType>();
+    if (id == INVALID_EVENT_ID) return;
+
+    // @todo: apply event immediate without pushing into a queue
+}
 
 
 } // namespace ecs

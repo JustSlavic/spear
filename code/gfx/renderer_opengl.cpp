@@ -8,6 +8,36 @@
 namespace gl
 {
 
+struct driver
+{
+    gfx::api m_api;
+    uint32 *debug_layer_ids[8];
+    uint8 data[64];
+};
+
+void debug_layer_callback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam)
+{
+    printf("OpenGL Debug Layer: %.*s\n", (int) length, message);
+}
+
+void enable_debug_layer(void *d)
+{
+#if 0
+    auto *opengl_driver = (driver *) d;
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, ARRAY_COUNT(driver::debug_layer_ids), (uint32 *) opengl_driver->debug_layer_ids, true);
+    glDebugMessageCallback(debug_layer_callback, NULL);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
+}
+
 matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 {
     matrix4 result = {};
@@ -87,22 +117,31 @@ mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
     uint32 vertex_buffer_id = 0;
     {
         glGenBuffers(1, &vertex_buffer_id);
+        GL_CHECK_ERRORS();
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        GL_CHECK_ERRORS();
         glBufferData(GL_ARRAY_BUFFER, mesh->vbo.size, mesh->vbo.data, GL_STATIC_DRAW);
+        GL_CHECK_ERRORS();
     }
 
     uint32 index_buffer_id = 0;
     {
         glGenBuffers(1, &index_buffer_id);
+        GL_CHECK_ERRORS();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
+        GL_CHECK_ERRORS();
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo.size, mesh->ibo.data, GL_STATIC_DRAW);
+        GL_CHECK_ERRORS();
     }
 
     uint32 vertex_array_id = 0;
     {
         glGenVertexArrays(1, &vertex_array_id);
+        GL_CHECK_ERRORS();
         glBindVertexArray(vertex_array_id);
+        GL_CHECK_ERRORS();
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        GL_CHECK_ERRORS();
 
         uint32 stride = 0;
         for (uint32 attrib_index = 0; attrib_index < mesh->vbl.size; attrib_index++)
@@ -115,6 +154,7 @@ mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
         {
             uint32 count = mesh->vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
+            GL_CHECK_ERRORS();
             glVertexAttribPointer(
                 attrib_index,      // Index
                 count,             // Count
@@ -122,6 +162,7 @@ mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
                 GL_FALSE,          // Normalized?
                 stride,            // Stride
                 (void *) offset);  // Offset
+            GL_CHECK_ERRORS();
 
             offset += (count * sizeof(float32));
         }
@@ -168,6 +209,12 @@ shader_render_data *load_shader(context *ctx, rs::shader *s)
         vs = compile_shader(memory_buffer::from(vs_text_shader), shader::vertex);
         fs = compile_shader(memory_buffer::from(fs_text_shader), shader::fragment);
     }
+    else
+    {
+        ASSERT_FAIL();
+    }
+
+    if (vs == 0 || fs == 0) return NULL;
 
     auto program = gl::link_shader(vs, fs);
 
@@ -215,8 +262,11 @@ void draw_indexed_triangles_color(matrix4 model, matrix4 view, matrix4 proj, mes
     s.uniform("u_color", color);
 
     glBindVertexArray(mesh_rd->vao_id);
+    GL_CHECK_ERRORS();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
+    GL_CHECK_ERRORS();
     glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
+    GL_CHECK_ERRORS();
 }
 
 void draw_indexed_triangles_texture(matrix4 model, matrix4 view, matrix4 proj, mesh_render_data *mesh_rd, shader_render_data *shader_rd, texture_render_data *texture_rd)
@@ -230,8 +280,11 @@ void draw_indexed_triangles_texture(matrix4 model, matrix4 view, matrix4 proj, m
     s.uniform("u_projection", proj);
 
     glBindVertexArray(mesh_rd->vao_id);
+    GL_CHECK_ERRORS();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_rd->ibo_id);
+    GL_CHECK_ERRORS();
     glDrawElements(GL_TRIANGLES, mesh_rd->count, GL_UNSIGNED_INT, NULL);
+    GL_CHECK_ERRORS();
 }
 
 void render_mesh_single_color(context *ctx, matrix4 model, matrix4 view, matrix4 proj, rs::token mesh_token, rs::token shader_token, vector4 color)
@@ -348,12 +401,17 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
     }
 
     glBindVertexArray(mesh_rd->vao_id);
+    GL_CHECK_ERRORS();
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh_rd->vbo_id);
+    GL_CHECK_ERRORS();
     glBufferData(GL_ARRAY_BUFFER, vbo_bucket.used, vbo_bucket.data, GL_STATIC_DRAW);
+    GL_CHECK_ERRORS();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL_CHECK_ERRORS();
 
     glDrawArrays(GL_TRIANGLES, 0, count);
+    GL_CHECK_ERRORS();
 }
 
 

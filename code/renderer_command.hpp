@@ -14,6 +14,7 @@ struct rend_command
         setup_camera,
         render_mesh_single_color,
         render_mesh_texture,
+        render_ui_single_color,
         render_text,
     };
     rend_command_kind kind;

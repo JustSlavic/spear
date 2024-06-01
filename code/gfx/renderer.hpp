@@ -39,6 +39,8 @@ struct driver
     void vsync(bool do_vsync);
     void swap_buffers(void *w);
 
+    void enable_debug_layer();
+
     matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up);
     matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
     matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
