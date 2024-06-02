@@ -61,6 +61,84 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 }
 
 
+entity_action null_action()
+{
+    entity_action result = {};
+    result.kind = ENTITY_ACTION_NONE;
+    return result;
+}
+
+bool cell_is_empty(game_state *gs, int x, int y)
+{
+    if ((x < -2 || x > 2) || (y < -2 || y > 2)) return false;
+    return !gs->map_cell_occupied[x][y];
+}
+
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
+{
+    ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
+    if (cell_is_empty(gs, x, y))
+    {
+        eid = gs->entity_manager.create_entity();
+        auto *entity = gs->entities + eid.get_index();
+        entity->kind = kind;
+        entity->action = null_action();
+        entity->x = x;
+        entity->y = y;
+        gs->map_cell_occupied[x][y] = true;
+    }
+    return eid;
+}
+
+ecs::entity_id spawn_hero(game_state *gs, int x, int y)
+{
+    auto eid = spawn_entity(gs, x, y, ENTITY_HERO);
+    gs->hero_id = eid;
+    printf("hero_id = %d\n", eid.id);
+    return eid;
+}
+
+ecs::entity_id spawn_monster(game_state *gs, int x, int y)
+{
+    auto eid = spawn_entity(gs, x, y, ENTITY_MONSTER);
+    gs->monsters[gs->monster_count++] = eid;
+    printf("monster_eid = %d\n", eid.id);
+    return eid;
+}
+
+bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
+{
+    return cell_is_empty(gs, x, y) &&
+           ((x == hero->x + 1 && y == hero->y) ||
+            (x == hero->x - 1 && y == hero->y) ||
+            (y == hero->y + 1 && x == hero->x) ||
+            (y == hero->y - 1 && x == hero->x));
+}
+
+void apply_entity_action(game_state *gs, entity *e)
+{
+    if (e->action.kind == ENTITY_ACTION_MOVE)
+    {
+        gs->map_cell_occupied[e->x][e->y] = false;
+        e->x += e->action.dx;
+        e->y += e->action.dy;
+        gs->map_cell_occupied[e->x][e->y] = true;
+    }
+}
+
+void apply_monster_actions(game_state *gs)
+{
+    for (uint32 i = 0; i < gs->monster_count; i++)
+    {
+        auto monster_eid = gs->monsters[i];
+        entity *monster = gs->entities + monster_eid.get_index();
+
+        apply_entity_action(gs, monster);
+    }
+}
+
+
+
 } // namespace game
 
 #endif // GAME_SYSTEMS_HPP

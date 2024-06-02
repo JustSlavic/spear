@@ -51,8 +51,11 @@ struct game_state
 {
     memory_allocator allocator;
 
+    bool map_cell_occupied[5][5];
+
     entity entities[ECS_MAX_ENTITIES];
-    uint32 entity_count;
+    ecs::entity_id monsters[ECS_MAX_ENTITIES];
+    uint32 monster_count;
 
     ecs::entity_manager entity_manager;
 

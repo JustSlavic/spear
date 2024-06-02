@@ -17,14 +17,6 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 
-entity_action none_action()
-{
-    entity_action result = {};
-    result.kind = ENTITY_ACTION_NONE;
-    return result;
-}
-
-
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -160,19 +152,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     // Init ECS
     gs->entity_manager = ecs::entity_manager::create();
 
-    gs->hero_id = gs->entity_manager.create_entity();
-    gs->entities[gs->hero_id.get_index()] = entity{ ENTITY_HERO };
-    printf("hero_id = %d\n", gs->hero_id.id);
-}
-
-
-bool hero_can_walk_here(entity *hero, int x, int y)
-{
-    if ((x < -2 || x > 2) || (y < -2 || y > 2)) return false;
-    return (x == hero->x + 1 && y == hero->y) ||
-           (x == hero->x - 1 && y == hero->y) ||
-           (y == hero->y + 1 && x == hero->x) ||
-           (y == hero->y - 1 && x == hero->x);
+    game::spawn_hero(gs, 0, 0);
+    game::spawn_monster(gs, 1, 1);
 }
 
 
@@ -238,14 +219,11 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         // @attention NEW TURN !!!
 
-        if (hero->action.kind == ENTITY_ACTION_MOVE)
-        {
-            hero->x += hero->action.dx;
-            hero->y += hero->action.dy;
-        }
-
+        game::apply_entity_action(gs, hero);
         gs->turn_start_time = input->time;
-        hero->action = none_action();
+        hero->action = game::null_action();
+
+        game::apply_monster_actions(gs);
     }
 
     int move_to_x = hero->x;
@@ -287,7 +265,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         TOGGLE(gs->selecting_direction_of_action);
     }
 
-    if (hero_can_walk_here(hero, move_to_x, move_to_y))
+    if (game::entity_can_walk_here(gs, hero, move_to_x, move_to_y))
     {
         gs->action_input.dx = (move_to_x - hero->x);
         gs->action_input.dy = (move_to_y - hero->y);
@@ -305,7 +283,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         {
             auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
 
-            if (hero_can_walk_here(hero, x, y))
+            if (game::entity_can_walk_here(gs, hero, x, y))
             {
                 c += V4(0.3, 0.3, 0.3, 0);
                 if (!gs->selecting_direction_of_action &&
@@ -339,6 +317,19 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                  matrix4::translate_z(2) *
                  matrix4::scale(0.5f, 0.5f, 0.8f);
         ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 1, 1, 1));
+    }
+
+    // Draw monsters
+    {
+        for (int i = 0; i < gs->monster_count; i++)
+        {
+            entity *monster = gs->entities + gs->monsters[i].get_index();
+            auto m = matrix4::translate_x((float32) monster->x + 1.3f*monster->x) *
+                     matrix4::translate_y((float32) monster->y + 1.3f*monster->y) *
+                     matrix4::translate_z(2) *
+                     matrix4::scale(0.5f, 0.5f, 0.3f);
+            ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 0.2, 0.1, 1));
+        }
     }
 
     {
@@ -394,3 +385,5 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <image/png.cpp>
 #include <crc.cpp>
 #endif // DLL_BUILD
+
+#include <ecs/entity_id.cpp>
