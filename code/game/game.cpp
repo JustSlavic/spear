@@ -1,4 +1,4 @@
-#include "game_stub.hpp"
+#include "game.hpp"
 #include "game_interface.hpp"
 
 #include <math/float32.h>
@@ -145,6 +145,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
+
+    // Init ECS
+    gs->entity_manager = ecs::entity_manager::create();
 }
 
 
@@ -203,7 +206,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    ctx->render_ui(matrix4::identity(), gs->rect_mesh, gs->shader_single_color, V4(0.0, 7.0, 9.0, 1.0));
+    ctx->render_ui(matrix4::scale(100.f), gs->rect_mesh, gs->shader_single_color, V4(0.0, 7.0, 9.0, 1.0));
 
     for (int x = -2; x <= 2; x++)
     {

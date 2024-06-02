@@ -10,6 +10,7 @@ entity_manager entity_manager::create()
     {
         result.empty_slots[result.p_write++] = i;
     }
+    result.create_entity(); // INVALID_ENTITY_ID
     return result;
 }
 

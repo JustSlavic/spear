@@ -3,7 +3,7 @@
 
 #include <base.h>
 
-#include <game_stub.hpp>
+#include "game.hpp"
 
 
 namespace game {

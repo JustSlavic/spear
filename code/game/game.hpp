@@ -5,6 +5,8 @@
 #include <time.hpp>
 #include <memory/allocator.hpp>
 
+#include <ecs/entity_manager.hpp>
+
 #include "rs/resource_system.hpp"
 
 #include <game/camera.hpp>
@@ -13,6 +15,10 @@
 struct game_state
 {
     memory_allocator allocator;
+
+    ecs::entity_manager entity_manager;
+
+    ecs::entity_id player_id;
 
     game::camera camera;
     float32 camera_speed;

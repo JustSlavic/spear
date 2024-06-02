@@ -123,8 +123,7 @@ int main()
 
     // ======================================================================
 
-    // auto manager = ecs::entity_manager::create();
-    // auto INVALID_ENTITY_ID = manager.create_entity();
+
 
     // ecs::component comps[] = {
     //     ECS_COMPONENT("eid", ecs::entity_id),
@@ -253,7 +252,7 @@ int main()
 #include <string_id.cpp>
 #include <rs/resource_system.cpp>
 #include <image/png.cpp>
-#include <game_stub.cpp>
+#include <game/game.cpp>
 #include <crc.cpp>
 #include <os/platform_posix.cpp>
 #include <ecs/entity_manager.cpp>
