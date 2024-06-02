@@ -98,6 +98,7 @@ void reset_transitions(button_state *buttons, usize key_count)
 
 enum mouse_key
 {
+    MOUSE_NONE,
     MOUSE_LEFT, MOUSE_MIDDLE, MOUSE_RIGHT,
     // @note: key_count have to be the last in enum
     MOUSE_KEY_COUNT

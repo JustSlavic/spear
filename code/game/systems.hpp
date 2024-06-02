@@ -12,12 +12,12 @@ namespace game {
 void move_camera(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
-    if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
-    if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
-    if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
+    if (get_hold_count(input->keyboard[KB_LEFT])) camera_move_direction -= V3(1, 0, 0);
+    if (get_hold_count(input->keyboard[KB_RIGHT])) camera_move_direction += V3(1, 0, 0);
+    if (get_hold_count(input->keyboard[KB_UP])) camera_move_direction += V3(0, 1, 0);
+    if (get_hold_count(input->keyboard[KB_DOWN])) camera_move_direction -= V3(0, 1, 0);
+    // if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
+    // if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
 
     if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);
     if (get_hold_count(input->gamepads[0][GP_DPAD_RIGHT])) camera_move_direction += V3(1, 0, 0);

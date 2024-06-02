@@ -222,7 +222,6 @@ bool is_shader_program_valid(uint32 id)
 uint32 compile_shader(memory_buffer source_code, shader::shader_type shader_type)
 {
     uint32 id = glCreateShader(shader_type);
-    printf("id = %d\n", id);
     GL_CHECK_ERRORS();
     glShaderSource(id, 1, (char const **) &source_code.data, (int const *) NULL);
     GL_CHECK_ERRORS();
@@ -275,11 +274,7 @@ uint32 link_shader(uint32 vs, uint32 fs)
     glDetachShader(id, fs);
     GL_CHECK_ERRORS();
 
-    if (is_shader_program_valid(id))
-    {
-        return id;
-    }
-    return 0;
+    return id;
 }
 
 void use_shader(shader s)

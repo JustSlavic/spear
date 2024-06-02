@@ -33,6 +33,16 @@ void process_pending_messages(input_state *input)
                 }
             break;
 
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                auto button = (e.button.button == 1) ? MOUSE_LEFT :
+                              (e.button.button == 2) ? MOUSE_MIDDLE :
+                              (e.button.button == 3) ? MOUSE_RIGHT : MOUSE_NONE;
+                process_button_state(&input->mouse[button], e.button.state == SDL_PRESSED);
+            }
+            break;
+
             case SDL_KEYUP:
             case SDL_KEYDOWN:
             {

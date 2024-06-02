@@ -17,6 +17,14 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 
+entity_action none_action()
+{
+    entity_action result = {};
+    result.kind = ENTITY_ACTION_NONE;
+    return result;
+}
+
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -140,14 +148,31 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->shader_single_color = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"));
     gs->shader_draw_texture = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"));
     gs->shader_draw_text = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXT"));
+    gs->shader_ground = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_GROUND"));
 
     // gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
 
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 
+    gs->seconds_for_turn = duration::seconds(5);
+
     // Init ECS
     gs->entity_manager = ecs::entity_manager::create();
+
+    gs->hero_id = gs->entity_manager.create_entity();
+    gs->entities[gs->hero_id.get_index()] = entity{ ENTITY_HERO };
+    printf("hero_id = %d\n", gs->hero_id.id);
+}
+
+
+bool hero_can_walk_here(entity *hero, int x, int y)
+{
+    if ((x < -2 || x > 2) || (y < -2 || y > 2)) return false;
+    return (x == hero->x + 1 && y == hero->y) ||
+           (x == hero->x - 1 && y == hero->y) ||
+           (y == hero->y + 1 && x == hero->x) ||
+           (y == hero->y - 1 && x == hero->x);
 }
 
 
@@ -206,19 +231,154 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    ctx->render_ui(matrix4::scale(100.f), gs->rect_mesh, gs->shader_single_color, V4(0.0, 7.0, 9.0, 1.0));
+    entity *hero = gs->entities + gs->hero_id.get_index();
+
+    if (get_press_count(input->keyboard[KB_SPACE]) ||
+        (input->time >= (gs->turn_start_time + gs->seconds_for_turn)))
+    {
+        // @attention NEW TURN !!!
+
+        if (hero->action.kind == ENTITY_ACTION_MOVE)
+        {
+            hero->x += hero->action.dx;
+            hero->y += hero->action.dy;
+        }
+
+        gs->turn_start_time = input->time;
+        hero->action = none_action();
+    }
+
+    int move_to_x = hero->x;
+    int move_to_y = hero->y;
+
+    if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
+    {
+        move_to_x = intersect_x;
+        move_to_y = intersect_y;
+    }
+    if (get_press_count(input->keyboard[KB_W]))
+    {
+        move_to_x = hero->x;
+        move_to_y = hero->y + 1;
+    }
+    if (get_press_count(input->keyboard[KB_A]))
+    {
+        move_to_x = hero->x - 1;
+        move_to_y = hero->y;
+    }
+    if (get_press_count(input->keyboard[KB_S]))
+    {
+        move_to_x = hero->x;
+        move_to_y = hero->y - 1;
+    }
+    if (get_press_count(input->keyboard[KB_D]))
+    {
+        move_to_x = hero->x + 1;
+        move_to_y = hero->y;
+    }
+    if (get_press_count(input->keyboard[KB_Q]))
+    {
+        gs->action_input.kind = ENTITY_ACTION_LEFT_ARM;
+        TOGGLE(gs->selecting_direction_of_action);
+    }
+    if (get_press_count(input->keyboard[KB_E]))
+    {
+        gs->action_input.kind = ENTITY_ACTION_RIGHT_ARM;
+        TOGGLE(gs->selecting_direction_of_action);
+    }
+
+    if (hero_can_walk_here(hero, move_to_x, move_to_y))
+    {
+        gs->action_input.dx = (move_to_x - hero->x);
+        gs->action_input.dy = (move_to_y - hero->y);
+        if (!gs->selecting_direction_of_action)
+        {
+            gs->action_input.kind = ENTITY_ACTION_MOVE;
+        }
+        hero->action = gs->action_input;
+        gs->selecting_direction_of_action = false;
+    }
 
     for (int x = -2; x <= 2; x++)
     {
         for (int y = -2; y <= 2; y++)
         {
             auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
-            if (intersected && x == intersect_x && y == intersect_y) c = V4(1, 0, 0, 1);
+
+            if (hero_can_walk_here(hero, x, y))
+            {
+                c += V4(0.3, 0.3, 0.3, 0);
+                if (!gs->selecting_direction_of_action &&
+                    x == (hero->x + hero->action.dx) &&
+                    y == (hero->y + hero->action.dy))
+                {
+                    if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
+                        c = V4(0.2, 0.6, 0.2, 1);
+                    else if (hero->action.kind == ENTITY_ACTION_RIGHT_ARM)
+                        c = V4(0.8, 0.2, 0.2, 1);
+                    else
+                        c = V4(0.4, 0.4, 0.8, 1);
+                }
+            }
+
+            if (intersected && x == intersect_x && y == intersect_y)
+            {
+                c += V4(0.3, 0.3, 0.3, 1);
+            }
 
             auto m = matrix4::translate_x((float32)x + 1.3f*x) *
                      matrix4::translate_y((float32)y + 1.3f*y);
-            ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, c);
+            ctx->render_mesh(m, gs->cube_mesh, gs->shader_ground, c);
         }
+    }
+
+    // Draw hero
+    {
+        auto m = matrix4::translate_x((float32) hero->x + 1.3f*hero->x) *
+                 matrix4::translate_y((float32) hero->y + 1.3f*hero->y) *
+                 matrix4::translate_z(2) *
+                 matrix4::scale(0.5f, 0.5f, 0.8f);
+        ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 1, 1, 1));
+    }
+
+    {
+        auto color_left_arm = V4(0.2, 0.5, 0.7, 1.0);
+        auto color_torso = V4(0.2, 0.5, 0.7, 1.0);
+        auto color_right_arm = V4(0.2, 0.5, 0.7, 1.0);
+
+        if ((!gs->selecting_direction_of_action && hero->action.kind == ENTITY_ACTION_LEFT_ARM) ||
+            (gs->selecting_direction_of_action && gs->action_input.kind == ENTITY_ACTION_LEFT_ARM))
+            color_left_arm += V4(0.5, 0.2, 0.1, 0);
+        if ((!gs->selecting_direction_of_action && hero->action.kind == ENTITY_ACTION_RIGHT_ARM) ||
+            (gs->selecting_direction_of_action && gs->action_input.kind == ENTITY_ACTION_RIGHT_ARM))
+            color_right_arm += V4(0.5, 0.2, 0.1, 0);
+
+        ctx->render_ui(
+                       matrix4::translate_y(50) *
+                       matrix4::translate_x(25) *
+                       matrix4::scale(25, 50, 1)
+            , gs->rect_mesh, gs->shader_single_color, color_left_arm);
+        ctx->render_ui(
+                       matrix4::translate_y(50) *
+                       matrix4::translate_x(80) *
+                       matrix4::scale(25, 50, 1)
+            , gs->rect_mesh, gs->shader_single_color, color_torso);
+        ctx->render_ui(
+                       matrix4::translate_y(50) *
+                       matrix4::translate_x(135) *
+                       matrix4::scale(25, 50, 1)
+            , gs->rect_mesh, gs->shader_single_color, color_right_arm);
+    }
+
+    {
+        float32 t = 1 - get_seconds(input->time - gs->turn_start_time) / get_seconds(gs->seconds_for_turn);
+        vector4 color = V4(sin((t - 3) * pi * 0.5f),
+                           -cos((t + 1) * pi * 0.5f),
+                           0, 1);
+        ctx->render_ui(
+                       matrix4::translate_y(ctx->viewport.height - 10) *
+                       matrix4::scale(ctx->viewport.width * t, 2, 1)
+            , gs->rect_mesh, gs->shader_single_color, color);
     }
 
     // ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));

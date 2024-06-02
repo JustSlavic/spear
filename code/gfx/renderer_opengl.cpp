@@ -209,6 +209,11 @@ shader_render_data *load_shader(context *ctx, rs::shader *s)
         vs = compile_shader(memory_buffer::from(vs_text_shader), shader::vertex);
         fs = compile_shader(memory_buffer::from(fs_text_shader), shader::fragment);
     }
+    else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_GROUND"))
+    {
+        vs = compile_shader(memory_buffer::from(vs_shaded_cube), shader::vertex);
+        fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
+    }
     else
     {
         ASSERT_FAIL();
