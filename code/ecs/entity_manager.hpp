@@ -17,10 +17,17 @@
 
 namespace ecs {
 
+
+struct entity_description
+{
+
+};
+
+
 struct entity_manager
 {
-    uint16 generations[ECS_MAX_ENTITIES];
-    uint16 empty_slots[ECS_MAX_ENTITIES];
+    entity_gen_t generations[ECS_MAX_ENTITIES];
+    entity_idx_t empty_slots[ECS_MAX_ENTITIES];
     uint64 p_read;
     uint64 p_write;
 

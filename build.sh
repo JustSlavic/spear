@@ -23,13 +23,16 @@ linux_release_build() {
 macos_debug_build() {
     command=$1
 
-    CXX_FLAGS="-std=c++14 -g"
-    WARNINGS="-Wall -Werror -Wno-unused-variable"
+    CXX_FLAGS="-std=c++17 -g -fno-rtti"
+    WARNINGS="-Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable"
     DEFINES="-DDEBUG=1 -DOS_MAC=1"
     INCLUDES="-I../code -I../code/based -I/opt/homebrew/Cellar/sdl2/2.30.3/include"
-    LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.30.3/lib"
+    LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.30.3/lib -framework OpenGL"
 
-    clang++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_sdl.cpp -o spear $LIBS -framework OpenGL
+    # clang++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_sdl.cpp -o spear $LIBS -framework OpenGL
+
+    clang++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_sdl_opengl.cpp -o spear $LIBS -framework OpenGL
+    # clang++ $CXX_FLAGS $WARNINGS ../code/main_sdl_vulkan.cpp -o vulkan -I/opt/homebrew/Cellar/sdl2/2.30.3/include -lSDL2 -L/opt/homebrew/Cellar/sdl2/2.30.3/lib -I/Users/vradko/VulkanSDK/1.3.283.0/macOS/include
 
     # swiftc ../code/main_macos.swift -o spear
 }

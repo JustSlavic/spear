@@ -7,8 +7,8 @@
 namespace ecs {
 
 typedef uint32 entity_id_t ;
-typedef uint32 entity_idx_t;
-typedef uint32 entity_gen_t;
+typedef entity_id_t entity_idx_t;
+typedef entity_id_t entity_gen_t;
 #define ECS_ENTITY_INDEX_BITS (16)
 #define ECS_ENTITY_INDEX_MASK ((1 << ECS_ENTITY_INDEX_BITS) - 1)
 #define ECS_ENTITY_GENERATION_BITS (sizeof(entity_id_t)*8 - ECS_ENTITY_INDEX_BITS)
@@ -17,7 +17,7 @@ typedef uint32 entity_gen_t;
 
 struct entity_id
 {
-    uint32 id;
+    entity_id_t id;
 
     entity_idx_t get_index() { return (id & ECS_ENTITY_INDEX_MASK); }
     entity_gen_t get_generation() { return (id >> ECS_ENTITY_INDEX_BITS) & ECS_ENTITY_GENERATION_MASK; }

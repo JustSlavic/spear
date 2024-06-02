@@ -36,13 +36,10 @@ void process_pending_messages(input_state *input)
             case SDL_KEYUP:
             case SDL_KEYDOWN:
             {
-                switch (e.key.keysym.scancode)
+                auto key = sdl::map_button_from_scancode(e.key.keysym.scancode);
+                if (key != KB_NONE)
                 {
-                    case SDL_SCANCODE_ESCAPE: process_button_state(&input->keyboard[KB_ESC], e.type == SDL_KEYDOWN);
-                        break;
-
-                    default:
-                        break;
+                    process_button_state(&input->keyboard[key], e.type == SDL_KEYDOWN);
                 }
             }
             break;
@@ -159,16 +156,9 @@ int main()
 
     input_state input = {};
 
-    float32 last_frame_dt = 60.f;
+    float32 last_frame_dt = 0.016f;
     timepoint last_timepoint;
-    last_timepoint.us = SDL_GetTicks64();
-
-    // int ec = SDL_CaptureMouse(SDL_TRUE);
-    // if (ec < 0)
-    // {
-    //     printf("CaptureMouse => %s\n", SDL_GetError());
-    //     return -150;
-    // }
+    last_timepoint.us = SDL_GetTicks64() * 1000;
 
     running = true;
     while (running)
@@ -190,11 +180,9 @@ int main()
             ctx.window_width = current_client_width;
             ctx.window_height = current_client_height;
 
-            printf("xy  = (%u, %u)\n", ctx.viewport.offset_x, ctx.viewport.offset_y);
-            printf("dim = (%u, %u)\n", ctx.viewport.width, ctx.viewport.height);
-
-            // projection_ui =
-            //     matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1) * matrix4::translate(-1, 1, 0);
+            projection_ui =
+                matrix4::translate(-1, 1, 0) *
+                matrix4::scale(2.0f/ctx.viewport.width, -2.0f/ctx.viewport.height, 1);
         }
 
         driver.clear();
@@ -247,9 +235,9 @@ int main()
         driver.swap_buffers(&window);
 
         timepoint end_of_frame;
-        end_of_frame.us = SDL_GetTicks64();
+        end_of_frame.us = SDL_GetTicks64() * 1000;
 
-        last_frame_dt =( (float32) (end_of_frame.us - last_timepoint.us)) / 1000000.f;
+        last_frame_dt = get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
     }
 
