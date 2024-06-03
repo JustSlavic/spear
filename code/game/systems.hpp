@@ -68,10 +68,28 @@ entity_action null_action()
     return result;
 }
 
+bool cell_on_board(int x, int y)
+{
+    return (-2 <= x && x <= 2) && (-2 <= y && y <= 2);
+}
+
 bool cell_is_empty(game_state *gs, int x, int y)
 {
-    if ((x < -2 || x > 2) || (y < -2 || y > 2)) return false;
+    if (!cell_on_board(x, y)) return false;
     return !gs->map_cell_occupied[x][y];
+}
+
+bool cell_is_adjacent_to_entity(entity *hero, int x, int y)
+{
+    return (x == hero->x + 1 && y == hero->y) ||
+           (x == hero->x - 1 && y == hero->y) ||
+           (y == hero->y + 1 && x == hero->x) ||
+           (y == hero->y - 1 && x == hero->x);
+}
+
+bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
+{
+    return cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(hero, x, y);
 }
 
 ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
@@ -106,22 +124,13 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     return eid;
 }
 
-bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
-{
-    return cell_is_empty(gs, x, y) &&
-           ((x == hero->x + 1 && y == hero->y) ||
-            (x == hero->x - 1 && y == hero->y) ||
-            (y == hero->y + 1 && x == hero->x) ||
-            (y == hero->y - 1 && x == hero->x));
-}
-
 void apply_entity_action(game_state *gs, entity *e)
 {
     if (e->action.kind == ENTITY_ACTION_MOVE)
     {
         gs->map_cell_occupied[e->x][e->y] = false;
-        e->x += e->action.dx;
-        e->y += e->action.dy;
+        e->x = e->action.x;
+        e->y = e->action.y;
         gs->map_cell_occupied[e->x][e->y] = true;
     }
 }

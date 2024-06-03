@@ -265,16 +265,29 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         TOGGLE(gs->selecting_direction_of_action);
     }
 
-    if (game::entity_can_walk_here(gs, hero, move_to_x, move_to_y))
+    if (game::cell_on_board(move_to_x, move_to_y) &&
+        game::cell_is_adjacent_to_entity(hero, move_to_x, move_to_y))
     {
-        gs->action_input.dx = (move_to_x - hero->x);
-        gs->action_input.dy = (move_to_y - hero->y);
+        gs->action_input.x = move_to_x;
+        gs->action_input.y = move_to_y;
         if (!gs->selecting_direction_of_action)
         {
             gs->action_input.kind = ENTITY_ACTION_MOVE;
         }
-        hero->action = gs->action_input;
-        gs->selecting_direction_of_action = false;
+
+        if (gs->action_input.kind == ENTITY_ACTION_MOVE)
+        {
+            if (game::entity_can_walk_here(gs, hero, gs->action_input.x, gs->action_input.y))
+            {
+                hero->action = gs->action_input;
+                gs->selecting_direction_of_action = false;
+            }
+        }
+        else if (gs->action_input.kind != ENTITY_ACTION_NONE)
+        {
+            hero->action = gs->action_input;
+            gs->selecting_direction_of_action = false;
+        }
     }
 
     for (int x = -2; x <= 2; x++)
@@ -283,21 +296,47 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         {
             auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
 
-            if (game::entity_can_walk_here(gs, hero, x, y))
+            if (gs->selecting_direction_of_action)
             {
-                c += V4(0.3, 0.3, 0.3, 0);
-                if (!gs->selecting_direction_of_action &&
-                    x == (hero->x + hero->action.dx) &&
-                    y == (hero->y + hero->action.dy))
+                if (game::cell_is_adjacent_to_entity(hero, x, y))
                 {
-                    if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
+                    c += V4(0.3, 0.3, 0.3, 0);
+                }
+            }
+            else
+            {
+                if (game::entity_can_walk_here(gs, hero, x, y))
+                {
+                    c += V4(0.3, 0.3, 0.3, 0);
+                }
+
+                if (x == hero->action.x &&
+                    y == hero->action.y)
+                {
+                    if (hero->action.kind == ENTITY_ACTION_MOVE)
+                        c = V4(0.4, 0.4, 0.8, 1);
+                    else if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
                         c = V4(0.2, 0.6, 0.2, 1);
                     else if (hero->action.kind == ENTITY_ACTION_RIGHT_ARM)
                         c = V4(0.8, 0.2, 0.2, 1);
-                    else
-                        c = V4(0.4, 0.4, 0.8, 1);
                 }
             }
+
+            // if (game::cell_is_adjacent_to_entity(hero, x, y))
+            // {
+            //     if (!gs->selecting_direction_of_action &&
+            //         hero->action.kind != ENTITY_ACTION_NONE &&
+            //         x == hero->action.x &&
+            //         y == hero->action.y)
+            //     {
+            //         if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
+            //             c = V4(0.2, 0.6, 0.2, 1);
+            //         else if (hero->action.kind == ENTITY_ACTION_RIGHT_ARM)
+            //             c = V4(0.8, 0.2, 0.2, 1);
+            //         else
+            //             c = V4(0.4, 0.4, 0.8, 1);
+            //     }
+            // }
 
             if (intersected && x == intersect_x && y == intersect_y)
             {

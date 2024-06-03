@@ -24,8 +24,8 @@ struct entity_action
 {
     entity_action_kind kind;
 
-    int dx;
-    int dy;
+    int x;
+    int y;
 };
 
 
