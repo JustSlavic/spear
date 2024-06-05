@@ -239,6 +239,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     }
 
     entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
+    entity *hero = game::get_entity(gs, gs->hero_eid);
 
     bool force_new_turn = get_press_count(input->keyboard[KB_SPACE]);
     bool timer_new_turn = gs->turn_timer_enabled && (input->time >= (gs->turn_start_time + gs->seconds_for_turn));
@@ -246,6 +247,15 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     if (force_new_turn || timer_new_turn)
     {
         // @attention NEW TURN !!!
+
+        gs->action_buffer.clear();
+        gs->action_buffer.push_back(game::get_action2(hero));
+        for (int i = 0; i < gs->monster_count; i++)
+        {
+            entity *monster = game::get_entity(gs, gs->monsters[i]);
+            gs->action_buffer.push_back(game::get_action2(monster));
+        }
+        printf("gs->action_buffer.size() => %llu\n", gs->action_buffer.size());
 
         game::apply_entity_action(gs, selected_entity);
         gs->turn_start_time = input->time;
@@ -329,12 +339,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
-    {
-        printf("Clicked on %d, %d => eid=%d\n", intersect_x, intersect_y,
-            gs->get_map_eid(intersect_x, intersect_y).id);
-    }
-
     for (int x = -2; x <= 2; x++)
     {
         for (int y = -2; y <= 2; y++)
@@ -383,7 +387,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
     // Draw selected_entity
     {
-        entity *hero = game::get_entity(gs, gs->hero_eid);
         float height = hero->eid == gs->selected_entity_eid ? selected_entity_height
                      : regular_entity_height;
         auto m = matrix4::translate_x((float32) hero->x + 1.3f*hero->x) *
@@ -397,7 +400,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         for (int i = 0; i < gs->monster_count; i++)
         {
-            entity *monster = gs->entities + gs->monsters[i].get_index();
+            entity *monster = game::get_entity(gs, gs->monsters[i]);
             float height = monster->eid == gs->selected_entity_eid ? selected_entity_height
                          : regular_entity_height;
 
@@ -449,6 +452,26 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                        matrix4::translate_y(ctx->viewport.height - 10) *
                        matrix4::scale(ctx->viewport.width * t, 2, 1)
             , gs->rect_mesh, gs->shader_single_color, color);
+    }
+
+    // Render action buffer
+    {
+        int x = 200;
+        int y = 20;
+        for (auto action : gs->action_buffer)
+        {
+            auto color = action.kind == ENTITY_ACTION2_MOVE ? V4(0.4, 0.4, 0.8, 1) :
+                         action.kind == ENTITY_ACTION2_ATTACK ? V4(0.8, 0.4, 0.4, 1) :
+                         action.kind == ENTITY_ACTION2_DEFENCE ? V4(0.4, 0.8, 0.4, 1) :
+                         V4(0.2, 0.2, 0.2, 1);
+            ctx->render_ui(
+                           matrix4::translate_x(x) *
+                           matrix4::translate_y(y) *
+                           matrix4::scale(10, 10, 1)
+                , gs->rect_mesh, gs->shader_single_color, color);
+
+            x += 25;
+        }
     }
 
     // ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));

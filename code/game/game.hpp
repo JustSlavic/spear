@@ -48,6 +48,27 @@ struct entity
     int y;
 };
 
+enum entity_action2_kind
+{
+    ENTITY_ACTION2_NONE,
+    ENTITY_ACTION2_MOVE,
+    ENTITY_ACTION2_ATTACK,
+    ENTITY_ACTION2_DEFENCE,
+};
+
+struct entity_action2
+{
+    entity_action2_kind kind;
+
+    ecs::entity_id eid;
+
+    int x0;
+    int y0;
+
+    int x1;
+    int y1;
+};
+
 
 struct game_state
 {
@@ -61,6 +82,8 @@ struct game_state
 
     ecs::entity_id hero_eid;
     ecs::entity_id selected_entity_eid;
+
+    static_array<entity_action2, 32> action_buffer;
 
     bool turn_timer_enabled;
     int turn_no;

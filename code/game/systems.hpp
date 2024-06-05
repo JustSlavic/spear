@@ -73,6 +73,21 @@ entity_action null_action()
     return result;
 }
 
+entity_action2 get_action2(entity *e)
+{
+    entity_action2 result;
+    result.kind = (e->action.kind == ENTITY_ACTION_MOVE) ? ENTITY_ACTION2_MOVE :
+                  (e->action.kind == ENTITY_ACTION_LEFT_ARM) ? ENTITY_ACTION2_DEFENCE :
+                  (e->action.kind == ENTITY_ACTION_RIGHT_ARM) ? ENTITY_ACTION2_ATTACK :
+                  ENTITY_ACTION2_NONE;
+    result.eid = e->eid;
+    result.x0 = e->x;
+    result.y0 = e->y;
+    result.x1 = e->action.x;
+    result.y1 = e->action.y;
+    return result;
+}
+
 bool cell_is_empty(game_state *gs, int x, int y)
 {
     if (!gs->is_coords_valid(x, y)) return false;
