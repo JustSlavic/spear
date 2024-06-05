@@ -213,7 +213,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    entity *hero = gs->entities + gs->hero_id.get_index();
+    entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
 
     bool force_new_turn = get_press_count(input->keyboard[KB_SPACE]);
     bool timer_new_turn = gs->turn_timer_enabled && (input->time >= (gs->turn_start_time + gs->seconds_for_turn));
@@ -222,15 +222,15 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         // @attention NEW TURN !!!
 
-        game::apply_entity_action(gs, hero);
+        game::apply_entity_action(gs, selected_entity);
         gs->turn_start_time = input->time;
-        hero->action = game::null_action();
+        selected_entity->action = game::null_action();
 
         game::apply_monster_actions(gs);
     }
 
-    int move_to_x = hero->x;
-    int move_to_y = hero->y;
+    int move_to_x = selected_entity->x;
+    int move_to_y = selected_entity->y;
 
     if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
     {
@@ -239,23 +239,23 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     }
     if (get_press_count(input->keyboard[KB_W]))
     {
-        move_to_x = hero->x;
-        move_to_y = hero->y + 1;
+        move_to_x = selected_entity->x;
+        move_to_y = selected_entity->y + 1;
     }
     if (get_press_count(input->keyboard[KB_A]))
     {
-        move_to_x = hero->x - 1;
-        move_to_y = hero->y;
+        move_to_x = selected_entity->x - 1;
+        move_to_y = selected_entity->y;
     }
     if (get_press_count(input->keyboard[KB_S]))
     {
-        move_to_x = hero->x;
-        move_to_y = hero->y - 1;
+        move_to_x = selected_entity->x;
+        move_to_y = selected_entity->y - 1;
     }
     if (get_press_count(input->keyboard[KB_D]))
     {
-        move_to_x = hero->x + 1;
-        move_to_y = hero->y;
+        move_to_x = selected_entity->x + 1;
+        move_to_y = selected_entity->y;
     }
     if (get_press_count(input->keyboard[KB_Q]))
     {
@@ -269,7 +269,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     }
 
     if (game::cell_on_board(move_to_x, move_to_y) &&
-        game::cell_is_adjacent_to_entity(hero, move_to_x, move_to_y))
+        game::cell_is_adjacent_to_entity(selected_entity, move_to_x, move_to_y))
     {
         gs->action_input.x = move_to_x;
         gs->action_input.y = move_to_y;
@@ -280,16 +280,24 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
         if (gs->action_input.kind == ENTITY_ACTION_MOVE)
         {
-            if (game::entity_can_walk_here(gs, hero, gs->action_input.x, gs->action_input.y))
+            if (game::entity_can_walk_here(gs, selected_entity, gs->action_input.x, gs->action_input.y))
             {
-                hero->action = gs->action_input;
+                selected_entity->action = gs->action_input;
                 gs->selecting_direction_of_action = false;
             }
         }
         else if (gs->action_input.kind != ENTITY_ACTION_NONE)
         {
-            hero->action = gs->action_input;
+            selected_entity->action = gs->action_input;
             gs->selecting_direction_of_action = false;
+        }
+    }
+    else if (gs->map[intersect_x][intersect_y] != ecs::INVALID_ENTITY_ID)
+    {
+        if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
+        {
+            gs->selected_entity_eid = gs->map[intersect_x][intersect_y];
+            selected_entity = game::get_entity(gs, gs->selected_entity_eid);
         }
     }
 
@@ -301,45 +309,29 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
             if (gs->selecting_direction_of_action)
             {
-                if (game::cell_is_adjacent_to_entity(hero, x, y))
+                if (game::cell_is_adjacent_to_entity(selected_entity, x, y))
                 {
                     c += V4(0.3, 0.3, 0.3, 0);
                 }
             }
             else
             {
-                if (game::entity_can_walk_here(gs, hero, x, y))
+                if (game::entity_can_walk_here(gs, selected_entity, x, y))
                 {
                     c += V4(0.3, 0.3, 0.3, 0);
                 }
 
-                if (x == hero->action.x &&
-                    y == hero->action.y)
+                if (x == selected_entity->action.x &&
+                    y == selected_entity->action.y)
                 {
-                    if (hero->action.kind == ENTITY_ACTION_MOVE)
+                    if (selected_entity->action.kind == ENTITY_ACTION_MOVE)
                         c = V4(0.4, 0.4, 0.8, 1);
-                    else if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
+                    else if (selected_entity->action.kind == ENTITY_ACTION_LEFT_ARM)
                         c = V4(0.2, 0.6, 0.2, 1);
-                    else if (hero->action.kind == ENTITY_ACTION_RIGHT_ARM)
+                    else if (selected_entity->action.kind == ENTITY_ACTION_RIGHT_ARM)
                         c = V4(0.8, 0.2, 0.2, 1);
                 }
             }
-
-            // if (game::cell_is_adjacent_to_entity(hero, x, y))
-            // {
-            //     if (!gs->selecting_direction_of_action &&
-            //         hero->action.kind != ENTITY_ACTION_NONE &&
-            //         x == hero->action.x &&
-            //         y == hero->action.y)
-            //     {
-            //         if (hero->action.kind == ENTITY_ACTION_LEFT_ARM)
-            //             c = V4(0.2, 0.6, 0.2, 1);
-            //         else if (hero->action.kind == ENTITY_ACTION_RIGHT_ARM)
-            //             c = V4(0.8, 0.2, 0.2, 1);
-            //         else
-            //             c = V4(0.4, 0.4, 0.8, 1);
-            //     }
-            // }
 
             if (intersected && x == intersect_x && y == intersect_y)
             {
@@ -352,12 +344,18 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    // Draw hero
+    float selected_entity_height = 0.8;
+    float regular_entity_height = 0.3;
+
+    // Draw selected_entity
     {
+        entity *hero = game::get_entity(gs, gs->hero_eid);
+        float height = hero->eid == gs->selected_entity_eid ? selected_entity_height
+                     : regular_entity_height;
         auto m = matrix4::translate_x((float32) hero->x + 1.3f*hero->x) *
                  matrix4::translate_y((float32) hero->y + 1.3f*hero->y) *
                  matrix4::translate_z(2) *
-                 matrix4::scale(0.5f, 0.5f, 0.8f);
+                 matrix4::scale(0.5f, 0.5f, height);
         ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 1, 1, 1));
     }
 
@@ -366,10 +364,13 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         for (int i = 0; i < gs->monster_count; i++)
         {
             entity *monster = gs->entities + gs->monsters[i].get_index();
+            float height = monster->eid == gs->selected_entity_eid ? selected_entity_height
+                         : regular_entity_height;
+
             auto m = matrix4::translate_x((float32) monster->x + 1.3f*monster->x) *
                      matrix4::translate_y((float32) monster->y + 1.3f*monster->y) *
                      matrix4::translate_z(2) *
-                     matrix4::scale(0.5f, 0.5f, 0.3f);
+                     matrix4::scale(0.5f, 0.5f, height);
             ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 0.2, 0.1, 1));
         }
     }
@@ -379,10 +380,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         auto color_torso = V4(0.2, 0.5, 0.7, 1.0);
         auto color_right_arm = V4(0.2, 0.5, 0.7, 1.0);
 
-        if ((!gs->selecting_direction_of_action && hero->action.kind == ENTITY_ACTION_LEFT_ARM) ||
+        if ((!gs->selecting_direction_of_action && selected_entity->action.kind == ENTITY_ACTION_LEFT_ARM) ||
             (gs->selecting_direction_of_action && gs->action_input.kind == ENTITY_ACTION_LEFT_ARM))
             color_left_arm += V4(0.5, 0.2, 0.1, 0);
-        if ((!gs->selecting_direction_of_action && hero->action.kind == ENTITY_ACTION_RIGHT_ARM) ||
+        if ((!gs->selecting_direction_of_action && selected_entity->action.kind == ENTITY_ACTION_RIGHT_ARM) ||
             (gs->selecting_direction_of_action && gs->action_input.kind == ENTITY_ACTION_RIGHT_ARM))
             color_right_arm += V4(0.5, 0.2, 0.1, 0);
 

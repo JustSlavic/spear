@@ -39,6 +39,8 @@ enum entity_kind
 
 struct entity
 {
+    ecs::entity_id eid;
+
     entity_kind kind;
     entity_action action;
 
@@ -51,7 +53,7 @@ struct game_state
 {
     memory_allocator allocator;
 
-    bool map_cell_occupied[5][5];
+    ecs::entity_id map[5][5];
 
     entity entities[ECS_MAX_ENTITIES];
     ecs::entity_id monsters[ECS_MAX_ENTITIES];
@@ -59,7 +61,8 @@ struct game_state
 
     ecs::entity_manager entity_manager;
 
-    ecs::entity_id hero_id;
+    ecs::entity_id hero_eid;
+    ecs::entity_id selected_entity_eid;
 
     bool turn_timer_enabled;
     int turn_no;

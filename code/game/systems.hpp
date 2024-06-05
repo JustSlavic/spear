@@ -60,6 +60,11 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
     return result;
 }
 
+entity *get_entity(game_state *gs, ecs::entity_id eid)
+{
+    entity *result = gs->entities + eid.get_index();
+    return result;
+}
 
 entity_action null_action()
 {
@@ -76,7 +81,7 @@ bool cell_on_board(int x, int y)
 bool cell_is_empty(game_state *gs, int x, int y)
 {
     if (!cell_on_board(x, y)) return false;
-    return !gs->map_cell_occupied[x][y];
+    return gs->map[x][y] == ecs::INVALID_ENTITY_ID;
 }
 
 bool cell_is_adjacent_to_entity(entity *hero, int x, int y)
@@ -92,6 +97,18 @@ bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
     return cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(hero, x, y);
 }
 
+void move_entity(game_state *gs, entity *e, int x, int y)
+{
+    if (gs->map[x][y] != ecs::INVALID_ENTITY_ID)
+        return;
+
+    gs->map[e->x][e->y] = ecs::INVALID_ENTITY_ID;
+    gs->map[x][y] = e->eid;
+
+    e->x = x;
+    e->y = y;
+}
+
 ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
 {
     ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
@@ -99,11 +116,12 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
     {
         eid = gs->entity_manager.create_entity();
         auto *entity = gs->entities + eid.get_index();
+        entity->eid = eid;
         entity->kind = kind;
         entity->action = null_action();
         entity->x = x;
         entity->y = y;
-        gs->map_cell_occupied[x][y] = true;
+        gs->map[x][y] = eid;
     }
     return eid;
 }
@@ -111,7 +129,8 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
 ecs::entity_id spawn_hero(game_state *gs, int x, int y)
 {
     auto eid = spawn_entity(gs, x, y, ENTITY_HERO);
-    gs->hero_id = eid;
+    gs->selected_entity_eid = eid;
+    gs->hero_eid = eid;
     printf("hero_id = %d\n", eid.id);
     return eid;
 }
@@ -128,10 +147,7 @@ void apply_entity_action(game_state *gs, entity *e)
 {
     if (e->action.kind == ENTITY_ACTION_MOVE)
     {
-        gs->map_cell_occupied[e->x][e->y] = false;
-        e->x = e->action.x;
-        e->y = e->action.y;
-        gs->map_cell_occupied[e->x][e->y] = true;
+        move_entity(gs, e, e->action.x, e->action.y);
     }
 }
 
@@ -145,7 +161,6 @@ void apply_monster_actions(game_state *gs)
         apply_entity_action(gs, monster);
     }
 }
-
 
 
 } // namespace game
