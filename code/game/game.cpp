@@ -257,11 +257,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
         printf("gs->action_buffer.size() => %llu\n", gs->action_buffer.size());
 
-        game::apply_entity_action(gs, selected_entity);
-        gs->turn_start_time = input->time;
-        selected_entity->action = game::null_action();
-
+        game::apply_entity_action(gs, hero);
         game::apply_monster_actions(gs);
+        
+        gs->turn_start_time = input->time;
     }
 
     if (intersected && gs->get_map_eid(intersect_x, intersect_y) != ecs::INVALID_ENTITY_ID &&
