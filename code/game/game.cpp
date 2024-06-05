@@ -147,6 +147,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 
+    gs->turn_timer_enabled = false;
     gs->seconds_for_turn = duration::seconds(5);
 
     // Init ECS
@@ -214,8 +215,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
     entity *hero = gs->entities + gs->hero_id.get_index();
 
-    if (get_press_count(input->keyboard[KB_SPACE]) ||
-        (input->time >= (gs->turn_start_time + gs->seconds_for_turn)))
+    bool force_new_turn = get_press_count(input->keyboard[KB_SPACE]);
+    bool timer_new_turn = gs->turn_timer_enabled && (input->time >= (gs->turn_start_time + gs->seconds_for_turn));
+
+    if (force_new_turn || timer_new_turn)
     {
         // @attention NEW TURN !!!
 
@@ -400,6 +403,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             , gs->rect_mesh, gs->shader_single_color, color_right_arm);
     }
 
+    // Render timer
+    if (gs->turn_timer_enabled)
     {
         float32 t = 1 - get_seconds(input->time - gs->turn_start_time) / get_seconds(gs->seconds_for_turn);
         vector4 color = V4(sin((t - 3) * pi * 0.5f),

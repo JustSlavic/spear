@@ -61,6 +61,7 @@ struct game_state
 
     ecs::entity_id hero_id;
 
+    bool turn_timer_enabled;
     int turn_no;
     duration seconds_for_turn;
     timepoint turn_start_time;
