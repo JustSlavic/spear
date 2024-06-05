@@ -17,6 +17,29 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 
+bool game_state::is_coords_valid(int x, int y)
+{
+    return (-2 <= x && x <= 2) && (-2 <= y && y <= 2);
+}
+
+ecs::entity_id game_state::get_map_eid(int x, int y)
+{
+    ecs::entity_id result = ecs::INVALID_ENTITY_ID;
+    if (is_coords_valid(x, y))
+    {
+        result = map[x + 2][y + 2];
+    }
+    return result;
+}
+
+void game_state::set_map_eid(int x, int y, ecs::entity_id eid)
+{
+    if (is_coords_valid(x, y))
+    {
+        map[x + 2][y + 2] = eid;
+    }
+}
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -144,6 +167,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     // gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
 
+    // memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
+
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 
@@ -229,6 +254,17 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         game::apply_monster_actions(gs);
     }
 
+    if (intersected && gs->get_map_eid(intersect_x, intersect_y) != ecs::INVALID_ENTITY_ID &&
+        !game::entity_can_walk_here(gs, selected_entity, intersect_x, intersect_y) &&
+        !gs->selecting_direction_of_action)
+    {
+        if (get_press_count(input->mouse[MOUSE_LEFT]))
+        {
+            gs->selected_entity_eid = gs->get_map_eid(intersect_x, intersect_y);
+            selected_entity = game::get_entity(gs, gs->selected_entity_eid);
+        }
+    }
+
     int move_to_x = selected_entity->x;
     int move_to_y = selected_entity->y;
 
@@ -268,7 +304,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         TOGGLE(gs->selecting_direction_of_action);
     }
 
-    if (game::cell_on_board(move_to_x, move_to_y) &&
+    if (gs->is_coords_valid(move_to_x, move_to_y) &&
         game::cell_is_adjacent_to_entity(selected_entity, move_to_x, move_to_y))
     {
         gs->action_input.x = move_to_x;
@@ -292,13 +328,11 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             gs->selecting_direction_of_action = false;
         }
     }
-    else if (gs->map[intersect_x][intersect_y] != ecs::INVALID_ENTITY_ID)
+
+    if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
     {
-        if (intersected && get_press_count(input->mouse[MOUSE_LEFT]))
-        {
-            gs->selected_entity_eid = gs->map[intersect_x][intersect_y];
-            selected_entity = game::get_entity(gs, gs->selected_entity_eid);
-        }
+        printf("Clicked on %d, %d => eid=%d\n", intersect_x, intersect_y,
+            gs->get_map_eid(intersect_x, intersect_y).id);
     }
 
     for (int x = -2; x <= 2; x++)

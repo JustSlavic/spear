@@ -53,8 +53,6 @@ struct game_state
 {
     memory_allocator allocator;
 
-    ecs::entity_id map[5][5];
-
     entity entities[ECS_MAX_ENTITIES];
     ecs::entity_id monsters[ECS_MAX_ENTITIES];
     uint32 monster_count;
@@ -88,6 +86,12 @@ struct game_state
     rs::token font_texture;
 
     timepoint exit_press_time;
+
+    bool is_coords_valid(int x, int y);
+    ecs::entity_id get_map_eid(int x, int y);
+    void set_map_eid(int x, int y, ecs::entity_id eid);
+
+    ecs::entity_id map[5][5];
 };
 
 

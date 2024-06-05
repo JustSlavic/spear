@@ -73,15 +73,10 @@ entity_action null_action()
     return result;
 }
 
-bool cell_on_board(int x, int y)
-{
-    return (-2 <= x && x <= 2) && (-2 <= y && y <= 2);
-}
-
 bool cell_is_empty(game_state *gs, int x, int y)
 {
-    if (!cell_on_board(x, y)) return false;
-    return gs->map[x][y] == ecs::INVALID_ENTITY_ID;
+    if (!gs->is_coords_valid(x, y)) return false;
+    return gs->get_map_eid(x, y) == ecs::INVALID_ENTITY_ID;
 }
 
 bool cell_is_adjacent_to_entity(entity *hero, int x, int y)
@@ -99,11 +94,11 @@ bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
 
 void move_entity(game_state *gs, entity *e, int x, int y)
 {
-    if (gs->map[x][y] != ecs::INVALID_ENTITY_ID)
+    if (gs->get_map_eid(x, y) != ecs::INVALID_ENTITY_ID)
         return;
 
-    gs->map[e->x][e->y] = ecs::INVALID_ENTITY_ID;
-    gs->map[x][y] = e->eid;
+    gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
+    gs->set_map_eid(x, y, e->eid);
 
     e->x = x;
     e->y = y;
@@ -121,7 +116,7 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
         entity->action = null_action();
         entity->x = x;
         entity->y = y;
-        gs->map[x][y] = eid;
+        gs->set_map_eid(x, y, eid);
     }
     return eid;
 }
