@@ -19,6 +19,8 @@ struct entity_id
 {
     entity_id_t id;
 
+    explicit operator bool() { return id != 0; }
+
     entity_idx_t get_index() { return (id & ECS_ENTITY_INDEX_MASK); }
     entity_gen_t get_generation() { return (id >> ECS_ENTITY_INDEX_BITS) & ECS_ENTITY_GENERATION_MASK; }
 };

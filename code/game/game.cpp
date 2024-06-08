@@ -172,6 +172,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 
+    gs->turn_no = 1;
     gs->turn_timer_enabled = false;
     gs->seconds_for_turn = duration::seconds(5);
 
@@ -255,11 +256,94 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             entity *monster = game::get_entity(gs, gs->monsters[i]);
             gs->action_buffer.push_back(game::get_action2(monster));
         }
-        printf("gs->action_buffer.size() => %llu\n", gs->action_buffer.size());
 
-        game::apply_entity_action(gs, hero);
-        game::apply_monster_actions(gs);
-        
+        for (int i = 0; i < gs->action_buffer.size(); i++)
+        {
+            auto *a1 = &gs->action_buffer[i];
+            for (int j = i + 1; j < gs->action_buffer.size(); j++)
+            {
+                auto *a2 = &gs->action_buffer[j];
+                if (a1->kind == ENTITY_ACTION2_MOVE && a2->kind == ENTITY_ACTION2_MOVE)
+                {
+                    if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
+                    {
+                        // a1 -> <- a2
+                        a1->kind = ENTITY_ACTION2_NONE;
+                        a2->kind = ENTITY_ACTION2_NONE;
+                    }
+                    else if (a1->x1 == a2->x0 && a1->y1 == a2->y0)
+                    {
+                        // a1 -> a2 ->
+                        ASSERT_FAIL("Should not be possible");
+                    }
+                    else if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
+                    {
+                        // <- a1 <- a2
+                        ASSERT_FAIL("Should not be possible");
+                    }
+                }
+                else if (a1->kind == ENTITY_ACTION2_MOVE && a2->kind == ENTITY_ACTION2_ATTACK)
+                {
+                    if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
+                    {
+                        // a2 --a-> a1 ->
+                        auto tmp = *a1;
+                        *a1 = *a2;
+                        *a2 = tmp;
+                    }
+                    else if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
+                    {
+                        // a2 --a->  <- a1
+                        // All right
+                    }
+                }
+                else if (a1->kind == ENTITY_ACTION2_ATTACK && a2->kind == ENTITY_ACTION2_MOVE)
+                {
+                    if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
+                    {
+                        // a2 --a-> a1 ->
+                        // All right
+                    }
+                    else if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
+                    {
+                        // a2 --a->  <- a1
+                        auto tmp = *a1;
+                        *a1 = *a2;
+                        *a2 = tmp;
+                    }
+                }
+                else if (a1->kind == ENTITY_ACTION2_ATTACK && a2->kind == ENTITY_ACTION2_DEFENCE)
+                {
+                    if ((a1->x1 == a2->x0 && a1->y1 == a2->y0) &&
+                        (a1->x0 == a2->x1 && a1->y0 == a2->y1))
+                    {
+                        // a1 --a-> a2
+                        //    <-d--
+                        auto tmp = *a1;
+                        *a1 = *a2;
+                        *a2 = tmp;
+                    }
+                }
+            }
+        }
+
+        {
+            int i = gs->action_buffer.size();
+            while (i-->0)
+            {
+                if (gs->action_buffer[i].kind == ENTITY_ACTION2_NONE)
+                {
+                    entity *e = game::get_entity(gs, gs->action_buffer[i].eid);
+                    e->action = game::null_action();
+
+                    gs->action_buffer.erase_not_sorted(i);
+                }
+            }
+        }
+
+        game::apply_actions(gs);
+
+        gs->turn_no += 1;
         gs->turn_start_time = input->time;
     }
 

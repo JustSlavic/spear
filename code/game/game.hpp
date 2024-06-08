@@ -46,6 +46,11 @@ struct entity
 
     int x;
     int y;
+
+    int hp;
+    
+    int strength;
+    int agility;
 };
 
 enum entity_action2_kind

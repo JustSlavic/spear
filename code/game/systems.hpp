@@ -119,7 +119,7 @@ void move_entity(game_state *gs, entity *e, int x, int y)
     e->y = y;
 }
 
-ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind, entity **p = NULL)
 {
     ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
     if (cell_is_empty(gs, x, y))
@@ -132,13 +132,24 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind)
         entity->x = x;
         entity->y = y;
         gs->set_map_eid(x, y, eid);
+
+        if (p) *p = entity;
     }
     return eid;
 }
 
 ecs::entity_id spawn_hero(game_state *gs, int x, int y)
 {
-    auto eid = spawn_entity(gs, x, y, ENTITY_HERO);
+    entity *entity = NULL;
+
+    auto eid = spawn_entity(gs, x, y, ENTITY_HERO, &entity);
+    if (entity)
+    {
+        entity->hp = 10;
+        entity->strength = 2;
+        entity->agility = 2;
+    }
+ 
     gs->selected_entity_eid = eid;
     gs->hero_eid = eid;
     printf("hero_id = %d\n", eid.id);
@@ -153,24 +164,41 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     return eid;
 }
 
-void apply_entity_action(game_state *gs, entity *e)
+void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
 {
-    if (e->action.kind == ENTITY_ACTION_MOVE)
+    if (action.kind == ENTITY_ACTION2_MOVE)
     {
-        move_entity(gs, e, e->action.x, e->action.y);
+        printf("%d at (%d, %d) moves to %d at (%d, %d)\n",
+            e->eid.id, action.x0, action.y0,
+            gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
+        move_entity(gs, e, action.x1, action.y1);
+    }
+    else if (action.kind == ENTITY_ACTION2_ATTACK)
+    {
+        printf("%d at (%d, %d) attacks %d at (%d, %d)\n",
+            e->eid.id, action.x0, action.y0,
+            gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
+    }
+    else if (action.kind == ENTITY_ACTION2_DEFENCE)
+    {
+        printf("%d at (%d, %d) defences from %d at (%d, %d)\n",
+            e->eid.id, action.x0, action.y0,
+            gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
     }
 }
 
-void apply_monster_actions(game_state *gs)
+void apply_actions(game_state *gs)
 {
-    for (uint32 i = 0; i < gs->monster_count; i++)
+    printf("-------- turn %d --------\n", gs->turn_no);
+    for (auto action : gs->action_buffer)
     {
-        auto monster_eid = gs->monsters[i];
-        entity *monster = gs->entities + monster_eid.get_index();
-
-        apply_entity_action(gs, monster);
+        auto *e = get_entity(gs, action.eid);
+        apply_entity_action(gs, e, action);
+        e->action = null_action();
     }
 }
+
+// void apply_monster_actions(game_state `
 
 
 } // namespace game
