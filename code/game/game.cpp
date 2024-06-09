@@ -371,6 +371,17 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
+    if (intersected)
+    {
+        if (game::cell_is_empty(gs, intersect_x, intersect_y))
+        {
+            if (get_press_count(input->keyboard[KB_P]))
+            {
+                game::spawn_monster(gs, intersect_x, intersect_y);
+            }
+        }
+    }
+
     if (selected_entity)
     {
         int move_to_x = selected_entity->x;
