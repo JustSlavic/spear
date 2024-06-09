@@ -248,6 +248,18 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     if (force_new_turn || timer_new_turn)
     {
         // @attention NEW TURN !!!
+        if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
+        {
+            if (gs->spawn_hero_next_turn)
+            {
+                if (game::cell_is_empty(gs, 0, 0))
+                    game::spawn_hero(gs, 0, 0);
+            }
+            else
+            {
+                gs->spawn_hero_next_turn = true;
+            }
+        }
 
         gs->action_buffer.clear();
         if (hero)

@@ -110,6 +110,8 @@ struct game_state
     entity_action action_input;
     bool selecting_direction_of_action;
 
+    bool spawn_hero_next_turn;
+
     game::camera camera;
     float32 camera_speed;
 
