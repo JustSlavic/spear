@@ -28,6 +28,18 @@ struct entity_action
     int y;
 };
 
+enum entity_state_kind
+{
+    ENTITY_STATE_IDLE,
+    ENTITY_STATE_DEFENCE,
+};
+
+struct entity_state
+{
+    entity_state_kind kind;
+    int x;
+    int y;
+};
 
 enum entity_kind
 {
@@ -43,6 +55,7 @@ struct entity
 
     entity_kind kind;
     entity_action action;
+    entity_state state;
 
     int x;
     int y;
@@ -80,8 +93,7 @@ struct game_state
     memory_allocator allocator;
 
     entity entities[ECS_MAX_ENTITIES];
-    ecs::entity_id monsters[ECS_MAX_ENTITIES];
-    uint32 monster_count;
+    static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
 
     ecs::entity_manager entity_manager;
 

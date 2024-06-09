@@ -62,7 +62,11 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 
 entity *get_entity(game_state *gs, ecs::entity_id eid)
 {
-    entity *result = gs->entities + eid.get_index();
+    entity *result = NULL;
+    if (eid != ecs::INVALID_ENTITY_ID)
+    {
+        result = gs->entities + eid.get_index();
+    }
     return result;
 }
 
@@ -70,6 +74,13 @@ entity_action null_action()
 {
     entity_action result = {};
     result.kind = ENTITY_ACTION_NONE;
+    return result;
+}
+
+entity_state idle_state()
+{
+    entity_state result = {};
+    result.kind = ENTITY_STATE_IDLE;
     return result;
 }
 
@@ -94,17 +105,18 @@ bool cell_is_empty(game_state *gs, int x, int y)
     return gs->get_map_eid(x, y) == ecs::INVALID_ENTITY_ID;
 }
 
-bool cell_is_adjacent_to_entity(entity *hero, int x, int y)
+bool cell_is_adjacent_to_entity(entity *e, int x, int y)
 {
-    return (x == hero->x + 1 && y == hero->y) ||
-           (x == hero->x - 1 && y == hero->y) ||
-           (y == hero->y + 1 && x == hero->x) ||
-           (y == hero->y - 1 && x == hero->x);
+    return e &&
+           ((x == e->x + 1 && y == e->y) ||
+            (x == e->x - 1 && y == e->y) ||
+            (y == e->y + 1 && x == e->x) ||
+            (y == e->y - 1 && x == e->x));
 }
 
-bool entity_can_walk_here(game_state *gs, entity *hero, int x, int y)
+bool entity_can_walk_here(game_state *gs, entity *e, int x, int y)
 {
-    return cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(hero, x, y);
+    return e && cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(e, x, y);
 }
 
 void move_entity(game_state *gs, entity *e, int x, int y)
@@ -119,7 +131,7 @@ void move_entity(game_state *gs, entity *e, int x, int y)
     e->y = y;
 }
 
-ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind, entity **p = NULL)
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p = NULL)
 {
     ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
     if (cell_is_empty(gs, x, y))
@@ -127,10 +139,9 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind, enti
         eid = gs->entity_manager.create_entity();
         auto *entity = gs->entities + eid.get_index();
         entity->eid = eid;
-        entity->kind = kind;
-        entity->action = null_action();
         entity->x = x;
         entity->y = y;
+        entity->action = null_action();
         gs->set_map_eid(x, y, eid);
 
         if (p) *p = entity;
@@ -140,14 +151,14 @@ ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity_kind kind, enti
 
 ecs::entity_id spawn_hero(game_state *gs, int x, int y)
 {
-    entity *entity = NULL;
-
-    auto eid = spawn_entity(gs, x, y, ENTITY_HERO, &entity);
-    if (entity)
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
     {
-        entity->hp = 10;
-        entity->strength = 2;
-        entity->agility = 2;
+        e->kind = ENTITY_HERO;
+        e->hp = 3;
+        e->strength = 1;
+        e->agility = 1;
     }
  
     gs->selected_entity_eid = eid;
@@ -158,8 +169,17 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
 
 ecs::entity_id spawn_monster(game_state *gs, int x, int y)
 {
-    auto eid = spawn_entity(gs, x, y, ENTITY_MONSTER);
-    gs->monsters[gs->monster_count++] = eid;
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
+    {
+        e->kind = ENTITY_MONSTER;
+        e->hp = 1;
+        e->strength = 1;
+        e->agility = 1;
+    }
+
+    gs->monsters.push_back(eid);
     printf("monster_eid = %d\n", eid.id);
     return eid;
 }
@@ -178,12 +198,28 @@ void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
         printf("%d at (%d, %d) attacks %d at (%d, %d)\n",
             e->eid.id, action.x0, action.y0,
             gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
+
+        auto eid = gs->get_map_eid(action.x1, action.y1);
+        if (eid == ecs::INVALID_ENTITY_ID) return;
+
+        auto *attacker = e;
+        auto *victim = get_entity(gs, eid);
+
+        if (!((victim->state.kind == ENTITY_STATE_DEFENCE) &&
+              (victim->state.x == attacker->x) &&
+              (victim->state.y == attacker->y)))
+        {
+            victim->hp -= 1;
+        }
     }
     else if (action.kind == ENTITY_ACTION2_DEFENCE)
     {
         printf("%d at (%d, %d) defences from %d at (%d, %d)\n",
             e->eid.id, action.x0, action.y0,
             gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
+        e->state.kind = ENTITY_STATE_DEFENCE;
+        e->state.x = action.x1;
+        e->state.y = action.y1;
     }
 }
 
@@ -198,7 +234,56 @@ void apply_actions(game_state *gs)
     }
 }
 
-// void apply_monster_actions(game_state `
+void reset_entity_states(game_state *gs)
+{
+    if (gs->hero_eid != ecs::INVALID_ENTITY_ID)
+    {
+        auto *hero = get_entity(gs, gs->hero_eid);
+        hero->state = idle_state();
+    }
+    for (auto monster_eid : gs->monsters)
+    {
+        auto *monster = get_entity(gs, monster_eid);
+        monster->state = idle_state();
+    }
+}
+
+void remove_dead_entity(game_state *gs, entity *e)
+{
+    if (e && e->hp <= 0)
+    {
+        if (gs->selected_entity_eid == e->eid)
+        {
+            gs->selected_entity_eid = ecs::INVALID_ENTITY_ID;
+        }
+        gs->entity_manager.destroy_entity(e->eid);
+        if (e->kind == ENTITY_HERO)
+        {
+            gs->hero_eid = ecs::INVALID_ENTITY_ID;
+        }
+        else if (e->kind == ENTITY_MONSTER)
+        {
+            for (int i = 0; i < gs->monsters.size(); i++)
+            {
+                if (gs->monsters[i] == e->eid)
+                {
+                    gs->monsters.erase_not_sorted(i);
+                    break;
+                }
+            }
+        }
+        gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
+    }
+}
+
+void remove_dead_entities(game_state *gs)
+{
+    remove_dead_entity(gs, get_entity(gs, gs->hero_eid));
+    for (auto monster_eid : gs->monsters)
+    {
+        remove_dead_entity(gs, get_entity(gs, monster_eid));
+    }
+}
 
 
 } // namespace game
