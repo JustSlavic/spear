@@ -10,6 +10,18 @@
 namespace gl
 {
 
+struct framebuffer
+{
+    uint32 framebuffer_id;
+    uint32 color_texture_id;
+    uint32 depth_stencil_id;
+};
+
+framebuffer *create_framebuffer(context *ctx);
+void use_backbuffer();
+void use_framebuffer(framebuffer *);
+void draw_framebuffer(context *ctx, framebuffer *fb);
+
 void enable_debug_layer(void *d);
 
 matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);

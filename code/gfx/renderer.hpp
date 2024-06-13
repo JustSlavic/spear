@@ -12,6 +12,8 @@
 namespace gfx
 {
 
+struct render_target {};
+
 enum class api
 {
     none,
@@ -29,6 +31,11 @@ struct driver
     uint8 data[64];
 
     static driver initialize_opengl();
+
+    render_target *create_render_target(context *ctx);
+    void use_render_target(render_target *);
+    void draw_render_target(context *ctx, render_target *rt);
+    void clear_render_target(render_target *);
 
     void clear_color(float32 r, float32 g, float32 b, float32 a);
     void clear_color(vector4 color);

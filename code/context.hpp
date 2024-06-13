@@ -8,6 +8,7 @@
 #include "execution_command.hpp"
 #include "renderer_command.hpp"
 
+#include "gfx/viewport.hpp"
 #include "rs/resource_system.hpp"
 
 
@@ -45,10 +46,10 @@ struct context
     void exit_game();
 
     void setup_camera(vector3 p, vector3 f, vector3 u);
-    void render_mesh(matrix4 model, rs::token mesh, rs::token shader, vector4 color);
-    void render_mesh_texture(matrix4 model, rs::token mesh, rs::token shader, rs::token texture);
-    void render_text(rs::token font_texture, rs::token mesh, rs::token shader, string_view text, vector4 color);
-    void render_ui(matrix4 model, rs::token mesh, rs::token shader, vector4 color);
+
+    void render_square(matrix4 m, vector4 c, shader_enum s);
+    void render_cube(matrix4 m, vector4 c, shader_enum s);
+    void render_ui(matrix4 m, vector4 c);
 };
 
 

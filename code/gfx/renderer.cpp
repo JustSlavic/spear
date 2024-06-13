@@ -138,6 +138,42 @@ void driver::render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::t
 }
 
 
+render_target *driver::create_render_target(context *ctx)
+{
+    render_target *result = NULL;
+    if (m_api == api::opengl)
+        result = (render_target *) gl::create_framebuffer(ctx);
+
+    return result;
+}
+
+void driver::use_render_target(render_target *rt)
+{
+    if (m_api == api::opengl)
+    {
+        gl::use_framebuffer((gl::framebuffer *) rt);
+    }
+}
+
+void driver::draw_render_target(context *ctx, render_target *rt)
+{
+    if (m_api == api::opengl)
+    {
+        // if (rt)
+            // gl::draw_framebuffer(ctx, (gl::framebuffer *) rt);
+    }
+}
+
+void driver::clear_render_target(render_target *rt)
+{
+    if (m_api == api::opengl)
+    {
+        gl::use_framebuffer((gl::framebuffer *) rt);
+        gl::clear();
+    }
+}
+
+
 } // namespace gfx
 
 

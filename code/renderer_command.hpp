@@ -7,15 +7,21 @@
 #include <rs/resource_system.hpp>
 
 
+enum shader_enum
+{
+    SHADER_NONE,
+    SHADER_COLOR,
+    SHADER_GROUND,
+};
+
 struct rend_command
 {
     enum rend_command_kind
     {
         setup_camera,
-        render_mesh_single_color,
-        render_mesh_texture,
-        render_ui_single_color,
-        render_text,
+        render_square,
+        render_cube,
+        render_ui,
     };
     rend_command_kind kind;
 
@@ -24,13 +30,8 @@ struct rend_command
     vector3 up;
 
     matrix4 model;
-
-    rs::token mesh_token;
-    rs::token shader_token;
-    rs::token texture_token;
-
     vector4 color;
-    string_view text;
+    shader_enum shader;
 };
 
 #endif // RENDERER_COMMAND_HPP

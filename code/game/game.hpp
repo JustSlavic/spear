@@ -7,8 +7,6 @@
 
 #include <ecs/entity_manager.hpp>
 
-#include "rs/resource_system.hpp"
-
 #include <game/camera.hpp>
 
 
@@ -114,11 +112,6 @@ struct game_state
 
     game::camera camera;
     float32 camera_speed;
-
-    rs::token rect_mesh;
-    rs::token cube_mesh;
-    rs::token rect_mesh_uv;
-    rs::token text_buffers;
 
     rs::token shader_single_color;
     rs::token shader_draw_texture;

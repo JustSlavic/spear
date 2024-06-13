@@ -49,125 +49,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->allocator = arena;
     ctx->game_state = gs;
 
-    // Rectangle mesh
-    {
-        float32 vbo_data[] = {
-            -1.0f, -1.0f, 0.0f,
-             1.0f, -1.0f, 0.0f,
-             1.0f,  1.0f, 0.0f,
-            -1.0f,  1.0f, 0.0f,
-        };
-        memory_buffer vbo;
-        vbo.data = (byte *) vbo_data;
-        vbo.size = sizeof(vbo_data);
-
-        uint32 ibo_data[] = {
-            0, 1, 2, // first triangle
-            2, 3, 0, // second triangle
-        };
-        memory_buffer ibo;
-        ibo.data = (byte *) ibo_data;
-        ibo.size = sizeof(ibo_data);
-
-        auto vbl = gfx::vertex_buffer_layout::make();
-        vbl.push<float>(3);
-
-        gs->rect_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
-    }
-
-    // Rectangle mesh with UV
-    {
-        float32 vbo_data[] = {
-            -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
-             1.0f, -1.0f, 0.0f,   1.0f, 0.0f,
-             1.0f,  1.0f, 0.0f,   1.0f, 1.0f,
-            -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,
-        };
-        memory_buffer vbo;
-        vbo.data = (byte *) vbo_data;
-        vbo.size = sizeof(vbo_data);
-
-        uint32 ibo_data[] = {
-            0, 1, 2, // first triangle
-            2, 3, 0, // second triangle
-        };
-        memory_buffer ibo;
-        ibo.data = (byte *) ibo_data;
-        ibo.size = sizeof(ibo_data);
-
-        auto vbl = gfx::vertex_buffer_layout::make();
-        vbl.push<float>(3);
-        vbl.push<float>(2);
-
-        gs->rect_mesh_uv = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
-    }
-
-    // Buffers for text
-    {
-        auto vbo = memory_buffer::make();
-        auto ibo = memory_buffer::make();
-        auto vbl = gfx::vertex_buffer_layout::make();
-        vbl.push<float>(2);
-        vbl.push<float>(2);
-
-        gs->text_buffers = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
-    }
-
-    // 3D cube
-    {
-        float32 vbo_data[] = {
-            // bottom square
-            -1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f, -1.0f,
-             1.0f, -1.0f,  1.0f,
-            // top square
-            -1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f, -1.0f,
-             1.0f,  1.0f, -1.0f,
-             1.0f,  1.0f,  1.0f,
-        };
-        memory_buffer vbo;
-        vbo.data = (byte *) vbo_data;
-        vbo.size = sizeof(vbo_data);
-
-        uint32 ibo_data[] = {
-            0, 1, 2,
-            2, 3, 0,
-
-            0, 3, 7,
-            7, 4, 0,
-
-            1, 5, 6,
-            6, 2, 1,
-
-            3, 2, 6,
-            6, 7, 3,
-
-            1, 0, 4,
-            4, 5, 1,
-
-            5, 4, 7,
-            7, 6, 5,
-        };
-        memory_buffer ibo;
-        ibo.data = (byte *) ibo_data;
-        ibo.size = sizeof(ibo_data);
-
-        auto vbl = gfx::vertex_buffer_layout::make();
-        vbl.push<float>(3);
-
-        gs->cube_mesh = rs::create_mesh(ctx, ctx->rs, vbo, ibo, vbl);
-    }
-
-    gs->shader_single_color = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"));
-    gs->shader_draw_texture = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"));
-    gs->shader_draw_text = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_TEXT"));
-    gs->shader_ground = rs::create_shader(ctx, ctx->rs, string_id::from(ctx->strids, "SHADER_DRAW_GROUND"));
-
-    // gs->font_texture = rs::load_texture(ctx, ctx->rs, "font.png");
-
-    // memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
+    memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
     gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
@@ -212,9 +94,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         auto intersection_p = outer(Oxy, line);
         intersection = intersection_p.vector / intersection_p.w;
     }
-
-    // printf("mouse = (%d, %d)\n", input->mouse.x, input->mouse.y);
-    // printf("ray_direction = (%f, %f, %f)\n", ray_direction.x, ray_direction.y, ray_direction.z);
 
     bool32 intersected = false;
     float32 intersect_t = infinity;
@@ -462,6 +341,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
+    // Render ground
     for (int x = -2; x <= 2; x++)
     {
         for (int y = -2; y <= 2; y++)
@@ -501,7 +381,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
             auto m = matrix4::translate_x((float32)x + 1.3f*x) *
                      matrix4::translate_y((float32)y + 1.3f*y);
-            ctx->render_mesh(m, gs->cube_mesh, gs->shader_ground, c);
+
+            ctx->render_cube(m, c, SHADER_GROUND);
         }
     }
 
@@ -517,7 +398,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                  matrix4::translate_y((float32) hero->y + 1.3f*hero->y) *
                  matrix4::translate_z(2) *
                  matrix4::scale(0.5f, 0.5f, height);
-        ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 1, 1, 1));
+
+        ctx->render_cube(m, V4(1, 1, 1, 1), SHADER_COLOR);
 
         // Render hp
         {
@@ -529,7 +411,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                                matrix4::translate_x(10) *
                                matrix4::translate_y(y) *
                                matrix4::scale(10, 10, 1)
-                    , gs->rect_mesh, gs->shader_single_color, color);
+                    , color);
 
                 y += 25;
             }
@@ -548,7 +430,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                      matrix4::translate_y((float32) monster->y + 1.3f*monster->y) *
                      matrix4::translate_z(2) *
                      matrix4::scale(0.5f, 0.5f, height);
-            ctx->render_mesh(m, gs->cube_mesh, gs->shader_single_color, V4(1, 0.2, 0.1, 1));
+            ctx->render_cube(m, V4(1, 0.2, 0.1, 1), SHADER_COLOR);
         }
     }
 
@@ -570,17 +452,17 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                        matrix4::translate_y(50) *
                        matrix4::translate_x(25) *
                        matrix4::scale(25, 50, 1)
-            , gs->rect_mesh, gs->shader_single_color, color_left_arm);
+            , color_left_arm);
         ctx->render_ui(
                        matrix4::translate_y(50) *
                        matrix4::translate_x(80) *
                        matrix4::scale(25, 50, 1)
-            , gs->rect_mesh, gs->shader_single_color, color_torso);
+            , color_torso);
         ctx->render_ui(
                        matrix4::translate_y(50) *
                        matrix4::translate_x(135) *
                        matrix4::scale(25, 50, 1)
-            , gs->rect_mesh, gs->shader_single_color, color_right_arm);
+            , color_right_arm);
     }
 
     // Render timer
@@ -590,10 +472,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         vector4 color = V4(sin((t - 3) * pi * 0.5f),
                            -cos((t + 1) * pi * 0.5f),
                            0, 1);
-        ctx->render_ui(
+        ctx->render_square(
                        matrix4::translate_y(ctx->viewport.height - 10) *
                        matrix4::scale(ctx->viewport.width * t, 2, 1)
-            , gs->rect_mesh, gs->shader_single_color, color);
+            , color, SHADER_COLOR);
     }
 
     // Render action buffer
@@ -610,7 +492,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                            matrix4::translate_x(x) *
                            matrix4::translate_y(y) *
                            matrix4::scale(10, 10, 1)
-                , gs->rect_mesh, gs->shader_single_color, color);
+                , color);
 
             x += 25;
         }
@@ -624,7 +506,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <string_id.cpp>
 #include <memory_bucket.cpp>
 #include <memory/allocator.cpp>
-#include <rs/resource_system.cpp>
 #include <collision.cpp>
 #include <image/png.cpp>
 #include <crc.cpp>

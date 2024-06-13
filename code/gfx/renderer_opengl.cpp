@@ -1,7 +1,7 @@
 #include "renderer_opengl.hpp"
 #include <math/integer.h>
 #include "gl.hpp"
-#include "static_shaders.cpp"
+// #include "static_shaders.cpp"
 #include <memory_bucket.hpp>
 
 
@@ -196,23 +196,23 @@ shader_render_data *load_shader(context *ctx, rs::shader *s)
 
     if (s->name == string_id::from(ctx->strids, "SHADER_SINGLE_COLOR"))
     {
-        vs = compile_shader(memory_buffer::from(vs_single_color), shader::vertex);
-        fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
+        // vs = compile_shader(memory_buffer::from(vs_single_color), shader::vertex);
+        // fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
     }
     else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_TEXTURE"))
     {
-        vs = compile_shader(memory_buffer::from(vs_uv_coords), shader::vertex);
-        fs = compile_shader(memory_buffer::from(fs_apply_texture), shader::fragment);
+        // vs = compile_shader(memory_buffer::from(vs_uv_coords), shader::vertex);
+        // fs = compile_shader(memory_buffer::from(fs_apply_texture), shader::fragment);
     }
     else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_TEXT"))
     {
-        vs = compile_shader(memory_buffer::from(vs_text_shader), shader::vertex);
-        fs = compile_shader(memory_buffer::from(fs_text_shader), shader::fragment);
+        // vs = compile_shader(memory_buffer::from(vs_text_shader), shader::vertex);
+        // fs = compile_shader(memory_buffer::from(fs_text_shader), shader::fragment);
     }
     else if (s->name == string_id::from(ctx->strids, "SHADER_DRAW_GROUND"))
     {
-        vs = compile_shader(memory_buffer::from(vs_shaded_cube), shader::vertex);
-        fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
+        // vs = compile_shader(memory_buffer::from(vs_shaded_cube), shader::vertex);
+        // fs = compile_shader(memory_buffer::from(fs_pass_color), shader::fragment);
     }
     else
     {
@@ -418,6 +418,81 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
     glDrawArrays(GL_TRIANGLES, 0, count);
     GL_CHECK_ERRORS();
 }
+
+
+framebuffer *create_framebuffer(context *ctx)
+{
+    framebuffer *result = NULL;
+
+    uint32 texture_id = 0;
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ctx->viewport.width, ctx->viewport.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    GL_CHECK_ERRORS();
+
+    uint32 render_buffer_id = 0;
+    glGenRenderbuffers(1, &render_buffer_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, ctx->viewport.width, ctx->viewport.height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    GL_CHECK_ERRORS();
+
+    uint32 id = 0;
+    glGenFramebuffers(1, &id);
+    glBindFramebuffer(GL_FRAMEBUFFER, id);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_id, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GL_CHECK_ERRORS();
+
+    auto completenes_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    switch (completenes_status)
+    {
+    case GL_FRAMEBUFFER_UNDEFINED: printf("Specified framebuffer is the default read or draw framebuffer, but the default framebuffer does not exist.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: printf("Any of the framebuffer attachment points are framebuffer incomplete.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: printf("The framebuffer does not have at least one image attached to it.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: printf("The value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for any color attachment point(s) named by GL_DRAW_BUFFERi.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: printf("GL_READ_BUFFER is not GL_NONE and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for the color attachment point named by GL_READ_BUFFER.\n"); break;
+    case GL_FRAMEBUFFER_UNSUPPORTED: printf("The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: printf("The value of GL_RENDERBUFFER_SAMPLES is not the same for all attached renderbuffers; if the value of GL_TEXTURE_SAMPLES is the not same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_RENDERBUFFER_SAMPLES does not match the value of GL_TEXTURE_SAMPLES.\n");
+        printf("    OR\n");
+        printf("The value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not the same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not GL_TRUE for all attached textures.\n"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: printf("Any framebuffer attachment is layered, and any populated attachment is not layered, or if all populated color attachments are not from textures of the same target.\n"); break;
+    case GL_FRAMEBUFFER_COMPLETE: printf("Framebuffer created correctly\n"); break;
+    }
+    if(completenes_status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printf("Error: Framebuffer is not complete!\n");
+        return result;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    result = ctx->renderer_allocator.allocate<framebuffer>();
+    result->framebuffer_id = id;
+    result->color_texture_id = texture_id;
+    result->depth_stencil_id = render_buffer_id;
+    return result;
+}
+
+void destroy_framebuffer(framebuffer *fb)
+{
+    glDeleteFramebuffers(1, &fb->framebuffer_id);
+    // ctx->renderer_allocator.deallocate(fb);
+}
+
+void use_framebuffer(framebuffer *fb)
+{
+    uint32 id = fb ? fb->framebuffer_id : 0;
+    glBindFramebuffer(GL_FRAMEBUFFER, id);
+    GL_CHECK_ERRORS();
+}
+
+
 
 
 } // namespace gl
