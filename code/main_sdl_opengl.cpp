@@ -165,6 +165,13 @@ struct shader
     }
 };
 
+struct framebuffer
+{
+    uint32 framebuffer_id;
+    uint32 color_texture_id;
+    uint32 depth_stencil_id;
+};
+
 cpu_mesh make_square()
 {
     static float32 vbo_data[] = {
@@ -379,6 +386,62 @@ shader compile_shaders(char const *vs_code, char const *fs_code)
     return result;
 }
 
+framebuffer create_framebuffer(int width, int height)
+{
+    uint32 texture_id = 0;
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    uint32 render_buffer_id = 0;
+    glGenRenderbuffers(1, &render_buffer_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    uint32 id = 0;
+    glGenFramebuffers(1, &id);
+    glBindFramebuffer(GL_FRAMEBUFFER, id);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_id, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    auto completenes_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    switch (completenes_status)
+    {
+        case GL_FRAMEBUFFER_UNDEFINED: printf("Specified framebuffer is the default read or draw framebuffer, but the default framebuffer does not exist.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: printf("Any of the framebuffer attachment points are framebuffer incomplete.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: printf("The framebuffer does not have at least one image attached to it.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: printf("The value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for any color attachment point(s) named by GL_DRAW_BUFFERi.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: printf("GL_READ_BUFFER is not GL_NONE and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for the color attachment point named by GL_READ_BUFFER.\n"); break;
+        case GL_FRAMEBUFFER_UNSUPPORTED: printf("The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: printf("The value of GL_RENDERBUFFER_SAMPLES is not the same for all attached renderbuffers; if the value of GL_TEXTURE_SAMPLES is the not same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_RENDERBUFFER_SAMPLES does not match the value of GL_TEXTURE_SAMPLES.\n");
+            printf("    OR\n");
+            printf("The value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not the same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not GL_TRUE for all attached textures.\n"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: printf("Any framebuffer attachment is layered, and any populated attachment is not layered, or if all populated color attachments are not from textures of the same target.\n"); break;
+        case GL_FRAMEBUFFER_COMPLETE: printf("Framebuffer created correctly\n"); break;
+    }
+    if (completenes_status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printf("Error: Framebuffer is not complete!\n");
+        return {};
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    framebuffer result;
+    result.framebuffer_id = id;
+    result.color_texture_id = texture_id;
+    result.depth_stencil_id = render_buffer_id;
+
+    return result;
+}
+
+
 #include <ecs/entity_manager.hpp>
 #include <ecs/component.hpp>
 #include <ecs/archetype.hpp>
@@ -488,6 +551,7 @@ int main()
 
     auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
+    auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
 
     // ======================================================================
 
@@ -502,6 +566,13 @@ int main()
     // driver.use_render_target(ui_render_target);
     // driver.clear_color(1.f, 1.f, 0.f, 1.f);
     // driver.clear();
+
+    // ======================================================================
+
+    auto ui_framebuffer = create_framebuffer(current_client_width, current_client_height);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // ======================================================================
 
@@ -564,6 +635,9 @@ int main()
                 matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
         }
 
+        glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         update_and_render(&ctx, game_memory, &input);
@@ -623,6 +697,7 @@ int main()
             }
             else if (cmd.kind == rend_command::render_ui)
             {
+                glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
                 glUseProgram(shader_color.id);
 
                 shader_color.uniform("u_model", cmd.model);
@@ -633,9 +708,27 @@ int main()
                 glBindVertexArray(gpu_square.vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
         ctx.rend_commands.clear();
+
+        // Draw UI on top of the everything
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glUseProgram(shader_framebuffer.id);
+
+            glDisable(GL_DEPTH_TEST);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, ui_framebuffer.color_texture_id);
+
+            glBindVertexArray(gpu_square.vao);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
+            glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+
+            glEnable(GL_DEPTH_TEST);
+        }
 
         SDL_GL_SwapWindow(window);
 

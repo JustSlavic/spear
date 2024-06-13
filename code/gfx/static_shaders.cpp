@@ -51,6 +51,33 @@ void main()
 }
 )GLSL";
 
+GLOBAL char const *vs_framebuffer = R"GLSL(
+#version 410
+
+layout (location = 0) in vec3 vertex_position;
+
+out vec2 uv_coordinates;
+
+void main()
+{
+    gl_Position = vec4(vertex_position, 1.0);
+}
+)GLSL";
+
+GLOBAL char const *fs_framebuffer = R"GLSL(
+#version 410
+
+in vec2 uv_coordinates;
+out vec4 result_color;
+
+uniform sampler2D framebuffer;
+
+void main()
+{
+    result_color = texture(framebuffer, uv_coordinates);
+}
+)GLSL";
+
 
 
 

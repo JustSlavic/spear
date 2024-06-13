@@ -497,8 +497,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             x += 25;
         }
     }
-
-    // ctx->render_text(gs->font_texture, gs->text_buffers, gs->shader_draw_text, string_view::from("Lorem ipsum dolor sit amet"), V4(1));
 }
 
 #if DLL_BUILD
