@@ -4,7 +4,6 @@
 #include <base.h>
 #include <math/vector4.hpp>
 #include <math/matrix4.hpp>
-#include <rs/resource_system.hpp>
 
 
 enum shader_enum

@@ -113,13 +113,6 @@ struct game_state
     game::camera camera;
     float32 camera_speed;
 
-    rs::token shader_single_color;
-    rs::token shader_draw_texture;
-    rs::token shader_draw_text;
-    rs::token shader_ground;
-
-    rs::token font_texture;
-
     timepoint exit_press_time;
 
     bool is_coords_valid(int x, int y);

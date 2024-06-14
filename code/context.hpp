@@ -9,7 +9,6 @@
 #include "renderer_command.hpp"
 
 #include "gfx/viewport.hpp"
-#include "rs/resource_system.hpp"
 
 
 typedef memory_buffer debug_load_file_t(memory_allocator allocator, char const *filename);
@@ -20,8 +19,6 @@ struct context
     memory_allocator resource_allocator;
     memory_allocator renderer_allocator;
 
-    string_id::storage *strids;
-    rs::storage *rs;
     void *game_state;
 
     uint32 screen_width;

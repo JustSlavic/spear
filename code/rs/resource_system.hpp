@@ -40,11 +40,11 @@ struct texture
     void *render_data;
 };
 
-struct token
-{
-    resource_kind kind;
-    uint32 index;
-};
+// struct token
+// {
+//     resource_kind kind;
+//     uint32 index;
+// };
 
 struct storage
 {

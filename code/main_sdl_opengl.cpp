@@ -7,6 +7,7 @@
 
 #include <gfx/viewport.hpp>
 #include <gfx/static_shaders.cpp>
+#include <gfx/vertex_buffer_layout.hpp>
 
 #include <SDL2/SDL.h>
 #define GL_SILENCE_DEPRECATION
@@ -474,8 +475,6 @@ int main()
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
-    auto string_id_allocator = global_arena.allocate_arena(KILOBYTES(10));
-    auto string_id_storage = string_id::initialize(string_id_allocator);
 
     // ======================================================================
 
@@ -697,7 +696,7 @@ int main()
             }
             else if (cmd.kind == rend_command::render_ui)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+                // glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
                 glUseProgram(shader_color.id);
 
                 shader_color.uniform("u_model", cmd.model);
@@ -708,7 +707,7 @@ int main()
                 glBindVertexArray(gpu_square.vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                // glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
         ctx.rend_commands.clear();
