@@ -5,6 +5,7 @@
 #include <math/matrix4.hpp>
 #include <math/vector3.hpp>
 #include <gfx/vertex_buffer_layout.hpp>
+#include <console.hpp>
 
 
 matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
@@ -295,7 +296,7 @@ int compile_shader(char const *source_code, int shader_type)
 
         auto message = mallocator()->allocate_buffer(length + 1);
 
-        glGetShaderInfoLog(id, length, (isize *) &length, (char *) message.data);
+        glGetShaderInfoLog(id, length, (GLsizei *) &length, (char *) message.data);
         glDeleteShader(id);
 
         console::print("Could not compile shader: \"%s\"\n", (char *)message.data);

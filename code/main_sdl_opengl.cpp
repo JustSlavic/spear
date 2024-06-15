@@ -92,14 +92,12 @@ timepoint now()
 int main()
 {
     current_client_width = 800;
-    current_client_height = 600;
+    current_client_height = 450;
 
     auto global_memory = sdl::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
-    auto string_id_allocator = global_arena.allocate_arena(KILOBYTES(10));
-    auto string_id_storage = string_id::initialize(string_id_allocator);
 
     // ======================================================================
 
@@ -248,12 +246,14 @@ int main()
             viewport_changed = false;
 
             ctx.viewport = viewport;
+
+            printf("Viewport size = %d x %d\n", viewport.width, viewport.height);
+
             ctx.window_width = current_client_width;
             ctx.window_height = current_client_height;
 
-            projection_ui =
-                matrix4::translate(-1, 1, 0) *
-                matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
+            projection_ui = matrix4::translate(-1, 1, 0)
+                          * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
@@ -275,6 +275,10 @@ int main()
             }
         }
         ctx.exec_commands.clear();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         for (auto cmd : ctx.rend_commands)
         {
@@ -318,6 +322,19 @@ int main()
             }
             else if (cmd.kind == rend_command::render_ui)
             {
+                ASSERT_FAIL();
+            }
+        }
+        ctx.rend_commands.clear();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        for (auto cmd : ctx.rend_commands_ui)
+        {
+            if (cmd.kind == rend_command::render_ui)
+            {
                 glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
                 glUseProgram(shader_color.id);
 
@@ -331,24 +348,31 @@ int main()
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
+            else
+            {
+                ASSERT_FAIL();
+            }
         }
-        ctx.rend_commands.clear();
+        ctx.rend_commands_ui.clear();
 
-        // Draw UI on top of the everything
+        // Draw UI on top of everything
         {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glDisable(GL_DEPTH_TEST);
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glUseProgram(shader_framebuffer.id);
-
-            glDisable(GL_DEPTH_TEST);
+            shader_framebuffer.uniform("u_framebuffer", 0);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, ui_framebuffer.color_texture_id);
 
             glBindVertexArray(gpu_square.vao);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
             glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
 
             glEnable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
         }
 
         SDL_GL_SwapWindow(window);
