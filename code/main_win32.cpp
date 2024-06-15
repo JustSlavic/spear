@@ -822,17 +822,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             ctx.window_width = current_client_width;
             ctx.window_height = current_client_height;
 
-            projection_ui =
-                matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1) * matrix4::translate(-1, 1, 0);
+            projection_ui = matrix4::translate(-1, 1, 0)
+                          * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
         }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         if (game.update_and_render)
         {
@@ -844,6 +836,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             if (cmd.kind == exec_command::exit) running = false;
         }
         ctx.exec_commands.clear();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         for (auto cmd : ctx.rend_commands)
         {
@@ -887,7 +883,19 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             }
             else if (cmd.kind == rend_command::render_ui)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+                ASSERT_FAIL();
+            }
+        }
+        ctx.rend_commands.clear();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        for (auto cmd : ctx.rend_commands_ui)
+        {
+            if (cmd.kind == rend_command::render_ui)
+            {
                 glUseProgram(shader_color.id);
 
                 shader_color.uniform("u_model", cmd.model);
@@ -897,10 +905,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
+            else
+            {
+                ASSERT_FAIL();
             }
         }
-        ctx.rend_commands.clear();
+        ctx.rend_commands_ui.clear();
 
         // Draw UI on top of everything
         {

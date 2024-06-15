@@ -37,6 +37,7 @@ struct context
 
     static_array<exec_command, 10> exec_commands;
     static_array<rend_command, 100> rend_commands;
+    static_array<rend_command, 100> rend_commands_ui;
 
     debug_load_file_t *debug_load_file;
 

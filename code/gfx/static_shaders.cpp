@@ -60,8 +60,10 @@ out vec2 uv_coordinates;
 
 void main()
 {
-    float k = 0.2f;
-    uv_coordinates = (vertex_position.xy + vec2(2.f, 0.f)) * 0.5f;
+    // NDC -> UV
+    // (-1,  1) -> (0, 1);    (1,  1) -> (0, 1);
+    // (-1, -1) -> (0, 0);    (1, -1) -> (1, 0);
+    uv_coordinates = vertex_position.xy * 0.5f + vec2(0.5f);
     gl_Position = vec4(vertex_position, 1.0);
 }
 )GLSL";
@@ -76,8 +78,7 @@ uniform sampler2D u_framebuffer;
 
 void main()
 {
-    vec4 tc = texture(u_framebuffer, uv_coordinates);
-    result_color = tc; //vec4(tc.x, uv_coordinates.y, 0.f, 1.f); // vec4(uv_coordinates.x, , 0.f, 1.f); //
+    result_color = texture(u_framebuffer, uv_coordinates);
 }
 )GLSL";
 

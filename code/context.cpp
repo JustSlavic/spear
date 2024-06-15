@@ -39,6 +39,6 @@ void context::render_ui(matrix4 m, vector4 c)
     rend_command cmd = { rend_command::render_ui };
     cmd.model = m;
     cmd.color = c;
-    rend_commands.push_back(cmd);
+    rend_commands_ui.push_back(cmd);
 }
 
