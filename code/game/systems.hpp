@@ -2,7 +2,7 @@
 #define GAME_SYSTEMS_HPP
 
 #include <base.h>
-
+#include <console.hpp>
 #include "game.hpp"
 
 
@@ -163,7 +163,7 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
  
     gs->selected_entity_eid = eid;
     gs->hero_eid = eid;
-    printf("hero_id = %d\n", eid.id);
+    console::print("hero_id = %d\n", eid.id);
     return eid;
 }
 
@@ -180,7 +180,7 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     }
 
     gs->monsters.push_back(eid);
-    printf("monster_eid = %d\n", eid.id);
+    console::print("monster_eid = %d\n", eid.id);
     return eid;
 }
 
@@ -188,14 +188,14 @@ void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
 {
     if (action.kind == ENTITY_ACTION2_MOVE)
     {
-        printf("%d at (%d, %d) moves to %d at (%d, %d)\n",
+        console::print("%d at (%d, %d) moves to %d at (%d, %d)\n",
             e->eid.id, action.x0, action.y0,
             gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
         move_entity(gs, e, action.x1, action.y1);
     }
     else if (action.kind == ENTITY_ACTION2_ATTACK)
     {
-        printf("%d at (%d, %d) attacks %d at (%d, %d)\n",
+        console::print("%d at (%d, %d) attacks %d at (%d, %d)\n",
             e->eid.id, action.x0, action.y0,
             gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
 
@@ -214,7 +214,7 @@ void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
     }
     else if (action.kind == ENTITY_ACTION2_DEFENCE)
     {
-        printf("%d at (%d, %d) defences from %d at (%d, %d)\n",
+        console::print("%d at (%d, %d) defences from %d at (%d, %d)\n",
             e->eid.id, action.x0, action.y0,
             gs->get_map_eid(action.x1, action.y1).id, action.x1, action.y1);
         e->state.kind = ENTITY_STATE_DEFENCE;
@@ -225,7 +225,7 @@ void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
 
 void apply_actions(game_state *gs)
 {
-    printf("-------- turn %d --------\n", gs->turn_no);
+    console::print("-------- turn %d --------\n", gs->turn_no);
     for (auto action : gs->action_buffer)
     {
         auto *e = get_entity(gs, action.eid);

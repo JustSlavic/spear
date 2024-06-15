@@ -9,7 +9,7 @@ namespace ecs {
 typedef uint32 entity_id_t ;
 typedef entity_id_t entity_idx_t;
 typedef entity_id_t entity_gen_t;
-#define ECS_ENTITY_INDEX_BITS (16)
+#define ECS_ENTITY_INDEX_BITS (5)
 #define ECS_ENTITY_INDEX_MASK ((1 << ECS_ENTITY_INDEX_BITS) - 1)
 #define ECS_ENTITY_GENERATION_BITS (sizeof(entity_id_t)*8 - ECS_ENTITY_INDEX_BITS)
 #define ECS_ENTITY_GENERATION_MASK ((1 << ECS_ENTITY_GENERATION_BITS) - 1)

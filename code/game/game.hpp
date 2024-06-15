@@ -10,6 +10,9 @@
 #include <game/camera.hpp>
 
 
+// #define printf
+
+
 enum entity_action_kind
 {
     ENTITY_ACTION_NONE,

@@ -179,7 +179,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
 
         {
-            int i = gs->action_buffer.size();
+            int i = (int) gs->action_buffer.size();
             while (i-->0)
             {
                 if (gs->action_buffer[i].kind == ENTITY_ACTION2_NONE)
@@ -386,8 +386,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    float selected_entity_height = 0.8;
-    float regular_entity_height = 0.3;
+    float selected_entity_height = 0.8f;
+    float regular_entity_height = 0.3f;
 
     // Draw hero
     if (hero)
@@ -409,7 +409,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                 auto color = V4(1, 0.2, 0.1, 1);
                 ctx->render_ui(
                                matrix4::translate_x(10) *
-                               matrix4::translate_y(y) *
+                               matrix4::translate_y((float32) y) *
                                matrix4::scale(10, 10, 1)
                     , color);
 
@@ -468,12 +468,12 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     // Render timer
     if (gs->turn_timer_enabled)
     {
-        float32 t = 1 - get_seconds(input->time - gs->turn_start_time) / get_seconds(gs->seconds_for_turn);
+        float32 t = (float32) (1.f - get_seconds(input->time - gs->turn_start_time) / get_seconds(gs->seconds_for_turn));
         vector4 color = V4(sin((t - 3) * pi * 0.5f),
                            -cos((t + 1) * pi * 0.5f),
                            0, 1);
         ctx->render_square(
-                       matrix4::translate_y(ctx->viewport.height - 10) *
+                       matrix4::translate_y((float32) (ctx->viewport.height - 10)) *
                        matrix4::scale(ctx->viewport.width * t, 2, 1)
             , color, SHADER_COLOR);
     }
@@ -489,8 +489,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                          action.kind == ENTITY_ACTION2_DEFENCE ? V4(0.4, 0.8, 0.4, 1) :
                          V4(0.2, 0.2, 0.2, 1);
             ctx->render_ui(
-                           matrix4::translate_x(x) *
-                           matrix4::translate_y(y) *
+                           matrix4::translate_x((float32) x) *
+                           matrix4::translate_y((float32) y) *
                            matrix4::scale(10, 10, 1)
                 , color);
 
@@ -507,6 +507,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <collision.cpp>
 #include <image/png.cpp>
 #include <crc.cpp>
+#include <ecs/entity_manager.cpp>
 #endif // DLL_BUILD
 
 #include <ecs/entity_id.cpp>

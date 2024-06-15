@@ -60,6 +60,8 @@ out vec2 uv_coordinates;
 
 void main()
 {
+    float k = 0.2f;
+    uv_coordinates = (vertex_position.xy + vec2(2.f, 0.f)) * 0.5f;
     gl_Position = vec4(vertex_position, 1.0);
 }
 )GLSL";
@@ -70,11 +72,12 @@ GLOBAL char const *fs_framebuffer = R"GLSL(
 in vec2 uv_coordinates;
 out vec4 result_color;
 
-uniform sampler2D framebuffer;
+uniform sampler2D u_framebuffer;
 
 void main()
 {
-    result_color = texture(framebuffer, uv_coordinates);
+    vec4 tc = texture(u_framebuffer, uv_coordinates);
+    result_color = tc; //vec4(tc.x, uv_coordinates.y, 0.f, 1.f); // vec4(uv_coordinates.x, , 0.f, 1.f); //
 }
 )GLSL";
 

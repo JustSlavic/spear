@@ -10,7 +10,6 @@
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl3.h>
 #else
-#include <GL/gl.h>
 #endif
 
 #define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
