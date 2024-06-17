@@ -150,6 +150,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             gs->action_buffer.push_back(game::get_action2(monster));
         }
 
+        // Cancel intersecting moves
         for (int i = 0; i < gs->action_buffer.size(); i++)
         {
             auto *a1 = &gs->action_buffer[i];
@@ -178,6 +179,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             }
         }
 
+        // Remove null actions
         {
             int i = (int) gs->action_buffer.size();
             while (i-->0)
@@ -392,28 +394,24 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     // Draw hero
     if (hero)
     {
+        float32 x = hero->x + 1.3f*hero->x;
+        float32 y = hero->y + 1.3f*hero->y;
         float height = hero->eid == gs->selected_entity_eid ? selected_entity_height
                      : regular_entity_height;
-        auto m = matrix4::translate_x((float32) hero->x + 1.3f*hero->x) *
-                 matrix4::translate_y((float32) hero->y + 1.3f*hero->y) *
-                 matrix4::translate_z(2) *
+        auto m = matrix4::translate(x, y, 2) *
                  matrix4::scale(0.5f, 0.5f, height);
 
         ctx->render_cube(m, V4(1, 1, 1, 1), SHADER_COLOR);
 
         // Render hp
         {
-            int y = 120;
+            auto mHP = m;
+
             for (int i = 0; i < hero->hp; i++)
             {
                 auto color = V4(1, 0.2, 0.1, 1);
-                ctx->render_ui(
-                               matrix4::translate_x(10) *
-                               matrix4::translate_y((float32) y) *
-                               matrix4::scale(10, 10, 1)
+                ctx->render_banner(V3(x - 1 + i, y + 1, 2), matrix4::scale(10, 10, 1)
                     , color);
-
-                y += 25;
             }
         }
     }

@@ -21,6 +21,7 @@ struct rend_command
         render_square,
         render_cube,
         render_ui,
+        render_banner,
     };
     rend_command_kind kind;
 

@@ -8,7 +8,7 @@
 #include <console.hpp>
 
 
-matrix4 make_look_at_matrix(vector3 eye, vector3 at, vector3 up)
+matrix4 make_lookat_matrix(vector3 eye, vector3 at, vector3 up)
 {
     vector3 f = normalized(at - eye);
     vector3 s = normalized(cross(f, up));

@@ -165,6 +165,12 @@ int main()
 
     // ======================================================================
 
+    auto view_matrix = matrix4::identity();
+    auto proj_matrix = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
+    auto proj_matrix_ui = matrix4::identity();
+
+    // ======================================================================
+
     auto cpu_square = make_square();
     auto gpu_square = load_mesh(cpu_square);
 
@@ -175,14 +181,10 @@ int main()
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
 
-    // ======================================================================
 
-    auto view = matrix4::identity();
-    auto projection = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
 
     // ======================================================================
 
-    auto projection_ui = matrix4::identity();
     // auto ui_render_target = driver.create_render_target(&ctx);
 
     // driver.use_render_target(ui_render_target);
@@ -252,8 +254,8 @@ int main()
             ctx.window_width = current_client_width;
             ctx.window_height = current_client_height;
 
-            projection_ui = matrix4::translate(-1, 1, 0)
-                          * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
+            proj_matrix_ui = matrix4::translate(-1, 1, 0)
+                           * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
@@ -284,15 +286,15 @@ int main()
         {
             if (cmd.kind == rend_command::setup_camera)
             {
-                view = make_look_at_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
+                view_matrix = make_lookat_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
             }
             else if (cmd.kind == rend_command::render_square)
             {
                 glUseProgram(shader_color.id);
 
                 shader_color.uniform("u_model", cmd.model);
-                shader_color.uniform("u_view", view);
-                shader_color.uniform("u_projection", projection);
+                shader_color.uniform("u_view", view_matrix);
+                shader_color.uniform("u_projection", proj_matrix);
                 shader_color.uniform("u_color", cmd.color);
 
                 glBindVertexArray(gpu_square.vao);
@@ -312,8 +314,8 @@ int main()
                 glUseProgram(s->id);
 
                 s->uniform("u_model", cmd.model);
-                s->uniform("u_view", view);
-                s->uniform("u_projection", projection);
+                s->uniform("u_view", view_matrix);
+                s->uniform("u_projection", proj_matrix);
                 s->uniform("u_color", cmd.color);
 
                 glBindVertexArray(gpu_cube.vao);
@@ -335,18 +337,36 @@ int main()
         {
             if (cmd.kind == rend_command::render_ui)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
                 glUseProgram(shader_color.id);
 
                 shader_color.uniform("u_model", cmd.model);
                 shader_color.uniform("u_view", matrix4::identity());
-                shader_color.uniform("u_projection", projection_ui);
+                shader_color.uniform("u_projection", proj_matrix_ui);
                 shader_color.uniform("u_color", cmd.color);
 
                 glBindVertexArray(gpu_square.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
+            else if (cmd.kind == rend_command::render_banner)
+            {
+                auto pNDC = proj_matrix * view_matrix * matrix4::translate(cmd.position) * V4(0, 0, 0, 1);
+                pNDC /= pNDC.w;
+                auto pUI = matrix4::scale(0.5f * ctx.viewport.width, - 0.5f * ctx.viewport.height, 1)
+                         * matrix4::translate(1, -1, 0)
+                         * pNDC;
+                auto m = matrix4::translate(pUI.xyz) * cmd.model;
+
+                // proj_ui * translate(pUI) * scale * p
+
+                glUseProgram(shader_color.id);
+
+                shader_color.uniform("u_model", m);
+                shader_color.uniform("u_view", matrix4::identity());
+                shader_color.uniform("u_projection", proj_matrix_ui);
+                shader_color.uniform("u_color", cmd.color);
+
+                glBindVertexArray(gpu_square.vao);
+                glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
             else
             {

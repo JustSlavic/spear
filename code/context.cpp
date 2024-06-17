@@ -42,3 +42,12 @@ void context::render_ui(matrix4 m, vector4 c)
     rend_commands_ui.push_back(cmd);
 }
 
+void context::render_banner(vector3 p, matrix4 m, vector4 c)
+{
+    rend_command cmd = { rend_command::render_banner };
+    cmd.position = p;
+    cmd.model = m;
+    cmd.color = c;
+    rend_commands_ui.push_back(cmd);
+}
+

@@ -10,10 +10,10 @@ namespace gfx
 
 struct viewport
 {
-    uint32 offset_x;
-    uint32 offset_y;
-    uint32 width;
-    uint32 height;
+    int32 offset_x;
+    int32 offset_y;
+    int32 width;
+    int32 height;
 
     static viewport make(uint32 width, uint32 height, float32 desired_aspect_ratio)
     {

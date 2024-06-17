@@ -48,6 +48,7 @@ struct context
     void render_square(matrix4 m, vector4 c, shader_enum s);
     void render_cube(matrix4 m, vector4 c, shader_enum s);
     void render_ui(matrix4 m, vector4 c);
+    void render_banner(vector3 p, matrix4 m, vector4 c);
 };
 
 
