@@ -12,10 +12,10 @@ namespace game {
 void move_camera(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
-    if (get_hold_count(input->keyboard[KB_LEFT])) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_RIGHT])) camera_move_direction += V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_UP])) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input->keyboard[KB_DOWN])) camera_move_direction -= V3(0, 1, 0);
+    if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
+    if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
+    if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
+    if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
     // if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
     // if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
 
@@ -158,6 +158,7 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
         e->kind = ENTITY_HERO;
         e->hp = 3;
         e->max_hp = 5;
+        e->invincible = false;
         e->strength = 1;
         e->agility = 1;
     }
@@ -177,12 +178,28 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
         e->kind = ENTITY_MONSTER;
         e->hp = 1;
         e->max_hp = 2;
+        e->invincible = false;
         e->strength = 1;
         e->agility = 1;
     }
 
     gs->monsters.push_back(eid);
     console::print("monster_eid = %d\n", eid.id);
+    return eid;
+}
+
+ecs::entity_id spawn_stone(game_state *gs, int x, int y)
+{
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
+    {
+        e->kind = ENTITY_STONE;
+        e->invincible = true;
+    }
+
+    gs->stones.push_back(eid);
+    console::print("stone_eid = %d\n", eid.id);
     return eid;
 }
 

@@ -48,6 +48,7 @@ enum entity_kind
     ENTITY_PLAYER,
     ENTITY_HERO,
     ENTITY_MONSTER,
+    ENTITY_STONE,
 };
 
 struct entity
@@ -57,6 +58,8 @@ struct entity
     entity_kind kind;
     entity_action action;
     entity_state state;
+
+    bool invincible;
 
     int x;
     int y;
@@ -96,6 +99,7 @@ struct game_state
 
     entity entities[ECS_MAX_ENTITIES];
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
+    static_array<ecs::entity_id, 25> stones;
 
     ecs::entity_manager entity_manager;
 
@@ -117,6 +121,7 @@ struct game_state
     game::camera camera;
     float32 camera_speed;
 
+    bool camera_fly_mode;
     timepoint exit_press_time;
 
     bool is_coords_valid(int x, int y);

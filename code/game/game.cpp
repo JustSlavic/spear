@@ -112,7 +112,12 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
-    game::move_camera(gs, input);
+    if (get_press_count(input->keyboard[KB_I]))
+    {
+        TOGGLE(gs->camera_fly_mode);
+    }
+
+    if (gs->camera_fly_mode) game::move_camera(gs, input);
     ctx->setup_camera(gs->camera.position, gs->camera.forward, gs->camera.up);
 
     vector3 ray_direction = game::compute_pointer_ray(ctx, gs, input);
@@ -309,6 +314,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
             {
                 game::spawn_monster(gs, intersect_x, intersect_y);
             }
+            else if (get_press_count(input->keyboard[KB_O]))
+            {
+                game::spawn_stone(gs, intersect_x, intersect_y);
+            }
         }
     }
 
@@ -458,6 +467,20 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                      matrix4::scale(0.5f, 0.5f, height);
             ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), SHADER_COLOR);
             draw_health_bar(ctx, monster, x, y, z);
+        }
+    }
+
+    // Draw stones
+    {
+        for (auto stone_eid : gs->stones)
+        {
+            entity *stone = game::get_entity(gs, stone_eid);
+            float32 x = stone->x + 1.3f*stone->x;
+            float32 y = stone->y + 1.3f*stone->y;
+            float32 z = 2;
+
+            auto m = matrix4::translate(x, y, z);
+            ctx->render_cube(m, V4(0.6, 0.8, 0.1, 1), SHADER_COLOR);
         }
     }
 
