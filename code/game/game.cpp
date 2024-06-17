@@ -396,21 +396,27 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         float32 x = hero->x + 1.3f*hero->x;
         float32 y = hero->y + 1.3f*hero->y;
+        float32 z = 2;
         float height = hero->eid == gs->selected_entity_eid ? selected_entity_height
                      : regular_entity_height;
-        auto m = matrix4::translate(x, y, 2) *
+        auto m = matrix4::translate(x, y, z) *
                  matrix4::scale(0.5f, 0.5f, height);
 
         ctx->render_cube(m, V4(1, 1, 1, 1), SHADER_COLOR);
 
         // Render hp
         {
-            auto mHP = m;
-
+            int maxHP = 3;
+            int hpBarWidth = 10;
+            int gap = 2; // px
+            // |hp| gap |hp| gap |hp|
+            float32 startP = -hpBarWidth - gap;
             for (int i = 0; i < hero->hp; i++)
             {
                 auto color = V4(1, 0.2, 0.1, 1);
-                ctx->render_banner(V3(x - 1 + i, y + 1, 2), matrix4::scale(10, 10, 1)
+                ctx->render_banner(V3(x, y, z + 1),
+                    matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
+                    matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
                     , color);
             }
         }
@@ -421,14 +427,31 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         for (int i = 0; i < gs->monsters.size(); i++)
         {
             entity *monster = game::get_entity(gs, gs->monsters[i]);
+            float32 x = monster->x + 1.3f*monster->x;
+            float32 y = monster->y + 1.3f*monster->y;
+            float32 z = 2;
             float height = monster->eid == gs->selected_entity_eid ? selected_entity_height
                          : regular_entity_height;
 
-            auto m = matrix4::translate_x((float32) monster->x + 1.3f*monster->x) *
-                     matrix4::translate_y((float32) monster->y + 1.3f*monster->y) *
-                     matrix4::translate_z(2) *
+            auto m = matrix4::translate(x, y, z) *
                      matrix4::scale(0.5f, 0.5f, height);
-            ctx->render_cube(m, V4(1, 0.2, 0.1, 1), SHADER_COLOR);
+            ctx->render_cube(m, V4(0.4, 0.2, 0.1, 1), SHADER_COLOR);
+            // Render hp
+            {
+                int maxHP = 3;
+                int hpBarWidth = 10;
+                int gap = 2; // px
+                // |hp| gap |hp| gap |hp|
+                float32 startP = -hpBarWidth - gap;
+                for (int i = 0; i < monster->hp; i++)
+                {
+                    auto color = V4(1, 0.2, 0.1, 1);
+                    ctx->render_banner(V3(x, y, z + 1),
+                        matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
+                        matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
+                        , color);
+                }
+            }
         }
     }
 
