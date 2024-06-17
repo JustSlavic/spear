@@ -157,6 +157,7 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
     {
         e->kind = ENTITY_HERO;
         e->hp = 3;
+        e->max_hp = 5;
         e->strength = 1;
         e->agility = 1;
     }
@@ -175,6 +176,7 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     {
         e->kind = ENTITY_MONSTER;
         e->hp = 1;
+        e->max_hp = 2;
         e->strength = 1;
         e->agility = 1;
     }

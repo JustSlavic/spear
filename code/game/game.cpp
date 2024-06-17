@@ -40,6 +40,35 @@ void game_state::set_map_eid(int x, int y, ecs::entity_id eid)
     }
 }
 
+void draw_health_bar(context *ctx, entity *e, float32 x, float32 y, float32 z)
+{
+    // Render hp
+    {
+        int hpBarWidth = 10;
+        int gap = 2; // px
+
+        // |hp|
+        // |hp| gap |hp|
+        // |hp| gap |hp| gap |hp|
+        // |hp| gap |hp| gap |hp| gap |hp|
+
+        // 0
+        // hp_width / 2 + gap / 2
+        // 2 hp_width / 2 + 2 gap / 2
+        // 3 hp_width / 2 + 3 gap / 2
+
+        float32 startP = -(hpBarWidth / 2 + gap / 2) * (e->max_hp - 1);
+        for (int i = 0; i < e->hp; i++)
+        {
+            auto color = V4(1, 0.2, 0.1, 1);
+            ctx->render_banner(V3(x, y, z + 1),
+                matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
+                matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
+                , color);
+        }
+    }
+}
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -253,6 +282,14 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         gs->turn_start_time = input->time;
     }
 
+    if (get_press_count(input->keyboard[KB_H]))
+    {
+        if (hero)
+        {
+            hero->hp = clamp(hero->hp + 1, 0, hero->max_hp);
+        }
+    }
+
     if (intersected && gs->get_map_eid(intersect_x, intersect_y) != ecs::INVALID_ENTITY_ID &&
         !game::entity_can_walk_here(gs, selected_entity, intersect_x, intersect_y) &&
         !gs->selecting_direction_of_action)
@@ -403,23 +440,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                  matrix4::scale(0.5f, 0.5f, height);
 
         ctx->render_cube(m, V4(1, 1, 1, 1), SHADER_COLOR);
-
-        // Render hp
-        {
-            int maxHP = 3;
-            int hpBarWidth = 10;
-            int gap = 2; // px
-            // |hp| gap |hp| gap |hp|
-            float32 startP = -hpBarWidth - gap;
-            for (int i = 0; i < hero->hp; i++)
-            {
-                auto color = V4(1, 0.2, 0.1, 1);
-                ctx->render_banner(V3(x, y, z + 1),
-                    matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
-                    matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
-                    , color);
-            }
-        }
+        draw_health_bar(ctx, hero, x, y, z);
     }
 
     // Draw monsters
@@ -435,23 +456,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
             auto m = matrix4::translate(x, y, z) *
                      matrix4::scale(0.5f, 0.5f, height);
-            ctx->render_cube(m, V4(0.4, 0.2, 0.1, 1), SHADER_COLOR);
-            // Render hp
-            {
-                int maxHP = 3;
-                int hpBarWidth = 10;
-                int gap = 2; // px
-                // |hp| gap |hp| gap |hp|
-                float32 startP = -hpBarWidth - gap;
-                for (int i = 0; i < monster->hp; i++)
-                {
-                    auto color = V4(1, 0.2, 0.1, 1);
-                    ctx->render_banner(V3(x, y, z + 1),
-                        matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
-                        matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
-                        , color);
-                }
-            }
+            ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), SHADER_COLOR);
+            draw_health_bar(ctx, monster, x, y, z);
         }
     }
 

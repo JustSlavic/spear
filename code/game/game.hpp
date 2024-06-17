@@ -62,6 +62,7 @@ struct entity
     int y;
 
     int hp;
+    int max_hp;
     
     int strength;
     int agility;
