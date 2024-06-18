@@ -389,6 +389,10 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         }
     }
 
+    auto move_color = V4(0.4, 0.4, 0.8, 1);
+    auto defence_color = V4(0.2, 0.6, 0.2, 1);
+    auto attack_color = V4(0.8, 0.2, 0.2, 1);
+
     // Render ground
     for (int x = -2; x <= 2; x++)
     {
@@ -414,11 +418,11 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                     y == selected_entity->action.y)
                 {
                     if (selected_entity->action.kind == ENTITY_ACTION_MOVE)
-                        c = V4(0.4, 0.4, 0.8, 1);
+                        c = move_color;
                     else if (selected_entity->action.kind == ENTITY_ACTION_LEFT_ARM)
-                        c = V4(0.2, 0.6, 0.2, 1);
+                        c = defence_color;
                     else if (selected_entity->action.kind == ENTITY_ACTION_RIGHT_ARM)
-                        c = V4(0.8, 0.2, 0.2, 1);
+                        c = attack_color;
                 }
             }
 
@@ -466,6 +470,18 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                      matrix4::scale(0.5f, 0.5f, height);
             ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), SHADER_COLOR);
             draw_health_bar(ctx, monster, x, y, z);
+
+            if (monster->action.kind != ENTITY_ACTION_NONE)
+            {
+                auto color = monster->action.kind == ENTITY_ACTION_MOVE ? move_color :
+                             monster->action.kind == ENTITY_ACTION_LEFT_ARM ? defence_color :
+                             monster->action.kind == ENTITY_ACTION_RIGHT_ARM ? attack_color :
+                             V4(1, 1, 1, 1);
+                ctx->render_square(matrix4::translate(monster->action.x - monster->x,
+                                                      monster->action.y - monster->y,
+                                                      -selected_entity_height) * m,
+                    color, SHADER_COLOR);
+            }
         }
     }
 
