@@ -58,9 +58,9 @@ void draw_health_bar(context *ctx, entity *e, float32 x, float32 y, float32 z)
         // 3 hp_width / 2 + 3 gap / 2
 
         float32 startP = -(hpBarWidth / 2 + gap / 2) * (e->max_hp - 1);
-        for (int i = 0; i < e->hp; i++)
+        for (int i = 0; i < e->max_hp; i++)
         {
-            auto color = V4(1, 0.2, 0.1, 1);
+            auto color = i < e->hp ? V4(1, 0.2, 0.1, 1) : V4(0.3, 0.3, 0.3, 1);
             ctx->render_banner(V3(x, y, z + 1),
                 matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
                 matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
@@ -427,8 +427,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
                 c += V4(0.3, 0.3, 0.3, 1);
             }
 
-            auto m = matrix4::translate_x((float32)x + 1.3f*x) *
-                     matrix4::translate_y((float32)y + 1.3f*y);
+            auto m = matrix4::translate(2.3*x, 2.3*y, 0);
 
             ctx->render_cube(m, c, SHADER_GROUND);
         }
@@ -440,8 +439,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     // Draw hero
     if (hero)
     {
-        float32 x = hero->x + 1.3f*hero->x;
-        float32 y = hero->y + 1.3f*hero->y;
+        float32 x = 2.3f*hero->x;
+        float32 y = 2.3f*hero->y;
         float32 z = 2;
         float height = hero->eid == gs->selected_entity_eid ? selected_entity_height
                      : regular_entity_height;
