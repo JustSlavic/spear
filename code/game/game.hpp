@@ -12,6 +12,11 @@
 
 // #define printf
 
+enum world_view_state
+{
+    WORLD_VIEW__NORMAL,
+    WORLD_VIEW__GHOST,
+};
 
 enum entity_action_kind
 {
@@ -107,6 +112,8 @@ struct game_state
     ecs::entity_id selected_entity_eid;
 
     static_array<entity_action2, 32> action_buffer;
+
+    world_view_state world_view;
 
     bool turn_timer_enabled;
     int turn_no;
