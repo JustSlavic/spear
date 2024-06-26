@@ -84,7 +84,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
-    gs->camera = game::camera::look_at(V3(0, -15, 15), V3(0, 0, 0), V3(0, 0, 1));
+    gs->camera = game::camera::look_at(V3(0, -15, 20), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 
     gs->turn_no = 1;
@@ -95,7 +95,13 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->entity_manager = ecs::entity_manager::create();
 
     game::spawn_hero(gs, 0, 0);
-    game::spawn_monster(gs, 1, 1);
+    game::spawn_monster(gs, -2, 2);
+    game::spawn_monster(gs, 2, -1);
+
+    game::spawn_stone(gs, -2,  1);
+    game::spawn_stone(gs, -1,  1);
+    game::spawn_stone(gs,  1,  0);
+    game::spawn_stone(gs,  2, -2);
 }
 
 enum a_star_move {
@@ -249,6 +255,21 @@ bool a_star(context *ctx, game_state *gs,
         }
     }
 
+    {
+        int i = i0;
+        int j = j0;
+        while (result_size > 0)
+        {
+            *result = moves[i][j];
+            result += 1;
+            result_size -= 1;
+            if (moves[i][j] == P_ML) i -= 1;
+            if (moves[i][j] == P_MR) i += 1;
+            if (moves[i][j] == P_MU) j += 1;
+            if (moves[i][j] == P_MD) j -= 1;
+        }
+    }
+
     // Render pathfinding debug
     if (draw)
     {
@@ -277,17 +298,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     auto gs = (game_state *) ctx->game_state;
     auto dt = input->dt;
 
-    if (get_release_count(input->keyboard[KB_ESC]))
-    {
-        if (get_seconds(input->time - gs->exit_press_time) < 1)
-        {
-            ctx->exit_game();
-        }
-        else
-        {
-            gs->exit_press_time = input->time;
-        }
-    }
+    game::on_every_frame(ctx, gs, input);
 
     if (get_press_count(input->keyboard[KB_I]))
     {
@@ -297,7 +308,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     if (get_press_count(input->keyboard[KB_G]))
     {
         gs->world_view = gs->world_view == WORLD_VIEW__NORMAL ? WORLD_VIEW__GHOST :
-            gs->world_view == WORLD_VIEW__GHOST ? WORLD_VIEW__NORMAL : WORLD_VIEW__NORMAL;
+                         gs->world_view == WORLD_VIEW__GHOST ? WORLD_VIEW__NORMAL : WORLD_VIEW__NORMAL;
     }
 
     if (gs->camera_fly_mode) game::move_camera(gs, input);
@@ -466,6 +477,61 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
         game::remove_dead_entities(gs);
         game::reset_entity_states(gs);
 
+        for (auto monster_eid : gs->monsters)
+        {
+            auto *monster = game::get_entity(gs, monster_eid);
+            a_star_move moves[25] = {};
+            bool32 path_exists = a_star(ctx, gs, monster->x, monster->y, hero->x, hero->y, moves, ARRAY_COUNT(moves), true);
+            if (path_exists)
+            {
+                int dx = 0;
+                int dy = 0;
+
+                if (moves[0] == P_ML) dx = -1;
+                if (moves[0] == P_MR) dx = 1;
+                if (moves[0] == P_MU) dy = 1;
+                if (moves[0] == P_MD) dy = -1;
+
+                for (auto m : moves) {
+                    if (m == A_NULL) console::print("A_NULL ");
+                    if (m == A_ML) console::print("A_ML ");
+                    if (m == A_MR) console::print("A_MR ");
+                    if (m == A_MU) console::print("A_MU ");
+                    if (m == A_MD) console::print("A_MD ");
+                    if (m == P_NULL) console::print("P_NULL ");
+                    if (m == P_ML) console::print("P_ML ");
+                    if (m == P_MR) console::print("P_MR ");
+                    if (m == P_MU) console::print("P_MU ");
+                    if (m == P_MD) console::print("P_MD ");
+                }
+                console::print("\n");
+
+                int x = monster->x + dx;
+                int y = monster->y + dy;
+
+                entity_action2 act;
+                act.eid = monster->eid;
+                act.x0 = monster->x;
+                act.y0 = monster->y;
+                act.x1 = x;
+                act.y1 = y;
+
+                if (x == hero->x && y == hero->y)
+                {
+                    act.kind = ENTITY_ACTION2_ATTACK;
+                    monster->action.kind = ENTITY_ACTION_RIGHT_ARM;
+                }
+                else
+                {
+                    act.kind = ENTITY_ACTION2_MOVE;
+                    monster->action.kind = ENTITY_ACTION_MOVE;
+                }
+                monster->action.x = x;
+                monster->action.y = y;
+                gs->action_buffer.push_back(act);
+            }
+        }
+
         gs->turn_no += 1;
         gs->turn_start_time = input->time;
     }
@@ -574,9 +640,9 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 
     // A* pathfinding
     a_star_move moves[25] = {};
-    if (intersected)
+    if (intersected && hero)
     {
-        a_star(ctx, gs, hero->x, hero->y, intersect_x, intersect_y, moves, ARRAY_COUNT(moves), true);
+        a_star(ctx, gs, hero->x, hero->y, intersect_x, intersect_y, moves, ARRAY_COUNT(moves));
     }
 
     auto move_color = V4(0.4, 0.4, 0.8, 1);

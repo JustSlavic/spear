@@ -9,6 +9,29 @@
 namespace game {
 
 
+void process_input(context *ctx, game_state *gs, input_state *input)
+{
+    if (get_release_count(input->keyboard[KB_ESC]))
+    {
+        if (get_seconds(input->time - gs->exit_press_time) < 1)
+        {
+            ctx->exit_game();
+        }
+        else
+        {
+            gs->exit_press_time = input->time;
+        }
+    }
+}
+
+
+void on_every_frame(context *ctx, game_state *gs, input_state *input)
+{
+    process_input(ctx, gs, input);
+}
+
+
+
 void move_camera(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
