@@ -104,7 +104,10 @@ enum a_star_move {
 };
 
 
-bool a_star(context *ctx, game_state *gs, int x0, int y0, int x1, int y1, a_star_move *result, int result_size)
+bool a_star(context *ctx, game_state *gs,
+            int x0, int y0, int x1, int y1,
+            a_star_move *result, int result_size,
+            bool32 draw = false)
 {
     float32 g_cost[5][5] = {};
     float32 h_cost[5][5] = {};
@@ -163,11 +166,10 @@ bool a_star(context *ctx, game_state *gs, int x0, int y0, int x1, int y1, a_star
             }
         }
 
-        visited[min_i][min_j] = true;
-
         // Since we set f_cost[i0][j0] < infinity, the condition is redundant
         if (min_cost < infinity)
         {
+            visited[min_i][min_j] = true;
             for (int shift_index = 0; shift_index < 4; shift_index++)
             {
                 int shift_x = shifts[shift_index][0];
@@ -195,6 +197,10 @@ bool a_star(context *ctx, game_state *gs, int x0, int y0, int x1, int y1, a_star
                     }
                 }
             }
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -244,6 +250,7 @@ bool a_star(context *ctx, game_state *gs, int x0, int y0, int x1, int y1, a_star
     }
 
     // Render pathfinding debug
+    if (draw)
     {
         for (int x = 0; x < 5; x++) for (int y = 0; y < 5; y++)
         {
@@ -569,7 +576,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     a_star_move moves[25] = {};
     if (intersected)
     {
-        a_star(ctx, gs, hero->x, hero->y, intersect_x, intersect_y, moves, ARRAY_COUNT(moves));
+        a_star(ctx, gs, hero->x, hero->y, intersect_x, intersect_y, moves, ARRAY_COUNT(moves), true);
     }
 
     auto move_color = V4(0.4, 0.4, 0.8, 1);
