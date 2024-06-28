@@ -131,6 +131,18 @@ struct game_state
     bool camera_fly_mode;
     timepoint exit_press_time;
 
+    vector4 move_color;
+    vector4 defence_color;
+    vector4 attack_color;
+
+    bool32 intersected;
+    float32 intersect_t;
+    int intersect_x;
+    int intersect_y;
+
+    float selected_entity_height = 0.8f;
+    float regular_entity_height = 0.3f;
+
     bool is_coords_valid(int x, int y);
     ecs::entity_id get_map_eid(int x, int y);
     void set_map_eid(int x, int y, ecs::entity_id eid);

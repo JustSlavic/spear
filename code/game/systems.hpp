@@ -9,57 +9,6 @@
 namespace game {
 
 
-void process_input(context *ctx, game_state *gs, input_state *input)
-{
-    if (get_release_count(input->keyboard[KB_ESC]))
-    {
-        if (get_seconds(input->time - gs->exit_press_time) < 1)
-        {
-            ctx->exit_game();
-        }
-        else
-        {
-            gs->exit_press_time = input->time;
-        }
-    }
-}
-
-
-void on_every_frame(context *ctx, game_state *gs, input_state *input)
-{
-    process_input(ctx, gs, input);
-}
-
-
-
-void move_camera(game_state *gs, input_state *input)
-{
-    auto camera_move_direction = V3(0, 0, 0);
-    if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
-    // if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
-    // if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
-
-    if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input->gamepads[0][GP_DPAD_RIGHT])) camera_move_direction += V3(1, 0, 0);
-    if (get_hold_count(input->gamepads[0][GP_DPAD_UP])) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input->gamepads[0][GP_DPAD_DOWN])) camera_move_direction -= V3(0, 1, 0);
-    if (get_hold_count(input->gamepads[0][GP_LEFT_SHOULDER])) camera_move_direction += V3(0, 0, 1);
-    if (get_hold_count(input->gamepads[0][GP_RIGHT_SHOULDER])) camera_move_direction -= V3(0, 0, 1);
-
-    camera_move_direction += V3(input->gamepads[0].left_stick.x, input->gamepads[0].left_stick.y, 0);
-
-    if (input->mouse.scroll != 0)
-    {
-        float k = 15.f * gs->camera.position.z;
-        camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
-    }
-
-    gs->camera.position += normalized(camera_move_direction) * gs->camera_speed * input->dt;
-}
-
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 {
     auto mouse_pos_x =  cvt((float32) input->mouse.x,
