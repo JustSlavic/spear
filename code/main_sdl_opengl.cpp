@@ -181,16 +181,6 @@ int main()
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
 
-
-
-    // ======================================================================
-
-    // auto ui_render_target = driver.create_render_target(&ctx);
-
-    // driver.use_render_target(ui_render_target);
-    // driver.clear_color(1.f, 1.f, 0.f, 1.f);
-    // driver.clear();
-
     // ======================================================================
 
     auto ui_framebuffer = create_framebuffer(current_client_width, current_client_height);
@@ -355,8 +345,6 @@ int main()
                          * matrix4::translate(1, -1, 0)
                          * pNDC;
                 auto m = matrix4::translate(pUI.xyz) * cmd.model;
-
-                // proj_ui * translate(pUI) * scale * p
 
                 glUseProgram(shader_color.id);
 

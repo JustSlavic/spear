@@ -8,9 +8,32 @@
 namespace game {
 
 
+vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
+{
+    auto mouse_pos_x =  cvt((float32) input->mouse.x,
+        (float32) ctx->viewport.offset_x, (float32) ctx->viewport.offset_x + ctx->viewport.width,
+        -1.f, 1.f);
+    auto mouse_pos_y = -cvt((float32) input->mouse.y,
+        (float32) ctx->viewport.offset_y, (float32) ctx->viewport.offset_y + ctx->viewport.height,
+        -1.f, 1.f);
+
+    auto clip_d = ctx->near_clip_dist;
+    auto clip_w = ctx->near_clip_width;
+    auto clip_h = ctx->near_clip_height;
+
+    auto up = gs->camera.up;
+    auto right = cross(gs->camera.forward, gs->camera.up);
+
+    auto clip_c = gs->camera.position + gs->camera.forward * clip_d;
+    auto clip_p = clip_c + mouse_pos_x * 0.5f * clip_w * right +
+                           mouse_pos_y * 0.5f * clip_h * up;
+    vector3 result = normalized(clip_p - gs->camera.position);
+    return result;
+}
+
 void find_selection_tile(context *ctx, game_state *gs, input_state *input)
 {
-    vector3 ray_direction = game::compute_pointer_ray(ctx, gs, input);
+    vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
     vector3 intersection;
     {
         auto Oxy = make_plane3(0, 0, 1, 0);
@@ -215,7 +238,7 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
                 }
                 monster->action.x = x;
                 monster->action.y = y;
-                gs->action_buffer.push_back(act);
+                // gs->action_buffer.push_back(act);
             }
         }
 

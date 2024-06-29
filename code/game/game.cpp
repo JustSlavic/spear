@@ -17,10 +17,6 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 
-#define TO_INDICES(X, Y) ((X) + 2) ][ ((Y) + 2)
-#define TO_COORDS(I, J) ((I) - 2) ][ ((J) - 2)
-
-
 bool game_state::is_coords_valid(int x, int y)
 {
     return (-2 <= x && x <= 2) && (-2 <= y && y <= 2);
