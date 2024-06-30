@@ -119,6 +119,12 @@ void select_entity(context *ctx, game_state *gs, input_state *input)
     }
 }
 
+void debug_toggle_battle(context *ctx, game_state *gs, input_state *input)
+{
+    if (get_press_count(input->keyboard[KB_K]))
+        TOGGLE(gs->is_in_battle);
+}
+
 
 } // namespace game
 

@@ -8,6 +8,10 @@
 
 namespace game {
 
+
+void move_entity(game_state *gs, entity *e, int x, int y);
+
+
 entity *get_entity(game_state *gs, ecs::entity_id eid)
 {
     entity *result = NULL;
@@ -65,18 +69,6 @@ bool cell_is_adjacent_to_entity(entity *e, int x, int y)
 bool entity_can_walk_here(game_state *gs, entity *e, int x, int y)
 {
     return e && cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(e, x, y);
-}
-
-void move_entity(game_state *gs, entity *e, int x, int y)
-{
-    if (gs->get_map_eid(x, y) != ecs::INVALID_ENTITY_ID)
-        return;
-
-    gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
-    gs->set_map_eid(x, y, e->eid);
-
-    e->x = x;
-    e->y = y;
 }
 
 ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p = NULL)

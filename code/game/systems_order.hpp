@@ -19,12 +19,20 @@ void process_input(context *ctx, game_state *gs, input_state *input)
     spawn_entities(ctx, gs, input);
     move_camera(ctx, gs, input);
     select_entity(ctx, gs, input);
+    debug_toggle_battle(ctx, gs, input);
 }
 
 void update_stage(context *ctx, game_state *gs, input_state *input)
 {
     find_selection_tile(ctx, gs, input);
-    next_turn(ctx, gs, input);
+    if (gs->is_in_battle)
+    {
+        next_turn(ctx, gs, input);
+    }
+    else
+    {
+        move_selected_entity(ctx, gs, input);
+    }
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)

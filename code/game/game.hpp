@@ -106,6 +106,9 @@ struct game_state
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
     static_array<ecs::entity_id, 25> stones;
 
+    // @todo: static_ring_buffer
+    // static_ring_buffer<ecs::entity_id, 25> battle_queue;
+
     ecs::entity_manager entity_manager;
 
     ecs::entity_id hero_eid;
@@ -124,6 +127,8 @@ struct game_state
     bool selecting_direction_of_action;
 
     bool spawn_hero_next_turn;
+
+    bool is_in_battle;
 
     game::camera camera;
     float32 camera_speed;
