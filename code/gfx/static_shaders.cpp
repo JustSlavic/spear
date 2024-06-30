@@ -82,73 +82,34 @@ void main()
 }
 )GLSL";
 
+GLOBAL char const *vs_text = R"GLSL(
+#version 410
+layout (location = 0) in vec2 ui_coordinates;
+layout (location = 1) in vec2 uv_coordinates;
 
+out vec2 uv;
 
+uniform mat4 u_model;
+uniform mat4 u_projection;
 
+void main()
+{
+    uv = uv_coordinates;
+    gl_Position = u_projection * u_model * vec4(ui_coordinates, 0., 1.);
+}
+)GLSL";
 
-// GLOBAL char const *vs_uv_coords = R"GLSL(
-// #version 410
+GLOBAL char const *fs_text = R"GLSL(
+#version 410
 
-// layout (location = 0) in vec3 vertex_position;
-// layout (location = 1) in vec2 uv_coordinates;
+in vec2 uv;
+out vec4 result_color;
 
-// out vec2 uv;
+uniform vec4 u_color;
+uniform sampler2D u_texture0;
 
-// uniform mat4 u_model;
-// uniform mat4 u_view;
-// uniform mat4 u_projection;
-
-// void main()
-// {
-//     uv = uv_coordinates;
-//     gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
-// }
-// )GLSL";
-
-
-// GLOBAL char const *fs_apply_texture = R"GLSL(
-// #version 410
-
-// in vec2 uv;
-// out vec4 result_color;
-
-// uniform sampler2D u_texture0;
-
-// void main()
-// {
-//     result_color = texture(u_texture0, uv);;
-// }
-// )GLSL";
-
-
-// GLOBAL char const *vs_text_shader = R"GLSL(
-// #version 410
-// layout (location = 0) in vec2 ui_coordinates;
-// layout (location = 1) in vec2 uv_coordinates;
-
-// out vec2 uv;
-
-// uniform mat4 u_projection;
-
-// void main()
-// {
-//     uv = uv_coordinates;
-//     gl_Position = u_projection * vec4(ui_coordinates, 0., 1.);
-// }
-// )GLSL";
-
-
-// GLOBAL char const *fs_text_shader = R"GLSL(
-// #version 410
-
-// in vec2 uv;
-// out vec4 result_color;
-
-// uniform vec4 u_color;
-// uniform sampler2D u_texture0;
-
-// void main()
-// {
-//     result_color = u_color * texture(u_texture0, uv);
-// }
-// )GLSL";
+void main()
+{
+    result_color = u_color * texture(u_texture0, uv);
+}
+)GLSL";

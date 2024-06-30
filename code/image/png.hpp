@@ -9,7 +9,7 @@
 namespace image {
 
 
-bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_buffer memory);
+bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory_buffer memory);
 
 
 } // namespace image

@@ -2,6 +2,7 @@
 #include <crc.hpp>
 #include <math/float32.h>
 #include <math/integer.h>
+#include <memory_bucket.hpp>
 
 //
 // PNG (Portable Network Graphics) Specification, Version 1.2
@@ -233,12 +234,12 @@ int paeth_predictor(int a, int b, int c)
 
 #define PNG_CONSUME_STRUCT(POINTER, TYPE) (TYPE *)png::consume_memory(&POINTER, sizeof(TYPE))
 
-bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allocator);
-bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_buffer contents)
+bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator *temporary_allocator);
+bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory_buffer contents)
 {
     bitmap result = {};
 
-    auto zlib_stream = memory_bucket::from(temporary.allocate_buffer(contents.size));
+    auto zlib_stream = memory_bucket::from(temporary->allocate_buffer(contents.size));
 
     uint8 *data = (uint8 *) contents.data;
 
@@ -335,7 +336,7 @@ bitmap load_png(memory_allocator allocator, memory_allocator temporary, memory_b
             // @note additional + height for filter types at the start of each scanline
             result.size = result.width * result.height * (result.bits_per_pixel / 8) + result.height;
 
-            auto buffer_1 = allocator.allocate_buffer(result.size, alignof(uint32));
+            auto buffer_1 = allocator->allocate_buffer(result.size, alignof(uint32));
             result.pixels = buffer_1.data;
 
             decoder.output = zlib::create_stream(result.pixels, result.size);
@@ -502,7 +503,7 @@ bool32 operator != (huffman_entry a, huffman_entry b)
 }
 
 
-array<huffman_entry> compute_huffman(memory_allocator temporary_allocator,
+array<huffman_entry> compute_huffman(memory_allocator *temporary_allocator,
                                      uint32 const *code_lengths,
                                      usize code_lengths_count);
 uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
@@ -523,7 +524,7 @@ uint32 decode_huffman(zlib::decoder *decoder, array<huffman_entry> huffman)
     return huffman[A].symbol;
 }
 
-bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allocator)
+bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator *temporary_allocator)
 {
     if (!decoder->initialized)
     {
@@ -651,7 +652,7 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator temporary_allo
 
                 auto clen_huffman = compute_huffman(temporary_allocator, CLEN_code_lengths, ARRAY_COUNT(CLEN_code_lengths));
 
-                auto LITLEN_DIST_code_lengths = temporary_allocator.allocate_array<uint32>(HLIT + HDIST);
+                auto LITLEN_DIST_code_lengths = temporary_allocator->allocate_array<uint32>(HLIT + HDIST);
                 LITLEN_DIST_code_lengths.resize(LITLEN_DIST_code_lengths.capacity());
 
                 uint32 index = 0;
@@ -751,17 +752,17 @@ uint32 reverse_bits(uint32 t, uint32 n)
 }
 
 
-array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_lengths, usize code_lengths_count)
+array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_lengths, usize code_lengths_count)
 {
-    auto bl_count = a.allocate_array_open<uint32>(17);
-    auto next_code = a.allocate_array_open<uint32>(16);
+    auto bl_count = a->allocate_array_open<uint32>(17);
+    auto next_code = a->allocate_array_open<uint32>(16);
     struct huffman_table_entry
     {
         uint32 symbol;
         uint32 code_length;
         uint32 code;
     };
-    auto huffman_table = a.allocate_array_open<huffman_table_entry>(code_lengths_count);
+    auto huffman_table = a->allocate_array_open<huffman_table_entry>(code_lengths_count);
 
     // Count the number of codes for each code length.  Let
     // bl_count[N] be the number of codes of length N, N >= 1.
@@ -810,7 +811,7 @@ array<huffman_entry> compute_huffman(memory_allocator a, uint32 const *code_leng
             maximum_code_length = code_lengths[index];
         }
     }
-    auto huffman = a.allocate_array_open<huffman_entry>(1ull << maximum_code_length);
+    auto huffman = a->allocate_array_open<huffman_entry>(1ull << maximum_code_length);
     {
         for (uint32 symbol = 0; symbol < code_lengths_count; symbol++)
         {

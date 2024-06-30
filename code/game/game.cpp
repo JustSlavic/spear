@@ -163,6 +163,8 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     {
         a_star(ctx, gs, hero->x, hero->y, gs->intersect_x, gs->intersect_y, moves, ARRAY_COUNT(moves));
     }
+
+    ctx->render_text(matrix4::translate(100, 200, 0) * matrix4::scale(0.4), V4(1, 1, 0, 1), "Hello, sailor!");
 }
 
 #if DLL_BUILD

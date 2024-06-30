@@ -62,6 +62,18 @@ struct gpu_mesh
     uint32 count;
 };
 
+struct texture
+{
+    uint32 id;
+};
+
+struct gpu_text
+{
+    char const *cstr;
+    texture font_texture;
+    gpu_mesh mesh;
+};
+
 struct shader
 {
     uint32 id;
@@ -278,6 +290,27 @@ gpu_mesh load_mesh(cpu_mesh mesh)
 
     console::print("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, count = %d)\n", vao_id, vbo_id, ibo_id, result.count);
 
+    return result;
+}
+
+texture load_texture(bitmap tx)
+{
+    uint32 id = 0;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    if (tx.color_type == IMAGE_RGBA)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tx.width, tx.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tx.pixels);
+    else
+        ASSERT_FAIL("Unsupported color type!");
+
+    texture result;
+    result.id = id;
     return result;
 }
 

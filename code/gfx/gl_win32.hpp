@@ -140,9 +140,7 @@ void swap_buffers(void *w)
 void use_texture(uint32 texture_id, uint32 slot)
 {
     glActiveTexture(GL_TEXTURE0 + slot);
-    GL_CHECK_ERRORS();
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    GL_CHECK_ERRORS();
 }
 
 

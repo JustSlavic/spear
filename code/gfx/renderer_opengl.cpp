@@ -369,7 +369,6 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
     auto vbo_bucket = memory_bucket::from(vbo_data_buffer);
     uint32 count = 0;
 
-
     for (int char_index = 0; char_index < text.size; char_index++)
     {
         char c = text.data[char_index];
@@ -406,17 +405,11 @@ void render_text(context *ctx, matrix4 proj, rs::token mesh_token, rs::token sha
     }
 
     glBindVertexArray(mesh_rd->vao_id);
-    GL_CHECK_ERRORS();
-
     glBindBuffer(GL_ARRAY_BUFFER, mesh_rd->vbo_id);
-    GL_CHECK_ERRORS();
     glBufferData(GL_ARRAY_BUFFER, vbo_bucket.used, vbo_bucket.data, GL_STATIC_DRAW);
-    GL_CHECK_ERRORS();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    GL_CHECK_ERRORS();
 
     glDrawArrays(GL_TRIANGLES, 0, count);
-    GL_CHECK_ERRORS();
 }
 
 

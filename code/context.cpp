@@ -51,3 +51,11 @@ void context::render_banner(vector3 p, matrix4 m, vector4 c)
     rend_commands_ui.push_back(cmd);
 }
 
+void context::render_text(matrix4 m, vector4 c, char const *cstr)
+{
+    rend_command cmd = { rend_command::render_text };
+    cmd.model = m;
+    cmd.color = c;
+    cmd.cstr = cstr;
+    rend_commands_ui.push_back(cmd);
+}

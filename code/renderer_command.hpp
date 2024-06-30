@@ -22,6 +22,7 @@ struct rend_command
         render_cube,
         render_ui,
         render_banner,
+        render_text,
     };
     rend_command_kind kind;
 
@@ -32,6 +33,7 @@ struct rend_command
     matrix4 model;
     vector4 color;
     shader_enum shader;
+    char const *cstr;
 };
 
 #endif // RENDERER_COMMAND_HPP

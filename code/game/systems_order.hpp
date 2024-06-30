@@ -30,7 +30,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
 void render_stage(context *ctx, game_state *gs, input_state *input)
 {
     render_ground(ctx, gs, input);
-    render_character_page(ctx, gs, input);
+    // render_character_page(ctx, gs, input);
     render_hero(ctx, gs, input);
     render_monsters(ctx, gs, input);
     render_stones(ctx, gs, input);

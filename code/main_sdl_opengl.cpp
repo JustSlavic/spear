@@ -2,8 +2,10 @@
 #include <time.hpp>
 #include <input.hpp>
 #include <game_interface.hpp>
+#include <platform.hpp>
 #include <platform_sdl.hpp>
 #include <hash.hpp>
+#include <image/png.hpp>
 
 #include <gfx/viewport.hpp>
 #include <gfx/static_shaders.cpp>
@@ -13,6 +15,9 @@
 #include <OpenGL/gl3.h>
 
 #include <common_graphics.hpp>
+#include <gen/font.hpp>
+#include <memory/serializer.hpp>
+#include <string_view.hpp>
 
 
 GLOBAL bool32 running;
@@ -64,23 +69,7 @@ void process_pending_messages(input_state *input)
     }
 }
 
-
-
-#include <ecs/entity_manager.hpp>
-#include <ecs/component.hpp>
-#include <ecs/archetype.hpp>
-
-
-void entity_system_1(ecs::event *evt, ecs::entity_id eid)
-{
-    printf("es: eid=%d\n", eid.id);
-}
-
-struct event_update : ecs::event {};
-
-
 #define ECS_HASH hash_djb2
-
 
 timepoint now()
 {
@@ -88,6 +77,18 @@ timepoint now()
     return result;
 }
 
+Character find_font_character(char c)
+{
+    for (int i = 0; i < font_Arial.characterCount; i++)
+    {
+        auto glyph = font_Arial.characters[i];
+        if (glyph.codePoint == c)
+        {
+            return glyph;
+        }
+    }
+    return {};
+}
 
 int main()
 {
@@ -98,6 +99,7 @@ int main()
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
+    auto temporary_allocator = global_arena.allocate_arena(MEGABYTES(5));
 
     // ======================================================================
 
@@ -177,39 +179,22 @@ int main()
     auto cpu_cube = make_cube();
     auto gpu_cube = load_mesh(cpu_cube);
 
+    auto cpu_square_uv = make_square_uv();
+    auto gpu_square_uv = load_mesh(cpu_square_uv);
+
     auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
+    auto shader_text = compile_shaders(vs_text, fs_text);
+
+    auto font_content = platform::load_file("font.png", &global_arena);
+    auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
+    auto font_texture = load_texture(font_bitmap);
+    console::print("Font texture is id=%d\n", font_texture.id);
 
     // ======================================================================
 
     auto ui_framebuffer = create_framebuffer(current_client_width, current_client_height);
-
-    // ======================================================================
-
-    // ecs::component comps[] = {
-    //     ECS_COMPONENT("eid", ecs::entity_id),
-    //     ECS_COMPONENT("abc", int),
-    //     ECS_COMPONENT("def", int),
-    // };
-    // ecs::archetype arch = ecs::make_archetype(comps, ARRAY_COUNT(comps));
-
-    // auto eid1 = manager.create_entity();
-    // auto comp_values = temporary_arena.allocate_buffer(sizeof(ecs::entity_id) + sizeof(int) * 2);
-    // *(ecs::entity_id *)(comp_values.data) = eid1;
-    // *(int *)(comp_values.data + sizeof(ecs::entity_id)) = 32;
-    // *(int *)(comp_values.data + sizeof(ecs::entity_id) + sizeof(int)) = 42;
-    // ecs::archetype_initializer init = { { comps[0], comps[1], comps[2] }, ARRAY_COUNT(comps), comp_values };
-    // arch.allocate(init);
-
-    // for (uint32 i = 0; i < arch.chunk.size / sizeof(int); i++)
-    // {
-    //     printf("%d ", *(int *)(arch.chunk.data + i*sizeof(int)));
-    // }
-
-    // // manager.register_event<event_update>(ECS_HASH("event_update"));
-    // // manager.register_system<ECS_HASH("event_update")>(entity_system_1);
-    // manager.send_event_immediate(event_update{});
 
     // ======================================================================
 
@@ -356,6 +341,62 @@ int main()
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
+            else if (cmd.kind == rend_command::render_text)
+            {
+                glUseProgram(shader_text.id);
+                shader_text.uniform("u_model", cmd.model);
+                shader_text.uniform("u_projection", proj_matrix_ui);
+                shader_text.uniform("u_color", cmd.color);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, font_texture.id);
+
+                float32 posx = 0.f;
+                float32 posy = 0.f;
+                uint32 count = 0;
+
+                string_view strview = string_view::from(cmd.cstr);
+                auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
+
+                char c = 0;
+                for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+                {
+                    Character glyph = find_font_character(c);
+
+                    float32 px = (float32) posx - glyph.originX;
+                    float32 py = (float32) posy - glyph.originY;
+                    float32 w  = (float32) glyph.width;
+                    float32 h  = (float32) glyph.height;
+
+                    float32 uv_x = (float32) glyph.x / font_Arial.width;
+                    float32 uv_y = (float32) glyph.y / font_Arial.height;
+                    float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
+                    float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+
+                    float32 vbo_data[] = {
+                         px,     py,       uv_x,  uv_y,
+                         px + w, py,       uv_x1, uv_y,
+                         px    , py + h,   uv_x,  uv_y1,
+
+                         px + w, py,       uv_x1, uv_y,
+                         px + w, py + h,   uv_x1, uv_y1,
+                         px,     py + h,   uv_x,  uv_y1,
+                    };
+
+                    seri_buffer.push(vbo_data, sizeof(vbo_data));
+                    posx += glyph.width;
+                    count += 6;
+                }
+
+                glBindVertexArray(gpu_square_uv.vao);
+
+                glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
+                glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                glDrawArrays(GL_TRIANGLES, 0, count);
+            }
             else
             {
                 ASSERT_FAIL();
@@ -385,6 +426,8 @@ int main()
 
         SDL_GL_SwapWindow(window);
 
+        temporary_allocator.reset();
+
         timepoint end_of_frame = now();
         last_frame_dt = get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
@@ -400,6 +443,7 @@ int main()
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
 #include <game/game.cpp>
+#include <image/png.cpp>
 #include <crc.cpp>
 #include <os/platform_posix.cpp>
 #include <ecs/entity_manager.cpp>
