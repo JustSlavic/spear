@@ -164,6 +164,7 @@ int main()
     ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
     ctx.far_clip_dist = 100.f;
     ctx.debug_load_file = NULL;
+    ctx.temporary_allocator = temporary_allocator;
 
     // ======================================================================
 
@@ -389,6 +390,7 @@ int main()
                     count += 6;
                 }
 
+                glEnable(GL_BLEND);
                 glBindVertexArray(gpu_square_uv.vao);
 
                 glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
@@ -396,6 +398,7 @@ int main()
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
                 glDrawArrays(GL_TRIANGLES, 0, count);
+                glDisable(GL_BLEND);
             }
             else
             {
