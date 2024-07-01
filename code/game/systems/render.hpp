@@ -179,6 +179,31 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
     }
 }
 
+void render_battle_queue(context *ctx, game_state *gs, input_state *)
+{
+    int x = 200;
+    int y = 20;
+    for (auto eid : gs->battle_queue)
+    {
+        auto color = V4(0.4, 0.4, 0.4, 1);
+        ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(10, 10, 1), color);
+
+        auto string_buffer = ctx->temporary_allocator.allocate_string(10);
+        int n = eid.id;
+        while (n > 0)
+        {
+            string_buffer.push_front((n % 10) + '0');
+            n /= 10;
+        }
+        string_buffer.push_back(0);
+
+        ctx->render_text(
+                matrix4::translate(x - 9, y + 25, -0.1) * matrix4::scale(0.8, 0.8, 1),
+                V4(1), string_buffer.data());
+
+        x += 25;
+    }
+}
 
 void render_action_buffer(context *ctx, game_state *gs, input_state *)
 {

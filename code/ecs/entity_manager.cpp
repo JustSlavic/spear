@@ -34,6 +34,7 @@ entity_id entity_manager::create_entity()
 
 void entity_manager::destroy_entity(entity_id eid)
 {
+    if (eid == INVALID_ENTITY_ID) return;
     entity_idx_t slot = eid.get_index();
     generations[slot] += 1;
     empty_slots[(p_write++) % ECS_MAX_ENTITIES] = slot;

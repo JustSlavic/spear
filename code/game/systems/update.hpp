@@ -8,6 +8,113 @@
 namespace game {
 
 
+void battle_queue_push(game_state *gs, ecs::entity_id eid)
+{
+    ASSERT(gs->battle_queue.size() < gs->battle_queue.capacity());
+
+    if (gs->battle_queue.size() < gs->battle_queue.capacity())
+    {
+        gs->battle_queue.push_back(eid);
+    }
+}
+
+void remove_monster(game_state *gs, ecs::entity_id monster_eid)
+{
+    for (int i = 0; i < gs->monsters.size(); i++)
+    {
+        if (gs->monsters[i] == monster_eid)
+        {
+            gs->monsters.erase_not_sorted(i);
+            break;
+        }
+    }
+}
+
+void destroy_unit(game_state *gs, entity *unit)
+{
+    gs->entity_manager.destroy_entity(unit->eid);
+    gs->set_map_eid(unit->x, unit->y, ecs::INVALID_ENTITY_ID);
+    gs->battle_queue.erase(unit->eid);
+}
+
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p)
+{
+    ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
+    if (cell_is_empty(gs, x, y))
+    {
+        eid = gs->entity_manager.create_entity();
+        auto *entity = gs->entities + eid.get_index();
+        entity->eid = eid;
+        entity->x = x;
+        entity->y = y;
+        gs->set_map_eid(x, y, eid);
+
+        if (p) *p = entity;
+    }
+    return eid;
+}
+
+ecs::entity_id spawn_hero(game_state *gs, int x, int y)
+{
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
+    {
+        e->kind = ENTITY_HERO;
+        e->hp = 3;
+        e->max_hp = 5;
+        e->invincible = false;
+        e->strength = 1;
+        e->agility = 1;
+    }
+
+    gs->selected_entity_eid = eid;
+    gs->hero_eid = eid;
+    console::print("hero_id = %d\n", eid.id);
+
+    battle_queue_push(gs, eid);
+
+    return eid;
+}
+
+ecs::entity_id spawn_monster(game_state *gs, int x, int y)
+{
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
+    {
+        e->kind = ENTITY_MONSTER;
+        e->hp = 1;
+        e->max_hp = 2;
+        e->invincible = false;
+        e->strength = 1;
+        e->agility = 1;
+    }
+
+    gs->monsters.push_back(eid);
+    console::print("monster_eid = %d\n", eid.id);
+
+    battle_queue_push(gs, eid);
+
+    return eid;
+}
+
+ecs::entity_id spawn_stone(game_state *gs, int x, int y)
+{
+    entity *e = NULL;
+    auto eid = spawn_entity(gs, x, y, &e);
+    if (e)
+    {
+        e->kind = ENTITY_STONE;
+        e->invincible = true;
+    }
+
+    gs->stones.push_back(eid);
+    console::print("stone_eid = %d\n", eid.id);
+    return eid;
+}
+
+
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 {
     auto mouse_pos_x =  cvt((float32) input->mouse.x,
@@ -112,9 +219,90 @@ void move_selected_entity(context *ctx, game_state *gs, input_state *input)
     }
 }
 
+void choose_entity_action(context *ctx, game_state *gs, input_state *input)
+{
+    if (gs->battle_queue.size() == 0)
+    {
+        debug_set_battle_state(gs, false);
+        return;
+    }
+
+    entity *active_entity = game::get_entity(gs, gs->battle_queue[0]);
+
+    int x, y;
+    get_entity_movement(gs, input, active_entity, &x, &y);
+
+    if (get_press_count(input->keyboard[KB_Q]))
+    {
+        gs->action_input.kind = ENTITY_ACTION_LEFT_ARM;
+        TOGGLE(gs->selecting_direction_of_action);
+    }
+    else if (get_press_count(input->keyboard[KB_E]))
+    {
+        gs->action_input.kind = ENTITY_ACTION_RIGHT_ARM;
+        TOGGLE(gs->selecting_direction_of_action);
+    }
+    else
+    {
+
+    }
+
+    if (gs->is_coords_valid(x, y) &&
+        game::cell_is_adjacent_to_entity(active_entity, x, y))
+    {
+        gs->action_input.x = x;
+        gs->action_input.y = y;
+        if (!gs->selecting_direction_of_action)
+        {
+            gs->action_input.kind = ENTITY_ACTION_MOVE;
+        }
+
+        if (gs->action_input.kind == ENTITY_ACTION_MOVE)
+        {
+            if (game::entity_can_walk_here(gs, active_entity, gs->action_input.x, gs->action_input.y))
+            {
+                active_entity->action = gs->action_input;
+                gs->selecting_direction_of_action = false;
+            }
+        }
+        else if (gs->action_input.kind != ENTITY_ACTION_NONE)
+        {
+            active_entity->action = gs->action_input;
+            gs->selecting_direction_of_action = false;
+        }
+    }
+}
+
+void apply_entity_action(game_state *gs, entity *e)
+{
+    auto enemy_eid = gs->get_map_eid(e->action.x, e->action.y);
+    if (e->action.kind == ENTITY_ACTION_MOVE)
+    {
+        console::print("%d at (%d, %d) moves to (%d, %d)\n",
+            e->eid.id, e->x, e->y, e->action.x, e->action.y);
+        move_entity(gs, e, e->action.x, e->action.y);
+    }
+    else if (e->action.kind == ENTITY_ACTION_RIGHT_ARM)
+    {
+        console::print("%d at (%d, %d) attacks %d at (%d, %d)\n",
+            e->eid.id, e->x, e->y,
+            enemy_eid.id, e->action.x, e->action.y);
+    }
+    else if (e->action.kind == ENTITY_ACTION_LEFT_ARM)
+    {
+        console::print("%d at (%d, %d) defences from %d at (%d, %d)\n",
+            e->eid.id, e->x, e->y,
+            enemy_eid.id, e->action.x, e->action.y);
+    }
+}
+
 void next_turn(context *ctx, game_state *gs, input_state *input)
 {
-    entity *hero = game::get_entity(gs, gs->hero_eid);
+    if (gs->battle_queue.size() == 0)
+    {
+        debug_set_battle_state(gs, false);
+        return;
+    }
 
     bool force_new_turn = get_press_count(input->keyboard[KB_SPACE]);
     bool timer_new_turn = gs->turn_timer_enabled &&
@@ -125,174 +313,9 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
         // @attention NEW TURN !!!
         console::print("> new turn \n");
 
-
-
-
-    //     if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
-    //     {
-    //         if (gs->spawn_hero_next_turn)
-    //         {
-    //             if (game::cell_is_empty(gs, 0, 0))
-    //                 game::spawn_hero(gs, 0, 0);
-    //         }
-    //         else
-    //         {
-    //             gs->spawn_hero_next_turn = true;
-    //         }
-    //     }
-
-    //     gs->action_buffer.clear();
-    //     if (hero)
-    //         gs->action_buffer.push_back(game::get_action2(hero));
-
-    //     for (int i = 0; i < gs->monsters.size(); i++)
-    //     {
-    //         entity *monster = game::get_entity(gs, gs->monsters[i]);
-    //         gs->action_buffer.push_back(game::get_action2(monster));
-    //     }
-
-    //     // Cancel intersecting moves
-    //     for (int i = 0; i < gs->action_buffer.size(); i++)
-    //     {
-    //         auto *a1 = &gs->action_buffer[i];
-    //         for (int j = i + 1; j < gs->action_buffer.size(); j++)
-    //         {
-    //             auto *a2 = &gs->action_buffer[j];
-    //             if (a1->kind == ENTITY_ACTION2_MOVE && a2->kind == ENTITY_ACTION2_MOVE)
-    //             {
-    //                 if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
-    //                 {
-    //                     // a1 -> <- a2
-    //                     a1->kind = ENTITY_ACTION2_NONE;
-    //                     a2->kind = ENTITY_ACTION2_NONE;
-    //                 }
-    //                 else if (a1->x1 == a2->x0 && a1->y1 == a2->y0)
-    //                 {
-    //                     // a1 -> a2 ->
-    //                     ASSERT_FAIL("Should not be possible");
-    //                 }
-    //                 else if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
-    //                 {
-    //                     // <- a1 <- a2
-    //                     ASSERT_FAIL("Should not be possible");
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // Remove null actions
-    //     {
-    //         int i = (int) gs->action_buffer.size();
-    //         while (i-->0)
-    //         {
-    //             if (gs->action_buffer[i].kind == ENTITY_ACTION2_NONE)
-    //             {
-    //                 entity *e = game::get_entity(gs, gs->action_buffer[i].eid);
-    //                 e->action = game::null_action();
-
-    //                 gs->action_buffer.erase_not_sorted(i);
-    //             }
-    //         }
-    //     }
-
-    //     for (int i = 0; i < gs->action_buffer.size(); i++)
-    //     {
-    //         auto *a1 = &gs->action_buffer[i];
-    //         for (int j = i + 1; j < gs->action_buffer.size(); j++)
-    //         {
-    //             auto *a2 = &gs->action_buffer[j];
-    //             if (a1->kind == ENTITY_ACTION2_MOVE && a2->kind == ENTITY_ACTION2_ATTACK)
-    //             {
-    //                 if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
-    //                 {
-    //                     // a2 --a-> a1 ->
-    //                     auto tmp = *a1;
-    //                     *a1 = *a2;
-    //                     *a2 = tmp;
-    //                 }
-    //                 else if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
-    //                 {
-    //                     // a2 --a->  <- a1
-    //                     // All right
-    //                 }
-    //             }
-    //             else if (a1->kind == ENTITY_ACTION2_ATTACK && a2->kind == ENTITY_ACTION2_MOVE)
-    //             {
-    //                 if (a1->x0 == a2->x1 && a1->y0 == a2->y1)
-    //                 {
-    //                     // a2 --a-> a1 ->
-    //                     // All right
-    //                 }
-    //                 else if (a1->x1 == a2->x1 && a1->y1 == a2->y1)
-    //                 {
-    //                     // a2 --a->  <- a1
-    //                     auto tmp = *a1;
-    //                     *a1 = *a2;
-    //                     *a2 = tmp;
-    //                 }
-    //             }
-    //             else if (a1->kind == ENTITY_ACTION2_ATTACK && a2->kind == ENTITY_ACTION2_DEFENCE)
-    //             {
-    //                 if ((a1->x1 == a2->x0 && a1->y1 == a2->y0) &&
-    //                     (a1->x0 == a2->x1 && a1->y0 == a2->y1))
-    //                 {
-    //                     // a1 --a-> a2
-    //                     //    <-d--
-    //                     auto tmp = *a1;
-    //                     *a1 = *a2;
-    //                     *a2 = tmp;
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     game::apply_actions(gs);
-    //     game::remove_dead_entities(gs);
-    //     game::reset_entity_states(gs);
-
-    //     if (hero) for (auto monster_eid : gs->monsters)
-    //     {
-    //         auto *monster = game::get_entity(gs, monster_eid);
-    //         a_star_move moves[25] = {};
-    //         bool32 path_exists = a_star(ctx, gs, monster->x, monster->y, hero->x, hero->y, moves, ARRAY_COUNT(moves), true);
-    //         if (path_exists)
-    //         {
-    //             int dx = 0;
-    //             int dy = 0;
-
-    //             if (moves[0] == P_ML) dx = -1;
-    //             if (moves[0] == P_MR) dx = 1;
-    //             if (moves[0] == P_MU) dy = 1;
-    //             if (moves[0] == P_MD) dy = -1;
-
-    //             int x = monster->x + dx;
-    //             int y = monster->y + dy;
-
-    //             entity_action2 act;
-    //             act.eid = monster->eid;
-    //             act.x0 = monster->x;
-    //             act.y0 = monster->y;
-    //             act.x1 = x;
-    //             act.y1 = y;
-
-    //             if (x == hero->x && y == hero->y)
-    //             {
-    //                 act.kind = ENTITY_ACTION2_ATTACK;
-    //                 monster->action.kind = ENTITY_ACTION_RIGHT_ARM;
-    //             }
-    //             else
-    //             {
-    //                 act.kind = ENTITY_ACTION2_MOVE;
-    //                 monster->action.kind = ENTITY_ACTION_MOVE;
-    //             }
-    //             monster->action.x = x;
-    //             monster->action.y = y;
-    //             // gs->action_buffer.push_back(act);
-    //         }
-    //     }
-
-    //     gs->turn_no += 1;
-    //     gs->turn_start_time = input->time;
+        entity *active_entity = game::get_entity(gs, gs->battle_queue[0]);
+        apply_entity_action(gs, active_entity);
+        active_entity->action = null_action();
     }
 }
 

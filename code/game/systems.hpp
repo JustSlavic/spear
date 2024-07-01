@@ -36,20 +36,20 @@ entity_state idle_state()
     return result;
 }
 
-entity_action2 get_action2(entity *e)
-{
-    entity_action2 result;
-    result.kind = (e->action.kind == ENTITY_ACTION_MOVE) ? ENTITY_ACTION2_MOVE :
-                  (e->action.kind == ENTITY_ACTION_LEFT_ARM) ? ENTITY_ACTION2_DEFENCE :
-                  (e->action.kind == ENTITY_ACTION_RIGHT_ARM) ? ENTITY_ACTION2_ATTACK :
-                  ENTITY_ACTION2_NONE;
-    result.eid = e->eid;
-    result.x0 = e->x;
-    result.y0 = e->y;
-    result.x1 = e->action.x;
-    result.y1 = e->action.y;
-    return result;
-}
+// entity_action2 get_action2(entity *e)
+// {
+//     entity_action2 result;
+//     result.kind = (e->action.kind == ENTITY_ACTION_MOVE) ? ENTITY_ACTION2_MOVE :
+//                   (e->action.kind == ENTITY_ACTION_LEFT_ARM) ? ENTITY_ACTION2_DEFENCE :
+//                   (e->action.kind == ENTITY_ACTION_RIGHT_ARM) ? ENTITY_ACTION2_ATTACK :
+//                   ENTITY_ACTION2_NONE;
+//     result.eid = e->eid;
+//     result.x0 = e->x;
+//     result.y0 = e->y;
+//     result.x1 = e->action.x;
+//     result.y1 = e->action.y;
+//     return result;
+// }
 
 bool cell_is_empty(game_state *gs, int x, int y)
 {
@@ -71,77 +71,11 @@ bool entity_can_walk_here(game_state *gs, entity *e, int x, int y)
     return e && cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(e, x, y);
 }
 
-ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p = NULL)
-{
-    ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
-    if (cell_is_empty(gs, x, y))
-    {
-        eid = gs->entity_manager.create_entity();
-        auto *entity = gs->entities + eid.get_index();
-        entity->eid = eid;
-        entity->x = x;
-        entity->y = y;
-        entity->action = null_action();
-        gs->set_map_eid(x, y, eid);
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p = NULL);
+ecs::entity_id spawn_hero(game_state *gs, int x, int y);
+ecs::entity_id spawn_monster(game_state *gs, int x, int y);
+ecs::entity_id spawn_stone(game_state *gs, int x, int y);
 
-        if (p) *p = entity;
-    }
-    return eid;
-}
-
-ecs::entity_id spawn_hero(game_state *gs, int x, int y)
-{
-    entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
-    if (e)
-    {
-        e->kind = ENTITY_HERO;
-        e->hp = 3;
-        e->max_hp = 5;
-        e->invincible = false;
-        e->strength = 1;
-        e->agility = 1;
-    }
- 
-    gs->selected_entity_eid = eid;
-    gs->hero_eid = eid;
-    console::print("hero_id = %d\n", eid.id);
-    return eid;
-}
-
-ecs::entity_id spawn_monster(game_state *gs, int x, int y)
-{
-    entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
-    if (e)
-    {
-        e->kind = ENTITY_MONSTER;
-        e->hp = 1;
-        e->max_hp = 2;
-        e->invincible = false;
-        e->strength = 1;
-        e->agility = 1;
-    }
-
-    gs->monsters.push_back(eid);
-    console::print("monster_eid = %d\n", eid.id);
-    return eid;
-}
-
-ecs::entity_id spawn_stone(game_state *gs, int x, int y)
-{
-    entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
-    if (e)
-    {
-        e->kind = ENTITY_STONE;
-        e->invincible = true;
-    }
-
-    gs->stones.push_back(eid);
-    console::print("stone_eid = %d\n", eid.id);
-    return eid;
-}
 
 void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
 {
@@ -182,16 +116,16 @@ void apply_entity_action(game_state *gs, entity *e, entity_action2 action)
     }
 }
 
-void apply_actions(game_state *gs)
-{
-    console::print("-------- turn %d --------\n", gs->turn_no);
-    for (auto action : gs->action_buffer)
-    {
-        auto *e = get_entity(gs, action.eid);
-        apply_entity_action(gs, e, action);
-        e->action = null_action();
-    }
-}
+// void apply_actions(game_state *gs)
+// {
+//     console::print("-------- turn %d --------\n", gs->turn_no);
+//     for (auto action : gs->action_buffer)
+//     {
+//         auto *e = get_entity(gs, action.eid);
+//         apply_entity_action(gs, e, action);
+//         e->action = null_action();
+//     }
+// }
 
 void reset_entity_states(game_state *gs)
 {
