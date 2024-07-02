@@ -183,8 +183,11 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
 {
     int x = 200;
     int y = 20;
-    for (auto eid : gs->battle_queue)
+    uint32 queue_index = gs->turn_no;
+    for (int i = 0; i < gs->battle_queue.size(); i++, queue_index++)
     {
+        auto eid = gs->battle_queue[queue_index % gs->battle_queue.size()];
+
         auto color = V4(0.4, 0.4, 0.4, 1);
         ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(10, 10, 1), color);
 

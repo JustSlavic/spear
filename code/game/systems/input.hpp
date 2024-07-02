@@ -122,12 +122,19 @@ void select_entity(context *ctx, game_state *gs, input_state *input)
 void debug_set_battle_state(game_state *gs, bool value)
 {
     gs->is_in_battle = value;
+    gs->turn_no = 0;
+    gs->action_input = null_action();
+    gs->selecting_direction_of_action = false;
+    auto selected_entity = get_entity(gs, gs->selected_entity_eid);
+    selected_entity->action = null_action();
 }
 
 void debug_toggle_battle(context *ctx, game_state *gs, input_state *input)
 {
     if (get_press_count(input->keyboard[KB_K]))
-        TOGGLE(gs->is_in_battle);
+    {
+        debug_set_battle_state(gs, !gs->is_in_battle);
+    }
 }
 
 

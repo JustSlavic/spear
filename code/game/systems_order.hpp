@@ -45,7 +45,10 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     render_stones(ctx, gs, input);
     render_timer(ctx, gs, input);
     render_action_buffer(ctx, gs, input);
-    render_battle_queue(ctx, gs, input);
+    if (gs->is_in_battle)
+    {
+        render_battle_queue(ctx, gs, input);
+    }
 }
 
 void on_every_frame(context *ctx, game_state *gs, input_state *input)

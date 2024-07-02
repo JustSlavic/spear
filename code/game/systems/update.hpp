@@ -316,6 +316,8 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
         entity *active_entity = game::get_entity(gs, gs->battle_queue[0]);
         apply_entity_action(gs, active_entity);
         active_entity->action = null_action();
+
+        gs->turn_no += 1;
     }
 }
 
