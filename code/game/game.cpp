@@ -70,12 +70,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     game::spawn_hero(gs, 0, 0);
     game::spawn_monster(gs, -2, 2);
-    game::spawn_monster(gs, 2, -1);
+    // game::spawn_monster(gs, 2, -1);
 
-    game::spawn_stone(gs, -2,  1);
-    game::spawn_stone(gs, -1,  1);
-    game::spawn_stone(gs,  1,  0);
-    game::spawn_stone(gs,  2, -2);
+    // game::spawn_stone(gs, -2,  1);
+    // game::spawn_stone(gs, -1,  1);
+    // game::spawn_stone(gs,  1,  0);
+    // game::spawn_stone(gs,  2, -2);
 }
 
 

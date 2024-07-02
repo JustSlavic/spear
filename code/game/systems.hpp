@@ -12,15 +12,7 @@ namespace game {
 void move_entity(game_state *gs, entity *e, int x, int y);
 
 
-entity *get_entity(game_state *gs, ecs::entity_id eid)
-{
-    entity *result = NULL;
-    if (eid != ecs::INVALID_ENTITY_ID)
-    {
-        result = gs->entities + eid.get_index();
-    }
-    return result;
-}
+entity *get_entity(game_state *gs, ecs::entity_id eid);
 
 entity_action null_action()
 {
