@@ -306,7 +306,7 @@ void choose_entity_action(context *ctx, game_state *gs, input_state *input)
         return;
     }
 
-    entity *active_entity = get_active_entity(gs);
+    entity *active_entity = get_entity(gs, gs->selected_entity_eid);
 
     int x, y;
     get_entity_movement(gs, input, active_entity, &x, &y);
