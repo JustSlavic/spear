@@ -208,39 +208,6 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
     }
 }
 
-void render_action_buffer(context *ctx, game_state *gs, input_state *)
-{
-    int x = 200;
-    int y = 20;
-    for (auto action : gs->action_buffer)
-    {
-        auto color = action.kind == ENTITY_ACTION2_MOVE ? V4(0.4, 0.4, 0.8, 1) :
-                     action.kind == ENTITY_ACTION2_ATTACK ? V4(0.8, 0.4, 0.4, 1) :
-                     action.kind == ENTITY_ACTION2_DEFENCE ? V4(0.4, 0.8, 0.4, 1) :
-                     V4(0.2, 0.2, 0.2, 1);
-        ctx->render_ui(
-                       matrix4::translate_x((float32) x) *
-                       matrix4::translate_y((float32) y) *
-                       matrix4::scale(10, 10, 1)
-            , color);
-
-        auto string_buffer = ctx->temporary_allocator.allocate_string(10);
-        int n = action.eid.id;
-        while (n > 0)
-        {
-            string_buffer.push_front((n % 10) + '0');
-            n /= 10;
-        }
-        string_buffer.push_back(0);
-
-        ctx->render_text(
-                matrix4::translate(x - 9, y + 25, -0.1) * matrix4::scale(0.8, 0.8, 1),
-                V4(1), string_buffer.data());
-
-        x += 25;
-    }
-}
-
 void render_timer(context *ctx, game_state *gs, input_state *input)
 {
     if (gs->turn_timer_enabled)

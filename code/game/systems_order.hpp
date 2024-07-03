@@ -34,6 +34,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
     {
         move_selected_entity(ctx, gs, input);
     }
+    remove_dead_entities(ctx, gs, input);
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)
@@ -44,7 +45,6 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     render_monsters(ctx, gs, input);
     render_stones(ctx, gs, input);
     render_timer(ctx, gs, input);
-    render_action_buffer(ctx, gs, input);
     if (gs->is_in_battle)
     {
         render_battle_queue(ctx, gs, input);

@@ -44,23 +44,40 @@ void battle_queue_push(game_state *gs, ecs::entity_id eid)
     }
 }
 
-void remove_monster(game_state *gs, ecs::entity_id monster_eid)
+void remove_entity(game_state *gs, entity *e)
 {
-    for (int i = 0; i < gs->monsters.size(); i++)
+    if (e->kind == ENTITY_HERO)
     {
-        if (gs->monsters[i] == monster_eid)
+        gs->hero_eid = ecs::INVALID_ENTITY_ID;
+    }
+    if (e->kind == ENTITY_MONSTER)
+    {
+        for (int i = 0; i < gs->monsters.size(); i++)
         {
-            gs->monsters.erase_not_sorted(i);
-            break;
+            if (gs->monsters[i] == e->eid)
+            {
+                gs->monsters.erase_not_sorted(i);
+                break;
+            }
         }
+    }
+
+    gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
+    gs->entity_manager.destroy_entity(e->eid);
+    gs->battle_queue.erase(e->eid);
+
+    if (gs->selected_entity_eid == e->eid)
+    {
+        gs->selected_entity_eid = get_active_entity_eid(gs);
     }
 }
 
-void destroy_unit(game_state *gs, entity *unit)
+void on_entity_spawned(game_state *gs, entity *e)
 {
-    gs->entity_manager.destroy_entity(unit->eid);
-    gs->set_map_eid(unit->x, unit->y, ecs::INVALID_ENTITY_ID);
-    gs->battle_queue.erase(unit->eid);
+    if (gs->is_in_battle)
+    {
+        gs->battle_queue.push_back(e->eid);
+    }
 }
 
 ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p)
@@ -98,7 +115,7 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
     gs->hero_eid = eid;
     console::print("hero_id = %d\n", eid.id);
 
-    battle_queue_push(gs, eid);
+    on_entity_spawned(gs, e);
 
     return eid;
 }
@@ -120,7 +137,7 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     gs->monsters.push_back(eid);
     console::print("monster_eid = %d\n", eid.id);
 
-    battle_queue_push(gs, eid);
+    on_entity_spawned(gs, e);
 
     return eid;
 }
@@ -245,11 +262,47 @@ void move_selected_entity(context *ctx, game_state *gs, input_state *input)
     }
 }
 
+
+void cmd_start_battle(game_state *gs)
+{
+    gs->battle_queue.push_back(gs->hero_eid);
+    for (auto monster_eid : gs->monsters)
+    {
+        gs->battle_queue.push_back(monster_eid);
+    }
+    gs->action_input = null_action();
+    gs->selecting_direction_of_action = false;
+    gs->turn_no = 0;
+    gs->is_in_battle = true;
+}
+
+void cmd_end_battle(game_state *gs)
+{
+    gs->battle_queue.clear();
+    gs->is_in_battle = false;
+}
+
+void debug_toggle_battle(context *ctx, game_state *gs, input_state *input)
+{
+    if (get_press_count(input->keyboard[KB_K]))
+    {
+        if (gs->is_in_battle)
+        {
+            cmd_end_battle(gs);
+        }
+        else
+        {
+            cmd_start_battle(gs);
+        }
+    }
+}
+
+
 void choose_entity_action(context *ctx, game_state *gs, input_state *input)
 {
-    if (gs->battle_queue.size() == 0)
+    if (gs->battle_queue.size() < 2)
     {
-        debug_set_battle_state(gs, false);
+        cmd_end_battle(gs);
         return;
     }
 
@@ -301,6 +354,7 @@ void choose_entity_action(context *ctx, game_state *gs, input_state *input)
 
 void apply_entity_action(game_state *gs, entity *e)
 {
+    e->state = idle_state();
     auto enemy_eid = gs->get_map_eid(e->action.x, e->action.y);
     if (e->action.kind == ENTITY_ACTION_MOVE)
     {
@@ -313,20 +367,37 @@ void apply_entity_action(game_state *gs, entity *e)
         console::print("%d at (%d, %d) attacks %d at (%d, %d)\n",
             e->eid.id, e->x, e->y,
             enemy_eid.id, e->action.x, e->action.y);
+
+        auto eid = gs->get_map_eid(e->action.x, e->action.y);
+        if (eid == ecs::INVALID_ENTITY_ID) return;
+
+        auto *attacker = e;
+        auto *victim = get_entity(gs, eid);
+
+        if (!((victim->state.kind == ENTITY_STATE_DEFENCE) &&
+              (victim->state.x == attacker->x) &&
+              (victim->state.y == attacker->y)))
+        {
+            victim->hp -= 1;
+        }
     }
     else if (e->action.kind == ENTITY_ACTION_LEFT_ARM)
     {
         console::print("%d at (%d, %d) defences from %d at (%d, %d)\n",
             e->eid.id, e->x, e->y,
             enemy_eid.id, e->action.x, e->action.y);
+
+        e->state.kind = ENTITY_STATE_DEFENCE;
+        e->state.x = e->action.x;
+        e->state.y = e->action.y;
     }
 }
 
 void next_turn(context *ctx, game_state *gs, input_state *input)
 {
-    if (gs->battle_queue.size() == 0)
+    if (gs->battle_queue.size() < 2)
     {
-        debug_set_battle_state(gs, false);
+        cmd_end_battle(gs);
         return;
     }
 
@@ -345,6 +416,23 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
 
         gs->turn_no += 1;
         gs->selected_entity_eid = get_active_entity_eid(gs);
+    }
+}
+
+void remove_dead_entities(context *, game_state *gs, input_state *)
+{
+    auto *hero = get_entity(gs, gs->hero_eid);
+    if (hero->hp <= 0)
+    {
+        remove_entity(gs, hero);
+    }
+    for (auto monster_eid : gs->monsters)
+    {
+        auto *monster = get_entity(gs, monster_eid);
+        if (monster->hp <= 0)
+        {
+            remove_entity(gs, monster);
+        }
     }
 }
 
