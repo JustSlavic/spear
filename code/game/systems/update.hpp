@@ -52,19 +52,12 @@ void remove_entity(game_state *gs, entity *e)
     }
     if (e->kind == ENTITY_MONSTER)
     {
-        for (int i = 0; i < gs->monsters.size(); i++)
-        {
-            if (gs->monsters[i] == e->eid)
-            {
-                gs->monsters.erase_not_sorted(i);
-                break;
-            }
-        }
+        gs->monsters.erase_first_unsorted(e->eid);
     }
 
     gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
     gs->entity_manager.destroy_entity(e->eid);
-    gs->battle_queue.erase(e->eid);
+    gs->battle_queue.erase_first(e->eid);
 
     if (gs->selected_entity_eid == e->eid)
     {

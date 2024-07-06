@@ -4,6 +4,8 @@
 #include <base.h>
 #include <math/matrix4.hpp>
 #include <memory/allocator.hpp>
+#include <console.hpp>
+#include <array.hpp>
 
 #include "execution_command.hpp"
 #include "renderer_command.hpp"

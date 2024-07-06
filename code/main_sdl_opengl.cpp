@@ -152,7 +152,7 @@ int main()
     glDepthMask(true);
     glEnable(GL_DEPTH_TEST);
     SDL_GL_SetSwapInterval(1);
-    
+
     // ======================================================================
 
     context ctx;
@@ -285,7 +285,7 @@ int main()
                 else if (cmd.shader == SHADER_GROUND)
                     s = &shader_ground;
                 else
-                    ASSERT_FAIL();
+                    ASSERT_FAIL("Unknown shader");
 
                 glUseProgram(s->id);
 
@@ -300,7 +300,7 @@ int main()
             }
             else if (cmd.kind == rend_command::render_ui)
             {
-                ASSERT_FAIL();
+                ASSERT_FAIL("RenderUI command in wrong array!");
             }
         }
         ctx.rend_commands.clear();
@@ -402,7 +402,7 @@ int main()
             }
             else
             {
-                ASSERT_FAIL();
+                ASSERT_FAIL("Render command in wrong array!");
             }
         }
         ctx.rend_commands_ui.clear();

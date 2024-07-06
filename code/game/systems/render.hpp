@@ -191,18 +191,18 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
         auto color = V4(0.4, 0.4, 0.4, 1);
         ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(10, 10, 1), color);
 
-        auto string_buffer = ctx->temporary_allocator.allocate_string(10);
+        auto string_buffer = ctx->temporary_allocator.allocate_buffer(32);
+        auto str = make_array<char>(string_buffer);
         int n = eid.id;
         while (n > 0)
         {
-            string_buffer.push_front((n % 10) + '0');
+            str.insert(str.begin(), (n % 10) + '0');
             n /= 10;
         }
-        string_buffer.push_back(0);
 
         ctx->render_text(
                 matrix4::translate(x - 9, y + 25, -0.1) * matrix4::scale(0.8, 0.8, 1),
-                V4(1), string_buffer.data());
+                V4(1), str.data());
 
         x += 25;
     }

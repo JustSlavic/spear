@@ -5,6 +5,7 @@
 #include <memory/buffer.hpp>
 #include <input.hpp>
 #include <context.hpp>
+#include <array.hpp>
 
 
 #define INITIALIZE_MEMORY_FUNCTION_T(NAME) void NAME(context *ctx, memory_buffer game_memory)

@@ -149,7 +149,7 @@ bool a_star(context *ctx, game_state *gs,
             }
             else
             {
-                ASSERT_FAIL();
+                ASSERT_FAIL("Should not be possible");
             }
         }
     }

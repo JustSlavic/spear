@@ -426,7 +426,7 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
                     case PNG_FILTER_PAETH:
                         additional_value = png::paeth_predictor(*(output_stream - bytes_per_pixel), 0, 0);
                         break;
-                    default: ASSERT_FAIL();
+                    default: ASSERT_FAIL("Unknown filter method");
                 }
                 *output_stream++ = *input_stream++ + (uint8) additional_value;
             }
@@ -452,7 +452,7 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
                     case PNG_FILTER_PAETH:
                         additional_value = png::paeth_predictor(0, *(output_stream - stride), 0);
                         break;
-                    default: ASSERT_FAIL();
+                    default: ASSERT_FAIL("Unknown filter method");
                 }
                 *output_stream++ = *input_stream++ + (uint8) additional_value;
             }
@@ -479,7 +479,7 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
                                 *(output_stream - stride),
                                 *(output_stream - stride - bytes_per_pixel));
                         break;
-                    default: ASSERT_FAIL();
+                    default: ASSERT_FAIL("Unknown filter method");
                 }
                 *output_stream++ = *input_stream++ + (uint8) additional_value;
             }
@@ -610,7 +610,7 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator *temporary_all
             if (LEN != ((uint16) ~NLEN))
             {
                 // @todo: something wrong
-                ASSERT_FAIL();
+                ASSERT_FAIL("Something wrong");
                 return false;
             }
 
@@ -652,7 +652,9 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator *temporary_all
 
                 auto clen_huffman = compute_huffman(temporary_allocator, CLEN_code_lengths, ARRAY_COUNT(CLEN_code_lengths));
 
-                auto LITLEN_DIST_code_lengths = temporary_allocator->allocate_array<uint32>(HLIT + HDIST);
+                auto LITLEN_DIST_code_length_buffer = temporary_allocator->allocate_buffer((HLIT + HDIST)*sizeof(uint32));
+                auto LITLEN_DIST_code_lengths = make_array<uint32>(LITLEN_DIST_code_length_buffer);
+
                 LITLEN_DIST_code_lengths.resize(LITLEN_DIST_code_lengths.capacity());
 
                 uint32 index = 0;
@@ -754,15 +756,22 @@ uint32 reverse_bits(uint32 t, uint32 n)
 
 array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_lengths, usize code_lengths_count)
 {
-    auto bl_count = a->allocate_array_open<uint32>(17);
-    auto next_code = a->allocate_array_open<uint32>(16);
+    auto bl_count = make_static_array<17, uint32>();
+    bl_count.resize(bl_count.capacity());
+
+    auto next_code = make_static_array<16, uint32>();
+    next_code.resize(next_code.capacity());
+
     struct huffman_table_entry
     {
         uint32 symbol;
         uint32 code_length;
         uint32 code;
     };
-    auto huffman_table = a->allocate_array_open<huffman_table_entry>(code_lengths_count);
+
+    auto huffman_table_buffer = a->allocate_buffer(code_lengths_count * sizeof(huffman_table_entry));
+    auto huffman_table = make_array<huffman_table_entry>(huffman_table_buffer);
+    huffman_table.resize(huffman_table.capacity());
 
     // Count the number of codes for each code length.  Let
     // bl_count[N] be the number of codes of length N, N >= 1.
@@ -811,7 +820,10 @@ array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_len
             maximum_code_length = code_lengths[index];
         }
     }
-    auto huffman = a->allocate_array_open<huffman_entry>(1ull << maximum_code_length);
+
+    auto huffman_buffer = a->allocate_buffer((1ull << maximum_code_length) * sizeof(huffman_entry));
+    auto huffman = make_array<huffman_entry>(huffman_buffer);
+    huffman.resize(huffman.capacity());
     {
         for (uint32 symbol = 0; symbol < code_lengths_count; symbol++)
         {
@@ -844,6 +856,8 @@ array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_len
     // DEALLOCATE(a, bl_count.data());
     // DEALLOCATE(a, next_code.data());
     // DEALLOCATE(a, huffman_table.data());
+
+    a->deallocate(huffman_table_buffer);
 
     return huffman;
 }
