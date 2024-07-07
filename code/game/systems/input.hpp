@@ -1,6 +1,9 @@
 #ifndef GAME_SYSTEMS_INPUT_HPP
 #define GAME_SYSTEMS_INPUT_HPP
 
+#include <base.h>
+#include "entity.hpp"
+
 
 namespace game {
 
