@@ -23,6 +23,7 @@ void process_input(context *ctx, game_state *gs, input_state *input)
 
 void update_stage(context *ctx, game_state *gs, input_state *input)
 {
+    enter_battle_on_enemies_present(ctx, gs, input);
     find_selection_tile(ctx, gs, input);
     if (gs->is_in_battle)
     {

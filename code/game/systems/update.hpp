@@ -215,7 +215,10 @@ void choose_hero_action(context *ctx, game_state *gs, input_state *input)
 void choose_bots_action(context *ctx, game_state *gs, input_state *input)
 {
     entity *hero = get_entity(gs, gs->hero_eid);
+    if (hero == NULL) return;
+
     entity *monster = get_active_entity(gs);
+    if (monster == NULL) return;
 
     a_star_move moves[25] = {};
     bool32 path_exists = a_star(ctx, gs,
@@ -312,6 +315,11 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
 
         gs->turn_no += 1;
         gs->selected_entity_eid = get_active_entity_eid(gs);
+
+        if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
+        {
+            spawn_hero(gs, 0, 0);
+        }
     }
 }
 
@@ -331,11 +339,10 @@ void entity_action(context *ctx, game_state *gs, input_state *input)
     }
 }
 
-
 void remove_dead_entities(context *, game_state *gs, input_state *)
 {
     auto *hero = get_entity(gs, gs->hero_eid);
-    if (hero->hp <= 0)
+    if (hero && hero->hp <= 0)
     {
         remove_entity(gs, hero);
     }
@@ -346,6 +353,14 @@ void remove_dead_entities(context *, game_state *gs, input_state *)
         {
             remove_entity(gs, monster);
         }
+    }
+}
+
+void enter_battle_on_enemies_present(context *, game_state *gs, input_state *)
+{
+    if (!gs->monsters.empty() && !gs->is_in_battle)
+    {
+        cmd_start_battle(gs);
     }
 }
 

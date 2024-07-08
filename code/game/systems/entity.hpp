@@ -124,13 +124,13 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
         e->invincible = false;
         e->strength = 1;
         e->agility = 1;
+
+        gs->selected_entity_eid = eid;
+        gs->hero_eid = eid;
+        console::print("hero_id = %d\n", eid.id);
+
+        on_entity_spawned(gs, e);
     }
-
-    gs->selected_entity_eid = eid;
-    gs->hero_eid = eid;
-    console::print("hero_id = %d\n", eid.id);
-
-    on_entity_spawned(gs, e);
 
     return eid;
 }
@@ -147,12 +147,12 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
         e->invincible = false;
         e->strength = 1;
         e->agility = 1;
+
+        gs->monsters.push_back(eid);
+        console::print("monster_eid = %d\n", eid.id);
+
+        on_entity_spawned(gs, e);
     }
-
-    gs->monsters.push_back(eid);
-    console::print("monster_eid = %d\n", eid.id);
-
-    on_entity_spawned(gs, e);
 
     return eid;
 }
@@ -165,10 +165,10 @@ ecs::entity_id spawn_stone(game_state *gs, int x, int y)
     {
         e->kind = ENTITY_STONE;
         e->invincible = true;
-    }
 
-    gs->stones.push_back(eid);
-    console::print("stone_eid = %d\n", eid.id);
+        gs->stones.push_back(eid);
+        console::print("stone_eid = %d\n", eid.id);
+    }
     return eid;
 }
 
