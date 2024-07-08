@@ -51,6 +51,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
+    gs->double_click_interval = duration::milliseconds(5);
+
     gs->camera = game::camera::look_at(V3(0, -15, 20), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 2.f;
 

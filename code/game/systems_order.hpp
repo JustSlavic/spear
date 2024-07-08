@@ -1,7 +1,6 @@
 #ifndef GAME_SYSTEMS_ORDER_HPP
 #define GAME_SYSTEMS_ORDER_HPP
 
-#include "systems.hpp"
 #include "systems/input.hpp"
 #include "systems/update.hpp"
 #include "systems/render.hpp"
@@ -27,8 +26,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
     find_selection_tile(ctx, gs, input);
     if (gs->is_in_battle)
     {
-        choose_entity_action(ctx, gs, input);
-        next_turn(ctx, gs, input);
+        entity_action(ctx, gs, input);
     }
     else
     {

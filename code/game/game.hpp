@@ -76,6 +76,34 @@ struct entity
     int agility;
 };
 
+struct input_action
+{
+    uint32 press;
+    uint32 hold;
+    uint32 release;
+    uint32 double_click;
+
+    timepoint last_press_time;
+    timepoint last_release_time;
+};
+
+// void act_on_press(input_action *action, button_state *button);
+// void act_on_release(input_action *action, button_state *button);
+// void act_on_hold(input_action *action, button_state *button);
+// void act_on_double_click(input_action *action, button_state *button, duration interval_between_presses);
+
+struct player_input_actions
+{
+    input_action action_exit_game;
+    input_action move_west;
+    input_action move_east;
+    input_action move_north;
+    input_action move_south;
+    input_action select_left_arm;
+    input_action select_right_arm;
+    input_action finish_turn;
+};
+
 
 struct game_state
 {
@@ -120,6 +148,8 @@ struct game_state
     float32 intersect_t;
     int intersect_x;
     int intersect_y;
+
+    duration double_click_interval;
 
     float selected_entity_height = 0.8f;
     float regular_entity_height = 0.3f;

@@ -158,8 +158,7 @@ void debug_toggle_battle(context *ctx, game_state *gs, input_state *input)
     }
 }
 
-
-void choose_entity_action(context *ctx, game_state *gs, input_state *input)
+void choose_hero_action(context *ctx, game_state *gs, input_state *input)
 {
     if (gs->battle_queue.size() < 2)
     {
@@ -210,6 +209,42 @@ void choose_entity_action(context *ctx, game_state *gs, input_state *input)
             active_entity->action = gs->action_input;
             gs->selecting_direction_of_action = false;
         }
+    }
+}
+
+void choose_bots_action(context *ctx, game_state *gs, input_state *input)
+{
+    entity *hero = get_entity(gs, gs->hero_eid);
+    entity *monster = get_active_entity(gs);
+
+    a_star_move moves[25] = {};
+    bool32 path_exists = a_star(ctx, gs,
+        monster->x, monster->y,
+        hero->x, hero->y,
+        moves, ARRAY_COUNT(moves), true);
+    if (path_exists)
+    {
+        int dx = 0;
+        int dy = 0;
+
+        if (moves[0] == P_ML) dx = -1;
+        if (moves[0] == P_MR) dx = 1;
+        if (moves[0] == P_MU) dy = 1;
+        if (moves[0] == P_MD) dy = -1;
+
+        int x = monster->x + dx;
+        int y = monster->y + dy;
+
+        if (x == hero->x && y == hero->y)
+        {
+            monster->action.kind = ENTITY_ACTION_RIGHT_ARM;
+        }
+        else
+        {
+            monster->action.kind = ENTITY_ACTION_MOVE;
+        }
+        monster->action.x = x;
+        monster->action.y = y;
     }
 }
 
@@ -279,6 +314,23 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
         gs->selected_entity_eid = get_active_entity_eid(gs);
     }
 }
+
+
+void entity_action(context *ctx, game_state *gs, input_state *input)
+{
+    auto active_entity_eid = get_active_entity_eid(gs);
+    if (active_entity_eid == gs->hero_eid)
+    {
+        choose_hero_action(ctx, gs, input);
+        next_turn(ctx, gs, input);
+    }
+    else
+    {
+        choose_bots_action(ctx, gs, input);
+        next_turn(ctx, gs, input);
+    }
+}
+
 
 void remove_dead_entities(context *, game_state *gs, input_state *)
 {
