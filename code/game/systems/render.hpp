@@ -185,7 +185,7 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
     int y = 20;
     // uint32 queue_index = gs->turn_no;
 
-    for (int i = 0; i < gs->battle_queue.size(); i++r)
+    for (int i = 0; i < gs->battle_queue.size(); i++)
     {
         auto eid = gs->battle_queue[i];
 
