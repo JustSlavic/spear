@@ -41,7 +41,7 @@ void render_character_page(context *ctx, game_state *gs, input_state *)
 
 void render_ground(context *ctx, game_state *gs, input_state *)
 {
-    entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
+    entity *selected_entity = game::get_entity(gs, gs->hero_eid);
     for (int x = -2; x <= 2; x++)
     {
         for (int y = -2; y <= 2; y++)
@@ -57,7 +57,7 @@ void render_ground(context *ctx, game_state *gs, input_state *)
                     c += V4(0.3, 0.3, 0.3, 0);
                 }
             }
-            else if (selected_entity)
+            else if (selected_entity && gs->selected_entity_eid == gs->hero_eid)
             {
                 if (game::entity_can_walk_here(gs, selected_entity, x, y))
                 {
@@ -183,13 +183,21 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
 {
     int x = 200;
     int y = 20;
-    uint32 queue_index = gs->turn_no;
-    for (int i = 0; i < gs->battle_queue.size(); i++, queue_index++)
-    {
-        auto eid = gs->battle_queue[queue_index % gs->battle_queue.size()];
+    // uint32 queue_index = gs->turn_no;
 
+    for (int i = 0; i < gs->battle_queue.size(); i++r)
+    {
+        auto eid = gs->battle_queue[i];
+
+        float32 scale = 10.f;
         auto color = V4(0.4, 0.4, 0.4, 1);
-        ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(10, 10, 1), color);
+        if (i == gs->battle_queue_current_slot)
+        {
+            scale = 11.f;
+            color = V4(0.6, 0.6, 0.8, 1);
+        }
+
+        ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(scale, scale, 1), color);
 
         auto string_buffer = ctx->temporary_allocator.allocate_buffer(32);
         auto str = make_array<char>(string_buffer);

@@ -114,6 +114,7 @@ struct game_state
     static_array<ecs::entity_id, 25> stones;
 
     static_array<ecs::entity_id, 32> battle_queue;
+    uint32 battle_queue_current_slot;
 
     ecs::entity_manager entity_manager;
 

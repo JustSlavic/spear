@@ -123,7 +123,6 @@ void move_selected_entity(context *ctx, game_state *gs, input_state *input)
     }
 }
 
-
 void cmd_start_battle(game_state *gs)
 {
     gs->battle_queue.push_back(gs->hero_eid);
@@ -166,10 +165,10 @@ void choose_hero_action(context *ctx, game_state *gs, input_state *input)
         return;
     }
 
-    entity *active_entity = get_entity(gs, gs->selected_entity_eid);
+    entity *hero = get_entity(gs, gs->hero_eid);
 
     int x, y;
-    get_entity_movement(gs, input, active_entity, &x, &y);
+    get_entity_movement(gs, input, hero, &x, &y);
 
     if (get_press_count(input->keyboard[KB_Q]))
     {
@@ -187,7 +186,7 @@ void choose_hero_action(context *ctx, game_state *gs, input_state *input)
     }
 
     if (gs->is_coords_valid(x, y) &&
-        game::cell_is_adjacent_to_entity(active_entity, x, y))
+        game::cell_is_adjacent_to_entity(hero, x, y))
     {
         gs->action_input.x = x;
         gs->action_input.y = y;
@@ -198,15 +197,15 @@ void choose_hero_action(context *ctx, game_state *gs, input_state *input)
 
         if (gs->action_input.kind == ENTITY_ACTION_MOVE)
         {
-            if (game::entity_can_walk_here(gs, active_entity, gs->action_input.x, gs->action_input.y))
+            if (game::entity_can_walk_here(gs, hero, gs->action_input.x, gs->action_input.y))
             {
-                active_entity->action = gs->action_input;
+                hero->action = gs->action_input;
                 gs->selecting_direction_of_action = false;
             }
         }
         else if (gs->action_input.kind != ENTITY_ACTION_NONE)
         {
-            active_entity->action = gs->action_input;
+            hero->action = gs->action_input;
             gs->selecting_direction_of_action = false;
         }
     }
@@ -314,6 +313,7 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
         active_entity->action = null_action();
 
         gs->turn_no += 1;
+        gs->battle_queue_current_slot = (gs->battle_queue_current_slot + 1) % gs->battle_queue.size();
         gs->selected_entity_eid = get_active_entity_eid(gs);
 
         if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
@@ -330,12 +330,10 @@ void entity_action(context *ctx, game_state *gs, input_state *input)
     if (active_entity_eid == gs->hero_eid)
     {
         choose_hero_action(ctx, gs, input);
-        next_turn(ctx, gs, input);
     }
     else
     {
         choose_bots_action(ctx, gs, input);
-        next_turn(ctx, gs, input);
     }
 }
 

@@ -34,6 +34,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
         move_selected_entity(ctx, gs, input);
     }
     remove_dead_entities(ctx, gs, input);
+    next_turn(ctx, gs, input);
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)

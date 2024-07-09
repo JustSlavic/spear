@@ -54,7 +54,7 @@ entity *get_entity(game_state *gs, ecs::entity_id eid)
 ecs::entity_id get_active_entity_eid(game_state *gs)
 {
     ecs::entity_id result = gs->is_in_battle
-        ? gs->battle_queue[gs->turn_no % gs->battle_queue.size()]
+        ? gs->battle_queue[gs->battle_queue_current_slot]
         : gs->hero_eid;
     return result;
 }
@@ -80,6 +80,7 @@ void remove_entity(game_state *gs, entity *e)
     gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
     gs->entity_manager.destroy_entity(e->eid);
     gs->battle_queue.erase_first(e->eid);
+    gs->battle_queue_current_slot = (gs->battle_queue_current_slot % gs->battle_queue.size());
 
     if (gs->selected_entity_eid == e->eid)
     {
