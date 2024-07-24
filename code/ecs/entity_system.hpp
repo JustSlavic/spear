@@ -4,13 +4,16 @@
 #include <base.h>
 
 
+#define ECS_SYSTEM(NAME) void NAME(context *ctx, game_state *gs, input_state *input)
+#define ECS_SYSTEM_CALL(NAME) NAME(ctx, gs, input)
+
+
 namespace ecs {
 
 
 struct system
 {
     // should here be archetypes to that this system is applied?
-    void *fn
 };
 
 

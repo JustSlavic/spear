@@ -1,6 +1,9 @@
 #ifndef GAME_SYSTEMS_ORDER_HPP
 #define GAME_SYSTEMS_ORDER_HPP
 
+#include <base.h>
+#include <ecs/entity_system.hpp>
+
 #include "systems/input.hpp"
 #include "systems/update.hpp"
 #include "systems/render.hpp"
@@ -9,53 +12,27 @@
 namespace game {
 
 
-void process_input(context *ctx, game_state *gs, input_state *input)
+ECS_SYSTEM(process_input)
 {
-    game_exit(ctx, gs, input);
-    camera_fly_mode(ctx, gs, input);
-    ghost_view_mode(ctx, gs, input);
-    heal_hero(ctx, gs, input);
-    spawn_entities(ctx, gs, input);
-    move_camera(ctx, gs, input);
-    select_entity(ctx, gs, input);
-    debug_toggle_battle(ctx, gs, input);
+    ECS_SYSTEM_CALL(game_exit);
 }
 
-void update_stage(context *ctx, game_state *gs, input_state *input)
+ECS_SYSTEM(update_stage)
 {
-    enter_battle_on_enemies_present(ctx, gs, input);
-    find_selection_tile(ctx, gs, input);
-    if (gs->is_in_battle)
-    {
-        entity_action(ctx, gs, input);
-    }
-    else
-    {
-        move_selected_entity(ctx, gs, input);
-    }
-    remove_dead_entities(ctx, gs, input);
-    next_turn(ctx, gs, input);
 }
 
-void render_stage(context *ctx, game_state *gs, input_state *input)
+ECS_SYSTEM(render_stage)
 {
-    render_ground(ctx, gs, input);
-    // render_character_page(ctx, gs, input);
-    render_hero(ctx, gs, input);
-    render_monsters(ctx, gs, input);
-    render_stones(ctx, gs, input);
-    render_timer(ctx, gs, input);
-    if (gs->is_in_battle)
-    {
-        render_battle_queue(ctx, gs, input);
-    }
+    ECS_SYSTEM_CALL(find_selection_tile);
+    ECS_SYSTEM_CALL(setup_camera);
+    ECS_SYSTEM_CALL(render_game_field);
 }
 
-void on_every_frame(context *ctx, game_state *gs, input_state *input)
+ECS_SYSTEM(on_every_frame)
 {
-    process_input(ctx, gs, input);
-    update_stage(ctx, gs, input);
-    render_stage(ctx, gs, input);
+    ECS_SYSTEM_CALL(process_input);
+    ECS_SYSTEM_CALL(update_stage);
+    ECS_SYSTEM_CALL(render_stage);
 }
 
 
