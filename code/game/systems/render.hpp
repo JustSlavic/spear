@@ -81,7 +81,7 @@ void render_ground(context *ctx, game_state *gs, input_state *)
                 c += V4(0.3, 0.3, 0.3, 1);
             }
 
-            auto m = matrix4::translate(2.3*x, 2.3*y, 0);
+            auto m = matrix4::translate(2.3f*x, 2.3f*y, 0.f);
 
             ctx->render_cube(m, c, SHADER_GROUND);
         }
@@ -119,13 +119,13 @@ void draw_health_bar(context *ctx, entity *e, float32 x, float32 y, float32 z)
         // 2 hp_width / 2 + 2 gap / 2
         // 3 hp_width / 2 + 3 gap / 2
 
-        float32 startP = -(hpBarWidth / 2 + gap / 2) * (e->max_hp - 1);
+        float32 startP = (float32) (-(hpBarWidth / 2 + gap / 2) * (e->max_hp - 1));
         for (int i = 0; i < e->max_hp; i++)
         {
             auto color = i < e->hp ? V4(1, 0.2, 0.1, 1) : V4(0.3, 0.3, 0.3, 1);
             ctx->render_banner(V3(x, y, z + 1),
                 matrix4::translate(startP + i * (hpBarWidth + gap), 0, 0) *
-                matrix4::scale(hpBarWidth / 2, hpBarWidth / 2, 1)
+                matrix4::scale(hpBarWidth / 2.f, hpBarWidth / 2.f, 1.f)
                 , color);
         }
     }
@@ -171,9 +171,9 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
                          monster->action.kind == ENTITY_ACTION_LEFT_ARM ? gs->defence_color :
                          monster->action.kind == ENTITY_ACTION_RIGHT_ARM ? gs->attack_color :
                          V4(1, 1, 1, 1);
-            ctx->render_square(matrix4::translate(monster->action.x - monster->x,
-                                                  monster->action.y - monster->y,
-                                                  -gs->selected_entity_height) * m,
+            ctx->render_square(matrix4::translate((float32) (monster->action.x - monster->x),
+                                                  (float32) (monster->action.y - monster->y),
+                                                  (float32) (-gs->selected_entity_height)) * m,
                 color, SHADER_COLOR);
         }
     }
@@ -191,13 +191,7 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
 
         float32 scale = 10.f;
         auto color = V4(0.4, 0.4, 0.4, 1);
-        if (i == gs->battle_queue_current_slot)
-        {
-            scale = 11.f;
-            color = V4(0.6, 0.6, 0.8, 1);
-        }
-
-        ctx->render_ui(matrix4::translate(x, y, 0) * matrix4::scale(scale, scale, 1), color);
+        ctx->render_ui(matrix4::translate((float32) x, (float32) y, 0.f) * matrix4::scale(10, 10, 1), color);
 
         auto string_buffer = ctx->temporary_allocator.allocate_buffer(32);
         auto str = make_array<char>(string_buffer);
@@ -209,7 +203,7 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
         }
 
         ctx->render_text(
-                matrix4::translate(x - 9, y + 25, -0.1) * matrix4::scale(0.8, 0.8, 1),
+                matrix4::translate(x - 9.f, y + 25.f, -0.1f) * matrix4::scale(0.8f, 0.8f, 1.f),
                 V4(1), str.data());
 
         x += 25;

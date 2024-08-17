@@ -1,6 +1,8 @@
 #ifndef GAME_A_STAR_HPP
 #define GAME_A_STAR_HPP
 
+#include <base.h>
+#include <math/integer.h>
 
 
 enum a_star_move {
@@ -29,7 +31,7 @@ bool a_star(context *ctx, game_state *gs,
     for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++)
     {
         g_cost[i][j] = infinity;
-        h_cost[i][j] = absolute(i - i1) + absolute(j - j1);
+        h_cost[i][j] = (float32) (absolute(i - i1) + absolute(j - j1));
         f_cost[i][j] = infinity;
     }
 

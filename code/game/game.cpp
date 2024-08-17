@@ -2,6 +2,7 @@
 #include "game_interface.hpp"
 
 #include <math/float32.h>
+#include <math/integer.h>
 
 #include <gfx/vertex_buffer_layout.hpp>
 
@@ -95,8 +96,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <memory_bucket.cpp>
 #include <memory/allocator.cpp>
 #include <collision.cpp>
-#include <image/png.cpp>
-#include <crc.cpp>
 #include <ecs/entity_manager.cpp>
 #endif // DLL_BUILD
 

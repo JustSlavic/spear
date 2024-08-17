@@ -4,6 +4,8 @@
 #include <memory/allocator.hpp>
 #include <math/matrix4.hpp>
 #include <console.hpp>
+#include <image/png.hpp>
+#include <memory/serializer.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -13,7 +15,7 @@
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 #include <input.hpp>
-
+#include <gen/font.hpp>
 #include <game_interface.hpp>
 #include <gfx/static_shaders.cpp>
 
@@ -283,6 +285,19 @@ bool32 initialize_opengl()
 
 
 #include <common_graphics.hpp>
+
+Character find_font_character(char c)
+{
+    for (int i = 0; i < font_Arial.characterCount; i++)
+    {
+        auto glyph = font_Arial.characters[i];
+        if (glyph.codePoint == c)
+        {
+            return glyph;
+        }
+    }
+    return {};
+}
 
 
 namespace win32 {
@@ -688,6 +703,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
+    auto temporary_allocator = global_arena.allocate_arena(MEGABYTES(1));
 
     // ======================================================================
 
@@ -716,6 +732,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
     ctx.far_clip_dist = 100.f;
     ctx.debug_load_file = NULL;
+    ctx.temporary_allocator = temporary_allocator;
 
     auto view = matrix4::identity();
     auto projection = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
@@ -727,7 +744,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     // auto xinput = win32::xinput::load();
 
     // ======================================================================
-
+#if DLL_BUILD
     char cwd[256] = {};
     uint32 program_path_size = win32::get_program_path(instance, cwd, ARRAY_COUNT(cwd));
     {
@@ -755,6 +772,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     game_dll game = load_game_dll(string_view::from(game_dll_buffer),
                                   string_view::from(temp_dll_buffer),
                                   string_view::from(lock_tmp_buffer));
+#else
+    game_dll game;
+    game.initialize_memory = initialize_memory;
+    game.update_and_render = update_and_render;
+#endif // DLL_BUILD
 
     if (game.initialize_memory)
     {
@@ -775,9 +797,18 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto cpu_cube = make_cube();
     auto gpu_cube = load_mesh(cpu_cube);
 
+    auto cpu_square_uv = make_square_uv();
+    auto gpu_square_uv = load_mesh(cpu_square_uv);
+
     auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
+    auto shader_text = compile_shaders(vs_text, fs_text);
+
+    auto font_content = platform::load_file("font.png", &global_arena);
+    auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
+    auto font_texture = load_texture(font_bitmap);
+    console::print("Font texture is id=%d\n", font_texture.id);
 
     // ======================================================================
 
@@ -791,6 +822,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     running = true;
     while (running)
     {
+#if DLL_BUILD
         uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
         if (dll_file_time > game.dll.timestamp)
         {
@@ -799,6 +831,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                                  string_view::from(temp_dll_buffer),
                                  string_view::from(lock_tmp_buffer));
         }
+#endif // DLL_BUILD
 
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
@@ -845,7 +878,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         {
             if (cmd.kind == rend_command::setup_camera)
             {
-                view = make_look_at_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
+                view = make_lookat_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
             }
             else if (cmd.kind == rend_command::render_square)
             {
@@ -906,6 +939,85 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
+            else if (cmd.kind == rend_command::render_banner)
+            {
+                auto pNDC = projection * view * matrix4::translate(cmd.position) * V4(0, 0, 0, 1);
+                pNDC /= pNDC.w;
+                auto pUI = matrix4::scale(0.5f * ctx.viewport.width, - 0.5f * ctx.viewport.height, 1)
+                         * matrix4::translate(1, -1, 0)
+                         * pNDC;
+                auto m = matrix4::translate(pUI.xyz) * cmd.model;
+
+                // proj_ui * translate(pUI) * scale * p
+
+                glUseProgram(shader_color.id);
+
+                shader_color.uniform("u_model", m);
+                shader_color.uniform("u_view", matrix4::identity());
+                shader_color.uniform("u_projection", projection_ui);
+                shader_color.uniform("u_color", cmd.color);
+
+                glBindVertexArray(gpu_square.vao);
+                glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+            }
+            else if (cmd.kind == rend_command::render_text)
+            {
+                glUseProgram(shader_text.id);
+                shader_text.uniform("u_model", cmd.model);
+                shader_text.uniform("u_projection", projection_ui);
+                shader_text.uniform("u_color", cmd.color);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, font_texture.id);
+
+                float32 posx = 0.f;
+                float32 posy = 0.f;
+                uint32 count = 0;
+
+                string_view strview = string_view::from(cmd.cstr);
+                auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
+
+                char c = 0;
+                for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+                {
+                    Character glyph = find_font_character(c);
+
+                    float32 px = (float32) posx - glyph.originX;
+                    float32 py = (float32) posy - glyph.originY;
+                    float32 w  = (float32) glyph.width;
+                    float32 h  = (float32) glyph.height;
+
+                    float32 uv_x = (float32) glyph.x / font_Arial.width;
+                    float32 uv_y = (float32) glyph.y / font_Arial.height;
+                    float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
+                    float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+
+                    float32 vbo_data[] = {
+                         px,     py,       uv_x,  uv_y,
+                         px + w, py,       uv_x1, uv_y,
+                         px    , py + h,   uv_x,  uv_y1,
+
+                         px + w, py,       uv_x1, uv_y,
+                         px + w, py + h,   uv_x1, uv_y1,
+                         px,     py + h,   uv_x,  uv_y1,
+                    };
+
+                    seri_buffer.push(vbo_data, sizeof(vbo_data));
+                    posx += glyph.width;
+                    count += 6;
+                }
+
+                glEnable(GL_BLEND);
+                glBindVertexArray(gpu_square_uv.vao);
+
+                glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
+                glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                glDrawArrays(GL_TRIANGLES, 0, count);
+                glDisable(GL_BLEND);
+            }
             else
             {
                 ASSERT_FAIL();
@@ -935,7 +1047,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         SwapBuffers(window.DeviceContext);
 
-        // ctx.temporary_allocator.reset();
+        ctx.temporary_allocator.reset();
 
         timepoint end_of_frame = platform::wall_clock::now();
         last_frame_dt = (float32) get_seconds(end_of_frame - last_timepoint);
@@ -949,6 +1061,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <memory/allocator.cpp>
 #include <os/platform_win32.cpp>
 
-
-
-// #include <memory/bucket.cpp>
+#if DLL_BUILD
+#else
+#include <game/game.cpp>
+#include <context.cpp>
+#include <string_id.cpp>
+#include <memory_bucket.cpp>
+#include <collision.cpp>
+#include <image/png.cpp>
+#include <crc.cpp>
+#include <ecs/entity_manager.cpp>
+#endif // DLL_BUILD
