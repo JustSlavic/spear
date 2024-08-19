@@ -21,13 +21,13 @@ namespace ecs {
 
 struct entity_description
 {
-
+    entity_gen_t generation;
 };
 
 
 struct entity_manager
 {
-    array<entity_gen_t> generations;
+    array<entity_description> descriptions;
     array<entity_idx_t> empty_slots;
     uint64 p_read;
     uint64 p_write;
