@@ -37,9 +37,9 @@ struct context
     float32 near_clip_height;
     float32 far_clip_dist;
 
-    static_array<exec_command, 10> exec_commands;
-    static_array<rend_command, 100> rend_commands;
-    static_array<rend_command, 100> rend_commands_ui;
+    static_array<exec_command, 20> exec_commands;
+    static_array<rend_command, 200> rend_commands;
+    static_array<rend_command, 200> rend_commands_ui;
 
     debug_load_file_t *debug_load_file;
 

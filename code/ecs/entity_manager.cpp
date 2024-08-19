@@ -3,9 +3,14 @@
 
 namespace ecs {
 
-entity_manager entity_manager::create()
+entity_manager entity_manager::initialize(memory_allocator a)
 {
     entity_manager result = {};
+    result.generations = a.allocate_array<entity_gen_t>(ECS_MAX_ENTITIES);
+    result.generations.resize(ECS_MAX_ENTITIES);
+    result.empty_slots = a.allocate_array<entity_idx_t>(ECS_MAX_ENTITIES);
+    result.empty_slots.resize(ECS_MAX_ENTITIES);
+
     for (int i = 0; i < ECS_MAX_ENTITIES; i++)
     {
         result.empty_slots[result.p_write++] = i;

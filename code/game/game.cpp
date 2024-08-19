@@ -69,7 +69,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->regular_entity_height = 0.3f;
 
     // Init ECS
-    gs->entity_manager = ecs::entity_manager::create();
+    gs->entity_manager = ecs::entity_manager::initialize(mallocator());
 
     game::spawn_hero(gs, 0, 0);
     game::spawn_monster(gs, -2, 2);

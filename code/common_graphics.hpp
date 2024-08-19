@@ -4,7 +4,6 @@
 #include <base.h>
 #include <math/matrix4.hpp>
 #include <math/vector3.hpp>
-#include <gfx/vertex_buffer_layout.hpp>
 #include <console.hpp>
 #include <image/bitmap.hpp>
 
@@ -48,11 +47,37 @@ matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n,
     return result;
 }
 
+// @note: for now always floats
+struct vertex_buffer_layout_element
+{
+    uint32 count;
+    // @todo: other types of elements other than floats
+};
+
+struct vertex_buffer_layout
+{
+    uint32 size;
+    vertex_buffer_layout_element elements[8];
+
+    static vertex_buffer_layout make()
+    {
+        vertex_buffer_layout result = {};
+        return result;
+    }
+
+    template <typename T>
+    void push(uint32 count)
+    {
+        ASSERT(count < ARRAY_COUNT(elements));
+        elements[size++].count = count;
+    }
+};
+
 struct cpu_mesh
 {
     memory_buffer vbo;
     memory_buffer ibo;
-    gfx::vertex_buffer_layout vbl;
+    vertex_buffer_layout vbl;
 };
 
 struct gpu_mesh
@@ -148,7 +173,7 @@ cpu_mesh make_square()
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data));
     auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data));
 
-    auto vbl = gfx::vertex_buffer_layout::make();
+    auto vbl = vertex_buffer_layout::make();
     vbl.push<float>(3);
 
     cpu_mesh result;
@@ -197,7 +222,7 @@ cpu_mesh make_cube()
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data));
     auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data));
 
-    auto vbl = gfx::vertex_buffer_layout::make();
+    auto vbl = vertex_buffer_layout::make();
     vbl.push<float>(3);
 
     cpu_mesh result;
@@ -224,7 +249,7 @@ cpu_mesh make_square_uv()
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data));
     auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data));
 
-    auto vbl = gfx::vertex_buffer_layout::make();
+    auto vbl = vertex_buffer_layout::make();
     vbl.push<float>(2);
     vbl.push<float>(2);
 
@@ -328,13 +353,13 @@ int compile_shader(char const *source_code, int shader_type)
         int length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int *) &length);
 
-        auto message = mallocator()->allocate_buffer(length + 1);
+        auto message = mallocator().allocate_buffer(length + 1);
 
         glGetShaderInfoLog(id, length, (isize *) &length, (char *) message.data);
         glDeleteShader(id);
 
         console::print("Could not compile shader: \"%s\"\n", (char *)message.data);
-        mallocator()->deallocate(message);
+        mallocator().deallocate(message);
 
         return 0;
     }

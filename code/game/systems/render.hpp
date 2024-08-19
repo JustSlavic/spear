@@ -189,9 +189,9 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
     {
         auto eid = gs->battle_queue[i];
 
-        float32 scale = 10.f;
-        auto color = V4(0.4, 0.4, 0.4, 1);
-        ctx->render_ui(matrix4::translate((float32) x, (float32) y, 0.f) * matrix4::scale(10, 10, 1), color);
+        // float32 scale = 10.f;
+        // auto color = V4(0.4, 0.4, 0.4, 1);
+        // ctx->render_ui(matrix4::translate((float32) x, (float32) y, 0.f) * matrix4::scale(10, 10, 1), color);
 
         auto string_buffer = ctx->temporary_allocator.allocate_buffer(32);
         auto str = make_array<char>(string_buffer);

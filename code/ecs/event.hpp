@@ -12,32 +12,24 @@ extern event_id_t INVALID_EVENT_ID;
 
 struct event
 {
-    // should here be list of systems that should be called when this event fires?
+
 };
 
-
-struct event_registry
+struct event_input_stage
 {
-    template <typename EventType>
-    event_id_t register_event();
-
-    template <typename EventType>
-    event_id_t find_event();
+    void *input;
 };
 
-
-template <typename EventType>
-event_id_t event_registry::register_event()
+struct event_update_stage
 {
-    return INVALID_EVENT_ID;
-}
+    float32 dt;
+};
 
-
-template <typename EventType>
-event_id_t event_registry::find_event()
+struct event_render_stage
 {
-    return INVALID_EVENT_ID;
-}
+    void *context;
+};
+
 
 
 } // namespace ecs

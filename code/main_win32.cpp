@@ -283,6 +283,28 @@ bool32 initialize_opengl()
     return true;
 }
 
+#if DEBUG
+const char* gl_get_error_string(GLenum err) {
+    switch (err) {
+        case GL_NO_ERROR:          return "GL_NO_ERROR";
+        case GL_INVALID_ENUM:      return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE:     return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+        case GL_STACK_OVERFLOW:    return "GL_STACK_OVERFLOW";
+        case GL_STACK_UNDERFLOW:   return "GL_STACK_UNDERFLOW";
+        case GL_OUT_OF_MEMORY:     return "GL_OUT_OF_MEMORY";
+        case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        default:                   return "UNKNOWN_ERROR";
+    }
+}
+
+#define GL_CHECK_ERRORS(...) { \
+    auto err = glGetError();   \
+    if (err) { console::print("%s\n", gl_get_error_string(err)); ASSERT_FAIL(); } \
+} void(0)
+#else
+#define GL_CHECK_ERRORS(...)
+#endif
 
 #include <common_graphics.hpp>
 
@@ -703,7 +725,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
     auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
-    auto temporary_allocator = global_arena.allocate_arena(MEGABYTES(1));
 
     // ======================================================================
 
@@ -732,7 +753,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
     ctx.far_clip_dist = 100.f;
     ctx.debug_load_file = NULL;
-    ctx.temporary_allocator = temporary_allocator;
+    ctx.temporary_allocator = global_arena.allocate_arena(MEGABYTES(1));
 
     auto view = matrix4::identity();
     auto projection = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
@@ -806,7 +827,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto shader_text = compile_shaders(vs_text, fs_text);
 
     auto font_content = platform::load_file("font.png", &global_arena);
-    auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
+    auto font_bitmap = image::load_png(&global_arena, &ctx.temporary_allocator, font_content);
     auto font_texture = load_texture(font_bitmap);
     console::print("Font texture is id=%d\n", font_texture.id);
 
@@ -818,6 +839,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
     float32 last_frame_dt = target_seconds_per_frame;
     timepoint last_timepoint = platform::wall_clock::now();
+
+    GL_CHECK_ERRORS();
+
+    uint32 frame_counter = 0;
 
     running = true;
     while (running)
@@ -859,6 +884,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                           * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
         }
 
+        GL_CHECK_ERRORS();
+
         if (game.update_and_render)
         {
             game.update_and_render(&ctx, game_memory, &input);
@@ -870,9 +897,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         ctx.exec_commands.clear();
 
+        GL_CHECK_ERRORS();
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        GL_CHECK_ERRORS();
 
         for (auto cmd : ctx.rend_commands)
         {
@@ -921,9 +952,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         ctx.rend_commands.clear();
 
+        GL_CHECK_ERRORS();
+
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        GL_CHECK_ERRORS();
 
         for (auto cmd : ctx.rend_commands_ui)
         {
@@ -975,7 +1010,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 uint32 count = 0;
 
                 string_view strview = string_view::from(cmd.cstr);
-                auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                auto temp_memory = ctx.temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
                 auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
 
                 char c = 0;
@@ -1025,6 +1060,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
         ctx.rend_commands_ui.clear();
 
+        GL_CHECK_ERRORS();
+
         // Draw UI on top of everything
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1044,6 +1081,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             glEnable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
         }
+
+        GL_CHECK_ERRORS();
 
         SwapBuffers(window.DeviceContext);
 
