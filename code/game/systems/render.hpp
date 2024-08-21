@@ -39,6 +39,22 @@ void render_character_page(context *ctx, game_state *gs, input_state *)
     }
 }
 
+void render_field(context *ctx, game_state *gs, input_state *)
+{
+    float32 mult = 2.f + gs->field_render__gap;
+    for (int x = 0; x < gs->field.width; x++)
+    {
+        for (int y = 0; y < gs->field.height; y++)
+        {
+            auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
+            auto m = matrix4::translate(mult*(x - gs->field.width / 2),
+                                        mult*(y - gs->field.height / 2),
+                                        0.f);
+            ctx->render_cube(m, c, SHADER_GROUND);
+        }
+    }
+}
+
 void render_ground(context *ctx, game_state *gs, input_state *)
 {
     entity *selected_entity = game::get_entity(gs, gs->hero_eid);
@@ -224,6 +240,15 @@ void render_timer(context *ctx, game_state *gs, input_state *input)
             , color, SHADER_COLOR);
     }
 }
+
+
+void render_dialogue(context *ctx, game_state *gs, input_state *input)
+{
+    ctx->render_text(
+        matrix4::translate(100.f, 40.f, 0.f) * matrix4::scale(1.f),
+        V4(1), "Hello, world!");
+}
+
 
 
 } // namespace game

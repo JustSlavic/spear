@@ -41,6 +41,32 @@ void game_state::set_map_eid(int x, int y, ecs::entity_id eid)
     }
 }
 
+
+game_field create_game_field(memory_allocator a, uint32 width, uint32 height)
+{
+    game_field result = {};
+    result.map = a.allocate_array<ecs::entity_id>(width * height);
+    result.width = width;
+    result.height = height;
+    return result;
+}
+
+bool game_field::is_coords_valid(int32 x, int32 y)
+{
+    return (x < width) && (y < height);
+}
+
+ecs::entity_id game_field::get_eid(int32 x, int32 y)
+{
+    return map[x * width + y];
+}
+
+void game_field::set_eid(int32 x, int32 y, ecs::entity_id eid)
+{
+    map[x * width + y] = eid;
+}
+
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -51,6 +77,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     ctx->game_state = gs;
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
+
+    gs->field = create_game_field(gs->allocator, 3, 3);
 
     gs->double_click_interval = duration::milliseconds(5);
 
@@ -67,6 +95,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->selected_entity_height = 0.8f;
     gs->regular_entity_height = 0.3f;
+
+    gs->field_render__gap = 0.3f;
 
     // Init ECS
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());

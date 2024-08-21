@@ -1011,6 +1011,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 string_view strview = string_view::from(cmd.cstr);
                 auto temp_memory = ctx.temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                ASSERT(temp_memory.data);
                 auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
 
                 char c = 0;
@@ -1101,13 +1102,13 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <os/platform_win32.cpp>
 
 #if DLL_BUILD
+#include <memory_bucket.cpp>
+#include <image/png.cpp>
+#include <crc.cpp>
 #else
 #include <game/game.cpp>
 #include <context.cpp>
 #include <string_id.cpp>
-#include <memory_bucket.cpp>
 #include <collision.cpp>
-#include <image/png.cpp>
-#include <crc.cpp>
 #include <ecs/entity_manager.cpp>
 #endif // DLL_BUILD

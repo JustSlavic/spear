@@ -3,8 +3,9 @@
 
 #include <base.h>
 #include <time.hpp>
-#include <memory/allocator.hpp>
 
+#include <math/vector4.hpp>
+#include <memory/allocator.hpp>
 #include <ecs/entity_manager.hpp>
 
 #include <game/camera.hpp>
@@ -105,6 +106,18 @@ struct player_input_actions
 };
 
 
+struct game_field
+{
+    int32 width;
+    int32 height;
+    array<ecs::entity_id> map;
+
+    bool is_coords_valid(int x, int y);
+    ecs::entity_id get_eid(int x, int y);
+    void set_eid(int x, int y, ecs::entity_id eid);
+};
+
+
 struct game_state
 {
     memory_allocator allocator;
@@ -160,6 +173,9 @@ struct game_state
     void set_map_eid(int x, int y, ecs::entity_id eid);
 
     ecs::entity_id map[5][5];
+
+    float32 field_render__gap;
+    game_field field;
 };
 
 
