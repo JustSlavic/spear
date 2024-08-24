@@ -350,12 +350,12 @@ int compile_shader(char const *source_code, int shader_type)
     glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
     if (successful == GL_FALSE)
     {
-        int length = 0;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, (int *) &length);
+        isize length = 0;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, (GLint *) &length);
 
         auto message = mallocator().allocate_buffer(length + 1);
 
-        glGetShaderInfoLog(id, length, (isize *) &length, (char *) message.data);
+        glGetShaderInfoLog(id, length, (GLsizei *) &length, (char *) message.data);
         glDeleteShader(id);
 
         console::print("Could not compile shader: \"%s\"\n", (char *)message.data);

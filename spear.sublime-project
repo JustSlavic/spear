@@ -20,11 +20,13 @@
                 "shell_cmd": "$folder/build.sh",
                 "working_dir": "$folder/build",
                 "file_regex": "^([\\w\\/\\.]+)\\:(\\d+)\\:(\\d+)\\:(.*)$",
-                "syntax": "Packages/User/sublime-setup/polar_build_output_gcc.sublime-syntaxx"
+                "syntax": "Packages/User/sublime-setup/polar_build_output_gcc.sublime-syntax"
             },
             "osx": {
                 "shell_cmd": "$folder/build.sh",
-                "working_dir": "$folder",
+                "working_dir": "$folder/build",
+                "file_regex": "^([\\.\\w\\d\\/]+):(\\d+):(\\d+):(.*)$",
+                "syntax": "Packages/User/sublime-setup/polar_build_output_llvm.sublime-syntax"
             }
         },
         {
@@ -35,6 +37,10 @@
                 "working_dir": "$folder\\data"
             },
             "linux": {
+                "shell_cmd": "$folder/build/spear",
+                "working_dir": "$folder/data"
+            },
+            "osx": {
                 "shell_cmd": "$folder/build/spear",
                 "working_dir": "$folder/data"
             }

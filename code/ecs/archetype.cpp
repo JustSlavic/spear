@@ -21,7 +21,7 @@ archetype make_archetype(component *comps, uint32 comp_count)
     result.count = 0;
     result.capacity = ECS_ARCH_MAX_MAGIC;
     result.comp_count = comp_count;
-    result.chunk = mallocator()->allocate_buffer(arch_size * ECS_ARCH_MAX_MAGIC);
+    result.chunk = mallocator().allocate_buffer(arch_size * ECS_ARCH_MAX_MAGIC);
     return result;
 }
 
