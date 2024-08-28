@@ -3,8 +3,10 @@
 
 #include <base.h>
 #include <memory/allocator.hpp>
+
 #include "entity_id.hpp"
 #include "event.hpp"
+#include "archetype.hpp"
 
 /*
     Entity ID is divided into two parts:

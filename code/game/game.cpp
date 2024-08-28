@@ -11,6 +11,9 @@
 
 #include <math/rectangle3.hpp>
 
+#include <ecs/entity_manager.hpp>
+#include <ecs/archetype.hpp>
+
 #include <game/systems_order.hpp>
 
 
@@ -100,6 +103,13 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     // Init ECS
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());
+
+    ecs::component_and_value comps[] = {
+        ECS_COMPONENT("eid", ecs::entity_id, ecs::INVALID_ENTITY_ID)
+    };
+
+    auto base_entity_archetype = ecs::make_archetype(comps, ARRAY_COUNT(comps));
+    // gs->entity_manager.create_archetype();
 
     game::spawn_hero(gs, 0, 0);
     game::spawn_monster(gs, -2, 2);

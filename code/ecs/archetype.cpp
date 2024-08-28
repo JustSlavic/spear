@@ -6,53 +6,77 @@
 namespace ecs {
 
 
-archetype make_archetype(component *comps, uint32 comp_count)
+component make_component(uint32 name_hash, uint32 size, uint32 alignment)
 {
-    ASSERT(comp_count <= 4);
-    archetype result;
-
-    uint32 arch_size = 0;
-    for (uint32 i = 0; i < comp_count; i++)
-    {
-        arch_size += comps[i].type_size;
-        result.comps[i] = comps[i];
-    }
-#define ECS_ARCH_MAX_MAGIC 4
-    result.count = 0;
-    result.capacity = ECS_ARCH_MAX_MAGIC;
-    result.comp_count = comp_count;
-    result.chunk = mallocator().allocate_buffer(arch_size * ECS_ARCH_MAX_MAGIC);
+    component result;
+    result.hash = name_hash;
+    result.size = size;
+    result.alignment = alignment;
     return result;
 }
 
-uint32 archetype::get_entity_size()
+bool operator == (component lhs, component rhs)
 {
-    uint32 size = 0;
-    for (uint32 i = 0; i < comp_count; i++)
-    {
-        size += comps[i].type_size;
-    }
-    return size;
+    return (lhs.hash == rhs.hash) &&
+           (lhs.size == rhs.size);
 }
 
-uint32 archetype::get_entity_struct_size()
+bool operator != (component lhs, component rhs)
 {
-    uint32 size = 0;
+    return !(lhs == rhs);
+}
+
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, entity_id value)
+{
+    component_and_value result;
+    result.comp = make_component(name_hash, size, alignment);
+    result.eid = value;
+    return result;
+}
+
+component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, bool value)
+{
+    component_and_value result;
+    result.comp = make_component(name_hash, size, alignment);
+    result.b = value;
+    return result;
+}
+
+component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, int32 value)
+{
+    component_and_value result;
+    result.comp = make_component(name_hash, size, alignment);
+    result.i = value;
+    return result;
+}
+
+component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, float32 value)
+{
+    component_and_value result;
+    result.comp = make_component(name_hash, size, alignment);
+    result.f = value;
+    return result;
+}
+
+archetype make_archetype(component_and_value *comps, uint32 comp_count)
+{
+    ASSERT(comp_count <= 4);
+    archetype result = {};
+
+    uint32 entity_size = 0;
     for (uint32 i = 0; i < comp_count; i++)
     {
-        size += (get_padding((void *) (uint64) size, comps[i].type_alignment) + comps[i].type_size);
+        result.comps.push_back(comps[i]);
+        entity_size += comps[i].comp.size;
     }
-    return size;
+#define ECS_ARCH_MAX_MAGIC 16
+    result.chunk = mallocator().allocate_buffer(entity_size * ECS_ARCH_MAX_MAGIC);
+    return result;
 }
 
 void archetype::allocate(archetype_initializer init)
 {
-    if (comp_count != init.comp_count) return;
 
-    for (uint32 i = 0; i < comp_count; i++)
-    {
-        if (comps[i] != init.comps[i]) return;
-    }
 
     if (count < capacity)
     {
@@ -60,12 +84,12 @@ void archetype::allocate(archetype_initializer init)
         uint32 skip = 0;
         for (uint32 i = 0; i < comp_count; i++)
         {
-            uint32 sub_skip = (comps[i].type_size * count);
+            uint32 sub_skip = (comps[i].size * count);
             byte *data = (chunk.data + skip + sub_skip);
-            memcpy(data, init_data, comps[i].type_size);
+            memcpy(data, init_data, comps[i].size);
 
-            skip += (comps[i].type_size * capacity);
-            init_data += comps[i].type_size;
+            skip += (comps[i].size * capacity);
+            init_data += comps[i].size;
         }
 
         count += 1;
