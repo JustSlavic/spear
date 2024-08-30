@@ -175,7 +175,7 @@ typedef void glDetachShaderType(uint32 program, uint32 shader);
 typedef void glLinkProgramType(uint32 program);
 typedef void glUseProgramType(uint32 program);
 typedef void glGetShaderivType(uint32 shader, GLenum pname, int32 *params);
-typedef void glGetShaderInfoLogType(uint32 shader, isize maxLength, isize *length, char *infoLog);
+typedef void glGetShaderInfoLogType(uint32 shader, GLsizei maxLength, GLsizei *length, char *infoLog); // GLsizei is int on windows and int64 on Mac?
 typedef void glDeleteShaderType(uint32 shader);
 typedef void glValidateProgramType(uint32 program);
 typedef void glGetProgramivType(uint32 program, GLenum pname, int32 *params);
@@ -1111,4 +1111,5 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <string_id.cpp>
 #include <collision.cpp>
 #include <ecs/entity_manager.cpp>
+#include <ecs/archetype.cpp>
 #endif // DLL_BUILD

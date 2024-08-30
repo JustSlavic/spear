@@ -34,7 +34,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
     return result;
 }
 
-component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, bool value)
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, bool value)
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
@@ -42,7 +42,7 @@ component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 al
     return result;
 }
 
-component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, int32 value)
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, int32 value)
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
@@ -50,7 +50,7 @@ component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 al
     return result;
 }
 
-component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 alignment, float32 value)
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, float32 value)
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
@@ -58,7 +58,7 @@ component_and_value make_component_init(uint32 name_hash, uint32 size, uint32 al
     return result;
 }
 
-archetype make_archetype(component_and_value *comps, uint32 comp_count)
+archetype make_archetype(memory_allocator allocator, component_and_value *comps, uint32 comp_count)
 {
     ASSERT(comp_count <= 4);
     archetype result = {};
@@ -69,33 +69,35 @@ archetype make_archetype(component_and_value *comps, uint32 comp_count)
         result.comps.push_back(comps[i]);
         entity_size += comps[i].comp.size;
     }
-#define ECS_ARCH_MAX_MAGIC 16
-    result.chunk = mallocator().allocate_buffer(entity_size * ECS_ARCH_MAX_MAGIC);
+    result.chunk.memory = allocator.allocate_buffer(entity_size * ECS_ARCH_MAX_COUNT);
+    result.chunk.eids.resize(result.chunk.eids.capacity());
     return result;
 }
 
-void archetype::allocate(archetype_initializer init)
+
+void archetype::push_entity(entity_id eid)
 {
-
-
-    if (count < capacity)
+    int index_in_chunk = 0;
+    for (; index_in_chunk < chunk.eids.size(); index_in_chunk++)
     {
-        byte *init_data = (byte *) init.values.data;
-        uint32 skip = 0;
-        for (uint32 i = 0; i < comp_count; i++)
+        if (chunk.eids[index_in_chunk] == INVALID_ENTITY_ID)
         {
-            uint32 sub_skip = (comps[i].size * count);
-            byte *data = (chunk.data + skip + sub_skip);
-            memcpy(data, init_data, comps[i].size);
-
-            skip += (comps[i].size * capacity);
-            init_data += comps[i].size;
+            break;
         }
+    }
 
-        count += 1;
+    usize offset = 0;
+    for (int index_in_comps = 0; index_in_comps < comps.size(); index_in_comps++)
+    {
+        component *comp = &comps[index_in_comps].comp;
+        byte *data = chunk.memory.data + offset + index_in_chunk * comp->size;
+
+        int bad_deed = index_in_comps == 0 ? 0xedded0ba : 0xaddeadde;
+        memcpy(data, &bad_deed, comp->size);
+        chunk.eids[index_in_chunk] = eid;
+        offset += comp->size * chunk.eids.size();
     }
 }
-
 
 
 } // namespace ecs

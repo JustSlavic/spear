@@ -350,7 +350,7 @@ int compile_shader(char const *source_code, int shader_type)
     glGetShaderiv(id, GL_COMPILE_STATUS, &successful);
     if (successful == GL_FALSE)
     {
-        isize length = 0;
+        GLsizei length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (GLint *) &length);
 
         auto message = mallocator().allocate_buffer(length + 1);

@@ -2,9 +2,13 @@
 #define ECS_ARCHETYPE_HPP
 
 #include <base.h>
+#include <hash.hpp>
+#include <memory/allocator.hpp>
 
 
 namespace ecs {
+
+#define ECS_HASH hash_djb2
 
 #define ECS_COMPONENT_1(STUB)
 #define ECS_COMPONENT_2(NAME, TYPE)        ::ecs::make_component(ECS_HASH(STRINGIFY(TYPE)), sizeof(TYPE), alignof(TYPE))
@@ -42,14 +46,29 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 
 struct archetype
 {
-    static_array<component_and_value, 32> comps;
-    memory_buffer chunk;
-    uint32 entity_size;
+    #define ECS_ARCH_MAX_COUNT 16
+    struct chunk_t
+    {
+        memory_buffer memory;
+        static_array<entity_id, ECS_ARCH_MAX_COUNT> eids;
+        chunk_t *next;
+    };
 
-    void create_entity(component_and_value *comps, uint32 comp_count);
+    static_array<component_and_value, 32> comps;
+    uint32 entity_size;
+    chunk_t chunk;
+
+    struct component_initializer
+    {
+
+    };
+
+    typedef void init_callback_t(component_initializer &init);
+
+    void push_entity(entity_id eid);
 };
 
-archetype make_archetype(component_and_value *comps, uint32 comp_count);
+archetype make_archetype(memory_allocator allocator, component_and_value *comps, uint32 comp_count);
 
 
 } // namespace ecs

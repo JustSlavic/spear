@@ -105,10 +105,14 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());
 
     ecs::component_and_value comps[] = {
-        ECS_COMPONENT("eid", ecs::entity_id, ecs::INVALID_ENTITY_ID)
+        // ECS_COMPONENT("eid", ecs::entity_id, ecs::INVALID_ENTITY_ID)
+        ECS_COMPONENT("height", int32, 23),
+        ECS_COMPONENT("height", int32, 23)
     };
 
-    auto base_entity_archetype = ecs::make_archetype(comps, ARRAY_COUNT(comps));
+    auto base_entity_archetype = ecs::make_archetype(gs->allocator, comps, ARRAY_COUNT(comps));
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
     // gs->entity_manager.create_archetype();
 
     game::spawn_hero(gs, 0, 0);
@@ -137,6 +141,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <memory/allocator.cpp>
 #include <collision.cpp>
 #include <ecs/entity_manager.cpp>
+#include <ecs/archetype.cpp>
 #endif // DLL_BUILD
 
 #include <ecs/entity_id.cpp>

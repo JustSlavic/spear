@@ -39,8 +39,8 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
 
 void render_stage(context *ctx, game_state *gs, input_state *input)
 {
-    // render_ground(ctx, gs, input);
-    // render_character_page(ctx, gs, input);
+    render_ground(ctx, gs, input);
+    render_character_page(ctx, gs, input);
     render_hero(ctx, gs, input);
     render_monsters(ctx, gs, input);
     render_stones(ctx, gs, input);
@@ -49,8 +49,8 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     {
         render_battle_queue(ctx, gs, input);
     }
-    render_dialogue(ctx, gs, input);
-    render_field(ctx, gs, input);
+    // render_dialogue(ctx, gs, input);
+    // render_field(ctx, gs, input);
 }
 
 void on_every_frame(context *ctx, game_state *gs, input_state *input)
