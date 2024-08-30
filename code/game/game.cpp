@@ -106,14 +106,18 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     ecs::component_and_value comps[] = {
         // ECS_COMPONENT("eid", ecs::entity_id, ecs::INVALID_ENTITY_ID)
-        ECS_COMPONENT("height", int32, 23),
-        ECS_COMPONENT("height", int32, 23)
+        ECS_COMPONENT("width", int32, 1),
+        ECS_COMPONENT("height", int32, 2),
+        ECS_COMPONENT("age", bool, true),
     };
 
     auto base_entity_archetype = ecs::make_archetype(gs->allocator, comps, ARRAY_COUNT(comps));
     base_entity_archetype.push_entity(gs->entity_manager.create_entity());
     base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    // gs->entity_manager.create_archetype();
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
+    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
 
     game::spawn_hero(gs, 0, 0);
     game::spawn_monster(gs, -2, 2);

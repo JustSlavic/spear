@@ -31,7 +31,7 @@ struct component_and_value
         bool b;
         int32 i;
         float32 f;
-    };
+    } value;
 };
 
 component make_component(uint32 name_hash, uint32 size, uint32 alignment);
@@ -46,7 +46,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 
 struct archetype
 {
-    #define ECS_ARCH_MAX_COUNT 16
+    #define ECS_ARCH_MAX_COUNT 32
     struct chunk_t
     {
         memory_buffer memory;

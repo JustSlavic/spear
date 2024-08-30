@@ -30,7 +30,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
-    result.eid = value;
+    result.value.eid = value;
     return result;
 }
 
@@ -38,7 +38,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
-    result.b = value;
+    result.value.b = value;
     return result;
 }
 
@@ -46,7 +46,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
-    result.i = value;
+    result.value.i = value;
     return result;
 }
 
@@ -54,7 +54,7 @@ component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint
 {
     component_and_value result;
     result.comp = make_component(name_hash, size, alignment);
-    result.f = value;
+    result.value.f = value;
     return result;
 }
 
@@ -89,13 +89,13 @@ void archetype::push_entity(entity_id eid)
     usize offset = 0;
     for (int index_in_comps = 0; index_in_comps < comps.size(); index_in_comps++)
     {
-        component *comp = &comps[index_in_comps].comp;
-        byte *data = chunk.memory.data + offset + index_in_chunk * comp->size;
+        auto *c = &comps[index_in_comps];
+        byte *data = chunk.memory.data + offset + index_in_chunk * c->comp.size;
 
         int bad_deed = index_in_comps == 0 ? 0xedded0ba : 0xaddeadde;
-        memcpy(data, &bad_deed, comp->size);
+        memcpy(data, &c->value, c->comp.size);
         chunk.eids[index_in_chunk] = eid;
-        offset += comp->size * chunk.eids.size();
+        offset += c->comp.size * chunk.eids.size();
     }
 }
 
