@@ -594,10 +594,21 @@ keyboard_key map_button_from_virtual_key_code(uint32 vk)
 {
     switch (vk)
     {
-        case VK_ESCAPE: return KB_ESC; break;
-        case VK_F1: return KB_F1; break;
-        case VK_SPACE: return KB_SPACE; break;
-        case VK_SHIFT: return KB_SHIFT; break;
+        case VK_ESCAPE:  return KB_ESC; break;
+        case VK_F1:      return KB_F1; break;
+        case VK_F2:      return KB_F2; break;
+        case VK_F3:      return KB_F3; break;
+        case VK_F4:      return KB_F4; break;
+        case VK_F5:      return KB_F5; break;
+        case VK_F6:      return KB_F6; break;
+        case VK_F7:      return KB_F7; break;
+        case VK_F8:      return KB_F8; break;
+        case VK_F9:      return KB_F9; break;
+        case VK_F10:     return KB_F10; break;
+        case VK_F11:     return KB_F11; break;
+        case VK_F12:     return KB_F12; break;
+        case VK_SPACE:   return KB_SPACE; break;
+        case VK_SHIFT:   return KB_SHIFT; break;
         case VK_CONTROL: return KB_CTRL; break;
         case 'Q': return KB_Q; break;
         case 'W': return KB_W; break;
