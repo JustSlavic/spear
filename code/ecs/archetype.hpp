@@ -11,15 +11,15 @@ namespace ecs {
 #define ECS_HASH hash_djb2
 
 #define ECS_COMPONENT_1(STUB)
-#define ECS_COMPONENT_2(NAME, TYPE)        ::ecs::make_component(ECS_HASH(STRINGIFY(TYPE)), sizeof(TYPE), alignof(TYPE))
-#define ECS_COMPONENT_3(NAME, TYPE, VALUE) ::ecs::make_component_and_value(ECS_HASH(STRINGIFY(TYPE)), sizeof(TYPE), alignof(TYPE), (VALUE))
+#define ECS_COMPONENT_2(NAME, TYPE)        ::ecs::make_component(ECS_HASH(NAME), sizeof(TYPE))
+#define ECS_COMPONENT_3(NAME, TYPE, VALUE) ::ecs::make_component_and_value(ECS_HASH(NAME), sizeof(TYPE), (VALUE))
 #define ECS_COMPONENT(...) MACRO_EXPAND(MACRO_OVERLOAD_3(__VA_ARGS__, ECS_COMPONENT_3, ECS_COMPONENT_2, ECS_COMPONENT_1)(__VA_ARGS__))
 
 struct component
 {
     uint32 hash;
     uint32 size;
-    uint32 alignment;
+    uint32 offset_in_chunk;
 };
 
 struct component_and_value
@@ -34,15 +34,15 @@ struct component_and_value
     } value;
 };
 
-component make_component(uint32 name_hash, uint32 size, uint32 alignment);
+component make_component(uint32 name_hash, uint32 size);
 
 bool operator == (component lhs, component rhs);
 bool operator != (component lhs, component rhs);
 
-component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, entity_id value);
-component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, bool value);
-component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, int32 value);
-component_and_value make_component_and_value(uint32 name_hash, uint32 size, uint32 alignment, float32 value);
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, entity_id value);
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, bool value);
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, int32 value);
+component_and_value make_component_and_value(uint32 name_hash, uint32 size, float32 value);
 
 struct archetype
 {
@@ -58,12 +58,7 @@ struct archetype
     uint32 entity_size;
     chunk_t chunk;
 
-    struct component_initializer
-    {
-
-    };
-
-    typedef void init_callback_t(component_initializer &init);
+    component get_component_by_name(char const *name);
 
     void push_entity(entity_id eid);
 };

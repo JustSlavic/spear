@@ -13,6 +13,7 @@
 
 #include <ecs/entity_manager.hpp>
 #include <ecs/archetype.hpp>
+#include <ecs/system.hpp>
 
 #include <game/systems_order.hpp>
 
@@ -70,6 +71,28 @@ void game_field::set_eid(int32 x, int32 y, ecs::entity_id eid)
 }
 
 
+void test_es(int32 width, int32 height)
+{
+    console::print("width = %d; height = %d;\n", width, height);
+}
+
+
+void test_es_gen(ecs::archetype *archetype)
+{
+    auto width_comp = archetype->get_component_by_name("width");
+    auto height_comp = archetype->get_component_by_name("height");
+    auto age_comp = archetype->get_component_by_name("age");
+
+    for (uint32 index_in_chunk = 0; index_in_chunk < archetype->chunk.eids.size(); index_in_chunk++)
+    {
+        if (archetype->chunk.eids[index_in_chunk] == ecs::INVALID_ENTITY_ID)
+            continue;
+        test_es(*(int32 *) (archetype->chunk.memory.data + width_comp.offset_in_chunk + index_in_chunk * width_comp.size),
+                *(int32 *) (archetype->chunk.memory.data + height_comp.offset_in_chunk + index_in_chunk * height_comp.size));
+    }
+}
+
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -119,10 +142,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     base_entity_archetype.push_entity(gs->entity_manager.create_entity());
     base_entity_archetype.push_entity(gs->entity_manager.create_entity());
 
+    test_es_gen(&base_entity_archetype);
+
     game::spawn_hero(gs, 0, 0);
-    game::spawn_monster(gs, -2, 2);
-    game::spawn_monster(gs, 2, -1);
-    game::spawn_monster(gs, -1, 2);
+    game::spawn_monster(gs, -2,  2);
+    game::spawn_monster(gs,  2, -1);
+    game::spawn_monster(gs, -1,  2);
 
     game::spawn_stone(gs, -1,  1);
     game::spawn_stone(gs, -1, -1);
