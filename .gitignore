@@ -4,6 +4,10 @@ build/
 # Sublime Text
 *.sublime-workspace
 
+# MacOS
+
+*.DS_Store
+
 # Visual Studio
 .vs/
 
