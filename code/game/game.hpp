@@ -77,34 +77,37 @@ struct entity
     int agility;
 };
 
-struct input_action
+enum input_action_bits
 {
-    uint32 press;
-    uint32 hold;
-    uint32 release;
-    uint32 double_click;
-
-    timepoint last_press_time;
-    timepoint last_release_time;
+    InputAction_Press = 0x1,
+    InputAction_Release = 0x2,
+    InputAction_Hold = 0x4,
+    InputAction_DoubleClick = 0x8,
 };
 
-// void act_on_press(input_action *action, button_state *button);
-// void act_on_release(input_action *action, button_state *button);
-// void act_on_hold(input_action *action, button_state *button);
-// void act_on_double_click(input_action *action, button_state *button, duration interval_between_presses);
-
-struct player_input_actions
+enum
 {
-    input_action action_exit_game;
-    input_action move_west;
-    input_action move_east;
-    input_action move_north;
-    input_action move_south;
-    input_action select_left_arm;
-    input_action select_right_arm;
-    input_action finish_turn;
+    PlayerAction_None,
+    PlayerAction_ExitGame,
+
+    PlayerAction_ToggleFreeCamera,
+    PlayerAction_MoveCameraForward,
+    PlayerAction_MoveCameraBackward,
+    PlayerAction_MoveCameraLeft,
+    PlayerAction_MoveCameraRight,
+
+    PlayerAction_SpawnMonster,
+    PlayerAction_SpawnStone,
 };
 
+struct action_set
+{
+    uint32 buttons[32];
+};
+
+uint32 get_press_count(input_state *input, action_set *set, uint32 action_id);
+uint32 get_release_count(input_state *input, action_set *set, uint32 action_id);
+uint32 get_hold_count(input_state *input, action_set *set, uint32 action_id);
 
 struct game_field
 {
@@ -128,6 +131,8 @@ struct game_state
 
     static_array<ecs::entity_id, 32> battle_queue;
     uint32 battle_queue_current_slot;
+
+    action_set player_actions;
 
     ecs::entity_manager entity_manager;
 

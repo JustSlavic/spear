@@ -590,55 +590,10 @@ MAIN_WINDOW_CALLBACK(window_callback)
     return result;
 }
 
-keyboard_key map_button_from_virtual_key_code(uint32 vk)
+uint32 vk_to_button_id[] =
 {
-    switch (vk)
-    {
-        case VK_ESCAPE:  return KB_ESC; break;
-        case VK_F1:      return KB_F1; break;
-        case VK_F2:      return KB_F2; break;
-        case VK_F3:      return KB_F3; break;
-        case VK_F4:      return KB_F4; break;
-        case VK_F5:      return KB_F5; break;
-        case VK_F6:      return KB_F6; break;
-        case VK_F7:      return KB_F7; break;
-        case VK_F8:      return KB_F8; break;
-        case VK_F9:      return KB_F9; break;
-        case VK_F10:     return KB_F10; break;
-        case VK_F11:     return KB_F11; break;
-        case VK_F12:     return KB_F12; break;
-        case VK_SPACE:   return KB_SPACE; break;
-        case VK_SHIFT:   return KB_SHIFT; break;
-        case VK_CONTROL: return KB_CTRL; break;
-        case 'Q': return KB_Q; break;
-        case 'W': return KB_W; break;
-        case 'E': return KB_E; break;
-        case 'R': return KB_R; break;
-        case 'T': return KB_T; break;
-        case 'Y': return KB_Y; break;
-        case 'U': return KB_U; break;
-        case 'I': return KB_I; break;
-        case 'O': return KB_O; break;
-        case 'P': return KB_P; break;
-        case 'A': return KB_A; break;
-        case 'S': return KB_S; break;
-        case 'D': return KB_D; break;
-        case 'F': return KB_F; break;
-        case 'G': return KB_G; break;
-        case 'H': return KB_H; break;
-        case 'J': return KB_J; break;
-        case 'K': return KB_K; break;
-        case 'L': return KB_L; break;
-        case 'Z': return KB_Z; break;
-        case 'X': return KB_X; break;
-        case 'C': return KB_C; break;
-        case 'V': return KB_V; break;
-        case 'B': return KB_B; break;
-        case 'N': return KB_N; break;
-        case 'M': return KB_M; break;
-    }
-    return KB_NONE;
-}
+#include "vk_to_button.inl"
+};
 
 void process_pending_messages(input_state *input)
 {
@@ -678,7 +633,7 @@ void process_pending_messages(input_state *input)
                 bool32 was_down = (message.lParam & (1 << 30)) != 0;
                 bool32 is_down  = (message.lParam & (1 << 31)) == 0;
 
-                process_button_state(&input->keyboard[map_button_from_virtual_key_code(virtual_key_code)], is_down);
+                process_button_state(&input->keyboard[vk_to_button_id[virtual_key_code]], is_down);
             }
             break;
 

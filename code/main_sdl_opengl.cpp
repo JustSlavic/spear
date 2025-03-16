@@ -26,6 +26,42 @@ GLOBAL int32 current_client_height;
 GLOBAL bool32 viewport_changed;
 
 
+uint32 map_button_from_scancode_2(uint32 sk)
+{
+    switch (sk)
+    {
+    case SDL_SCANCODE_ESCAPE: return Keyboard_Esc;
+    case SDL_SCANCODE_A: return Keyboard_A;
+    case SDL_SCANCODE_B: return Keyboard_B;
+    case SDL_SCANCODE_C: return Keyboard_C;
+    case SDL_SCANCODE_D: return Keyboard_D;
+    case SDL_SCANCODE_E: return Keyboard_E;
+    case SDL_SCANCODE_F: return Keyboard_F;
+    case SDL_SCANCODE_G: return Keyboard_G;
+    case SDL_SCANCODE_H: return Keyboard_H;
+    case SDL_SCANCODE_I: return Keyboard_I;
+    case SDL_SCANCODE_J: return Keyboard_J;
+    case SDL_SCANCODE_K: return Keyboard_K;
+    case SDL_SCANCODE_L: return Keyboard_L;
+    case SDL_SCANCODE_M: return Keyboard_M;
+    case SDL_SCANCODE_N: return Keyboard_N;
+    case SDL_SCANCODE_O: return Keyboard_O;
+    case SDL_SCANCODE_P: return Keyboard_P;
+    case SDL_SCANCODE_Q: return Keyboard_Q;
+    case SDL_SCANCODE_R: return Keyboard_R;
+    case SDL_SCANCODE_S: return Keyboard_S;
+    case SDL_SCANCODE_T: return Keyboard_T;
+    case SDL_SCANCODE_U: return Keyboard_U;
+    case SDL_SCANCODE_V: return Keyboard_V;
+    case SDL_SCANCODE_W: return Keyboard_W;
+    case SDL_SCANCODE_X: return Keyboard_X;
+    case SDL_SCANCODE_Y: return Keyboard_Y;
+    case SDL_SCANCODE_Z: return Keyboard_Z;
+    }
+    return 0;
+}
+
+
 void process_pending_messages(input_state *input)
 {
     SDL_Event e;
@@ -62,6 +98,11 @@ void process_pending_messages(input_state *input)
                 if (key != KB_NONE)
                 {
                     process_button_state(&input->keyboard[key], e.type == SDL_KEYDOWN);
+                }
+                uint32 k = map_button_from_scancode_2(e.key.keysym.scancode);
+                if (k != Button_None)
+                {
+                    process_button_state(&input->keyboard_and_mouse.buttons[k], e.type == SDL_KEYDOWN);
                 }
             }
             break;
@@ -211,6 +252,7 @@ int main()
     {
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
+        reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
         process_pending_messages(&input);
         sdl::get_mouse_pos(&input.mouse.x, &input.mouse.y);
         input.dt = last_frame_dt;

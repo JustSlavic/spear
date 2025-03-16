@@ -13,7 +13,8 @@
 
 #include <ecs/entity_manager.hpp>
 #include <ecs/archetype.hpp>
-#include <ecs/system.hpp>
+// #include <ecs/system.hpp>
+#include <simd/float4.h>
 
 #include <game/systems_order.hpp>
 
@@ -93,6 +94,50 @@ void test_es_gen(ecs::archetype *archetype)
 }
 
 
+void bind_action_to_button(action_set *set, uint32 button_id, uint32 action_id)
+{
+    if (action_id < ARRAY_COUNT(set->buttons))
+    {
+        set->buttons[action_id] = button_id;
+    }
+}
+
+uint32 get_press_count(input_state *input, action_set *set, uint32 action_id)
+{
+    uint32 result = 0;
+    if (action_id < ARRAY_COUNT(set->buttons))
+    {
+        uint32 button_id = set->buttons[action_id];
+        button_state button = input->keyboard_and_mouse.buttons[button_id];
+        result = get_press_count(button);
+    }
+    return result;
+}
+
+uint32 get_release_count(input_state *input, action_set *set, uint32 action_id)
+{
+    uint32 result = 0;
+    if (action_id < ARRAY_COUNT(set->buttons))
+    {
+        uint32 button_id = set->buttons[action_id];
+        button_state button = input->keyboard_and_mouse.buttons[button_id];
+        result = get_release_count(button);
+    }
+    return result;
+}
+
+uint32 get_hold_count(input_state *input, action_set *set, uint32 action_id)
+{
+    uint32 result = 0;
+    if (action_id < ARRAY_COUNT(set->buttons))
+    {
+        uint32 button_id = set->buttons[action_id];
+        button_state button = input->keyboard_and_mouse.buttons[button_id];
+        result = get_hold_count(button);
+    }
+    return result;
+}
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -101,6 +146,15 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     auto gs = arena.allocate<game_state>();
     gs->allocator = arena;
     ctx->game_state = gs;
+
+    bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
+    bind_action_to_button(&gs->player_actions, Keyboard_I, PlayerAction_ToggleFreeCamera);
+    bind_action_to_button(&gs->player_actions, Keyboard_W, PlayerAction_MoveCameraForward);
+    bind_action_to_button(&gs->player_actions, Keyboard_S, PlayerAction_MoveCameraBackward);
+    bind_action_to_button(&gs->player_actions, Keyboard_A, PlayerAction_MoveCameraLeft);
+    bind_action_to_button(&gs->player_actions, Keyboard_D, PlayerAction_MoveCameraRight);
+    bind_action_to_button(&gs->player_actions, Keyboard_P, PlayerAction_SpawnMonster);
+    bind_action_to_button(&gs->player_actions, Keyboard_O, PlayerAction_SpawnStone);
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
@@ -153,6 +207,15 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs, -1, -1);
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
+
+    float4 vx = v_make_float4(0.1, 0.2, 0.1, 0.3);
+    float4 vy = v_make_float4(0.7, 0.1, 0.1, 0.8);
+    float4 vz = v_dot(vx, vy);
+
+    float vv[4] = {};
+    v_st(vv, vz);
+
+    console::print("A. %f, %f, %f, %f\n", vv[0], vv[1], vv[2], vv[3]);
 }
 
 

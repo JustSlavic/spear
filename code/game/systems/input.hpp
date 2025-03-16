@@ -10,7 +10,7 @@ namespace game {
 
 void game_exit(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_release_count(input->keyboard[KB_ESC]))
+    if (get_release_count(input, &gs->player_actions, PlayerAction_ExitGame))
     {
         if (get_seconds(input->time - gs->exit_press_time) < 1)
         {
@@ -25,7 +25,7 @@ void game_exit(context *ctx, game_state *gs, input_state *input)
 
 void camera_fly_mode(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_press_count(input->keyboard[KB_I]))
+    if (get_press_count(input, &gs->player_actions, PlayerAction_ToggleFreeCamera))
     {
         TOGGLE(gs->camera_fly_mode);
     }
@@ -43,10 +43,10 @@ void ghost_view_mode(context *ctx, game_state *gs, input_state *input)
 void camera_movement(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
-    if (get_hold_count(input->keyboard[KB_A])) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_D])) camera_move_direction += V3(1, 0, 0);
-    if (get_hold_count(input->keyboard[KB_W])) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input->keyboard[KB_S])) camera_move_direction -= V3(0, 1, 0);
+    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraForward)) camera_move_direction += V3(0, 1, 0);
+    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraBackward)) camera_move_direction -= V3(0, 1, 0);
+    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraLeft)) camera_move_direction -= V3(1, 0, 0);
+    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraRight)) camera_move_direction += V3(1, 0, 0);
     // if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
     // if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
 
@@ -95,11 +95,11 @@ void spawn_entities(context *ctx, game_state *gs, input_state *input)
     {
         if (game::cell_is_empty(gs, gs->intersect_x, gs->intersect_y))
         {
-            if (get_press_count(input->keyboard[KB_P]))
+            if (get_press_count(input, &gs->player_actions, PlayerAction_SpawnMonster))
             {
                 game::spawn_monster(gs, gs->intersect_x, gs->intersect_y);
             }
-            else if (get_press_count(input->keyboard[KB_O]))
+            else if (get_press_count(input, &gs->player_actions, PlayerAction_SpawnStone))
             {
                 game::spawn_stone(gs, gs->intersect_x, gs->intersect_y);
             }

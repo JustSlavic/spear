@@ -29,7 +29,6 @@ struct button_state
     uint32 transition_count;
 };
 
-
 INLINE uint32 get_press_count(button_state button)
 {
     uint32 result = (button.transition_count + (button.is_down > 0)) / 2;
@@ -122,6 +121,67 @@ struct mouse_device
     }
 };
 
+enum keyboard_and_mouse_button
+{
+    Button_None,
+    
+    Mouse_Left,
+    Mouse_Right,
+    Mouse_Middle,
+    Mouse_X1,
+    Mouse_X2,
+
+    Keyboard_Esc,
+    Keyboard_F1,
+    Keyboard_F2,
+    Keyboard_F3,
+    Keyboard_F4,
+    Keyboard_F5,
+    Keyboard_F6,
+    Keyboard_F7,
+    Keyboard_F8,
+    Keyboard_F9,
+    Keyboard_F10,
+    Keyboard_F11,
+    Keyboard_F12,
+
+    Keyboard_A,
+    Keyboard_B,
+    Keyboard_C,
+    Keyboard_D,
+    Keyboard_E,
+    Keyboard_F,
+    Keyboard_G,
+    Keyboard_H,
+    Keyboard_I,
+    Keyboard_J,
+    Keyboard_K,
+    Keyboard_L,
+    Keyboard_M,
+    Keyboard_N,
+    Keyboard_O,
+    Keyboard_P,
+    Keyboard_Q,
+    Keyboard_R,
+    Keyboard_S,
+    Keyboard_T,
+    Keyboard_U,
+    Keyboard_V,
+    Keyboard_W,
+    Keyboard_X,
+    Keyboard_Y,
+    Keyboard_Z,
+
+    Button_Count,
+};
+
+struct keyboard_and_mouse_input
+{
+    button_state buttons[Button_Count];
+    int32 x, y;
+    int32 scroll;
+};
+
 struct stick_state
 {
     //       +1
@@ -164,6 +224,7 @@ struct gamepad_device
 
 struct input_state
 {
+    keyboard_and_mouse_input keyboard_and_mouse;
     keyboard_device keyboard;
     mouse_device mouse;
     gamepad_device gamepads[4];
