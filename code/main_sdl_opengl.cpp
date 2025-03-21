@@ -57,6 +57,10 @@ uint32 map_button_from_scancode_2(uint32 sk)
     case SDL_SCANCODE_X: return Keyboard_X;
     case SDL_SCANCODE_Y: return Keyboard_Y;
     case SDL_SCANCODE_Z: return Keyboard_Z;
+    case SDL_SCANCODE_UP: return Keyboard_Up;
+    case SDL_SCANCODE_DOWN: return Keyboard_Down;
+    case SDL_SCANCODE_LEFT: return Keyboard_Left;
+    case SDL_SCANCODE_RIGHT: return Keyboard_Right;
     }
     return 0;
 }
@@ -221,6 +225,9 @@ int main()
     auto cpu_cube = make_cube();
     auto gpu_cube = load_mesh(cpu_cube);
 
+    auto cpu_sphere = make_sphere();
+    auto gpu_sphere = load_mesh(cpu_sphere);
+
     auto cpu_square_uv = make_square_uv();
     auto gpu_square_uv = load_mesh(cpu_square_uv);
 
@@ -228,6 +235,7 @@ int main()
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
     auto shader_text = compile_shaders(vs_text, fs_text);
+    auto shader_phong = compile_shaders(vs_phong, fs_phong);
 
     auto font_content = platform::load_file("font.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
@@ -346,6 +354,20 @@ int main()
             }
         }
         ctx.rend_commands.clear();
+
+        // Do spere (planet?)
+        {
+            glUseProgram(shader_phong.id);
+
+            shader_phong.uniform("u_model", matrix4::translate_z(2));
+            shader_phong.uniform("u_view", view_matrix);
+            shader_phong.uniform("u_projection", proj_matrix);
+            shader_phong.uniform("u_color", V4(1, 1, 0, 1));
+
+            glBindVertexArray(gpu_sphere.vao);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_sphere.ibo);
+            glDrawElements(GL_TRIANGLES, gpu_sphere.count, GL_UNSIGNED_INT, NULL);
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);

@@ -124,7 +124,7 @@ struct mouse_device
 enum keyboard_and_mouse_button
 {
     Button_None,
-    
+
     Mouse_Left,
     Mouse_Right,
     Mouse_Middle,
@@ -171,6 +171,11 @@ enum keyboard_and_mouse_button
     Keyboard_X,
     Keyboard_Y,
     Keyboard_Z,
+
+    Keyboard_Up,
+    Keyboard_Down,
+    Keyboard_Left,
+    Keyboard_Right,
 
     Button_Count,
 };

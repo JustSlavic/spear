@@ -10,7 +10,7 @@ namespace game {
 
 void game_exit(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_release_count(input, &gs->player_actions, PlayerAction_ExitGame))
+    if (get_release_count(gs, input, PlayerAction_ExitGame))
     {
         if (get_seconds(input->time - gs->exit_press_time) < 1)
         {
@@ -25,7 +25,7 @@ void game_exit(context *ctx, game_state *gs, input_state *input)
 
 void camera_fly_mode(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_press_count(input, &gs->player_actions, PlayerAction_ToggleFreeCamera))
+    if (get_press_count(gs, input, PlayerAction_ToggleFreeCamera))
     {
         TOGGLE(gs->camera_fly_mode);
     }
@@ -43,12 +43,16 @@ void ghost_view_mode(context *ctx, game_state *gs, input_state *input)
 void camera_movement(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
-    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraForward)) camera_move_direction += V3(0, 1, 0);
-    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraBackward)) camera_move_direction -= V3(0, 1, 0);
-    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraLeft)) camera_move_direction -= V3(1, 0, 0);
-    if (get_hold_count(input, &gs->player_actions, PlayerAction_MoveCameraRight)) camera_move_direction += V3(1, 0, 0);
-    // if (get_hold_count(input->keyboard[KB_R])) camera_move_direction += V3(0, 0, 1);
-    // if (get_hold_count(input->keyboard[KB_F])) camera_move_direction -= V3(0, 0, 1);
+    quaternion camera_rotate_q = quaternion::identity();
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraForward)) camera_move_direction += gs->camera.forward;
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraBackward)) camera_move_direction -= gs->camera.forward;
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraLeft)) camera_move_direction -= cross(gs->camera.forward, gs->camera.up);
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraRight)) camera_move_direction += cross(gs->camera.forward, gs->camera.up);
+
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraUp)) camera_move_direction += gs->camera.up;
+    if (get_hold_count(gs, input, PlayerAction_MoveCameraDown)) camera_move_direction -= gs->camera.up;
+
+    // if (get_hold_count(gs, input, PlayerAction_RotateCameraUp)) camera_rotate_q = gs->camera.up * gs->camera.forward;
 
     if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);
     if (get_hold_count(input->gamepads[0][GP_DPAD_RIGHT])) camera_move_direction += V3(1, 0, 0);
@@ -59,11 +63,11 @@ void camera_movement(game_state *gs, input_state *input)
 
     camera_move_direction += V3(input->gamepads[0].left_stick.x, input->gamepads[0].left_stick.y, 0);
 
-    if (input->mouse.scroll != 0)
-    {
-        float k = 15.f * gs->camera.position.z;
-        camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
-    }
+    // if (input->mouse.scroll != 0)
+    // {
+    //     float k = 15.f * gs->camera.position.z;
+    //     camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
+    // }
 
     gs->camera.position += normalized(camera_move_direction) * gs->camera_speed * input->dt;
 }
@@ -95,11 +99,11 @@ void spawn_entities(context *ctx, game_state *gs, input_state *input)
     {
         if (game::cell_is_empty(gs, gs->intersect_x, gs->intersect_y))
         {
-            if (get_press_count(input, &gs->player_actions, PlayerAction_SpawnMonster))
+            if (get_press_count(gs, input, PlayerAction_SpawnMonster))
             {
                 game::spawn_monster(gs, gs->intersect_x, gs->intersect_y);
             }
-            else if (get_press_count(input, &gs->player_actions, PlayerAction_SpawnStone))
+            else if (get_press_count(gs, input, PlayerAction_SpawnStone))
             {
                 game::spawn_stone(gs, gs->intersect_x, gs->intersect_y);
             }

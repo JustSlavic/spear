@@ -95,6 +95,12 @@ enum
     PlayerAction_MoveCameraBackward,
     PlayerAction_MoveCameraLeft,
     PlayerAction_MoveCameraRight,
+    PlayerAction_MoveCameraUp,
+    PlayerAction_MoveCameraDown,
+    PlayerAction_RotateCameraUp,
+    PlayerAction_RotateCameraDown,
+    PlayerAction_RotateCameraLeft,
+    PlayerAction_RotateCameraRight,
 
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,
@@ -105,9 +111,11 @@ struct action_set
     uint32 buttons[32];
 };
 
-uint32 get_press_count(input_state *input, action_set *set, uint32 action_id);
-uint32 get_release_count(input_state *input, action_set *set, uint32 action_id);
-uint32 get_hold_count(input_state *input, action_set *set, uint32 action_id);
+struct game_state;
+
+uint32 get_press_count(game_state *gs, input_state *input, uint32 action_id);
+uint32 get_release_count(game_state *gs, input_state *input, uint32 action_id);
+uint32 get_hold_count(game_state *gs, input_state *input, uint32 action_id);
 
 struct game_field
 {
