@@ -113,3 +113,51 @@ void main()
     result_color = u_color * texture(u_texture0, uv);
 }
 )GLSL";
+
+GLOBAL char const *vs_phong = R"GLSL(
+#version 410
+
+layout (location = 0) in vec3 vertex_position;
+layout (location = 1) in vec3 vertex_normal;
+
+out vec4 fragment_color;
+out vec3 fragment_position;
+out vec3 fragment_normal;
+
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+uniform vec4 u_color;
+
+void main()
+{
+    fragment_color = u_color;
+    fragment_position = (u_view * u_model * vec4(vertex_position, 1.0)).xyz;
+    fragment_normal = vertex_normal;
+    gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
+}
+)GLSL";
+
+GLOBAL char const *fs_phong = R"GLSL(
+#version 410
+
+in vec4 fragment_color;
+in vec3 fragment_position;
+in vec3 fragment_normal;
+out vec4 result_color;
+
+void main()
+{
+    // Just assume the light position is on (5, 5, 5)
+    vec3 light_position = vec3(5.0, 5.0, 5.0);
+    vec3 light_direction = normalize(light_position - fragment_position);
+
+    float ambient_light = 0.2;
+    vec4 ambient_color = ambient_light * fragment_color;
+
+    float diffuse_light = max(dot(fragment_normal, light_direction), 0.0);
+    vec4 diffuse_color = fragment_color * diffuse_light;
+
+    result_color = ambient_color + diffuse_color;
+}
+)GLSL";

@@ -233,6 +233,103 @@ cpu_mesh make_cube()
     return result;
 }
 
+cpu_mesh make_sphere()
+{
+    int32 n = 10; // number of vertical divisions
+    int32 m = 14; // number of horizontal divisions
+
+    // Total vertices: n * m + 2
+
+    float32 vbo_data[1 << 10] =
+    { // position            normal
+         0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  1.0f, // top vertex
+    };
+    uint32 vbo_count = 6;
+
+    for (int32 i = 0; i < n; i++)
+    {
+        float32 a = pi * (i + 1) / (n + 1);
+        for (int32 j = 0; j < m; j++)
+        {
+            float32 b = 2.f * pi * j / m;
+
+            float32 x = sinf(a) * cosf(b);
+            float32 y = sinf(a) * sinf(b);
+            float32 z = cosf(a);
+
+            // position
+            vbo_data[vbo_count++] = x;
+            vbo_data[vbo_count++] = y;
+            vbo_data[vbo_count++] = z;
+            // normal
+            vbo_data[vbo_count++] = x;
+            vbo_data[vbo_count++] = y;
+            vbo_data[vbo_count++] = z;
+        }
+    }
+    // bottom vertex
+    vbo_data[vbo_count++] = 0.0f;
+    vbo_data[vbo_count++] = 0.0f;
+    vbo_data[vbo_count++] = -1.0f;
+    vbo_data[vbo_count++] = 0.0f;
+    vbo_data[vbo_count++] = 0.0f;
+    vbo_data[vbo_count++] = -1.0f;
+
+    static uint32 ibo_data[1 << 10] = {};
+    uint32 ibo_count = 0;
+
+    for (int j = 0; j < m; j++)
+    {
+        ibo_data[ibo_count++] = 0;
+        ibo_data[ibo_count++] = j + 1;
+        ibo_data[ibo_count++] = (j + 1) % m + 1;
+    }
+    printf("\n");
+    for (int i = 1; i < n; i++)
+    {
+        for (int j = 0; j < m + 1; j++)
+        {
+            // top row points: t0, t1, t2, ...
+            // bottom row points: b0, b1, b2, ...
+
+            // 2 triangles per quad
+            // t0, b0, b1
+            // b1, t1, t0
+
+            ibo_data[ibo_count++] = (i - 1) * m + j % m + 1; // t0
+            ibo_data[ibo_count++] = i * m + j % m + 1;       // b0
+            ibo_data[ibo_count++] = i * m + (j + 1) % m + 1; // b1
+
+            ibo_data[ibo_count++] = i * m + (j + 1) % m + 1;       // b1
+            ibo_data[ibo_count++] = (i - 1) * m + (j + 1) % m + 1; // t1
+            ibo_data[ibo_count++] = (i - 1) * m + j % m + 1;       // t0
+        }
+    }
+    printf("\n");
+    for (int j = 0; j < m; j++)
+    {
+        ibo_data[ibo_count++] = n * m + 1;
+        ibo_data[ibo_count++] = (n - 1) * m + j + 1;
+        ibo_data[ibo_count++] = (n - 1) * m + (j + 1) % m + 1;
+    }
+
+    printf("VBO Count = %d (%d); IBO Count = %d (%d);\n", vbo_count, (vbo_count / 6), ibo_count, (ibo_count / 3));
+
+    auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data[0]) * vbo_count);
+    auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data[0]) * ibo_count);
+
+    auto vbl = vertex_buffer_layout::make();
+    vbl.push<float>(3);
+    vbl.push<float>(3);
+
+    cpu_mesh result;
+    result.vbo = vbo;
+    result.ibo = ibo;
+    result.vbl = vbl;
+
+    return result;
+}
+
 cpu_mesh make_square_uv()
 {
     static float32 vbo_data[] = {

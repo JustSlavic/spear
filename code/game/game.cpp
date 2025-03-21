@@ -102,9 +102,10 @@ void bind_action_to_button(action_set *set, uint32 button_id, uint32 action_id)
     }
 }
 
-uint32 get_press_count(input_state *input, action_set *set, uint32 action_id)
+uint32 get_press_count(game_state *gs, input_state *input, uint32 action_id)
 {
     uint32 result = 0;
+    action_set *set = &gs->player_actions;
     if (action_id < ARRAY_COUNT(set->buttons))
     {
         uint32 button_id = set->buttons[action_id];
@@ -114,9 +115,10 @@ uint32 get_press_count(input_state *input, action_set *set, uint32 action_id)
     return result;
 }
 
-uint32 get_release_count(input_state *input, action_set *set, uint32 action_id)
+uint32 get_release_count(game_state *gs, input_state *input, uint32 action_id)
 {
     uint32 result = 0;
+    action_set *set = &gs->player_actions;
     if (action_id < ARRAY_COUNT(set->buttons))
     {
         uint32 button_id = set->buttons[action_id];
@@ -126,9 +128,10 @@ uint32 get_release_count(input_state *input, action_set *set, uint32 action_id)
     return result;
 }
 
-uint32 get_hold_count(input_state *input, action_set *set, uint32 action_id)
+uint32 get_hold_count(game_state *gs, input_state *input, uint32 action_id)
 {
     uint32 result = 0;
+    action_set *set = &gs->player_actions;
     if (action_id < ARRAY_COUNT(set->buttons))
     {
         uint32 button_id = set->buttons[action_id];
@@ -153,8 +156,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     bind_action_to_button(&gs->player_actions, Keyboard_S, PlayerAction_MoveCameraBackward);
     bind_action_to_button(&gs->player_actions, Keyboard_A, PlayerAction_MoveCameraLeft);
     bind_action_to_button(&gs->player_actions, Keyboard_D, PlayerAction_MoveCameraRight);
+    bind_action_to_button(&gs->player_actions, Keyboard_R, PlayerAction_MoveCameraUp);
+    bind_action_to_button(&gs->player_actions, Keyboard_F, PlayerAction_MoveCameraDown);
     bind_action_to_button(&gs->player_actions, Keyboard_P, PlayerAction_SpawnMonster);
     bind_action_to_button(&gs->player_actions, Keyboard_O, PlayerAction_SpawnStone);
+
+    bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
@@ -177,6 +184,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->regular_entity_height = 0.3f;
 
     gs->field_render__gap = 0.3f;
+    gs->camera_fly_mode = true;
 
     // Init ECS
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());
