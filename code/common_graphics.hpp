@@ -56,8 +56,9 @@ struct vertex_buffer_layout_element
 
 struct vertex_buffer_layout
 {
-    uint32 size;
     vertex_buffer_layout_element elements[8];
+    uint32 count;
+    uint32 total_count;
 
     static vertex_buffer_layout make()
     {
@@ -66,10 +67,11 @@ struct vertex_buffer_layout
     }
 
     template <typename T>
-    void push(uint32 count)
+    void push(uint32 n)
     {
         ASSERT(count < ARRAY_COUNT(elements));
-        elements[size++].count = count;
+        elements[count++].count = n;
+        total_count += n;
     }
 };
 
@@ -156,6 +158,32 @@ struct framebuffer
     uint32 depth_stencil_id;
 };
 
+cpu_mesh rebuild_mesh_into_array(cpu_mesh mesh, memory_allocator a)
+{
+    uint32 vertex_count = mesh.ibo.size / sizeof(uint32);
+    uint32 *ibo_data = (uint32 *) mesh.ibo.data;
+    float32 *vbo_data = (float32 *) mesh.vbo.data;
+
+    memory_buffer result_vbo = a.allocate_buffer(mesh.vbl.total_count * vertex_count * sizeof(float32));
+    float32 *result_vbo_data = (float32 *) result_vbo.data;
+    uint32 result_vbo_count = 0;
+
+    for (int vertex_index = 0; vertex_index < vertex_count; vertex_index++)
+    {
+        for (int element_index = 0; element_index < mesh.vbl.total_count; element_index++)
+        {
+            result_vbo_data[result_vbo_count++] = vbo_data[mesh.vbl.total_count * ibo_data[vertex_index] + element_index];
+        }
+    }
+
+    cpu_mesh result = {};
+    result.vbo = result_vbo;
+    result.ibo = memory_buffer{};
+    result.vbl = mesh.vbl;
+
+    return result;
+}
+
 cpu_mesh make_square()
 {
     static float32 vbo_data[] = {
@@ -184,46 +212,25 @@ cpu_mesh make_square()
     return result;
 }
 
-cpu_mesh make_cube()
+cpu_mesh make_square_uv()
 {
     static float32 vbo_data[] = {
-        // bottom square
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-        // top square
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,   0.0f, 0.0f,
+         1.0f, -1.0f,   1.0f, 0.0f,
+         1.0f,  1.0f,   1.0f, 1.0f,
+        -1.0f,  1.0f,   0.0f, 1.0f,
     };
-
     static uint32 ibo_data[] = {
-        0, 1, 2,
-        2, 3, 0,
-
-        0, 3, 7,
-        7, 4, 0,
-
-        1, 5, 6,
-        6, 2, 1,
-
-        3, 2, 6,
-        6, 7, 3,
-
-        1, 0, 4,
-        4, 5, 1,
-
-        5, 4, 7,
-        7, 6, 5,
+        0, 1, 2, // first triangle
+        2, 3, 0, // second triangle
     };
 
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data));
     auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data));
 
     auto vbl = vertex_buffer_layout::make();
-    vbl.push<float>(3);
+    vbl.push<float>(2);
+    vbl.push<float>(2);
 
     cpu_mesh result;
     result.vbo = vbo;
@@ -240,7 +247,7 @@ cpu_mesh make_sphere()
 
     // Total vertices: n * m + 2
 
-    float32 vbo_data[1 << 10] =
+    static float32 vbo_data[1 << 10] =
     { // position            normal
          0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  1.0f, // top vertex
     };
@@ -256,6 +263,8 @@ cpu_mesh make_sphere()
             float32 x = sin(a) * cos(b);
             float32 y = sin(a) * sin(b);
             float32 z = cos(a);
+
+            ASSERT(norm(V3(x, y, z)) < 2.f);
 
             // position
             vbo_data[vbo_count++] = x;
@@ -274,6 +283,8 @@ cpu_mesh make_sphere()
     vbo_data[vbo_count++] = 0.0f;
     vbo_data[vbo_count++] = 0.0f;
     vbo_data[vbo_count++] = -1.0f;
+
+    ASSERT(vbo_count < ARRAY_COUNT(vbo_data));
 
     static uint32 ibo_data[1 << 10] = {};
     uint32 ibo_count = 0;
@@ -313,6 +324,8 @@ cpu_mesh make_sphere()
         ibo_data[ibo_count++] = (n - 1) * m + (j + 1) % m + 1;
     }
 
+    ASSERT(ibo_count < ARRAY_COUNT(ibo_data));
+
     printf("VBO Count = %d (%d); IBO Count = %d (%d);\n", vbo_count, (vbo_count / 6), ibo_count, (ibo_count / 3));
 
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data[0]) * vbo_count);
@@ -321,34 +334,6 @@ cpu_mesh make_sphere()
     auto vbl = vertex_buffer_layout::make();
     vbl.push<float>(3);
     vbl.push<float>(3);
-
-    cpu_mesh result;
-    result.vbo = vbo;
-    result.ibo = ibo;
-    result.vbl = vbl;
-
-    return result;
-}
-
-cpu_mesh make_square_uv()
-{
-    static float32 vbo_data[] = {
-        -1.0f, -1.0f,   0.0f, 0.0f,
-         1.0f, -1.0f,   1.0f, 0.0f,
-         1.0f,  1.0f,   1.0f, 1.0f,
-        -1.0f,  1.0f,   0.0f, 1.0f,
-    };
-    static uint32 ibo_data[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0, // second triangle
-    };
-
-    auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data));
-    auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data));
-
-    auto vbl = vertex_buffer_layout::make();
-    vbl.push<float>(2);
-    vbl.push<float>(2);
 
     cpu_mesh result;
     result.vbo = vbo;
@@ -368,6 +353,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
     }
 
     uint32 ibo_id = 0;
+    if (mesh.ibo)
     {
         glGenBuffers(1, &ibo_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
@@ -381,7 +367,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
         glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 
         uint32 stride = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.size; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.count; attrib_index++)
         {
             stride += (mesh.vbl.elements[attrib_index].count * sizeof(float32));
         }
@@ -389,7 +375,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
         console::print("stride = %d\n", stride);
 
         usize offset = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.size; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.count; attrib_index++)
         {
             uint32 count = mesh.vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
@@ -409,7 +395,8 @@ gpu_mesh load_mesh(cpu_mesh mesh)
     result.vbo = vbo_id;
     result.ibo = ibo_id;
     result.vao = vao_id;
-    result.count = (uint32) (mesh.ibo.size / sizeof(uint32));
+    result.count = mesh.ibo ? (uint32) (mesh.ibo.size / sizeof(uint32))
+                            : mesh.vbo.size / (sizeof(float32) * mesh.vbl.total_count);
 
     console::print("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, count = %d)\n", vao_id, vbo_id, ibo_id, result.count);
 

@@ -112,7 +112,7 @@ struct mesh_render_data
     uint32 count;
 };
 
-mesh_render_data *load_mesh(context *ctx, rs::mesh *mesh)
+mesh_render_data *aload_mesh(context *ctx, rs::mesh *mesh)
 {
     uint32 vertex_buffer_id = 0;
     {

@@ -16,8 +16,9 @@ struct vertex_buffer_layout_element
 
 struct vertex_buffer_layout
 {
-    uint32 size;
     vertex_buffer_layout_element elements[8];
+    uint32 total_count;
+    uint32 count;
 
     static vertex_buffer_layout make()
     {
@@ -29,7 +30,7 @@ struct vertex_buffer_layout
     void push(uint32 count)
     {
         ASSERT(count < ARRAY_COUNT(elements));
-        elements[size++].count = count;
+        elements[count++].count = count;
     }
 };
 

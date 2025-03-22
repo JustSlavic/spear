@@ -132,8 +132,8 @@ uniform vec4 u_color;
 void main()
 {
     fragment_color = u_color;
-    fragment_position = (u_view * u_model * vec4(vertex_position, 1.0)).xyz;
-    fragment_normal = vertex_normal;
+    fragment_position = vec3(u_model * vec4(vertex_position, 1.0));
+    fragment_normal = mat3(transpose(inverse(u_model))) * vertex_normal;
     gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
 }
 )GLSL";
@@ -148,16 +148,16 @@ out vec4 result_color;
 
 void main()
 {
-    // Just assume the light position is on (5, 5, 5)
-    vec3 light_position = vec3(5.0, 5.0, 5.0);
+    // Just assume the light position is on (5, -1, 5)
+    vec3 light_position = vec3(0.0, 0.0, 5.0);
     vec3 light_direction = normalize(light_position - fragment_position);
 
-    float ambient_light = 0.2;
-    vec4 ambient_color = ambient_light * fragment_color;
+    float ambient_light = 0.01;
+    vec3 ambient_color = ambient_light * fragment_color.rgb;
 
     float diffuse_light = max(dot(fragment_normal, light_direction), 0.0);
-    vec4 diffuse_color = fragment_color * diffuse_light;
+    vec3 diffuse_color = diffuse_light * fragment_color.rgb;
 
-    result_color = ambient_color + diffuse_color;
+    result_color = vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
 }
 )GLSL";
