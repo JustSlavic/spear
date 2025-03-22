@@ -170,7 +170,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->double_click_interval = duration::milliseconds(5);
 
     gs->camera = game::camera::look_at(V3(0, -15, 20), V3(0, 0, 0), V3(0, 0, 1));
-    gs->camera_speed = 2.f;
+    gs->camera_speed = 5.f;
 
     gs->turn_no = 1;
     gs->turn_timer_enabled = false;

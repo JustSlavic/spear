@@ -979,10 +979,10 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 matrix4::translate_z(2) *
                 matrix4::rotate_x(rotation_x) *
                 matrix4::rotate_z(rotation_z);
-            // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             // draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
             draw_platonic_solid(gpu_ico_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
-            // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view, projection);
             // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
             // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
