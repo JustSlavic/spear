@@ -242,7 +242,7 @@ cpu_mesh make_sphere()
 
     // Total vertices: n * m + 2
 
-    float32 vbo_data[1 << 10] =
+    static float32 vbo_data[1 << 10] =
     { // position            normal
          0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  1.0f, // top vertex
     };
@@ -286,7 +286,7 @@ cpu_mesh make_sphere()
         ibo_data[ibo_count++] = j + 1;
         ibo_data[ibo_count++] = (j + 1) % m + 1;
     }
-    printf("\n");
+
     for (int i = 1; i < n; i++)
     {
         for (int j = 0; j < m + 1; j++)
@@ -307,7 +307,7 @@ cpu_mesh make_sphere()
             ibo_data[ibo_count++] = (i - 1) * m + j % m + 1;       // t0
         }
     }
-    printf("\n");
+
     for (int j = 0; j < m; j++)
     {
         ibo_data[ibo_count++] = n * m + 1;
@@ -315,7 +315,7 @@ cpu_mesh make_sphere()
         ibo_data[ibo_count++] = (n - 1) * m + (j + 1) % m + 1;
     }
 
-    printf("VBO Count = %d (%d); IBO Count = %d (%d);\n", vbo_count, (vbo_count / 6), ibo_count, (ibo_count / 3));
+    console::print("VBO Count = %d (%d); IBO Count = %d (%d);\n", vbo_count, (vbo_count / 6), ibo_count, (ibo_count / 3));
 
     auto vbo = memory_buffer::from(vbo_data, sizeof(vbo_data[0]) * vbo_count);
     auto ibo = memory_buffer::from(ibo_data, sizeof(ibo_data[0]) * ibo_count);

@@ -67,33 +67,33 @@ Keyboard_Esc, // 0x1B    VK_ESCAPE               ESC key
 0,            // 0x3F                            Undefined
 
 0,            // 0x40                            Undefined
-0,            // 0x41                            A key
-0,            // 0x42                            B key
-0,            // 0x43                            C key
-0,            // 0x44                            D key
-0,            // 0x45                            E key
-0,            // 0x46                            F key
-0,            // 0x47                            G key
-0,            // 0x48                            H key
-0,            // 0x49                            I key
-0,            // 0x4A                            J key
-0,            // 0x4B                            K key
-0,            // 0x4C                            L key
-0,            // 0x4D                            M key
-0,            // 0x4E                            N key
-0,            // 0x4F                            O key
+Keyboard_A,   // 0x41                            A key
+Keyboard_B,            // 0x42                            B key
+Keyboard_C,            // 0x43                            C key
+Keyboard_D,            // 0x44                            D key
+Keyboard_E,            // 0x45                            E key
+Keyboard_F,            // 0x46                            F key
+Keyboard_G,            // 0x47                            G key
+Keyboard_H,            // 0x48                            H key
+Keyboard_I,            // 0x49                            I key
+Keyboard_J,            // 0x4A                            J key
+Keyboard_K,            // 0x4B                            K key
+Keyboard_L,            // 0x4C                            L key
+Keyboard_M,            // 0x4D                            M key
+Keyboard_N,            // 0x4E                            N key
+Keyboard_O,            // 0x4F                            O key
 
-0,            // 0x50                            P key
-0,            // 0x51                            Q key
-0,            // 0x52                            R key
-0,            // 0x53                            S key
-0,            // 0x54                            T key
-0,            // 0x55                            U key
-0,            // 0x56                            V key
-0,            // 0x57                            W key
-0,            // 0x58                            X key
-0,            // 0x59                            Y key
-0,            // 0x5A                            Z key
+Keyboard_P,            // 0x50                            P key
+Keyboard_Q,            // 0x51                            Q key
+Keyboard_R,            // 0x52                            R key
+Keyboard_S,            // 0x53                            S key
+Keyboard_T,            // 0x54                            T key
+Keyboard_U,            // 0x55                            U key
+Keyboard_V,            // 0x56                            V key
+Keyboard_W,            // 0x57                            W key
+Keyboard_X,            // 0x58                            X key
+Keyboard_Y,            // 0x59                            Y key
+Keyboard_Z,            // 0x5A                            Z key
 0,            // 0x5B    VK_LWIN                 Left Windows key
 0,            // 0x5C    VK_RWIN                 Right Windows key
 0,            // 0x5D    VK_APPS                 Applications key
@@ -117,18 +117,18 @@ Keyboard_Esc, // 0x1B    VK_ESCAPE               ESC key
 0,            // 0x6E    VK_DECIMAL              Decimal key
 0,            // 0x6F    VK_DIVIDE               Divide key
 
-0,            // 0x70    VK_F1                   F1 key
-0,            // 0x71    VK_F2                   F2 key
-0,            // 0x72    VK_F3                   F3 key
-0,            // 0x73    VK_F4                   F4 key
-0,            // 0x74    VK_F5                   F5 key
-0,            // 0x75    VK_F6                   F6 key
-0,            // 0x76    VK_F7                   F7 key
-0,            // 0x77    VK_F8                   F8 key
-0,            // 0x78    VK_F9                   F9 key
-0,            // 0x79    VK_F10                  F10 key
-0,            // 0x7A    VK_F11                  F11 key
-0,            // 0x7B    VK_F12                  F12 key
+Keyboard_F1,            // 0x70    VK_F1                   F1 key
+Keyboard_F2,            // 0x71    VK_F2                   F2 key
+Keyboard_F3,            // 0x72    VK_F3                   F3 key
+Keyboard_F4,            // 0x73    VK_F4                   F4 key
+Keyboard_F5,            // 0x74    VK_F5                   F5 key
+Keyboard_F6,            // 0x75    VK_F6                   F6 key
+Keyboard_F7,            // 0x76    VK_F7                   F7 key
+Keyboard_F8,            // 0x77    VK_F8                   F8 key
+Keyboard_F9,            // 0x78    VK_F9                   F9 key
+Keyboard_F10,            // 0x79    VK_F10                  F10 key
+Keyboard_F11,            // 0x7A    VK_F11                  F11 key
+Keyboard_F12,            // 0x7B    VK_F12                  F12 key
 0,            // 0x7C    VK_F13                  F13 key
 0,            // 0x7D    VK_F14                  F14 key
 0,            // 0x7E    VK_F15                  F15 key

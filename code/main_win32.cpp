@@ -825,6 +825,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto cpu_icosahedron = make_platonic_icosahedron();
     auto gpu_icosahedron = load_mesh(cpu_icosahedron);
 
+    auto cpu_ico_sphere = make_ico_sphere(ctx.temporary_allocator, global_arena);
+    auto gpu_ico_sphere = load_mesh(cpu_ico_sphere);
+
 
     auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
@@ -866,6 +869,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
         reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
+        reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
         input.mouse.scroll = 0;
         process_pending_messages(&input);
         win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
@@ -948,8 +952,15 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 s->uniform("u_color", cmd.color);
 
                 glBindVertexArray(gpu_cube.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_cube.ibo);
-                glDrawElements(GL_TRIANGLES, gpu_cube.count, GL_UNSIGNED_INT, NULL);
+                if (gpu_cube.ibo)
+                {
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_cube.ibo);
+                    glDrawElements(GL_TRIANGLES, gpu_cube.count, GL_UNSIGNED_INT, NULL);
+                }
+                else
+                {
+                    glDrawArrays(GL_TRIANGLES, 0, gpu_cube.count);
+                }
             }
             else if (cmd.kind == rend_command::render_ui)
             {
@@ -968,10 +979,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 matrix4::translate_z(2) *
                 matrix4::rotate_x(rotation_x) *
                 matrix4::rotate_z(rotation_z);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view, projection);
+            // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            // draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
+            draw_platonic_solid(gpu_ico_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
+            // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view, projection);
             // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
             // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
             rotation_x += 0.01f;

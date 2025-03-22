@@ -308,3 +308,171 @@ cpu_mesh make_platonic_icosahedron()
 
     return result;
 }
+
+
+cpu_mesh make_ico_sphere(memory_allocator temp_allocator, memory_allocator allocator)
+{
+    float phi = (1.0f + sqrtf(5.0f)) * 0.5f;
+    float a = 1.0f;
+    float b = 1.0f / phi;
+
+    vector3 vertices[12] =
+    {
+        V3( b,  a,  0),
+        V3( 0,  b,  a),
+        V3( a,  0,  b),
+        V3(-b,  a,  0),
+        V3( 0, -b,  a),
+        V3( a,  0, -b),
+        V3( b, -a,  0),
+        V3( 0,  b, -a),
+        V3(-a,  0,  b),
+        V3(-b, -a,  0),
+        V3( 0, -b, -a),
+        V3(-a,  0, -b),
+    };
+
+    uint32 ibo_data[20 * 3] =
+    {
+        3, 0, 7,
+        0, 3, 1,
+        8, 4, 1,
+        4, 2, 1,
+        5, 10, 7,
+        10, 11, 7,
+        9, 6, 4,
+        6, 9, 10,
+        11, 8, 3,
+        8, 11, 9,
+        2, 5, 0,
+        5, 2, 6,
+        3, 8, 1,
+        2, 0, 1,
+        11, 3, 7,
+        0, 5, 7,
+        9, 11, 10,
+        5, 6, 10,
+        8, 9, 4,
+        6, 2, 4,
+    };
+
+    // How many vertices will be after subdivide?
+    // All current vertices will remain, but for each
+    // edge, will be additional vertex
+    // ARRAY_COUNT(ibo_data) / 2 is the number of
+    // ADDITIONAL vertices
+
+    auto new_vertices = temp_allocator.allocate_array<vector3>(ARRAY_COUNT(vertices) * ARRAY_COUNT(ibo_data) / 2);
+    uint32 index_map_dim = ARRAY_COUNT(vertices);
+    auto index_map = temp_allocator.allocate_array<uint32>(index_map_dim * index_map_dim);
+    index_map.resize(index_map_dim * index_map_dim);
+
+    // Copy all current vertices
+    for (int i = 0; i < ARRAY_COUNT(vertices); i++)
+    {
+        new_vertices.push_back(vertices[i]);
+    }
+
+    int new_vertices_count = 0;
+    // Push new vertices for all edges and record its indices into index map:
+    for (int i = 0; i < ARRAY_COUNT(ibo_data); i+=3)
+    {
+        uint32 iis[4] =
+        {
+            ibo_data[i + 0],
+            ibo_data[i + 1],
+            ibo_data[i + 2],
+            ibo_data[i + 0],
+        };
+        for (int j = 0; j < 3; j++)
+        {
+            uint32 i0 = iis[j];
+            uint32 i1 = iis[j + 1];
+            uint32 index = index_map[i0 * index_map_dim + i1];
+            if (index == 0)
+            {
+                index = (uint32) new_vertices.size();
+                vector3 v01 = 0.5f * (new_vertices[i0] + new_vertices[i1]);
+                new_vertices.push_back(v01);
+                index_map[i0 * index_map_dim + i1] = index;
+                index_map[i1 * index_map_dim + i0] = index;
+            }
+        }
+    }
+
+    // Now when we have more vertices and index_map,
+    // we can create new index buffer object (ibo)
+
+    uint32 old_triangle_count = ARRAY_COUNT(ibo_data) / 3;
+    uint32 new_triangle_count = 4 * old_triangle_count;
+    auto new_ibo_array = temp_allocator.allocate_array<uint32>(3 * new_triangle_count);
+    for (int i = 0; i < ARRAY_COUNT(ibo_data); i += 3)
+    {
+        /*
+                 0
+                / \
+               01  20
+              /     \
+             1---12--2
+        */
+
+        uint32 i0 = ibo_data[i + 0];
+        uint32 i1 = ibo_data[i + 1];
+        uint32 i2 = ibo_data[i + 2];
+
+        uint32 i01 = index_map[i0 * index_map_dim + i1];
+        uint32 i12 = index_map[i1 * index_map_dim + i2];
+        uint32 i20 = index_map[i2 * index_map_dim + i0];
+
+        new_ibo_array.push_back(i0);
+        new_ibo_array.push_back(i01);
+        new_ibo_array.push_back(i20);
+
+        new_ibo_array.push_back(i01);
+        new_ibo_array.push_back(i1);
+        new_ibo_array.push_back(i12);
+
+        new_ibo_array.push_back(i20);
+        new_ibo_array.push_back(i12);
+        new_ibo_array.push_back(i2);
+
+        new_ibo_array.push_back(i20);
+        new_ibo_array.push_back(i01);
+        new_ibo_array.push_back(i12);
+    }
+
+    auto vbo = allocator.allocate_buffer(new_vertices.size() * (2 * sizeof(vector3)));
+    auto vbo_data = (float32 *) vbo.data;
+    auto vbo_count = 0;
+    for (int i = 0; i < new_vertices.size(); i++)
+    {
+        auto normal = norm(new_vertices[i]);
+
+        vbo_data[vbo_count++] = new_vertices[i].x / normal;
+        vbo_data[vbo_count++] = new_vertices[i].y / normal;
+        vbo_data[vbo_count++] = new_vertices[i].z / normal;
+        vbo_data[vbo_count++] = new_vertices[i].x / normal;
+        vbo_data[vbo_count++] = new_vertices[i].y / normal;
+        vbo_data[vbo_count++] = new_vertices[i].z / normal;
+    }
+
+    auto ibo = allocator.allocate_buffer(new_ibo_array.size() * sizeof(uint32));
+    auto ibo_data_ = (uint32 *) ibo.data;
+    auto ibo_count = 0;
+    for (int i = 0; i < new_ibo_array.size(); i++)
+    {
+        ibo_data_[ibo_count++] = new_ibo_array[i];
+    }
+
+    auto vbl = vertex_buffer_layout::make();
+    vbl.push<float>(3);
+    vbl.push<float>(3);
+
+    cpu_mesh result;
+    result.vbo = vbo;
+    result.ibo = ibo;
+    result.vbl = vbl;
+
+    return result;
+}
+
