@@ -4,6 +4,7 @@
 #include <base.h>
 #include <time.hpp>
 
+#include <input.hpp>
 #include <math/vector4.hpp>
 #include <memory/allocator.hpp>
 #include <ecs/entity_manager.hpp>

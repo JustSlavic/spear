@@ -207,15 +207,6 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs, -1, -1);
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
-
-    float4 vx = v_make_float4(0.1, 0.2, 0.1, 0.3);
-    float4 vy = v_make_float4(0.7, 0.1, 0.1, 0.8);
-    float4 vz = v_dot(vx, vy);
-
-    float vv[4] = {};
-    v_st(vv, vz);
-
-    console::print("A. %f, %f, %f, %f\n", vv[0], vv[1], vv[2], vv[3]);
 }
 
 

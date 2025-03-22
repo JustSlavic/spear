@@ -592,7 +592,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
 
 uint32 vk_to_button_id[] =
 {
-#include "vk_to_button.inl"
+#include "win32_vk_to_button.inl"
 };
 
 void process_pending_messages(input_state *input)
@@ -633,7 +633,7 @@ void process_pending_messages(input_state *input)
                 bool32 was_down = (message.lParam & (1 << 30)) != 0;
                 bool32 is_down  = (message.lParam & (1 << 31)) == 0;
 
-                process_button_state(&input->keyboard[vk_to_button_id[virtual_key_code]], is_down);
+                process_button_state(&input->keyboard_and_mouse.buttons[vk_to_button_id[virtual_key_code]], is_down);
             }
             break;
 
