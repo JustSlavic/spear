@@ -307,6 +307,7 @@ const char* gl_get_error_string(GLenum err) {
 #endif
 
 #include <common_graphics.hpp>
+#include <platonic_solids.hpp>
 
 Character find_font_character(char c)
 {
@@ -321,6 +322,26 @@ Character find_font_character(char c)
     return {};
 }
 
+void draw_platonic_solid(gpu_mesh mesh, shader s, vector4 c, matrix4 m, matrix4 v, matrix4 p)
+{
+    glUseProgram(s.id);
+
+    s.uniform("u_model", m);
+    s.uniform("u_view", v);
+    s.uniform("u_projection", p);
+    s.uniform("u_color", c);
+
+    glBindVertexArray(mesh.vao);
+    if (mesh.ibo)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+        glDrawElements(GL_TRIANGLES, mesh.count, GL_UNSIGNED_INT, NULL);
+    }
+    else
+    {
+        glDrawArrays(GL_TRIANGLES, 0, mesh.count);
+    }
+}
 
 namespace win32 {
 
@@ -700,7 +721,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     initialize_opengl();
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(true);
     glEnable(GL_DEPTH_TEST);
     wglSwapIntervalEXT(1);
@@ -787,10 +809,28 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto cpu_square_uv = make_square_uv();
     auto gpu_square_uv = load_mesh(cpu_square_uv);
 
+
+    auto cpu_sphere = make_sphere();
+    auto gpu_sphere = load_mesh(cpu_sphere);
+
+    auto cpu_tetrahedron = make_platonic_tetrahedron();
+    auto gpu_tetrahedron = load_mesh(cpu_tetrahedron);
+
+    auto cpu_platonic_cube = make_platonic_cube();
+    auto gpu_platonic_cube = load_mesh(cpu_cube);
+
+    auto cpu_octahedron = make_platonic_octahedron();
+    auto gpu_octahedron = load_mesh(cpu_octahedron);
+
+    auto cpu_icosahedron = make_platonic_icosahedron();
+    auto gpu_icosahedron = load_mesh(cpu_icosahedron);
+
+
     auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
     auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
     auto shader_text = compile_shaders(vs_text, fs_text);
+    auto shader_phong = compile_shaders(vs_phong, fs_phong);
 
     auto font_content = platform::load_file("font.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &ctx.temporary_allocator, font_content);
@@ -919,6 +959,27 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         ctx.rend_commands.clear();
 
         GL_CHECK_ERRORS();
+
+        // Do spere (planet?)
+        {
+            static float32 rotation_x = 0.f;
+            static float32 rotation_z = 0.f;
+            matrix4 platonic_model_matrix =
+                matrix4::translate_z(2) *
+                matrix4::rotate_x(rotation_x) *
+                matrix4::rotate_z(rotation_z);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view, projection);
+            // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
+            // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
+            rotation_x += 0.01f;
+            rotation_z += 0.01f;
+            if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
+            if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
+        }
+
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -1079,3 +1140,4 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #include <ecs/entity_manager.cpp>
 #include <ecs/archetype.cpp>
 #endif // DLL_BUILD
+#include <platonic_solids.cpp>

@@ -56,8 +56,9 @@ struct vertex_buffer_layout_element
 
 struct vertex_buffer_layout
 {
-    uint32 size;
     vertex_buffer_layout_element elements[8];
+    uint32 count;
+    uint32 total_count;
 
     static vertex_buffer_layout make()
     {
@@ -66,10 +67,11 @@ struct vertex_buffer_layout
     }
 
     template <typename T>
-    void push(uint32 count)
+    void push(uint32 n)
     {
         ASSERT(count < ARRAY_COUNT(elements));
-        elements[size++].count = count;
+        elements[count++].count = n;
+        total_count += n;
     }
 };
 
@@ -368,6 +370,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
     }
 
     uint32 ibo_id = 0;
+    if (mesh.ibo)
     {
         glGenBuffers(1, &ibo_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
@@ -381,7 +384,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
         glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 
         uint32 stride = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.size; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.count; attrib_index++)
         {
             stride += (mesh.vbl.elements[attrib_index].count * sizeof(float32));
         }
@@ -389,7 +392,7 @@ gpu_mesh load_mesh(cpu_mesh mesh)
         console::print("stride = %d\n", stride);
 
         usize offset = 0;
-        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.size; attrib_index++)
+        for (uint32 attrib_index = 0; attrib_index < mesh.vbl.count; attrib_index++)
         {
             uint32 count = mesh.vbl.elements[attrib_index].count;
             glEnableVertexAttribArray(attrib_index);
@@ -409,7 +412,8 @@ gpu_mesh load_mesh(cpu_mesh mesh)
     result.vbo = vbo_id;
     result.ibo = ibo_id;
     result.vao = vao_id;
-    result.count = (uint32) (mesh.ibo.size / sizeof(uint32));
+    result.count = mesh.ibo ? (uint32) (mesh.ibo.size / sizeof(uint32))
+                            : (uint32) mesh.vbo.size / (sizeof(float32) * mesh.vbl.total_count);
 
     console::print("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, count = %d)\n", vao_id, vbo_id, ibo_id, result.count);
 
