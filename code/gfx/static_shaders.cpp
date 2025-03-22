@@ -133,7 +133,7 @@ void main()
 {
     fragment_color = u_color;
     fragment_position = (u_view * u_model * vec4(vertex_position, 1.0)).xyz;
-    fragment_normal = vertex_normal;
+    fragment_normal = mat3(transpose(inverse(u_model))) * vertex_normal;
     gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
 }
 )GLSL";
@@ -153,11 +153,11 @@ void main()
     vec3 light_direction = normalize(light_position - fragment_position);
 
     float ambient_light = 0.2;
-    vec4 ambient_color = ambient_light * fragment_color;
+    vec3 ambient_color = ambient_light * fragment_color.rgb;
 
     float diffuse_light = max(dot(fragment_normal, light_direction), 0.0);
-    vec4 diffuse_color = fragment_color * diffuse_light;
+    vec3 diffuse_color = diffuse_light * fragment_color.rgb;
 
-    result_color = ambient_color + diffuse_color;
+    result_color = vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
 }
 )GLSL";

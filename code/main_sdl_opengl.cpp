@@ -255,8 +255,8 @@ int main()
     auto cpu_tetrahedron = make_platonic_tetrahedron();
     auto gpu_tetrahedron = load_mesh(cpu_tetrahedron);
 
-    auto cpu_cube = make_platonic_cube();
-    auto gpu_cube = load_mesh(cpu_cube);
+    // auto cpu_cube = make_platonic_cube();
+    // auto gpu_cube = load_mesh(cpu_cube);
 
     auto cpu_octahedron = make_platonic_octahedron();
     auto gpu_octahedron = load_mesh(cpu_octahedron);
@@ -398,10 +398,10 @@ int main()
             matrix4::translate_z(2) *
             matrix4::rotate_x(rotation_x) *
             matrix4::rotate_z(rotation_z);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view_matrix, proj_matrix);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         rotation_x += 0.01f;
@@ -494,7 +494,6 @@ int main()
                     count += 6;
                 }
 
-                glEnable(GL_BLEND);
                 glBindVertexArray(gpu_square_uv.vao);
 
                 glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
@@ -502,7 +501,6 @@ int main()
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
                 glDrawArrays(GL_TRIANGLES, 0, count);
-                glDisable(GL_BLEND);
             }
             else
             {
