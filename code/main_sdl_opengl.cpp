@@ -264,6 +264,9 @@ int main()
     auto cpu_icosahedron = make_platonic_icosahedron();
     auto gpu_icosahedron = load_mesh(cpu_icosahedron);
 
+    auto cpu_ico_sphere = make_ico_sphere(temporary_allocator, global_arena);
+    auto gpu_ico_sphere = load_mesh(cpu_ico_sphere);
+
     auto cpu_square_uv = make_square_uv();
     auto gpu_square_uv = load_mesh(cpu_square_uv);
 
@@ -346,11 +349,11 @@ int main()
 
         for (auto cmd : ctx.rend_commands)
         {
-            if (cmd.kind == rend_command::setup_camera)
+            if (cmd.tag == RenderCommand_SetupCamera)
             {
                 view_matrix = make_lookat_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
             }
-            else if (cmd.kind == rend_command::render_square)
+            else if (cmd.tag == RenderCommand_RenderSquare)
             {
                 glUseProgram(shader_color.id);
 
@@ -363,7 +366,7 @@ int main()
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_cube)
+            else if (cmd.tag == RenderCommand_RenderCube)
             {
                 shader *s = NULL;
                 if (cmd.shader == SHADER_COLOR)
@@ -384,7 +387,17 @@ int main()
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_cube.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_cube.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_ui)
+            else if (cmd.tag == RenderCommand_RenderSphere)
+            {
+                matrix4 m = matrix4::translate(cmd.position) *
+                    matrix4::scale(cmd.scale);
+            draw_platonic_solid(
+                gpu_ico_sphere,
+                shader_phong,
+                cmd.color,
+                m, view_matrix, proj_matrix);
+            }
+            else if (cmd.tag == RenderCommand_RenderUi)
             {
                 ASSERT_FAIL("RenderUI command in wrong array!");
             }
@@ -392,22 +405,17 @@ int main()
         ctx.rend_commands.clear();
 
         // Do spere (planet?)
-        static float32 rotation_x = 0.f;
-        static float32 rotation_z = 0.f;
-        matrix4 platonic_model_matrix =
-            matrix4::translate_z(2) *
-            matrix4::rotate_x(rotation_x) *
-            matrix4::rotate_z(rotation_z);
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view_matrix, proj_matrix);
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        matrix4 platonic_model_matrix = matrix4::identity();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        draw_platonic_solid(gpu_ico_sphere, shader_color, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
-        rotation_x += 0.01f;
-        rotation_z += 0.01f;
-        if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
-        if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
+        // rotation_x += 0.01f;
+        // rotation_z += 0.01f;
+        // if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
+        // if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -415,7 +423,7 @@ int main()
 
         for (auto cmd : ctx.rend_commands_ui)
         {
-            if (cmd.kind == rend_command::render_ui)
+            if (cmd.tag == RenderCommand_RenderUi)
             {
                 glUseProgram(shader_color.id);
 
@@ -427,7 +435,7 @@ int main()
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_banner)
+            else if (cmd.tag == RenderCommand_RenderBanner)
             {
                 auto pNDC = proj_matrix * view_matrix * matrix4::translate(cmd.position) * V4(0, 0, 0, 1);
                 pNDC /= pNDC.w;
@@ -446,7 +454,7 @@ int main()
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_text)
+            else if (cmd.tag == RenderCommand_RenderText)
             {
                 glUseProgram(shader_text.id);
                 shader_text.uniform("u_model", cmd.model);

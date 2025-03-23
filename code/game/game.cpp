@@ -215,6 +215,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs, -1, -1);
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
+
+    spawn_planet(gs, V3(0, 3, 1), V3(0, 0, 0), 0.1f, 5.f);
+    spawn_planet(gs, V3(15, -1, -2), V3(0, 0, 0), 3.6f, 5.f);
 }
 
 

@@ -4,6 +4,7 @@
 #include "systems/input.hpp"
 #include "systems/update.hpp"
 #include "systems/render.hpp"
+#include "systems/planets.hpp"
 
 
 namespace game {
@@ -35,22 +36,26 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
     }
     remove_dead_entities(ctx, gs, input);
     next_turn(ctx, gs, input);
+
+    move_planets_around_origin(gs);
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)
 {
-    render_ground(ctx, gs, input);
-    render_character_page(ctx, gs, input);
-    render_hero(ctx, gs, input);
-    render_monsters(ctx, gs, input);
-    render_stones(ctx, gs, input);
-    render_timer(ctx, gs, input);
-    if (gs->is_in_battle)
-    {
-        render_battle_queue(ctx, gs, input);
-    }
+    // render_ground(ctx, gs, input);
+    // render_character_page(ctx, gs, input);
+    // render_hero(ctx, gs, input);
+    // render_monsters(ctx, gs, input);
+    // render_stones(ctx, gs, input);
+    // render_timer(ctx, gs, input);
+    // if (gs->is_in_battle)
+    // {
+    //     render_battle_queue(ctx, gs, input);
+    // }
     // render_dialogue(ctx, gs, input);
     // render_field(ctx, gs, input);
+
+    render_planets(ctx, gs);
 }
 
 void on_every_frame(context *ctx, game_state *gs, input_state *input)

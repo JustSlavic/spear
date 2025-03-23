@@ -56,6 +56,8 @@ enum entity_kind
     ENTITY_HERO,
     ENTITY_MONSTER,
     ENTITY_STONE,
+
+    Entity_Planet,
 };
 
 struct entity
@@ -76,6 +78,12 @@ struct entity
     
     int strength;
     int agility;
+
+    // Planet stuff
+    vector3 position;
+    vector3 velocity;
+    float32 radius;
+    float32 mass;
 };
 
 enum input_action_bits
@@ -137,6 +145,7 @@ struct game_state
     entity entities[ECS_MAX_ENTITIES];
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
     static_array<ecs::entity_id, 25> stones;
+    static_array<ecs::entity_id, 25> planets;
 
     static_array<ecs::entity_id, 32> battle_queue;
     uint32 battle_queue_current_slot;

@@ -13,22 +13,26 @@ enum shader_enum
     SHADER_GROUND,
 };
 
+enum render_command_tag
+{
+    RenderCommand_SetupCamera,
+    RenderCommand_RenderSquare,
+    RenderCommand_RenderCube,
+    RenderCommand_RenderUi,
+    RenderCommand_RenderBanner,
+    RenderCommand_RenderText,
+
+    RenderCommand_RenderSphere,
+};
+
 struct rend_command
 {
-    enum rend_command_kind
-    {
-        setup_camera,
-        render_square,
-        render_cube,
-        render_ui,
-        render_banner,
-        render_text,
-    };
-    rend_command_kind kind;
+    render_command_tag tag;
 
     vector3 position;
     vector3 forward;
     vector3 up;
+    float32 scale;
 
     matrix4 model;
     vector4 color;
