@@ -56,7 +56,8 @@ void camera_movement(game_state *gs, input_state *input)
     if (get_hold_count(gs, input, PlayerAction_RotateCameraDown)) camera_rotate_q *= quaternion::rotate(-0.01f, cross(gs->camera.forward, gs->camera.up));
     if (get_hold_count(gs, input, PlayerAction_RotateCameraLeft)) camera_rotate_q *= quaternion::rotate(0.01f, gs->camera.up);
     if (get_hold_count(gs, input, PlayerAction_RotateCameraRight)) camera_rotate_q *= quaternion::rotate(-0.01f, gs->camera.up);
-
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraRollLeft)) camera_rotate_q *= quaternion::rotate(-0.01f, gs->camera.forward);
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraRollRight)) camera_rotate_q *= quaternion::rotate(0.01f, gs->camera.forward);
     // if (get_hold_count(gs, input, PlayerAction_RotateCameraUp)) camera_rotate_q = gs->camera.up * gs->camera.forward;
 
     if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);

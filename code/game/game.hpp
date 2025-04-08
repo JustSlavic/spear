@@ -85,6 +85,8 @@ struct entity
     float32 radius;
     float32 mass;
     quaternion orientation;
+
+    int32 phys_world_handler;
 };
 
 enum input_action_bits
@@ -111,6 +113,8 @@ enum
     PlayerAction_RotateCameraDown,
     PlayerAction_RotateCameraLeft,
     PlayerAction_RotateCameraRight,
+    PlayerAction_RotateCameraRollLeft,
+    PlayerAction_RotateCameraRollRight,
 
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,
@@ -138,6 +142,31 @@ struct game_field
     void set_eid(int x, int y, ecs::entity_id eid);
 };
 
+namespace phys
+{
+
+#define PHYS_SIMULATION_FREQUENCY (1.0 / 120.0)
+
+struct body
+{
+    vector3 position;
+    vector3 velocity;
+
+    float32 inv_mass;
+};
+
+struct world
+{
+    body bodies[32];
+    uint32 body_count;
+
+    float32 residual_dt;
+};
+
+void update_world(phys::world *world, float32 dt);
+
+
+} // phys
 
 struct game_state
 {
@@ -147,6 +176,8 @@ struct game_state
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
     static_array<ecs::entity_id, 25> stones;
     static_array<ecs::entity_id, 25> planets;
+
+    phys::world phys_world;
 
     static_array<ecs::entity_id, 32> battle_queue;
     uint32 battle_queue_current_slot;

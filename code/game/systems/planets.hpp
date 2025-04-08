@@ -15,15 +15,24 @@ ecs::entity_id spawn_planet(game_state *gs, vector3 p, vector3 v, float32 r, flo
     e->radius = r;
     e->mass = m;
     e->orientation = q;
+    e->phys_world_handler = gs->phys_world.body_count;
+
+    auto *b = gs->phys_world.bodies + gs->phys_world.body_count++;
+    b->position = p;
+    b->velocity = v;
+    b->inv_mass = 1.0f / m;
+
     return eid;
 }
 
-void move_planets_around_origin(game_state *gs)
+void move_planets(game_state *gs)
 {
     for (auto eid : gs->planets)
     {
         auto *e = gs->entities + eid.get_index();
         e->orientation = quaternion::rotate_x(to_radians(0.1f)) * e->orientation;
+        auto *b = gs->phys_world.bodies + e->phys_world_handler;
+        e->position = b->position;
     }
 }
 

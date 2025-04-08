@@ -152,16 +152,22 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
     bind_action_to_button(&gs->player_actions, Keyboard_I, PlayerAction_ToggleFreeCamera);
-    bind_action_to_button(&gs->player_actions, Keyboard_W, PlayerAction_MoveCameraForward);
-    bind_action_to_button(&gs->player_actions, Keyboard_S, PlayerAction_MoveCameraBackward);
+
+    bind_action_to_button(&gs->player_actions, Keyboard_W, PlayerAction_MoveCameraUp);
+    bind_action_to_button(&gs->player_actions, Keyboard_S, PlayerAction_MoveCameraDown);
     bind_action_to_button(&gs->player_actions, Keyboard_A, PlayerAction_MoveCameraLeft);
     bind_action_to_button(&gs->player_actions, Keyboard_D, PlayerAction_MoveCameraRight);
+
+    bind_action_to_button(&gs->player_actions, Keyboard_F, PlayerAction_MoveCameraForward);
+    bind_action_to_button(&gs->player_actions, Keyboard_B, PlayerAction_MoveCameraBackward);
+
     bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
     bind_action_to_button(&gs->player_actions, Keyboard_Down, PlayerAction_RotateCameraDown);
     bind_action_to_button(&gs->player_actions, Keyboard_Left, PlayerAction_RotateCameraLeft);
     bind_action_to_button(&gs->player_actions, Keyboard_Right, PlayerAction_RotateCameraRight);
-    bind_action_to_button(&gs->player_actions, Keyboard_R, PlayerAction_MoveCameraUp);
-    bind_action_to_button(&gs->player_actions, Keyboard_F, PlayerAction_MoveCameraDown);
+    bind_action_to_button(&gs->player_actions, Keyboard_Q, PlayerAction_RotateCameraRollLeft);
+    bind_action_to_button(&gs->player_actions, Keyboard_E, PlayerAction_RotateCameraRollRight);
+
     bind_action_to_button(&gs->player_actions, Keyboard_P, PlayerAction_SpawnMonster);
     bind_action_to_button(&gs->player_actions, Keyboard_O, PlayerAction_SpawnStone);
 
@@ -229,7 +235,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     //     quaternion::rotate_x(to_radians(60)));
     // spawn_planet(gs, V3(-2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
     //     quaternion::rotate_x(to_radians(90)));
-    spawn_planet(gs, V3( 0.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    spawn_planet(gs, V3( 0.0, 0, 0), V3(0.1, 0.1, 0), 1.0f, 5.f,
         quaternion::identity());
     // spawn_planet(gs, V3( 2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
     //     quaternion::rotate_x(to_radians(150)));
@@ -241,9 +247,29 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state *input)
 {
     auto gs = (game_state *) ctx->game_state;
+    phys::update_world(&gs->phys_world, input->dt);
     game::on_every_frame(ctx, gs, input);
 }
 
+namespace phys {
+
+void update_world(phys::world *world, float32 dt)
+{
+    dt += world->residual_dt;
+    int32 num_steps = (int32) floor(dt / PHYS_SIMULATION_FREQUENCY);
+    world->residual_dt = dt - num_steps * PHYS_SIMULATION_FREQUENCY;
+    for (int step = 0; step < num_steps; step++)
+    {
+        for (int body_index = 0; body_index < world->body_count; body_index++)
+        {
+            body *b = world->bodies + body_index;
+            b->position = b->position + b->velocity * PHYS_SIMULATION_FREQUENCY;
+        }
+    }
+    console::print("num steps = %d\n", num_steps);
+}
+
+} // phys
 
 #if DLL_BUILD
 #include <context.cpp>

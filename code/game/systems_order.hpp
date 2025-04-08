@@ -37,7 +37,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
     remove_dead_entities(ctx, gs, input);
     next_turn(ctx, gs, input);
 
-    move_planets_around_origin(gs);
+    move_planets(gs);
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)
