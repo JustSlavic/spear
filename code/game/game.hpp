@@ -84,6 +84,7 @@ struct entity
     vector3 velocity;
     float32 radius;
     float32 mass;
+    quaternion orientation;
 };
 
 enum input_action_bits

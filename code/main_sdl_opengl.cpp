@@ -255,8 +255,8 @@ int main()
     auto cpu_tetrahedron = make_platonic_tetrahedron();
     auto gpu_tetrahedron = load_mesh(cpu_tetrahedron);
 
-    // auto cpu_cube = make_platonic_cube();
-    // auto gpu_cube = load_mesh(cpu_cube);
+    auto cpu_platonic_cube = make_platonic_cube();
+    auto gpu_platonic_cube = load_mesh(cpu_platonic_cube);
 
     auto cpu_octahedron = make_platonic_octahedron();
     auto gpu_octahedron = load_mesh(cpu_octahedron);
@@ -390,12 +390,23 @@ int main()
             else if (cmd.tag == RenderCommand_RenderSphere)
             {
                 matrix4 m = matrix4::translate(cmd.position) *
-                    matrix4::scale(cmd.scale);
-            draw_platonic_solid(
-                gpu_ico_sphere,
-                shader_phong,
-                cmd.color,
-                m, view_matrix, proj_matrix);
+                            matrix4::scale(cmd.scale);
+
+                m[0].xyz = apply_unit_quaternion(cmd.quat, m[0].xyz);
+                m[1].xyz = apply_unit_quaternion(cmd.quat, m[1].xyz);
+                m[2].xyz = apply_unit_quaternion(cmd.quat, m[2].xyz);
+
+                draw_platonic_solid(
+                    gpu_icosahedron,
+                    shader_phong,
+                    V4(0.2, 1, 0, 1),
+                    m, view_matrix, proj_matrix);
+
+                // draw_platonic_solid(
+                //     gpu_ico_sphere,
+                //     shader_phong,
+                //     cmd.color,
+                //     m, view_matrix, proj_matrix);
             }
             else if (cmd.tag == RenderCommand_RenderUi)
             {
@@ -405,17 +416,19 @@ int main()
         ctx.rend_commands.clear();
 
         // Do spere (planet?)
-        matrix4 platonic_model_matrix = matrix4::identity();
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        draw_platonic_solid(gpu_ico_sphere, shader_color, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        static float32 rotation_x = 0.f;
+        static float32 rotation_z = 0.f;
+        matrix4 platonic_model_matrix = matrix4::translate_z(-3) * matrix4::rotate_x(rotation_x) * matrix4::rotate_z(rotation_z);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(0.2, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
         // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
-        // rotation_x += 0.01f;
-        // rotation_z += 0.01f;
-        // if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
-        // if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
+        rotation_x += 0.01f;
+        rotation_z += 0.01f;
+        if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
+        if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -456,59 +469,71 @@ int main()
             }
             else if (cmd.tag == RenderCommand_RenderText)
             {
-                glUseProgram(shader_text.id);
-                shader_text.uniform("u_model", cmd.model);
-                shader_text.uniform("u_projection", proj_matrix_ui);
-                shader_text.uniform("u_color", cmd.color);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, font_texture.id);
-
-                float32 posx = 0.f;
-                float32 posy = 0.f;
-                uint32 count = 0;
-
-                string_view strview = string_view::from(cmd.cstr);
-                auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
-                auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
-
-                char c = 0;
-                for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+                if (font_texture.id == 0)
                 {
-                    Character glyph = find_font_character(c);
-
-                    float32 px = (float32) posx - glyph.originX;
-                    float32 py = (float32) posy - glyph.originY;
-                    float32 w  = (float32) glyph.width;
-                    float32 h  = (float32) glyph.height;
-
-                    float32 uv_x = (float32) glyph.x / font_Arial.width;
-                    float32 uv_y = (float32) glyph.y / font_Arial.height;
-                    float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
-                    float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
-
-                    float32 vbo_data[] = {
-                         px,     py,       uv_x,  uv_y,
-                         px + w, py,       uv_x1, uv_y,
-                         px    , py + h,   uv_x,  uv_y1,
-
-                         px + w, py,       uv_x1, uv_y,
-                         px + w, py + h,   uv_x1, uv_y1,
-                         px,     py + h,   uv_x,  uv_y1,
-                    };
-
-                    seri_buffer.push(vbo_data, sizeof(vbo_data));
-                    posx += glyph.width;
-                    count += 6;
+                    PERSIST bool32 log_once = 1;
+                    if (log_once)
+                    {
+                        console::print("Error: font texture isn't loaded!\n");
+                        log_once = 0;
+                    }
                 }
+                else
+                {
+                    glUseProgram(shader_text.id);
+                    shader_text.uniform("u_model", cmd.model);
+                    shader_text.uniform("u_projection", proj_matrix_ui);
+                    shader_text.uniform("u_color", cmd.color);
 
-                glBindVertexArray(gpu_square_uv.vao);
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, font_texture.id);
 
-                glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
-                glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                    float32 posx = 0.f;
+                    float32 posy = 0.f;
+                    uint32 count = 0;
 
-                glDrawArrays(GL_TRIANGLES, 0, count);
+                    string_view strview = string_view::from(cmd.cstr);
+                    auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                    auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
+
+                    char c = 0;
+                    for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+                    {
+                        Character glyph = find_font_character(c);
+
+                        float32 px = (float32) posx - glyph.originX;
+                        float32 py = (float32) posy - glyph.originY;
+                        float32 w  = (float32) glyph.width;
+                        float32 h  = (float32) glyph.height;
+
+                        float32 uv_x = (float32) glyph.x / font_Arial.width;
+                        float32 uv_y = (float32) glyph.y / font_Arial.height;
+                        float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
+                        float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+
+                        float32 vbo_data[] = {
+                             px,     py,       uv_x,  uv_y,
+                             px + w, py,       uv_x1, uv_y,
+                             px    , py + h,   uv_x,  uv_y1,
+
+                             px + w, py,       uv_x1, uv_y,
+                             px + w, py + h,   uv_x1, uv_y1,
+                             px,     py + h,   uv_x,  uv_y1,
+                        };
+
+                        seri_buffer.push(vbo_data, sizeof(vbo_data));
+                        posx += glyph.width;
+                        count += 6;
+                    }
+
+                    glBindVertexArray(gpu_square_uv.vao);
+
+                    glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
+                    glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                    glDrawArrays(GL_TRIANGLES, 0, count);
+                }
             }
             else
             {

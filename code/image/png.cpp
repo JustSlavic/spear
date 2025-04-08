@@ -239,6 +239,8 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
 {
     bitmap result = {};
 
+    if (!contents) return result;
+
     auto zlib_stream = memory_bucket::from(temporary->allocate_buffer(contents.size));
 
     uint8 *data = (uint8 *) contents.data;

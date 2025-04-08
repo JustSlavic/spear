@@ -43,7 +43,7 @@ void ghost_view_mode(context *ctx, game_state *gs, input_state *input)
 void camera_movement(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
-    quaternion camera_rotate_q = quaternion::identity();
+    auto camera_rotate_q = quaternion::identity();
     if (get_hold_count(gs, input, PlayerAction_MoveCameraForward)) camera_move_direction += gs->camera.forward;
     if (get_hold_count(gs, input, PlayerAction_MoveCameraBackward)) camera_move_direction -= gs->camera.forward;
     if (get_hold_count(gs, input, PlayerAction_MoveCameraLeft)) camera_move_direction -= cross(gs->camera.forward, gs->camera.up);
@@ -51,6 +51,11 @@ void camera_movement(game_state *gs, input_state *input)
 
     if (get_hold_count(gs, input, PlayerAction_MoveCameraUp)) camera_move_direction += gs->camera.up;
     if (get_hold_count(gs, input, PlayerAction_MoveCameraDown)) camera_move_direction -= gs->camera.up;
+
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraUp)) camera_rotate_q *= quaternion::rotate(0.01f, cross(gs->camera.forward, gs->camera.up));
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraDown)) camera_rotate_q *= quaternion::rotate(-0.01f, cross(gs->camera.forward, gs->camera.up));
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraLeft)) camera_rotate_q *= quaternion::rotate(0.01f, gs->camera.up);
+    if (get_hold_count(gs, input, PlayerAction_RotateCameraRight)) camera_rotate_q *= quaternion::rotate(-0.01f, gs->camera.up);
 
     // if (get_hold_count(gs, input, PlayerAction_RotateCameraUp)) camera_rotate_q = gs->camera.up * gs->camera.forward;
 
@@ -70,6 +75,8 @@ void camera_movement(game_state *gs, input_state *input)
     // }
 
     gs->camera.position += normalized(camera_move_direction) * gs->camera_speed * input->dt;
+    gs->camera.forward = apply_unit_quaternion(camera_rotate_q, gs->camera.forward);
+    gs->camera.up = apply_unit_quaternion(camera_rotate_q, gs->camera.up);
 }
 
 void move_camera(context *ctx, game_state *gs, input_state *input)

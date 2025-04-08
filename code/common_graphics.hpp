@@ -422,6 +422,10 @@ gpu_mesh load_mesh(cpu_mesh mesh)
 
 texture load_texture(bitmap tx)
 {
+    texture result = {};
+
+    if (tx.size == 0) return result;
+
     uint32 id = 0;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -436,7 +440,6 @@ texture load_texture(bitmap tx)
     else
         ASSERT_FAIL("Unsupported color type!");
 
-    texture result;
     result.id = id;
     return result;
 }

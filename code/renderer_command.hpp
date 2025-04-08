@@ -33,6 +33,7 @@ struct rend_command
     vector3 forward;
     vector3 up;
     float32 scale;
+    quaternion quat;
 
     matrix4 model;
     vector4 color;

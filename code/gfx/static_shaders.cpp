@@ -148,7 +148,7 @@ out vec4 result_color;
 
 void main()
 {
-    vec3 light_position = vec3(0.f, 0.f, 0.f);
+    vec3 light_position = vec3(10.f, 0.f, 10.f);
     vec3 light_direction = normalize(light_position - fragment_position);
 
     float ambient_light = 0.01;

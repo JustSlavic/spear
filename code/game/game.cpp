@@ -156,6 +156,10 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     bind_action_to_button(&gs->player_actions, Keyboard_S, PlayerAction_MoveCameraBackward);
     bind_action_to_button(&gs->player_actions, Keyboard_A, PlayerAction_MoveCameraLeft);
     bind_action_to_button(&gs->player_actions, Keyboard_D, PlayerAction_MoveCameraRight);
+    bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
+    bind_action_to_button(&gs->player_actions, Keyboard_Down, PlayerAction_RotateCameraDown);
+    bind_action_to_button(&gs->player_actions, Keyboard_Left, PlayerAction_RotateCameraLeft);
+    bind_action_to_button(&gs->player_actions, Keyboard_Right, PlayerAction_RotateCameraRight);
     bind_action_to_button(&gs->player_actions, Keyboard_R, PlayerAction_MoveCameraUp);
     bind_action_to_button(&gs->player_actions, Keyboard_F, PlayerAction_MoveCameraDown);
     bind_action_to_button(&gs->player_actions, Keyboard_P, PlayerAction_SpawnMonster);
@@ -216,8 +220,21 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
 
-    spawn_planet(gs, V3(0, 3, 1), V3(0, 0, 0), 0.1f, 5.f);
-    spawn_planet(gs, V3(15, -1, -2), V3(0, 0, 0), 3.6f, 5.f);
+    // spawn_planet(gs, V3(0, 3, 1), V3(0, 0, 0), 0.1f, 5.f);
+    // spawn_planet(gs, V3(15, -1, -2), V3(0, 0, 0), 3.6f, 5.f);
+    // spawn_planet(gs, V3(-3, 1, 2), V3(0, 0, 0), 1.6f, 5.f);
+    // spawn_planet(gs, V3(-7.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    //     quaternion::rotate_x(to_radians(30)));
+    // spawn_planet(gs, V3(-5.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    //     quaternion::rotate_x(to_radians(60)));
+    // spawn_planet(gs, V3(-2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    //     quaternion::rotate_x(to_radians(90)));
+    spawn_planet(gs, V3( 0.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+        quaternion::identity());
+    // spawn_planet(gs, V3( 2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    //     quaternion::rotate_x(to_radians(150)));
+    // spawn_planet(gs, V3( 5.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
+    //     quaternion::rotate_x(to_radians(180)));
 }
 
 
