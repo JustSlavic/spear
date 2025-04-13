@@ -110,7 +110,8 @@ uniform sampler2D u_texture0;
 
 void main()
 {
-    result_color = u_color * texture(u_texture0, uv);
+    vec4 tex_color = texture(u_texture0, uv);
+    result_color = u_color * tex_color;
 }
 )GLSL";
 

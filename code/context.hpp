@@ -52,7 +52,7 @@ struct context
     void render_ui(matrix4 m, vector4 c);
     void render_banner(vector3 p, matrix4 m, vector4 c);
     void render_text(matrix4 m, vector4 c, char const *cstr);
-    void render_planet(vector3 p, float32 r, vector4 c, quaternion q);
+    void render_planet(vector3 p, float32 r, vector4 c, quaternion q, matrix3 mo);
 };
 
 

@@ -60,12 +60,13 @@ void context::render_text(matrix4 m, vector4 c, char const *cstr)
     rend_commands_ui.push_back(cmd);
 }
 
-void context::render_planet(vector3 p, float32 r, vector4 c, quaternion q)
+void context::render_planet(vector3 p, float32 r, vector4 c, quaternion q, matrix3 mo)
 {
     rend_command cmd = { RenderCommand_RenderSphere };
     cmd.position = p;
     cmd.scale = r;
     cmd.color = c;
     cmd.quat = q;
+    cmd.mo = mo;
     rend_commands.push_back(cmd);
 }

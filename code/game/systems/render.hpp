@@ -219,10 +219,9 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
         }
 
         ctx->render_text(
-                matrix4::translate(x - 9.f, y + 25.f, -0.1f) * matrix4::scale(0.8f, 0.8f, 1.f),
-                V4(1), str.data());
-
-        x += 25;
+            matrix4::translate(x - 9.f, y + 50.f, 0.f) * matrix4::scale(2),
+            V4(1), str.data());
+        x += 40;
     }
 }
 
@@ -245,7 +244,7 @@ void render_timer(context *ctx, game_state *gs, input_state *input)
 void render_dialogue(context *ctx, game_state *gs, input_state *input)
 {
     ctx->render_text(
-        matrix4::translate(100.f, 40.f, 0.f) * matrix4::scale(1.f),
+        matrix4::translate(100.f, 240.f, 0.f),
         V4(1), "Hello, world!");
 }
 

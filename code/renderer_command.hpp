@@ -2,8 +2,7 @@
 #define RENDERER_COMMAND_HPP
 
 #include <base.h>
-#include <math/vector4.hpp>
-#include <math/matrix4.hpp>
+#include <math.hpp>
 
 
 enum shader_enum
@@ -39,6 +38,7 @@ struct rend_command
     vector4 color;
     shader_enum shader;
     char const *cstr;
+    matrix3 mo;
 };
 
 #endif // RENDERER_COMMAND_HPP

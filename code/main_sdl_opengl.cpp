@@ -6,6 +6,7 @@
 #include <platform_sdl.hpp>
 #include <hash.hpp>
 #include <image/png.hpp>
+#include <math.hpp>
 
 #include <gfx/viewport.hpp>
 #include <gfx/static_shaders.cpp>
@@ -15,7 +16,7 @@
 #include <OpenGL/gl3.h>
 
 #include <common_graphics.hpp>
-#include <gen/font.hpp>
+#include <gen/font_14x26.hpp>
 #include <memory/serializer.hpp>
 #include <string_view.hpp>
 
@@ -121,19 +122,6 @@ timepoint now()
 {
     timepoint result = { SDL_GetTicks64() * 1000 };
     return result;
-}
-
-Character find_font_character(char c)
-{
-    for (int i = 0; i < font_Arial.characterCount; i++)
-    {
-        auto glyph = font_Arial.characters[i];
-        if (glyph.codePoint == c)
-        {
-            return glyph;
-        }
-    }
-    return {};
 }
 
 void draw_platonic_solid(gpu_mesh mesh, shader s, vector4 c, matrix4 m, matrix4 v, matrix4 p)
@@ -276,7 +264,7 @@ int main()
     auto shader_text = compile_shaders(vs_text, fs_text);
     auto shader_phong = compile_shaders(vs_phong, fs_phong);
 
-    auto font_content = platform::load_file("font.png", &global_arena);
+    auto font_content = platform::load_file("font_14x26.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
     auto font_texture = load_texture(font_bitmap);
     console::print("Font texture is id=%d\n", font_texture.id);
@@ -389,18 +377,19 @@ int main()
             }
             else if (cmd.tag == RenderCommand_RenderSphere)
             {
-                matrix4 m = matrix4::translate(cmd.position) *
-                            matrix4::scale(cmd.scale);
+                auto tm = transform::translate(cmd.position) *
+                          transform::scale(cmd.scale) *
+                          transform::scale(0.6f, 1.f, 0.2f);
 
-                m[0].xyz = apply_unit_quaternion(cmd.quat, m[0].xyz);
-                m[1].xyz = apply_unit_quaternion(cmd.quat, m[1].xyz);
-                m[2].xyz = apply_unit_quaternion(cmd.quat, m[2].xyz);
+                tm.sx = cmd.mo * tm.sx;
+                tm.sy = cmd.mo * tm.sy;
+                tm.sz = cmd.mo * tm.sz;
 
                 draw_platonic_solid(
-                    gpu_icosahedron,
+                    gpu_platonic_cube,
                     shader_phong,
-                    V4(0.2, 1, 0, 1),
-                    m, view_matrix, proj_matrix);
+                    cmd.color,
+                    to_matrix4(tm), view_matrix, proj_matrix);
 
                 // draw_platonic_solid(
                 //     gpu_ico_sphere,
@@ -499,17 +488,17 @@ int main()
                     char c = 0;
                     for (char const *str = cmd.cstr; (c = *str) != 0; str++)
                     {
-                        Character glyph = find_font_character(c);
+                        glyph g = get_glyph(c);
 
-                        float32 px = (float32) posx - glyph.originX;
-                        float32 py = (float32) posy - glyph.originY;
-                        float32 w  = (float32) glyph.width;
-                        float32 h  = (float32) glyph.height;
+                        float32 px = (float32) posx - g.origin_x;
+                        float32 py = (float32) posy - g.origin_y;
+                        float32 w  = (float32) g.width;
+                        float32 h  = (float32) g.height;
 
-                        float32 uv_x = (float32) glyph.x / font_Arial.width;
-                        float32 uv_y = (float32) glyph.y / font_Arial.height;
-                        float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
-                        float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+                        float32 uv_x = (float32) g.x / font_14x26.width;
+                        float32 uv_y = (float32) g.y / font_14x26.height;
+                        float32 uv_x1 = (float32) (g.x + g.width) / font_14x26.width;
+                        float32 uv_y1 = (float32) (g.y + g.height) / font_14x26.height;
 
                         float32 vbo_data[] = {
                              px,     py,       uv_x,  uv_y,
@@ -522,7 +511,7 @@ int main()
                         };
 
                         seri_buffer.push(vbo_data, sizeof(vbo_data));
-                        posx += glyph.width;
+                        posx += g.width;
                         count += 6;
                     }
 
@@ -546,7 +535,6 @@ int main()
 
         // Draw UI on top of everything
         {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_DEPTH_TEST);
 
             glUseProgram(shader_framebuffer.id);

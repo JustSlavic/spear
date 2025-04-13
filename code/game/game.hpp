@@ -5,7 +5,10 @@
 #include <time.hpp>
 
 #include <input.hpp>
-#include <math/vector4.hpp>
+#include <math.hpp>
+#include <phys/world.hpp>
+#include <phys/rigid_body.hpp>
+
 #include <memory/allocator.hpp>
 #include <ecs/entity_manager.hpp>
 
@@ -81,10 +84,9 @@ struct entity
 
     // Planet stuff
     vector3 position;
-    vector3 velocity;
     float32 radius;
-    float32 mass;
-    quaternion orientation;
+    vector3 color;
+    matrix3 orientation;
 
     int32 phys_world_handler;
 };
@@ -142,31 +144,6 @@ struct game_field
     void set_eid(int x, int y, ecs::entity_id eid);
 };
 
-namespace phys
-{
-
-#define PHYS_SIMULATION_FREQUENCY (1.0 / 120.0)
-
-struct body
-{
-    vector3 position;
-    vector3 velocity;
-
-    float32 inv_mass;
-};
-
-struct world
-{
-    body bodies[32];
-    uint32 body_count;
-
-    float32 residual_dt;
-};
-
-void update_world(phys::world *world, float32 dt);
-
-
-} // phys
 
 struct game_state
 {

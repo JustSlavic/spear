@@ -179,7 +179,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->double_click_interval = duration::milliseconds(5);
 
-    gs->camera = game::camera::look_at(V3(0, -15, 20), V3(0, 0, 0), V3(0, 0, 1));
+    gs->camera = game::camera::look_at(V3(0, -10, 5), V3(0, 0, 0), V3(0, 0, 1));
     gs->camera_speed = 5.f;
 
     gs->turn_no = 1;
@@ -226,21 +226,13 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
 
-    // spawn_planet(gs, V3(0, 3, 1), V3(0, 0, 0), 0.1f, 5.f);
-    // spawn_planet(gs, V3(15, -1, -2), V3(0, 0, 0), 3.6f, 5.f);
-    // spawn_planet(gs, V3(-3, 1, 2), V3(0, 0, 0), 1.6f, 5.f);
-    // spawn_planet(gs, V3(-7.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
-    //     quaternion::rotate_x(to_radians(30)));
-    // spawn_planet(gs, V3(-5.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
-    //     quaternion::rotate_x(to_radians(60)));
-    // spawn_planet(gs, V3(-2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
-    //     quaternion::rotate_x(to_radians(90)));
-    spawn_planet(gs, V3( 0.0, 0, 0), V3(0.1, 0.1, 0), 1.0f, 5.f,
-        quaternion::identity());
-    // spawn_planet(gs, V3( 2.5, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
-    //     quaternion::rotate_x(to_radians(150)));
-    // spawn_planet(gs, V3( 5.0, 0, 0), V3(0, 0, 0), 1.0f, 5.f,
-    //     quaternion::rotate_x(to_radians(180)));
+    auto position = V3(0);
+    auto velocity = V3(0, 0.1, 0);
+    spawn_planet(gs, position, velocity, 1.0f, 5.f, V3(1));
+    spawn_planet(gs, position + V3(2, 0, 0), velocity, 1.0f, 5.f, V3(0.2, 0.2, 0.2));
+    // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
+    // spawn_planet(gs, position + V3(0, 1, 0), velocity, 0.1f, 5.f, orientation, V3(0, 1, 0));
+    // spawn_planet(gs, position + V3(0, 0, 1), velocity, 0.1f, 5.f, orientation, V3(0, 0, 1));
 }
 
 
@@ -251,25 +243,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
     game::on_every_frame(ctx, gs, input);
 }
 
-namespace phys {
 
-void update_world(phys::world *world, float32 dt)
-{
-    dt += world->residual_dt;
-    int32 num_steps = (int32) floor(dt / PHYS_SIMULATION_FREQUENCY);
-    world->residual_dt = dt - num_steps * PHYS_SIMULATION_FREQUENCY;
-    for (int step = 0; step < num_steps; step++)
-    {
-        for (int body_index = 0; body_index < world->body_count; body_index++)
-        {
-            body *b = world->bodies + body_index;
-            b->position = b->position + b->velocity * PHYS_SIMULATION_FREQUENCY;
-        }
-    }
-    console::print("num steps = %d\n", num_steps);
-}
-
-} // phys
 
 #if DLL_BUILD
 #include <context.cpp>
@@ -282,3 +256,7 @@ void update_world(phys::world *world, float32 dt)
 #endif // DLL_BUILD
 
 #include <ecs/entity_id.cpp>
+
+#include <phys/world.cpp>
+#include <phys/rigid_body.cpp>
+
