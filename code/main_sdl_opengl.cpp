@@ -379,11 +379,11 @@ int main()
             {
                 auto tm = transform::translate(cmd.position) *
                           transform::scale(cmd.scale) *
-                          transform::scale(0.6f, 1.f, 0.2f);
+                          transform::scale(2.5f, 5.0f, 0.5f);
 
-                tm.sx = cmd.mo * tm.sx;
-                tm.sy = cmd.mo * tm.sy;
-                tm.sz = cmd.mo * tm.sz;
+                tm.sx = apply_unit_quaternion(cmd.quat, tm.sx);
+                tm.sy = apply_unit_quaternion(cmd.quat, tm.sy);
+                tm.sz = apply_unit_quaternion(cmd.quat, tm.sz);
 
                 draw_platonic_solid(
                     gpu_platonic_cube,

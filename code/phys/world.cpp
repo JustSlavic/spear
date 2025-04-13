@@ -15,24 +15,15 @@ namespace phys {
                |     0         0     a^2 + b^2 |
 */
 
-matrix make_inertia_tensor(float64 a, float64 b, float64 c)
+matrix3 make_inertia_tensor(float64 a, float64 b, float64 c)
 {
-    matrix I = {};
+    matrix3 I = {};
     I._11 = b*b + c*c;
     I._22 = a*a + c*c;
     I._33 = a*a + b*b;
 
-    float64 V = a*b*c;
-    return (1/12.0) * V * I;
-}
-
-matrix cross(vector v)
-{
-    matrix result = {};
-    result._12 = -v.z; result._13 = v.y;
-    result._21 = v.z; result._23 = -v.x;
-    result._31 = -v.y; result._32 = v.x;
-    return result;
+    float32 V = a*b*c;
+    return (1.0f/12.0f) * V * I;
 }
 
 void simulate_step(phys::world *world)
@@ -42,14 +33,16 @@ void simulate_step(phys::world *world)
         body *b = world->bodies + body_index;
         b->X += PHYS_DT * b->P / b->M;
 
-        matrix R = b->R;
+        matrix3 R = to_matrix3(b->Q);
 
-        float64 det = determinant(R);
+        float32 norm_ = norm(b->Q);
+        console::print("norm = %f\n", norm_);
+        float32 det = determinant(R);
         console::print("det = %f\n", det);
 
-        matrix I0 = make_inertia_tensor(1.4, 0.7, 2.1);
+        matrix3 I0 = make_inertia_tensor(2.5f, 5.0f, 0.5f);
 
-        matrix invI0 = I0;
+        matrix3 invI0 = I0;
         invI0._11 = 1.0/invI0._11;
         invI0._22 = 1.0/invI0._22;
         invI0._33 = 1.0/invI0._33;
@@ -67,9 +60,20 @@ void simulate_step(phys::world *world)
             invI0._21, invI0._22, invI0._23,
             invI0._31, invI0._32, invI0._33);
 
-        vector omega = R * invI0 * transposed(R) * b->L;
-        matrix cross_omega = cross(omega);
-        b->R += cross_omega * R * PHYS_DT;
+        // transpose(invI0);
+        // invI0._1 = apply_unit_quaternion(b->Q, invI0._1);
+        // invI0._2 = apply_unit_quaternion(b->Q, invI0._2);
+        // invI0._3 = apply_unit_quaternion(b->Q, invI0._3);
+        // transpose(invI0);
+
+        vector3 omega = R * invI0 * transposed(R) * b->L;
+        quaternion omega_q = {};
+        omega_q.axis = omega;
+        b->Q += 0.5f * omega_q * b->Q * PHYS_DT;
+
+        printf("Q = (%f, %f, %f, %f) ", b->Q._1, b->Q._e32, b->Q._e13, b->Q._e21);
+        normalize(b->Q);
+        printf("and normalized(%f, %f, %f, %f);\n", b->Q._1, b->Q._e32, b->Q._e13, b->Q._e21);
     }
 }
 

@@ -2,25 +2,21 @@
 #define RIGID_BODY_HPP
 
 #include <base.h>
-#include "vector.hpp"
-#include "matrix.hpp"
 
 
 namespace phys {
 
 struct body
 {
-    vector X;
-    matrix R;
+    vector3 X;
+    quaternion Q;
 
-    vector P;
-    vector L;
-    matrix I;
+    vector3 P;
+    vector3 L;
+    matrix3 I;
 
     float64 M;
 };
-
-
 
 } // namespace phys
 

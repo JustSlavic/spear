@@ -21,10 +21,10 @@ ecs::entity_id spawn_planet(game_state *gs,
     e->phys_world_handler = gs->phys_world.body_count;
 
     auto *b = gs->phys_world.bodies + gs->phys_world.body_count++;
-    b->X = phys::to_vector(p);
-    b->R = phys::matrix::identity();
-    b->P = phys::to_vector(v) * m;
-    b->L = phys::make_vector(1.0, 0.01, 0.0);
+    b->X = p;
+    b->Q = quaternion::identity();
+    b->P = v * m;
+    b->L = make_vector3(3.0, 0.01, 0.0);
     b->M = m;
 
     return eid;
@@ -37,8 +37,8 @@ void move_planets(game_state *gs)
         // Copy from phys world ?
         auto *e = gs->entities + eid.get_index();
         auto *b = gs->phys_world.bodies + e->phys_world_handler;
-        e->position = phys::to_vector3(b->X);
-        e->orientation = phys::to_matrix3(b->R);
+        e->position = b->X;
+        e->orientation = b->Q;
     }
 }
 
@@ -73,7 +73,7 @@ void render_planets(context *ctx, game_state *gs)
     for (auto eid : gs->planets)
     {
         auto *e = gs->entities + eid.get_index();
-        ctx->render_planet(e->position, e->radius, V4(e->color, 1), quaternion::identity(), e->orientation);
+        ctx->render_planet(e->position, e->radius, V4(e->color, 1), e->orientation, matrix3::identity());
 #if 0
         {
             auto m1 = matrix4::identity();

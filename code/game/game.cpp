@@ -229,7 +229,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     auto position = V3(0);
     auto velocity = V3(0, 0.1, 0);
     spawn_planet(gs, position, velocity, 1.0f, 5.f, V3(1));
-    spawn_planet(gs, position + V3(2, 0, 0), velocity, 1.0f, 5.f, V3(0.2, 0.2, 0.2));
+    spawn_planet(gs, position + V3(6, 0, 0), velocity, 1.0f, 5.f, V3(0.2, 0.2, 0.2));
     // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
     // spawn_planet(gs, position + V3(0, 1, 0), velocity, 0.1f, 5.f, orientation, V3(0, 1, 0));
     // spawn_planet(gs, position + V3(0, 0, 1), velocity, 0.1f, 5.f, orientation, V3(0, 0, 1));

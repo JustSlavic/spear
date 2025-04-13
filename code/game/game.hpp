@@ -86,7 +86,7 @@ struct entity
     vector3 position;
     float32 radius;
     vector3 color;
-    matrix3 orientation;
+    quaternion orientation;
 
     int32 phys_world_handler;
 };
