@@ -12,6 +12,9 @@ struct world
     body bodies[32];
     uint32 body_count;
 
+    float32 Y0[32 * (3 + 4 + 3 + 3 + 3 + 1)];
+    float32 Y1[32 * (3 + 4 + 3 + 3 + 3 + 1)];
+
     float32 residual_time;
 };
 

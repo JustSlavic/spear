@@ -13,9 +13,9 @@ struct body
 
     vector3 P;
     vector3 L;
-    matrix3 I;
+    vector3 I0;
 
-    float64 M;
+    float32 M;
 };
 
 } // namespace phys
