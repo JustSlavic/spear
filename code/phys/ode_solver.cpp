@@ -4,11 +4,9 @@ namespace phys {
 
 void solve_ode(float32 *in, float32 *out, uint32 count, uint32 stride, dydt_f dydt, float32 dt)
 {
-    ASSERT(count % stride == 0);
-
-    for (uint32 i = 0; i < count; i += stride)
+    for (uint32 body_index = 0; body_index < count; body_index++)
     {
-        dydt(in + i, out + i, dt);
+        dydt(in + body_index*stride, out + body_index*stride, dt);
     }
 }
 

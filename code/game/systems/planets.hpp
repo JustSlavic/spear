@@ -3,6 +3,16 @@
 
 #include <base.h>
 
+vector3 make_inertia_tensor(float64 a, float64 b, float64 c)
+{
+    vector3 I = {};
+    I._e1 = b*b + c*c;
+    I._e2 = a*a + c*c;
+    I._e3 = a*a + b*b;
+
+    float32 V = a*b*c;
+    return (1.0f/12.0f) * V * I;
+}
 
 ecs::entity_id spawn_planet(game_state *gs,
                             vector3 p,
@@ -11,21 +21,27 @@ ecs::entity_id spawn_planet(game_state *gs,
                             float32 m,
                             vector3 c)
 {
+    phys::world *w = &gs->phys_world;
+
     ecs::entity_id eid = gs->entity_manager.create_entity();
     gs->planets.push_back(eid);
+
+    phys::handle h = phys::create_rigid_body(&gs->phys_world);
 
     auto *e = gs->entities + eid.get_index();
     e->position = p;
     e->radius = r;
     e->color = c;
-    e->phys_world_handler = gs->phys_world.body_count;
+    e->phys_world_handle = h;
 
-    auto *b = gs->phys_world.bodies + gs->phys_world.body_count++;
-    b->X = p;
-    b->Q = quaternion::identity();
-    b->P = v * m;
-    b->L = make_vector3(3.0, 0.01, 0.0);
-    b->M = m;
+    vector3 I0 = make_inertia_tensor(2.5f, 5.0f, 0.5f);
+
+    phys::set_position(w, h, p);
+    phys::set_orientation(w, h, quaternion::identity());
+    phys::set_linear_momentum(w, h, v * m);
+    phys::set_angular_momentum(w, h, make_vector3(3.0, 0.01, 0.0));
+    phys::set_inertia_tensor(w, h, I0);
+    phys::set_mass(w, h, m);
 
     return eid;
 }
@@ -36,9 +52,10 @@ void move_planets(game_state *gs)
     {
         // Copy from phys world ?
         auto *e = gs->entities + eid.get_index();
-        auto *b = gs->phys_world.bodies + e->phys_world_handler;
-        e->position = b->X;
-        e->orientation = b->Q;
+        e->position = phys::get_position(&gs->phys_world, e->phys_world_handle);
+        e->orientation = phys::get_orientation(&gs->phys_world, e->phys_world_handle);
+        printf("h = %d p = (%4.2f, %4.2f, %4.2f)\n", e->phys_world_handle.index,
+            e->position.x, e->position.y, e->position.z);
     }
 }
 

@@ -88,7 +88,7 @@ struct entity
     vector3 color;
     quaternion orientation;
 
-    int32 phys_world_handler;
+    phys::handle phys_world_handle;
 };
 
 enum input_action_bits

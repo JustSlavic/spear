@@ -150,6 +150,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->allocator = arena;
     ctx->game_state = gs;
 
+    memory_buffer phys_memory0 = arena.allocate_buffer(64 * PHYS_BODY_SIZE);
+    memory_buffer phys_memory1 = arena.allocate_buffer(64 * PHYS_BODY_SIZE);
+    gs->phys_world.Y0 = (float32 *) phys_memory0.data;
+    gs->phys_world.Y1 = (float32 *) phys_memory1.data;
+    gs->phys_world.capacity = 64;
+
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
     bind_action_to_button(&gs->player_actions, Keyboard_I, PlayerAction_ToggleFreeCamera);
 
