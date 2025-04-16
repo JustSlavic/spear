@@ -169,29 +169,6 @@ void simulate_step_phase_space(float32 *in, float32 *out, float32 dt) {
     return;
 };
 
-void simulate_step(phys::world *world)
-{
-    // for (int body_index = 0; body_index < world->body_count; body_index++)
-    // {
-    //     body *b = world->bodies + body_index;
-    //     b->X += PHYS_DT * b->P / b->M;
-
-    //     matrix3 I0 = make_inertia_tensor(2.5f, 5.0f, 0.5f);
-
-    //     matrix3 invI0 = I0;
-    //     invI0._11 = 1.0/invI0._11;
-    //     invI0._22 = 1.0/invI0._22;
-    //     invI0._33 = 1.0/invI0._33;
-
-    //     vector3 omega = apply_unit_quaternion(b->Q,
-    //         invI0 * apply_unit_quaternion(conjugated(b->Q), b->L));
-
-    //     b->Q += 0.5f * quaternion::pure(omega) * b->Q * PHYS_DT;
-
-    //     normalize(b->Q);
-    // }
-}
-
 void swap_buffers(phys::world *world)
 {
     float32 *tmp = world->Y0;

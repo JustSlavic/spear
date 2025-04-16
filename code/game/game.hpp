@@ -7,8 +7,7 @@
 #include <input.hpp>
 #include <math.hpp>
 #include <phys/world.hpp>
-#include <phys/rigid_body.hpp>
-
+    
 #include <memory/allocator.hpp>
 #include <ecs/entity_manager.hpp>
 

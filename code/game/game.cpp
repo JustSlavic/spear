@@ -239,6 +239,19 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
     // spawn_planet(gs, position + V3(0, 1, 0), velocity, 0.1f, 5.f, orientation, V3(0, 1, 0));
     // spawn_planet(gs, position + V3(0, 0, 1), velocity, 0.1f, 5.f, orientation, V3(0, 0, 1));
+
+    quaternion qq;
+    qq._1 = 3.f; qq.i = 1.f; qq.j = 5.f; qq.k = -2.f;
+    float4 vq = v_set4(3.f, 1.f, 5.f, -2.f);
+
+    quaternion qq_ans = qq * qq;
+    float4 vq_ans = q_mul(vq, vq);
+
+    alignas(16) float32 vq_ans_arr[4];
+    v_st(vq_ans_arr, vq_ans);
+
+    printf("qq = (%f, %f, %f, %f)\n", qq_ans._1, qq_ans.i, qq_ans.j, qq_ans.k);
+    printf("vq = (%f, %f, %f, %f)\n", vq_ans_arr[0], vq_ans_arr[1], vq_ans_arr[2], vq_ans_arr[3]);
 }
 
 
@@ -264,5 +277,4 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state 
 #include <ecs/entity_id.cpp>
 
 #include <phys/world.cpp>
-#include <phys/rigid_body.cpp>
 #include <phys/ode_solver.cpp>

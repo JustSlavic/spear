@@ -385,17 +385,17 @@ int main()
                 tm.sy = apply_unit_quaternion(cmd.quat, tm.sy);
                 tm.sz = apply_unit_quaternion(cmd.quat, tm.sz);
 
+                // draw_platonic_solid(
+                //     gpu_platonic_cube,
+                //     shader_phong,
+                //     cmd.color,
+                //     to_matrix4(tm), view_matrix, proj_matrix);
+
                 draw_platonic_solid(
-                    gpu_platonic_cube,
+                    gpu_ico_sphere,
                     shader_phong,
                     cmd.color,
                     to_matrix4(tm), view_matrix, proj_matrix);
-
-                // draw_platonic_solid(
-                //     gpu_ico_sphere,
-                //     shader_phong,
-                //     cmd.color,
-                //     m, view_matrix, proj_matrix);
             }
             else if (cmd.tag == RenderCommand_RenderUi)
             {

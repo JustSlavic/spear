@@ -2,7 +2,6 @@
 #define PHYS_WORLD
 
 #include <base.h>
-#include "rigid_body.hpp"
 
 
 namespace phys {

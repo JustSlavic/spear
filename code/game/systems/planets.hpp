@@ -50,12 +50,10 @@ void move_planets(game_state *gs)
 {
     for (auto eid : gs->planets)
     {
-        // Copy from phys world ?
+        // Copy from phys world for render
         auto *e = gs->entities + eid.get_index();
         e->position = phys::get_position(&gs->phys_world, e->phys_world_handle);
         e->orientation = phys::get_orientation(&gs->phys_world, e->phys_world_handle);
-        printf("h = %d p = (%4.2f, %4.2f, %4.2f)\n", e->phys_world_handle.index,
-            e->position.x, e->position.y, e->position.z);
     }
 }
 
