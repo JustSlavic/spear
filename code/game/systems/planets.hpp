@@ -3,7 +3,7 @@
 
 #include <base.h>
 
-vector3 make_inertia_tensor(float64 a, float64 b, float64 c)
+vector3 make_inertia_tensor(float32 a, float32 b, float32 c)
 {
     vector3 I = {};
     I._e1 = b*b + c*c;
@@ -39,7 +39,7 @@ ecs::entity_id spawn_planet(game_state *gs,
     phys::set_position(w, h, p);
     phys::set_orientation(w, h, quaternion::identity());
     phys::set_linear_momentum(w, h, v * m);
-    phys::set_angular_momentum(w, h, make_vector3(3.0, 0.01, 0.0));
+    phys::set_angular_momentum(w, h, make_vector3(3.0f, 0.01f, 0.0f));
     phys::set_inertia_tensor(w, h, I0);
     phys::set_mass(w, h, m);
 

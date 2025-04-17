@@ -15,7 +15,7 @@
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 #include <input.hpp>
-#include <gen/font.hpp>
+#include <gen/font_14x26.hpp>
 #include <game_interface.hpp>
 #include <gfx/static_shaders.cpp>
 
@@ -309,18 +309,6 @@ const char* gl_get_error_string(GLenum err) {
 #include <common_graphics.hpp>
 #include <platonic_solids.hpp>
 
-Character find_font_character(char c)
-{
-    for (int i = 0; i < font_Arial.characterCount; i++)
-    {
-        auto glyph = font_Arial.characters[i];
-        if (glyph.codePoint == c)
-        {
-            return glyph;
-        }
-    }
-    return {};
-}
 
 void draw_platonic_solid(gpu_mesh mesh, shader s, vector4 c, matrix4 m, matrix4 v, matrix4 p)
 {
@@ -741,7 +729,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
     ctx.far_clip_dist = 100.f;
     ctx.debug_load_file = NULL;
-    ctx.temporary_allocator = global_arena.allocate_arena(MEGABYTES(1));
+    ctx.temporary_allocator = global_arena.allocate_arena(MEGABYTES(10));
 
     auto view = matrix4::identity();
     auto projection = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
@@ -835,7 +823,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto shader_text = compile_shaders(vs_text, fs_text);
     auto shader_phong = compile_shaders(vs_phong, fs_phong);
 
-    auto font_content = platform::load_file("font.png", &global_arena);
+    auto font_content = platform::load_file("font_14x26.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &ctx.temporary_allocator, font_content);
     auto font_texture = load_texture(font_bitmap);
     console::print("Font texture is id=%d\n", font_texture.id);
@@ -917,11 +905,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         for (auto cmd : ctx.rend_commands)
         {
-            if (cmd.kind == rend_command::setup_camera)
+            if (cmd.tag == RenderCommand_SetupCamera)
             {
                 view = make_lookat_matrix(cmd.position, cmd.position + cmd.forward, cmd.up);
             }
-            else if (cmd.kind == rend_command::render_square)
+            else if (cmd.tag == RenderCommand_RenderSquare)
             {
                 glUseProgram(shader_color.id);
 
@@ -934,7 +922,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_cube)
+            else if (cmd.tag == RenderCommand_RenderCube)
             {
                 shader *s = NULL;
                 if (cmd.shader == SHADER_COLOR)
@@ -962,7 +950,29 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     glDrawArrays(GL_TRIANGLES, 0, gpu_cube.count);
                 }
             }
-            else if (cmd.kind == rend_command::render_ui)
+            else if (cmd.tag == RenderCommand_RenderSphere)
+            {
+                auto tm = transform::translate(cmd.position) *
+                          transform::scale(cmd.scale);
+
+                tm.sx = apply_unit_quaternion(cmd.quat, tm.sx);
+                tm.sy = apply_unit_quaternion(cmd.quat, tm.sy);
+                tm.sz = apply_unit_quaternion(cmd.quat, tm.sz);
+
+                // draw_platonic_solid(
+                //     gpu_platonic_cube,
+                //     shader_phong,
+                //     cmd.color,
+                //     to_matrix4(tm), view_matrix, proj_matrix);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                draw_platonic_solid(
+                    gpu_ico_sphere,
+                    shader_phong,
+                    cmd.color,
+                    to_matrix4(tm), view, projection);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            else if (cmd.tag == RenderCommand_RenderUi)
             {
                 ASSERT_FAIL();
             }
@@ -970,28 +980,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         ctx.rend_commands.clear();
 
         GL_CHECK_ERRORS();
-
-        // Do spere (planet?)
-        {
-            static float32 rotation_x = 0.f;
-            static float32 rotation_z = 0.f;
-            matrix4 platonic_model_matrix =
-                matrix4::translate_z(2) *
-                matrix4::rotate_x(rotation_x) *
-                matrix4::rotate_z(rotation_z);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            // draw_platonic_solid(gpu_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
-            draw_platonic_solid(gpu_ico_sphere, shader_phong, V4(0.2, 1, 0.3, 1), platonic_model_matrix, view, projection);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            // draw_platonic_solid(gpu_octahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view, projection);
-            // draw_platonic_solid(gpu_cube, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
-            // draw_platonic_solid(gpu_icosahedron, shader_phong, V4(1, 1, 0, 1), platonic_model_matrix, view_matrix, proj_matrix);
-            rotation_x += 0.01f;
-            rotation_z += 0.01f;
-            if (rotation_x > 2.f * pi) rotation_x -= 2.f * pi;
-            if (rotation_z > 2.f * pi) rotation_z -= 2.f * pi;
-        }
-
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -1001,7 +989,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         for (auto cmd : ctx.rend_commands_ui)
         {
-            if (cmd.kind == rend_command::render_ui)
+            if (cmd.tag == RenderCommand_RenderUi)
             {
                 glUseProgram(shader_color.id);
 
@@ -1013,7 +1001,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_banner)
+            else if (cmd.tag == RenderCommand_RenderBanner)
             {
                 auto pNDC = projection * view * matrix4::translate(cmd.position) * V4(0, 0, 0, 1);
                 pNDC /= pNDC.w;
@@ -1034,7 +1022,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindVertexArray(gpu_square.vao);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.kind == rend_command::render_text)
+            else if (cmd.tag == RenderCommand_RenderText)
             {
                 glUseProgram(shader_text.id);
                 shader_text.uniform("u_model", cmd.model);
@@ -1056,17 +1044,17 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 char c = 0;
                 for (char const *str = cmd.cstr; (c = *str) != 0; str++)
                 {
-                    Character glyph = find_font_character(c);
+                    glyph g = get_glyph(c);
 
-                    float32 px = (float32) posx - glyph.originX;
-                    float32 py = (float32) posy - glyph.originY;
-                    float32 w  = (float32) glyph.width;
-                    float32 h  = (float32) glyph.height;
+                    float32 px = (float32) posx - g.origin_x;
+                    float32 py = (float32) posy - g.origin_y;
+                    float32 w  = (float32) g.width;
+                    float32 h  = (float32) g.height;
 
-                    float32 uv_x = (float32) glyph.x / font_Arial.width;
-                    float32 uv_y = (float32) glyph.y / font_Arial.height;
-                    float32 uv_x1 = (float32) (glyph.x + glyph.width) / font_Arial.width;
-                    float32 uv_y1 = (float32) (glyph.y + glyph.height) / font_Arial.height;
+                    float32 uv_x = (float32) g.x / font_14x26.width;
+                    float32 uv_y = (float32) g.y / font_14x26.height;
+                    float32 uv_x1 = (float32) (g.x + g.width) / font_14x26.width;
+                    float32 uv_y1 = (float32) (g.y + g.height) / font_14x26.height;
 
                     float32 vbo_data[] = {
                          px,     py,       uv_x,  uv_y,
@@ -1079,7 +1067,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     };
 
                     seri_buffer.push(vbo_data, sizeof(vbo_data));
-                    posx += glyph.width;
+                    posx += g.width;
                     count += 6;
                 }
 

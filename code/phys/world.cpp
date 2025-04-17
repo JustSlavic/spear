@@ -1,7 +1,7 @@
 #include "world.hpp"
 #include "ode_solver.hpp"
 
-#define PHYS_DT (1.0 / 120.0)
+#define PHYS_DT (1.0f / 120.0f)
 
 
 namespace phys {
