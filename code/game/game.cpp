@@ -150,10 +150,10 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->allocator = arena;
     ctx->game_state = gs;
 
-    memory_buffer phys_memory0 = arena.allocate_buffer(64 * PHYS_BODY_SIZE);
-    memory_buffer phys_memory1 = arena.allocate_buffer(64 * PHYS_BODY_SIZE);
-    gs->phys_world.Y0 = (float32 *) phys_memory0.data;
-    gs->phys_world.Y1 = (float32 *) phys_memory1.data;
+    gs->phys_world.memory = arena.allocate_buffer(2 * 64 * PHYS_BODY_SIZE + 64 * sizeof(vector3));
+    gs->phys_world.Y = (float32 *) gs->phys_world.memory.data;
+    gs->phys_world.Y_prev = (float32 *) (gs->phys_world.memory.data + 64 * PHYS_BODY_SIZE);
+    gs->phys_world.F = (float32 *) (gs->phys_world.memory.data + 2 * 64 * PHYS_BODY_SIZE);
     gs->phys_world.capacity = 64;
 
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
@@ -234,8 +234,10 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     auto position = V3(0);
     auto velocity = V3(0.f, 0.1f, 0.f);
-    spawn_planet(gs, position, velocity, 1.0f, 5.f, V3(1));
-    spawn_planet(gs, position + V3(6.f, 0.f, 0.f), velocity, 1.0f, 5.f, V3(0.2f, 0.2f, 0.2f));
+    spawn_planet(gs, position, V3(0.f, 0.1f, 0.2f), 1.0f, 5.f, V3(1));
+    spawn_planet(gs, position + V3(10.f, 0.f, 10.f), V3(0.f), 0.1f, 0.00001f, V3(1));
+    spawn_planet(gs, position + V3(6.f, 0.f, 0.f), V3(0.1f, 0.f, -0.1f), 0.8f, 5.f, V3(0.2f, 0.2f, 0.2f));
+    // spawn_planet(gs, position, V3(10.0f, 0.0f, 10.0f), 1.0f, 0.1f, V3(1));
     // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
     // spawn_planet(gs, position + V3(0, 1, 0), velocity, 0.1f, 5.f, orientation, V3(0, 1, 0));
     // spawn_planet(gs, position + V3(0, 0, 1), velocity, 0.1f, 5.f, orientation, V3(0, 0, 1));

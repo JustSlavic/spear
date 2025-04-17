@@ -2,6 +2,7 @@
 #define PHYS_WORLD
 
 #include <base.h>
+#include <memory/buffer.hpp>
 
 
 namespace phys {
@@ -25,8 +26,10 @@ namespace phys {
 
 struct world
 {
-    float32 *Y0;
-    float32 *Y1;
+    memory_buffer memory;
+    float32 *Y;
+    float32 *Y_prev;
+    float32 *F;
     uint32 capacity;
     uint32 count;
 
