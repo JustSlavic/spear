@@ -151,7 +151,7 @@ struct game_state
     entity entities[ECS_MAX_ENTITIES];
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
     static_array<ecs::entity_id, 25> stones;
-    static_array<ecs::entity_id, 25> planets;
+    static_array<ecs::entity_id, 100> planets;
 
     phys::world phys_world;
 

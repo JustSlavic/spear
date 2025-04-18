@@ -150,11 +150,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->allocator = arena;
     ctx->game_state = gs;
 
-    gs->phys_world.memory = arena.allocate_buffer(2 * 64 * PHYS_BODY_SIZE + 64 * sizeof(vector3));
+#define PHYS_MAX_BODY_COUNT 256
+    gs->phys_world.memory = arena.allocate_buffer(2 * PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE + PHYS_MAX_BODY_COUNT * sizeof(vector3));
     gs->phys_world.Y = (float32 *) gs->phys_world.memory.data;
-    gs->phys_world.Y_prev = (float32 *) (gs->phys_world.memory.data + 64 * PHYS_BODY_SIZE);
-    gs->phys_world.F = (float32 *) (gs->phys_world.memory.data + 2 * 64 * PHYS_BODY_SIZE);
-    gs->phys_world.capacity = 64;
+    gs->phys_world.Y_prev = (float32 *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
+    gs->phys_world.F = (float32 *) (gs->phys_world.memory.data + 2 * PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
+    gs->phys_world.capacity = PHYS_MAX_BODY_COUNT;
 
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
     bind_action_to_button(&gs->player_actions, Keyboard_I, PlayerAction_ToggleFreeCamera);
@@ -185,7 +186,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->double_click_interval = duration::milliseconds(5);
 
-    gs->camera = game::camera::look_at(V3(0, -10, 5), V3(0, 0, 0), V3(0, 0, 1));
+    gs->camera = game::camera::look_at(V3(0, 0, 60), V3(0, 0, 0), V3(0, 1, 0));
     gs->camera_speed = 5.f;
 
     gs->turn_no = 1;
@@ -232,11 +233,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
 
-    auto position = V3(0);
     auto velocity = V3(0.f, 0.1f, 0.f);
-    spawn_planet(gs, position, V3(0.f, 0.1f, 0.2f), 1.0f, 5.f, V3(1));
-    spawn_planet(gs, position + V3(10.f, 0.f, 10.f), V3(0.f), 0.1f, 0.00001f, V3(1));
-    spawn_planet(gs, position + V3(6.f, 0.f, 0.f), V3(0.1f, 0.f, -0.1f), 0.8f, 5.f, V3(0.2f, 0.2f, 0.2f));
+    spawn_planet(gs, V3(0),                V3(0.f, 0.f, 0.f),    1.0f,  1000.f, V3(0.8f, 0.8f, 0.2f));
+    // spawn_planet(gs, V3(10.f, -1.f, 10.f), V3(0.f),              0.1f,  0.01f,  V3(1));
+    spawn_planet(gs, V3(6.f, 1.f, 0.f),    V3(-0.05f, 3.7f, -0.1f), 0.2f,  5.f,    V3(0.2f, 0.4f, 0.7f));
+
+
     // spawn_planet(gs, position, V3(10.0f, 0.0f, 10.0f), 1.0f, 0.1f, V3(1));
     // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
     // spawn_planet(gs, position + V3(0, 1, 0), velocity, 0.1f, 5.f, orientation, V3(0, 1, 0));

@@ -57,6 +57,8 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
 
     render_planets(ctx, gs);
     render_grid(ctx);
+
+    render_camera_position(ctx, gs);
 }
 
 void on_every_frame(context *ctx, game_state *gs, input_state *input)

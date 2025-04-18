@@ -38,8 +38,8 @@ struct context
     float32 far_clip_dist;
 
     static_array<exec_command, 32> exec_commands;
-    static_array<rend_command, 512> rend_commands;
-    static_array<rend_command, 512> rend_commands_ui;
+    static_array<rend_command, 1<<10> rend_commands;
+    static_array<rend_command, 1<<10> rend_commands_ui;
 
     debug_load_file_t *debug_load_file;
 

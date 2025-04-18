@@ -37,10 +37,10 @@ Keyboard_Esc, // 0x1B    VK_ESCAPE               ESC key
 0,            // 0x22    VK_NEXT                 PAGE DOWN key
 0,            // 0x23    VK_END                  END key
 0,            // 0x24    VK_HOME                 HOME key
-0,            // 0x25    VK_LEFT                 LEFT ARROW key
-0,            // 0x26    VK_UP                   UP ARROW key
-0,            // 0x27    VK_RIGHT                RIGHT ARROW key
-0,            // 0x28    VK_DOWN                 DOWN ARROW key
+Keyboard_Left,         // 0x25    VK_LEFT                 LEFT ARROW key
+Keyboard_Up,           // 0x26    VK_UP                   UP ARROW key
+Keyboard_Right,        // 0x27    VK_RIGHT                RIGHT ARROW key
+Keyboard_Down,         // 0x28    VK_DOWN                 DOWN ARROW key
 0,            // 0x29    VK_SELECT               SELECT key
 0,            // 0x2A    VK_PRINT                PRINT key
 0,            // 0x2B    VK_EXECUTE              EXECUTE key
@@ -67,7 +67,7 @@ Keyboard_Esc, // 0x1B    VK_ESCAPE               ESC key
 0,            // 0x3F                            Undefined
 
 0,            // 0x40                            Undefined
-Keyboard_A,   // 0x41                            A key
+Keyboard_A,            // 0x41                            A key
 Keyboard_B,            // 0x42                            B key
 Keyboard_C,            // 0x43                            C key
 Keyboard_D,            // 0x44                            D key

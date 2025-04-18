@@ -59,24 +59,25 @@ void move_planets(game_state *gs)
 
 void render_grid(context *ctx)
 {
+    int grid_n = 20;
     {
-        auto m = matrix4::scale_x(1000.f) * matrix4::scale_y(0.05f);
-        for (int i = -5; i < 6; i++)
+        auto m = matrix4::scale_x((float32) grid_n) * matrix4::scale_y(0.01f);
+        for (int i = -grid_n; i <= grid_n; i++)
         {
             auto c = V4(0.4, 0.4, 0.4, 1);
-            auto m1 = matrix4::translate_y((float32) i * 10.f) * m;
-            auto m2 = matrix4::translate_y((float32) i * 10.f) * matrix4::rotate_x(to_radians(90)) * m;
+            auto m1 = matrix4::translate_y((float32) i * 1.f) * m;
+            auto m2 = matrix4::translate_y((float32) i * 1.f) * matrix4::rotate_x(to_radians(90)) * m;
             ctx->render_square(m1, c, SHADER_COLOR);
             ctx->render_square(m2, c, SHADER_COLOR);
         }
     }
     {
-        auto m = matrix4::scale_x(0.05f) * matrix4::scale_y(1000.f);
-        for (int i = -5; i < 6; i++)
+        auto m = matrix4::scale_x(0.01f) * matrix4::scale_y((float32) grid_n);
+        for (int i = -grid_n; i <= grid_n; i++)
         {
             auto c = V4(0.4, 0.4, 0.4, 1);
-            auto m1 = matrix4::translate_x((float32) i * 10.f) * m;
-            auto m2 = matrix4::translate_x((float32) i * 10.f) * matrix4::rotate_y(to_radians(90)) * m;
+            auto m1 = matrix4::translate_x((float32) i * 1.f) * m;
+            auto m2 = matrix4::translate_x((float32) i * 1.f) * matrix4::rotate_y(to_radians(90)) * m;
             ctx->render_square(m1, c, SHADER_COLOR);
             ctx->render_square(m2, c, SHADER_COLOR);
         }
@@ -89,6 +90,18 @@ void render_planets(context *ctx, game_state *gs)
     {
         auto *e = gs->entities + eid.get_index();
         ctx->render_planet(e->position, e->radius, V4(e->color, 1), e->orientation, matrix3::identity());
+
+        {
+            auto Oxy = V3(e->position.x, e->position.y, 0.f);
+            auto tm = transform::translate(0.5f * (e->position + Oxy))
+                    * transform::scale_x(0.01f)
+                    * transform::scale_y(0.5f * norm(e->position - Oxy));
+            auto rot = quaternion::rotate_x(to_radians(90.f));
+            tm.sx = apply_unit_quaternion(rot, tm.sx);
+            tm.sy = apply_unit_quaternion(rot, tm.sy);
+            tm.sz = apply_unit_quaternion(rot, tm.sz);
+            ctx->render_square(to_matrix4(tm), V4(1.f, 1.f, 1.f, 0.4f), SHADER_COLOR);
+        }
 #if 0
         {
             auto m1 = matrix4::identity();

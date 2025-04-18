@@ -727,7 +727,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     ctx.near_clip_dist = 0.05f;
     ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
     ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
-    ctx.far_clip_dist = 100.f;
+    ctx.far_clip_dist = 10000.f;
     ctx.debug_load_file = NULL;
     ctx.temporary_allocator = global_arena.allocate_arena(MEGABYTES(10));
 
@@ -1071,7 +1071,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     count += 6;
                 }
 
-                glEnable(GL_BLEND);
                 glBindVertexArray(gpu_square_uv.vao);
 
                 glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
@@ -1079,7 +1078,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
                 glDrawArrays(GL_TRIANGLES, 0, count);
-                glDisable(GL_BLEND);
             }
             else
             {
@@ -1093,7 +1091,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         // Draw UI on top of everything
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);
             glDisable(GL_DEPTH_TEST);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1107,7 +1104,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
 
             glEnable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
         }
 
         GL_CHECK_ERRORS();
