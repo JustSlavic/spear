@@ -172,6 +172,17 @@ enum keyboard_and_mouse_button
     Keyboard_Y,
     Keyboard_Z,
 
+    Keyboard_1,
+    Keyboard_2,
+    Keyboard_3,
+    Keyboard_4,
+    Keyboard_5,
+    Keyboard_6,
+    Keyboard_7,
+    Keyboard_8,
+    Keyboard_9,
+    Keyboard_0,
+
     Keyboard_Up,
     Keyboard_Down,
     Keyboard_Left,

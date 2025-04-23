@@ -82,11 +82,33 @@ void camera_movement(game_state *gs, input_state *input)
 
 void move_camera(context *ctx, game_state *gs, input_state *input)
 {
+    if (get_press_count(gs, input, PlayerAction_Follow1))
+    {
+        gs->entity_to_follow = gs->planets[0];
+        // gs->camera_fly_mode = false;
+    }
+    if (get_press_count(gs, input, PlayerAction_Follow2))
+    {
+        gs->entity_to_follow = gs->planets[1];
+        // gs->camera_fly_mode = false;
+    }
+    if (gs->entity_to_follow != ecs::INVALID_ENTITY_ID)
+    {
+        float32 d_distance = 0.f;
+        if (get_hold_count(gs, input, PlayerAction_MoveCameraBackward))
+        {
+            d_distance += 1.f;
+        }
+        if (get_hold_count(gs, input, PlayerAction_MoveCameraForward))
+        {
+            d_distance -= 1.f;
+        }
+        gs->follow_distance += d_distance * gs->camera_speed * input->dt;
+    }
     if (gs->camera_fly_mode)
     {
         camera_movement(gs, input);
     }
-    ctx->setup_camera(gs->camera.position, gs->camera.forward, gs->camera.up);
 }
 
 void heal_hero(context *ctx, game_state *gs, input_state *input)

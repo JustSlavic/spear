@@ -153,7 +153,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 #define PHYS_MAX_BODY_COUNT 256
     gs->phys_world.memory = arena.allocate_buffer(2 * PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE + PHYS_MAX_BODY_COUNT * sizeof(vector3));
     gs->phys_world.Y = (float32 *) gs->phys_world.memory.data;
-    gs->phys_world.Y_prev = (float32 *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
+    gs->phys_world.Y0 = (float32 *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
     gs->phys_world.F = (float32 *) (gs->phys_world.memory.data + 2 * PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
     gs->phys_world.capacity = PHYS_MAX_BODY_COUNT;
 
@@ -178,6 +178,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     bind_action_to_button(&gs->player_actions, Keyboard_P, PlayerAction_SpawnMonster);
     bind_action_to_button(&gs->player_actions, Keyboard_O, PlayerAction_SpawnStone);
 
+    bind_action_to_button(&gs->player_actions, Keyboard_1, PlayerAction_Follow1);
+    bind_action_to_button(&gs->player_actions, Keyboard_2, PlayerAction_Follow2);
+
     bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
@@ -186,7 +189,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->double_click_interval = duration::milliseconds(5);
 
-    gs->camera = game::camera::look_at(V3(0, 0, 60), V3(0, 0, 0), V3(0, 1, 0));
+    gs->camera = game::camera::look_at(V3(0, 0, 40), V3(0, 0, 0), V3(0, 1, 0));
     gs->camera_speed = 5.f;
 
     gs->turn_no = 1;
@@ -202,6 +205,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     gs->field_render__gap = 0.3f;
     gs->camera_fly_mode = true;
+
+    gs->follow_distance = 2.f;
 
     // Init ECS
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());
@@ -233,11 +238,10 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     game::spawn_stone(gs,  1,  1);
     game::spawn_stone(gs,  1, -1);
 
-    auto velocity = V3(0.f, 0.1f, 0.f);
-    spawn_planet(gs, V3(0),                V3(0.f, 0.f, 0.f),    1.0f,  1000.f, V3(0.8f, 0.8f, 0.2f));
-    // spawn_planet(gs, V3(10.f, -1.f, 10.f), V3(0.f),              0.1f,  0.01f,  V3(1));
-    spawn_planet(gs, V3(6.f, 1.f, 0.f),    V3(-0.05f, 3.7f, -0.1f), 0.2f,  5.f,    V3(0.2f, 0.4f, 0.7f));
+    spawn_planet(gs, V3(0),               V3(0.f, 0.f, 0.f),    10.0f,  10000.f, V3(0.8f, 0.8f, 0.2f));
+    spawn_planet(gs, V3(100.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / 100.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.4f, 0.7f));
 
+    // sqrt(GM/r)
 
     // spawn_planet(gs, position, V3(10.0f, 0.0f, 10.0f), 1.0f, 0.1f, V3(1));
     // spawn_planet(gs, position + V3(1, 0, 0), velocity, 0.1f, 5.f, orientation, V3(1, 0, 0));
@@ -262,7 +266,11 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_buffer game_memory, input_state *input)
 {
     auto gs = (game_state *) ctx->game_state;
-    phys::update_world(&gs->phys_world, input->dt);
+    // if (get_press_count(input->keyboard_and_mouse.buttons[Keyboard_H]))
+    {
+        // printf("H\n");
+        phys::update_world(&gs->phys_world, input->dt);
+    }
     game::on_every_frame(ctx, gs, input);
 }
 

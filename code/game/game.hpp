@@ -117,6 +117,9 @@ enum
     PlayerAction_RotateCameraRollLeft,
     PlayerAction_RotateCameraRollRight,
 
+    PlayerAction_Follow1,
+    PlayerAction_Follow2,
+
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,
 };
@@ -181,6 +184,8 @@ struct game_state
 
     game::camera camera;
     float32 camera_speed;
+    ecs::entity_id entity_to_follow;
+    float32 follow_distance;
 
     bool camera_fly_mode;
     timepoint exit_press_time;

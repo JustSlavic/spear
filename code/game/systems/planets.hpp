@@ -60,26 +60,26 @@ void move_planets(game_state *gs)
 void render_grid(context *ctx)
 {
     int grid_n = 20;
+    float32 dx = 5.f;
+    float32 dy = 5.f;
     {
-        auto m = matrix4::scale_x((float32) grid_n) * matrix4::scale_y(0.01f);
         for (int i = -grid_n; i <= grid_n; i++)
         {
             auto c = V4(0.4, 0.4, 0.4, 1);
-            auto m1 = matrix4::translate_y((float32) i * 1.f) * m;
-            auto m2 = matrix4::translate_y((float32) i * 1.f) * matrix4::rotate_x(to_radians(90)) * m;
-            ctx->render_square(m1, c, SHADER_COLOR);
-            ctx->render_square(m2, c, SHADER_COLOR);
+            auto m = matrix4::translate_y((float32) i * dy)
+                   * matrix4::scale_x((float32) grid_n * dx)
+                   * matrix4::scale_y(0.05f);
+            ctx->render_square(m, c, SHADER_COLOR);
         }
     }
     {
-        auto m = matrix4::scale_x(0.01f) * matrix4::scale_y((float32) grid_n);
         for (int i = -grid_n; i <= grid_n; i++)
         {
             auto c = V4(0.4, 0.4, 0.4, 1);
-            auto m1 = matrix4::translate_x((float32) i * 1.f) * m;
-            auto m2 = matrix4::translate_x((float32) i * 1.f) * matrix4::rotate_y(to_radians(90)) * m;
-            ctx->render_square(m1, c, SHADER_COLOR);
-            ctx->render_square(m2, c, SHADER_COLOR);
+            auto m = matrix4::translate_x((float32) i * dx)
+                   * matrix4::scale_x(0.05f)
+                   * matrix4::scale_y((float32) grid_n * dy);
+            ctx->render_square(m, c, SHADER_COLOR);
         }
     }
 }
@@ -139,6 +139,32 @@ void render_planets(context *ctx, game_state *gs)
         }
 #endif
     }
+
+    if (gs->planets.size() == 2)
+    {
+        auto *planet1 = gs->entities + gs->planets[0].get_index();
+        auto *planet2 = gs->entities + gs->planets[1].get_index();
+
+        auto m1 = phys::get_mass(&gs->phys_world, planet1->phys_world_handle);
+        auto m2 = phys::get_mass(&gs->phys_world, planet2->phys_world_handle);
+        auto x1 = phys::get_position(&gs->phys_world, planet1->phys_world_handle);
+        auto x2 = phys::get_position(&gs->phys_world, planet2->phys_world_handle);
+        auto p1 = phys::get_linear_momentum(&gs->phys_world, planet1->phys_world_handle);
+        auto p2 = phys::get_linear_momentum(&gs->phys_world, planet2->phys_world_handle);
+
+        float32 G = 0.1f;
+        float32 K1 = 0.5f * norm_squared(p1) / m1;
+        float32 K2 = 0.5f * norm_squared(p2) / m2;
+        float32 U  = G*m1*m2 / norm(x2 - x1);
+        float32 E = K1 + K2 - U;
+
+        {
+            auto buffer = ctx->temporary_allocator.allocate_buffer(64);
+            snprintf((char *) buffer.data, 63, "E = %f", E);
+            ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
+        }
+    }
+
     // ctx->render_banner(V3(0), matrix4::scale_x(50), V4(1));
 }
 

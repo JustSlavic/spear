@@ -362,6 +362,15 @@ void enter_battle_on_enemies_present(context *, game_state *gs, input_state *)
     }
 }
 
+void camera_follow(context *, game_state *gs, input_state *)
+{
+    auto *e = get_entity(gs, gs->entity_to_follow);
+    if (e)
+    {
+        gs->camera.position = e->position - normalized(gs->camera.forward) * gs->follow_distance;
+    }
+}
+
 
 } // namespace game
 

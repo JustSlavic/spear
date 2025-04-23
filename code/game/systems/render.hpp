@@ -5,6 +5,11 @@
 namespace game {
 
 
+void setup_render_camera(context *ctx, game_state *gs, input_state *)
+{
+    ctx->setup_camera(gs->camera.position, gs->camera.forward, gs->camera.up);
+}
+
 void render_character_page(context *ctx, game_state *gs, input_state *)
 {
     entity *hero = game::get_entity(gs, gs->hero_eid);
@@ -252,7 +257,7 @@ void render_camera_position(context *ctx, game_state *gs)
 {
     auto buffer = ctx->temporary_allocator.allocate_buffer(64);
     auto p = gs->camera.position;
-    sprintf((char *) buffer.data, "Camera.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
+    snprintf((char *) buffer.data, 63, "Camera.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
     ctx->render_text(matrix4::translate(10.f, 100.f, 0.f), V4(1), (char const *) buffer.data);
 }
 

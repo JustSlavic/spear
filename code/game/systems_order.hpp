@@ -38,10 +38,12 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
     next_turn(ctx, gs, input);
 
     move_planets(gs);
+    camera_follow(ctx, gs, input);
 }
 
 void render_stage(context *ctx, game_state *gs, input_state *input)
 {
+    setup_render_camera(ctx, gs, input);
     // render_ground(ctx, gs, input);
     // render_character_page(ctx, gs, input);
     // render_hero(ctx, gs, input);
