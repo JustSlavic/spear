@@ -47,12 +47,14 @@ struct context
 
     void setup_camera(vector3 p, vector3 f, vector3 u);
 
-    void render_square(matrix4 m, vector4 c, shader_enum s);
-    void render_cube(matrix4 m, vector4 c, shader_enum s);
+    void render_mesh(render_mesh_tag mesh_tag, render_shader_tag shader_tag, vector3 position, vector3 scale, quaternion orientation = quaternion::identity(), vector4 color = V4(1.f));
+
+    void render_square(matrix4 m, vector4 c, render_shader_tag s);
+    void render_cube(matrix4 m, vector4 c, render_shader_tag s);
     void render_ui(matrix4 m, vector4 c);
     void render_banner(vector3 p, matrix4 m, vector4 c);
     void render_text(matrix4 m, vector4 c, char const *cstr);
-    void render_planet(vector3 p, float32 r, vector4 c, quaternion q, matrix3 mo);
+    void render_planet(vector3 p, float32 r, vector4 c, quaternion q, render_shader_tag shader_tag);
 };
 
 

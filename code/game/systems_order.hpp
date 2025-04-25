@@ -52,7 +52,7 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     // render_timer(ctx, gs, input);
     if (gs->is_in_battle)
     {
-        render_battle_queue(ctx, gs, input);
+        // render_battle_queue(ctx, gs, input);
     }
     // render_dialogue(ctx, gs, input);
     // render_field(ctx, gs, input);

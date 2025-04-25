@@ -65,31 +65,33 @@ void render_grid(context *ctx)
     {
         for (int i = -grid_n; i <= grid_n; i++)
         {
-            auto c = V4(0.4, 0.4, 0.4, 1);
+            auto c = V4(0.2, 0.2, 0.2, 1);
             auto m = matrix4::translate_y((float32) i * dy)
                    * matrix4::scale_x((float32) grid_n * dx)
                    * matrix4::scale_y(0.05f);
-            ctx->render_square(m, c, SHADER_COLOR);
+            ctx->render_square(m, c, RenderShader_SingleColor);
         }
     }
     {
         for (int i = -grid_n; i <= grid_n; i++)
         {
-            auto c = V4(0.4, 0.4, 0.4, 1);
+            auto c = V4(0.2, 0.2, 0.2, 1);
             auto m = matrix4::translate_x((float32) i * dx)
                    * matrix4::scale_x(0.05f)
                    * matrix4::scale_y((float32) grid_n * dy);
-            ctx->render_square(m, c, SHADER_COLOR);
+            ctx->render_square(m, c, RenderShader_SingleColor);
         }
     }
 }
 
 void render_planets(context *ctx, game_state *gs)
 {
-    for (auto eid : gs->planets)
+    for (int planet_index = 0; planet_index < gs->planets.size(); planet_index++)
     {
+        auto shader_tag = planet_index == 0 ? RenderShader_Sun : RenderShader_Phong;
+        auto eid = gs->planets[planet_index];
         auto *e = gs->entities + eid.get_index();
-        ctx->render_planet(e->position, e->radius, V4(e->color, 1), e->orientation, matrix3::identity());
+        ctx->render_planet(e->position, e->radius, V4(e->color, 1), e->orientation, shader_tag);
 
         {
             auto Oxy = V3(e->position.x, e->position.y, 0.f);
@@ -100,7 +102,7 @@ void render_planets(context *ctx, game_state *gs)
             tm.sx = apply_unit_quaternion(rot, tm.sx);
             tm.sy = apply_unit_quaternion(rot, tm.sy);
             tm.sz = apply_unit_quaternion(rot, tm.sz);
-            ctx->render_square(to_matrix4(tm), V4(1.f, 1.f, 1.f, 0.4f), SHADER_COLOR);
+            ctx->render_square(to_matrix4(tm), V4(1.f, 1.f, 1.f, 0.4f), RenderShader_SingleColor);
         }
 #if 0
         {
@@ -112,7 +114,7 @@ void render_planets(context *ctx, game_state *gs)
                  matrix4::scale_y(0.05f) *
                  matrix4::scale(e->radius) *
                  matrix4::translate_x(1);
-            ctx->render_square(m1, V4(1, 0, 0, 1), SHADER_COLOR);
+            ctx->render_square(m1, V4(1, 0, 0, 1), RenderShader_SingleColor);
         }
         {
             auto m1 = matrix4::identity();
@@ -123,7 +125,7 @@ void render_planets(context *ctx, game_state *gs)
                  matrix4::scale_x(0.05f) *
                  matrix4::scale(e->radius) *
                  matrix4::translate_y(1);
-            ctx->render_square(m1, V4(0, 1, 0, 1), SHADER_COLOR);
+            ctx->render_square(m1, V4(0, 1, 0, 1), RenderShader_SingleColor);
         }
         {
             auto m1 = matrix4::translate(e->position);
@@ -135,7 +137,7 @@ void render_planets(context *ctx, game_state *gs)
             //      matrix4::translate_z(1) *
             //      matrix4::rotate_y(to_radians(90)) *
             //      matrix4::rotate_x(to_radians(90));
-            ctx->render_square(m1, V4(0, 0, 1, 1), SHADER_COLOR);
+            ctx->render_square(m1, V4(0, 0, 1, 1), RenderShader_SingleColor);
         }
 #endif
     }

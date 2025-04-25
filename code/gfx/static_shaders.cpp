@@ -149,7 +149,7 @@ out vec4 result_color;
 
 void main()
 {
-    vec3 light_position = vec3(10.f, 0.f, 10.f);
+    vec3 light_position = vec3(0.f, 0.f, 0.f);
     vec3 light_direction = normalize(light_position - fragment_position);
 
     float ambient_light = 0.01;
@@ -159,5 +159,41 @@ void main()
     vec3 diffuse_color = diffuse_light * fragment_color.rgb;
 
     result_color = vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
+}
+)GLSL";
+
+GLOBAL char const *vs_sun = R"GLSL(
+#version 410
+
+layout (location = 0) in vec3 vertex_position;
+layout (location = 1) in vec3 vertex_normal;
+
+out vec3 fragment_position;
+out vec3 fragment_normal;
+
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
+
+void main()
+{
+    fragment_position = (u_model * vec4(vertex_position, 1.0)).xyz;
+    fragment_normal = mat3(transpose(inverse(u_model))) * vertex_normal;
+    gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
+}
+)GLSL";
+
+GLOBAL char const *fs_sun = R"GLSL(
+#version 410
+
+in vec3 fragment_position;
+in vec3 fragment_normal;
+
+out vec4 result_color;
+
+void main()
+{
+    vec3 sun_color = vec3(1.0, 1.0, 1.0);
+    result_color = vec4(sun_color, 1.0);
 }
 )GLSL";

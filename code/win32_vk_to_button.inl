@@ -49,16 +49,16 @@ Keyboard_Down,         // 0x28    VK_DOWN                 DOWN ARROW key
 0,            // 0x2E    VK_DELETE               DEL key
 0,            // 0x2F    VK_HELP                 HELP key
 
-0,            // 0x30                            0 key
-0,            // 0x31                            1 key
-0,            // 0x32                            2 key
-0,            // 0x33                            3 key
-0,            // 0x34                            4 key
-0,            // 0x35                            5 key
-0,            // 0x36                            6 key
-0,            // 0x37                            7 key
-0,            // 0x38                            8 key
-0,            // 0x39                            9 key
+Keyboard_0,            // 0x30                            0 key
+Keyboard_1,            // 0x31                            1 key
+Keyboard_2,            // 0x32                            2 key
+Keyboard_3,            // 0x33                            3 key
+Keyboard_4,            // 0x34                            4 key
+Keyboard_5,            // 0x35                            5 key
+Keyboard_6,            // 0x36                            6 key
+Keyboard_7,            // 0x37                            7 key
+Keyboard_8,            // 0x38                            8 key
+Keyboard_9,            // 0x39                            9 key
 0,            // 0x3A                            Undefined
 0,            // 0x3B                            Undefined
 0,            // 0x3C                            Undefined

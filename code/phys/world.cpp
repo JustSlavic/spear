@@ -151,7 +151,7 @@ void make_jacobian_nxn(float32 *Y, float32 *J, uint32 stride)
 
     // J - row3
     J[Ix(3, 1)] = Gm2_d5 * 3.f*x*z;
-    J[Ix(3, 2)] = Gm2_d5 * 3.2*y*z;
+    J[Ix(3, 2)] = Gm2_d5 * 3.f*y*z;
     J[Ix(3, 3)] = Gm2_d5 * (-x*x - y*y + 2.f*z*z);
 
     J[Ix(3, 4)] = -J[Ix(3, 1)];
@@ -240,20 +240,20 @@ void update_step(float32 *in, float32 *out, uint32 stride, uint32 count, float32
     dY0[4] = dt * F0[4];
     dY0[5] = dt * F0[5];
 
-    for (int approx_step = 0; approx_step < 3; approx_step++)
-    {
-        for (int i = 0; i < 6; i++)
-        {
-            float32 acc = 0.f;
-            for (int j = 0; j < 6; j++) if (i != j)
-                acc += I_hJ[Ix(i+1, j+1)] * dY1[j];
-            dY1[i] = (dt*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
-        }
+    // for (int approx_step = 0; approx_step < 3; approx_step++)
+    // {
+    //     for (int i = 0; i < 6; i++)
+    //     {
+    //         float32 acc = 0.f;
+    //         for (int j = 0; j < 6; j++) if (i != j)
+    //             acc += I_hJ[Ix(i+1, j+1)] * dY1[j];
+    //         dY1[i] = (dt*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
+    //     }
 
-        float32 *tmp = dY0;
-        dY0 = dY1;
-        dY1 = tmp;
-    }
+    //     float32 *tmp = dY0;
+    //     dY0 = dY1;
+    //     dY1 = tmp;
+    // }
 
     float32 new_vx1 = vx1 + dY0[0];
     float32 new_vy1 = vy1 + dY0[1];
@@ -281,7 +281,7 @@ void update_step(float32 *in, float32 *out, uint32 stride, uint32 count, float32
     out[stride + 1] = y2 + dt * new_vy2;
     out[stride + 2] = z2 + dt * new_vz2;
 
-    for (int i = 0; i < count; i++)
+    for (uint32 i = 0; i < count; i++)
     {
         quaternion Q;
         Q._1 = in[i*stride + 3];

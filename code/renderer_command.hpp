@@ -5,16 +5,10 @@
 #include <math.hpp>
 
 
-enum shader_enum
-{
-    SHADER_NONE,
-    SHADER_COLOR,
-    SHADER_GROUND,
-};
-
 enum render_command_tag
 {
     RenderCommand_SetupCamera,
+    RenderCommand_RenderMesh,
     RenderCommand_RenderSquare,
     RenderCommand_RenderCube,
     RenderCommand_RenderUi,
@@ -24,19 +18,37 @@ enum render_command_tag
     RenderCommand_RenderSphere,
 };
 
+enum render_shader_tag
+{
+    RenderShader_None,
+    RenderShader_SingleColor,
+    RenderShader_Ground,
+    RenderShader_Phong,
+    RenderShader_Sun,
+};
+
+enum render_mesh_tag
+{
+    RenderMesh_None,
+    RenderMesh_Square,
+    RenderMesh_Cube,
+    RenderMesh_Sphere,
+};
+
 struct rend_command
 {
     render_command_tag tag;
+    render_shader_tag shader_tag;
+    render_mesh_tag mesh_tag;
 
     vector3 position;
     vector3 forward;
     vector3 up;
-    float32 scale;
-    quaternion quat;
+    vector3 scale;
+    quaternion orientation;
 
     matrix4 model;
     vector4 color;
-    shader_enum shader;
     char const *cstr;
     matrix3 mo;
 };

@@ -822,6 +822,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
     auto shader_text = compile_shaders(vs_text, fs_text);
     auto shader_phong = compile_shaders(vs_phong, fs_phong);
+    auto shader_sun = compile_shaders(vs_sun, fs_sun);
 
     auto font_content = platform::load_file("font_14x26.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &ctx.temporary_allocator, font_content);
@@ -922,32 +923,45 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
                 glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
             }
-            else if (cmd.tag == RenderCommand_RenderCube)
+            else if (cmd.tag == RenderCommand_RenderMesh)
             {
-                shader *s = NULL;
-                if (cmd.shader == SHADER_COLOR)
-                    s = &shader_color;
-                else if (cmd.shader == SHADER_GROUND)
-                    s = &shader_ground;
-                else
-                    ASSERT_FAIL();
+                gpu_mesh *mesh = NULL;
+                if (cmd.mesh_tag == RenderMesh_Square) mesh = &gpu_square;
+                if (cmd.mesh_tag == RenderMesh_Cube) mesh = &gpu_cube;
+                if (cmd.mesh_tag == RenderMesh_Sphere) mesh = &gpu_ico_sphere;
 
-                glUseProgram(s->id);
+                shader *shader = NULL;
+                if (cmd.shader_tag == RenderShader_SingleColor) shader = &shader_color;
+                if (cmd.shader_tag == RenderShader_Ground) shader = &shader_ground;
+                if (cmd.shader_tag == RenderShader_Phong) shader = &shader_phong;
+                if (cmd.shader_tag == RenderShader_Sun) shader = &shader_sun;
 
-                s->uniform("u_model", cmd.model);
-                s->uniform("u_view", view);
-                s->uniform("u_projection", projection);
-                s->uniform("u_color", cmd.color);
-
-                glBindVertexArray(gpu_cube.vao);
-                if (gpu_cube.ibo)
+                if (mesh && shader)
                 {
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_cube.ibo);
-                    glDrawElements(GL_TRIANGLES, gpu_cube.count, GL_UNSIGNED_INT, NULL);
-                }
-                else
-                {
-                    glDrawArrays(GL_TRIANGLES, 0, gpu_cube.count);
+                    auto tm = transform::translate(cmd.position) *
+                              transform::scale(cmd.scale);
+
+                    tm.sx = apply_unit_quaternion(cmd.orientation, tm.sx);
+                    tm.sy = apply_unit_quaternion(cmd.orientation, tm.sy);
+                    tm.sz = apply_unit_quaternion(cmd.orientation, tm.sz);
+
+                    glUseProgram(shader->id);
+
+                    shader->uniform("u_model", to_matrix4(tm));
+                    shader->uniform("u_view", view);
+                    shader->uniform("u_projection", projection);
+                    shader->uniform("u_color", cmd.color);
+
+                    glBindVertexArray(mesh->vao);
+                    if (mesh->ibo)
+                    {
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
+                        glDrawElements(GL_TRIANGLES, mesh->count, GL_UNSIGNED_INT, NULL);
+                    }
+                    else
+                    {
+                        glDrawArrays(GL_TRIANGLES, 0, mesh->count);
+                    }
                 }
             }
             else if (cmd.tag == RenderCommand_RenderSphere)
@@ -955,22 +969,17 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 auto tm = transform::translate(cmd.position) *
                           transform::scale(cmd.scale);
 
-                tm.sx = apply_unit_quaternion(cmd.quat, tm.sx);
-                tm.sy = apply_unit_quaternion(cmd.quat, tm.sy);
-                tm.sz = apply_unit_quaternion(cmd.quat, tm.sz);
+                tm.sx = apply_unit_quaternion(cmd.orientation, tm.sx);
+                tm.sy = apply_unit_quaternion(cmd.orientation, tm.sy);
+                tm.sz = apply_unit_quaternion(cmd.orientation, tm.sz);
 
-                // draw_platonic_solid(
-                //     gpu_platonic_cube,
-                //     shader_phong,
-                //     cmd.color,
-                //     to_matrix4(tm), view_matrix, proj_matrix);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 draw_platonic_solid(
                     gpu_ico_sphere,
                     shader_phong,
                     cmd.color,
                     to_matrix4(tm), view, projection);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
             else if (cmd.tag == RenderCommand_RenderUi)
             {

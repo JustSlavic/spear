@@ -29,7 +29,6 @@ struct world
     memory_buffer memory;
     float32 *Y;
     float32 *Y0;
-    float32 *F;
     uint32 capacity;
     uint32 count;
 

@@ -55,7 +55,7 @@ void render_field(context *ctx, game_state *gs, input_state *)
             auto m = matrix4::translate(mult*(x - gs->field.width / 2),
                                         mult*(y - gs->field.height / 2),
                                         0.f);
-            ctx->render_cube(m, c, SHADER_GROUND);
+            ctx->render_cube(m, c, RenderShader_Ground);
         }
     }
 }
@@ -104,7 +104,7 @@ void render_ground(context *ctx, game_state *gs, input_state *)
 
             auto m = matrix4::translate(2.3f*x, 2.3f*y, 0.f);
 
-            ctx->render_cube(m, c, SHADER_GROUND);
+            ctx->render_cube(m, c, RenderShader_Ground);
         }
     }
 }
@@ -119,7 +119,7 @@ void render_stones(context *ctx, game_state *gs, input_state *)
         float32 z = 2;
 
         auto m = matrix4::translate(x, y, z);
-        ctx->render_cube(m, V4(0.6, 0.8, 0.1, 1), SHADER_COLOR);
+        ctx->render_cube(m, V4(0.6, 0.8, 0.1, 1), RenderShader_SingleColor);
     }
 }
 
@@ -165,7 +165,7 @@ void render_hero(context *ctx, game_state *gs, input_state *)
         auto m = matrix4::translate(x, y, z) *
                  matrix4::scale(0.5f, 0.5f, height);
 
-        ctx->render_cube(m, V4(1, 1, 1, 1), SHADER_COLOR);
+        ctx->render_cube(m, V4(1, 1, 1, 1), RenderShader_SingleColor);
         draw_health_bar(ctx, hero, x, y, z);
     }
 }
@@ -183,7 +183,7 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
 
         auto m = matrix4::translate(x, y, z) *
                  matrix4::scale(0.5f, 0.5f, height);
-        ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), SHADER_COLOR);
+        ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), RenderShader_SingleColor);
         draw_health_bar(ctx, monster, x, y, z);
 
         if (monster->action.kind != ENTITY_ACTION_NONE)
@@ -195,7 +195,7 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
             ctx->render_square(matrix4::translate((float32) (monster->action.x - monster->x),
                                                   (float32) (monster->action.y - monster->y),
                                                   (float32) (-gs->selected_entity_height)) * m,
-                color, SHADER_COLOR);
+                color, RenderShader_SingleColor);
         }
     }
 }
@@ -241,7 +241,7 @@ void render_timer(context *ctx, game_state *gs, input_state *input)
         ctx->render_square(
                        matrix4::translate_y((float32) (ctx->viewport.height - 10)) *
                        matrix4::scale(ctx->viewport.width * t, 2, 1)
-            , color, SHADER_COLOR);
+            , color, RenderShader_SingleColor);
     }
 }
 
