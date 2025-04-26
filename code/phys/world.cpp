@@ -240,20 +240,27 @@ void update_step(float32 *in, float32 *out, uint32 stride, uint32 count, float32
     dY0[4] = dt * F0[4];
     dY0[5] = dt * F0[5];
 
-    // for (int approx_step = 0; approx_step < 3; approx_step++)
-    // {
-    //     for (int i = 0; i < 6; i++)
-    //     {
-    //         float32 acc = 0.f;
-    //         for (int j = 0; j < 6; j++) if (i != j)
-    //             acc += I_hJ[Ix(i+1, j+1)] * dY1[j];
-    //         dY1[i] = (dt*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
-    //     }
+    for (int approx_step = 0; approx_step < 3; approx_step++)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            float32 acc = 0.f;
+            for (int j = 0; j < 6; j++)
+            {
+                if (i != j)
+                {
+                    acc += I_hJ[Ix(i+1, j+1)] * dY0[j];
+                    console::print("acc += %f * %f\n", I_hJ[Ix(i+1, j+1)], dY0[j]);
+                }
+            }
 
-    //     float32 *tmp = dY0;
-    //     dY0 = dY1;
-    //     dY1 = tmp;
-    // }
+            dY1[i] = (dt*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
+        }
+
+        float32 *tmp = dY0;
+        dY0 = dY1;
+        dY1 = tmp;
+    }
 
     float32 new_vx1 = vx1 + dY0[0];
     float32 new_vy1 = vy1 + dY0[1];
