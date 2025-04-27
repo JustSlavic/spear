@@ -3,7 +3,7 @@
 
 void context::exit_game()
 {
-    exec_commands.push_back(exec_command{ exec_command::exit });
+    exec_commands.push_back(exec_command{ ExecutionCommand_ExitGame });
 }
 
 void context::setup_camera(vector3 p, vector3 f, vector3 u)

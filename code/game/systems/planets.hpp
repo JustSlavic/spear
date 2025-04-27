@@ -84,7 +84,7 @@ void render_grid(context *ctx)
     }
 }
 
-void render_planets(context *ctx, game_state *gs)
+void render_planets(context *ctx, game_state *gs, input_state *input)
 {
     for (int planet_index = 0; planet_index < gs->planets.size(); planet_index++)
     {
@@ -162,7 +162,7 @@ void render_planets(context *ctx, game_state *gs)
 
         {
             auto buffer = ctx->temporary_allocator.allocate_buffer(64);
-            snprintf((char *) buffer.data, 63, "E = %f", E);
+            snprintf((char *) buffer.data, 63, "E = %f", input->dt);
             ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
         }
     }

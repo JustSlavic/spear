@@ -57,7 +57,7 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     // render_dialogue(ctx, gs, input);
     // render_field(ctx, gs, input);
 
-    render_planets(ctx, gs);
+    render_planets(ctx, gs, input);
     render_grid(ctx);
 
     render_camera_position(ctx, gs);

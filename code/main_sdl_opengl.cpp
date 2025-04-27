@@ -27,6 +27,15 @@ GLOBAL int32 current_client_width;
 GLOBAL int32 current_client_height;
 GLOBAL bool32 viewport_changed;
 
+struct debug_graph
+{
+    memory_buffer memory;
+    float32 *graph;
+    uint64   count;
+    uint64   index;
+    float32  max_value;
+};
+
 
 uint32 map_button_from_scancode_2(uint32 sk)
 {
@@ -175,9 +184,7 @@ void debug_draw_line(float32 posx, float32 posy, float32 width, float32 height,
     glDrawElements(GL_TRIANGLES, m->count, GL_UNSIGNED_INT, NULL);
 }
 
-void debug_draw_memory_usage(int32 *usage_array, usize count,
-    int32 index, int32 max_value,
-    gpu_mesh *m, shader *s)
+void draw_debug_graph(debug_graph *graph, gpu_mesh *m, shader *s)
 {
     transform tm_ui = transform::translate(-1.f, -1.f, 0.f)
                     * transform::scale(2.f / current_client_width,
@@ -199,10 +206,10 @@ void debug_draw_memory_usage(int32 *usage_array, usize count,
         }
     }
     // Draw usage graph
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < graph->count; i++)
     {
-        float32 col_width = ((float32) current_client_width - 2) / count;
-        float32 col_height = (float32) usage_array[(i + index) % count] / max_value;
+        float32 col_width = ((float32) current_client_width - 2) / (graph->count);
+        float32 col_height = (float32) graph->graph[(i + (graph->index)) % (graph->count)] / graph->max_value;
 
         float32 col_posx = (float32) col_width * i;
         float32 col_posy = (float32) frame_posy + 1;
@@ -345,6 +352,15 @@ int main()
 
     // ======================================================================
 
+    debug_graph debug_fps_graph = {};
+    debug_fps_graph.memory = global_arena.allocate_buffer(sizeof(float32) * 512);
+    debug_fps_graph.graph = (float32 *) debug_fps_graph.memory.data;
+    debug_fps_graph.index = 0;
+    debug_fps_graph.count = 512;
+    debug_fps_graph.max_value = 1000.f / 30.f;
+
+    // ======================================================================
+
 #define FLUID_N 50
 #define FLUID_SIZE ((FLUID_N)+2)*((FLUID_N)+2)
 #define Ix(x, y) ((x)*((FLUID_N)+2) + (y))
@@ -412,13 +428,16 @@ int main()
 
         for (auto cmd : ctx.exec_commands)
         {
-            switch (cmd.kind)
+            switch (cmd.tag)
             {
-                case exec_command::exit:
+                case ExecutionCommand_ExitGame:
                 {
                     running = false;
                 }
                 break;
+
+                default:
+                    ASSERT_FAIL("Unsupported");
             }
         }
         ctx.exec_commands.clear();
@@ -608,17 +627,6 @@ int main()
             }
         }
 #endif
-        static int32 memory_usage[256] = {};
-        static int32 memory_usage_index = 0;
-
-        int32 max_value = 90;
-        memory_usage[memory_usage_index] = rand() % 100;
-        memory_usage_index = (memory_usage_index + 1) % 256;
-
-        debug_draw_memory_usage(memory_usage, ARRAY_COUNT(memory_usage),
-            memory_usage_index, max_value,
-            &gpu_square, &shader_color);
-
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -749,6 +757,11 @@ int main()
 
             glEnable(GL_DEPTH_TEST);
         }
+
+#if DEBUG
+        debug_fps_graph.graph[(debug_fps_graph.index++) % debug_fps_graph.count] = input.dt * 1000.f;
+        draw_debug_graph(&debug_fps_graph, &gpu_square, &shader_color);
+#endif
 
         SDL_GL_SwapWindow(window);
 

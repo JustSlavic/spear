@@ -250,7 +250,6 @@ void update_step(float32 *in, float32 *out, uint32 stride, uint32 count, float32
                 if (i != j)
                 {
                     acc += I_hJ[Ix(i+1, j+1)] * dY0[j];
-                    console::print("acc += %f * %f\n", I_hJ[Ix(i+1, j+1)], dY0[j]);
                 }
             }
 
