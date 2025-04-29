@@ -10,8 +10,8 @@ enum execution_command_tag
 
     ExecutionCommand_ExitGame,
 
-    ExecutionCommand_DebugGraph_Off,
-    ExecutionCommand_DebugGraph_Fps,
+    ExecutionCommand_DebugDraw_Off,
+    ExecutionCommand_DebugDraw_Fps,
 };
 
 

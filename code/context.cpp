@@ -6,6 +6,18 @@ void context::exit_game()
     exec_commands.push_back(exec_command{ ExecutionCommand_ExitGame });
 }
 
+#if DEBUG
+void context::debug_draw_off()
+{
+    exec_commands.push_back(exec_command{ ExecutionCommand_DebugDraw_Off });
+}
+
+void context::debug_draw_fps()
+{
+    exec_commands.push_back(exec_command{ ExecutionCommand_DebugDraw_Fps });
+}
+#endif // DEBUG
+
 void context::setup_camera(vector3 p, vector3 f, vector3 u)
 {
     rend_command cmd = { RenderCommand_SetupCamera };

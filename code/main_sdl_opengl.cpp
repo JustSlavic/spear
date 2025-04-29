@@ -42,6 +42,18 @@ uint32 map_button_from_scancode_2(uint32 sk)
     switch (sk)
     {
     case SDL_SCANCODE_ESCAPE: return Keyboard_Esc;
+    case SDL_SCANCODE_F1: return Keyboard_F1;
+    case SDL_SCANCODE_F2: return Keyboard_F2;
+    case SDL_SCANCODE_F3: return Keyboard_F3;
+    case SDL_SCANCODE_F4: return Keyboard_F4;
+    case SDL_SCANCODE_F5: return Keyboard_F5;
+    case SDL_SCANCODE_F6: return Keyboard_F6;
+    case SDL_SCANCODE_F7: return Keyboard_F7;
+    case SDL_SCANCODE_F8: return Keyboard_F8;
+    case SDL_SCANCODE_F9: return Keyboard_F9;
+    case SDL_SCANCODE_F10: return Keyboard_F10;
+    case SDL_SCANCODE_F11: return Keyboard_F11;
+    case SDL_SCANCODE_F12: return Keyboard_F12;
     case SDL_SCANCODE_A: return Keyboard_A;
     case SDL_SCANCODE_B: return Keyboard_B;
     case SDL_SCANCODE_C: return Keyboard_C;
@@ -351,14 +363,15 @@ int main()
     auto ui_framebuffer = create_framebuffer(current_client_width, current_client_height);
 
     // ======================================================================
-
+#if DEBUG
+    bool32 debug_draw_fps_graph_active = false;
     debug_graph debug_fps_graph = {};
     debug_fps_graph.memory = global_arena.allocate_buffer(sizeof(float32) * 512);
     debug_fps_graph.graph = (float32 *) debug_fps_graph.memory.data;
     debug_fps_graph.index = 0;
     debug_fps_graph.count = 512;
     debug_fps_graph.max_value = 1000.f / 30.f;
-
+#endif // DEBUG
     // ======================================================================
 
 #define FLUID_N 50
@@ -434,6 +447,14 @@ int main()
                 {
                     running = false;
                 }
+                break;
+
+                case ExecutionCommand_DebugDraw_Off:
+                    debug_draw_fps_graph_active = false;
+                break;
+
+                case ExecutionCommand_DebugDraw_Fps:
+                    TOGGLE(debug_draw_fps_graph_active);
                 break;
 
                 default:
@@ -759,8 +780,11 @@ int main()
         }
 
 #if DEBUG
-        debug_fps_graph.graph[(debug_fps_graph.index++) % debug_fps_graph.count] = input.dt * 1000.f;
-        draw_debug_graph(&debug_fps_graph, &gpu_square, &shader_color);
+        if (debug_draw_fps_graph_active)
+        {
+            debug_fps_graph.graph[(debug_fps_graph.index++) % debug_fps_graph.count] = input.dt * 1000.f;
+            draw_debug_graph(&debug_fps_graph, &gpu_square, &shader_color);
+        }
 #endif
 
         SDL_GL_SwapWindow(window);

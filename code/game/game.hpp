@@ -103,6 +103,11 @@ enum
     PlayerAction_None,
     PlayerAction_ExitGame,
 
+#if DEBUG
+    PlayerAction_DebugDraw_Off,
+    PlayerAction_DebugDraw_Fps,
+#endif
+
     PlayerAction_ToggleFreeCamera,
     PlayerAction_MoveCameraForward,
     PlayerAction_MoveCameraBackward,
@@ -122,11 +127,13 @@ enum
 
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,
+
+    PlayerAction_Count
 };
 
 struct action_set
 {
-    uint32 buttons[32];
+    uint32 buttons[PlayerAction_Count];
 };
 
 struct game_state;

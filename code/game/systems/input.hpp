@@ -23,6 +23,20 @@ void game_exit(context *ctx, game_state *gs, input_state *input)
     }
 }
 
+#if DEBUG
+void debug_draw_input(context *ctx, game_state *gs, input_state *input)
+{
+    if (get_press_count(gs, input, PlayerAction_DebugDraw_Off))
+    {
+        ctx->debug_draw_off();
+    }
+    if (get_press_count(gs, input, PlayerAction_DebugDraw_Fps))
+    {
+        ctx->debug_draw_fps();
+    }
+}
+#endif
+
 void camera_fly_mode(context *ctx, game_state *gs, input_state *input)
 {
     if (get_press_count(gs, input, PlayerAction_ToggleFreeCamera))

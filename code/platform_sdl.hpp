@@ -76,7 +76,7 @@ void create_opengl_window(int32 width, int32 height, window *w)
 
     w->handle  = window;
     w->context = context;
-
+        
     SDL_version compiled;
     SDL_VERSION(&compiled);
     printf("Compiled against SDL2 v.%d.%d.%d\n", (int)compiled.major, (int)compiled.minor, (int)compiled.patch);

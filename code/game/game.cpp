@@ -157,6 +157,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->phys_world.capacity = PHYS_MAX_BODY_COUNT;
 
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);
+
+#if DEBUG
+    bind_action_to_button(&gs->player_actions, Keyboard_F1, PlayerAction_DebugDraw_Off);
+    bind_action_to_button(&gs->player_actions, Keyboard_F2, PlayerAction_DebugDraw_Fps);
+#endif
+
     bind_action_to_button(&gs->player_actions, Keyboard_I, PlayerAction_ToggleFreeCamera);
 
     bind_action_to_button(&gs->player_actions, Keyboard_W, PlayerAction_MoveCameraUp);

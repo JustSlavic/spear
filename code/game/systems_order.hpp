@@ -13,6 +13,7 @@ namespace game {
 void process_input(context *ctx, game_state *gs, input_state *input)
 {
     game_exit(ctx, gs, input);
+    debug_draw_input(ctx, gs, input);
     camera_fly_mode(ctx, gs, input);
     ghost_view_mode(ctx, gs, input);
     heal_hero(ctx, gs, input);

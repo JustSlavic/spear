@@ -44,6 +44,11 @@ struct context
     debug_load_file_t *debug_load_file;
 
     void exit_game();
+    
+#if DEBUG
+    void debug_draw_off();
+    void debug_draw_fps();
+#endif
 
     void setup_camera(vector3 p, vector3 f, vector3 u);
 

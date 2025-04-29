@@ -342,7 +342,7 @@ memory_buffer allocate_memory(void *base_address, usize size)
 }
 
 int32 get_width(RECT rectangle)
-{
+        {
     int32 result = rectangle.right - rectangle.left;
     return result;
 }
