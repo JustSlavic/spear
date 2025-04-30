@@ -151,9 +151,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     ctx->game_state = gs;
 
 #define PHYS_MAX_BODY_COUNT 32
-    gs->phys_world.memory = arena.allocate_buffer(2 * PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE + PHYS_MAX_BODY_COUNT * sizeof(vector3));
-    gs->phys_world.Y = (float32 *) gs->phys_world.memory.data;
-    gs->phys_world.Y0 = (float32 *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * PHYS_BODY_SIZE);
+    gs->phys_world.memory = arena.allocate_buffer(2 * PHYS_MAX_BODY_COUNT * sizeof(phys::rigid_body) + PHYS_MAX_BODY_COUNT * sizeof(vector3));
+    gs->phys_world.Y = (phys::rigid_body *) gs->phys_world.memory.data;
+    gs->phys_world.Y0 = (phys::rigid_body *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * sizeof(phys::rigid_body));
     gs->phys_world.capacity = PHYS_MAX_BODY_COUNT;
 
     bind_action_to_button(&gs->player_actions, Keyboard_Esc, PlayerAction_ExitGame);

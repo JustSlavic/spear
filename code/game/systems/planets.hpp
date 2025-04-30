@@ -36,12 +36,13 @@ ecs::entity_id spawn_planet(game_state *gs,
 
     vector3 I0 = make_inertia_tensor(2.5f, 5.0f, 0.5f);
 
-    phys::set_position(w, h, p);
-    phys::set_orientation(w, h, quaternion::identity());
-    phys::set_linear_momentum(w, h, v * m);
-    phys::set_angular_momentum(w, h, make_vector3(3.0f, 0.01f, 0.0f));
-    phys::set_inertia_tensor(w, h, I0);
-    phys::set_mass(w, h, m);
+    phys::rigid_body *body = phys::get_rigid_body(w, h);
+    body->X = p;
+    body->Q = quaternion::identity();
+    body->P = v * m;
+    body->L = make_vector3(3.0f, 0.01f, 0.0f);
+    body->I = I0;
+    body->M = m;
 
     return eid;
 }
@@ -52,8 +53,9 @@ void move_planets(game_state *gs)
     {
         // Copy from phys world for render
         auto *e = gs->entities + eid.get_index();
-        e->position = phys::get_position(&gs->phys_world, e->phys_world_handle);
-        e->orientation = phys::get_orientation(&gs->phys_world, e->phys_world_handle);
+        auto *b = phys::get_rigid_body(&gs->phys_world, e->phys_world_handle);
+        e->position = b->X;
+        e->orientation = b->Q;
     }
 }
 
@@ -147,12 +149,15 @@ void render_planets(context *ctx, game_state *gs, input_state *input)
         auto *planet1 = gs->entities + gs->planets[0].get_index();
         auto *planet2 = gs->entities + gs->planets[1].get_index();
 
-        auto m1 = phys::get_mass(&gs->phys_world, planet1->phys_world_handle);
-        auto m2 = phys::get_mass(&gs->phys_world, planet2->phys_world_handle);
-        auto x1 = phys::get_position(&gs->phys_world, planet1->phys_world_handle);
-        auto x2 = phys::get_position(&gs->phys_world, planet2->phys_world_handle);
-        auto p1 = phys::get_linear_momentum(&gs->phys_world, planet1->phys_world_handle);
-        auto p2 = phys::get_linear_momentum(&gs->phys_world, planet2->phys_world_handle);
+        auto *body1 = phys::get_rigid_body(&gs->phys_world, planet1->phys_world_handle);
+        auto *body2 = phys::get_rigid_body(&gs->phys_world, planet2->phys_world_handle);
+
+        auto m1 = body1->M;
+        auto m2 = body2->M;
+        auto x1 = body1->X;
+        auto x2 = body2->X;
+        auto p1 = body1->P;
+        auto p2 = body2->P;
 
         float32 G = 0.1f;
         float32 K1 = 0.5f * norm_squared(p1) / m1;
@@ -162,7 +167,7 @@ void render_planets(context *ctx, game_state *gs, input_state *input)
 
         {
             auto buffer = ctx->temporary_allocator.allocate_buffer(64);
-            snprintf((char *) buffer.data, 63, "E = %f", input->dt);
+            snprintf((char *) buffer.data, 63, "E = %f", E);
             ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
         }
     }
