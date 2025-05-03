@@ -20,7 +20,6 @@ typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 #include <gfx/static_shaders.cpp>
 
 
-GLOBAL bool32 running;
 GLOBAL uint32 current_client_width;
 GLOBAL uint32 current_client_height;
 GLOBAL bool32 viewport_changed;
@@ -309,6 +308,12 @@ const char* gl_get_error_string(GLenum err) {
 #include <common_graphics.hpp>
 #include <platonic_solids.hpp>
 
+#include "game_loop.hpp"
+#include "debug_graph.hpp"
+
+
+GLOBAL game_loop_data game_loop;
+
 
 void draw_platonic_solid(gpu_mesh mesh, shader s, vector4 c, matrix4 m, matrix4 v, matrix4 p)
 {
@@ -577,11 +582,11 @@ MAIN_WINDOW_CALLBACK(window_callback)
         break;
 
         case WM_CLOSE:
-            running = false;
+            game_loop.is_running = false;
         break;
 
         case WM_DESTROY:
-            running = false;
+            game_loop.is_running = false;
         break;
 
         case WM_MOVE:
@@ -609,7 +614,7 @@ void process_pending_messages(input_state *input)
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
     {
-        if (message.message == WM_QUIT) running = false;
+        if (message.message == WM_QUIT) game_loop.is_running = false;
         TranslateMessage(&message);
 
         switch (message.message)
@@ -696,11 +701,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    auto global_memory = win32::allocate_memory((void *) TERABYTES(1), MEGABYTES(100));
-    auto global_arena  = memory_allocator::make_arena(global_memory);
-
-    auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
-
     // ======================================================================
 
     win32::window window;
@@ -717,22 +717,21 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    context ctx;
-    memset(&ctx, 0, sizeof(ctx));
+    init_loop(&game_loop);
 
     int32 monitor_refresh_rate_hz = GetDeviceCaps(window.DeviceContext, VREFRESH);
-    ctx.screen_width = GetDeviceCaps(window.DeviceContext, HORZRES);
-    ctx.screen_height = GetDeviceCaps(window.DeviceContext, VERTRES);
-    ctx.aspect_ratio = 16.0f / 9.0f;
-    ctx.near_clip_dist = 0.05f;
-    ctx.near_clip_width = 2 * ctx.near_clip_dist * tanf(0.5f * to_radians(60));
-    ctx.near_clip_height = ctx.near_clip_width / ctx.aspect_ratio;
-    ctx.far_clip_dist = 10000.f;
-    ctx.debug_load_file = NULL;
-    ctx.temporary_allocator = global_arena.allocate_arena(MEGABYTES(10));
+    game_loop.ctx.screen_width = GetDeviceCaps(window.DeviceContext, HORZRES);
+    game_loop.ctx.screen_height = GetDeviceCaps(window.DeviceContext, VERTRES);
+    game_loop.ctx.aspect_ratio = 16.0f / 9.0f;
+    game_loop.ctx.near_clip_dist = 0.05f;
+    game_loop.ctx.near_clip_width = 2 * game_loop.ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    game_loop.ctx.near_clip_height = game_loop.ctx.near_clip_width / game_loop.ctx.aspect_ratio;
+    game_loop.ctx.far_clip_dist = 10000.f;
+    game_loop.ctx.debug_load_file = NULL;
+    game_loop.ctx.temporary_allocator = game_loop.temporary_allocator;
 
     auto view = matrix4::identity();
-    auto projection = make_projection_matrix_fov(to_radians(60), ctx.aspect_ratio, ctx.near_clip_dist, ctx.far_clip_dist);
+    auto projection = make_projection_matrix_fov(to_radians(60), game_loop.ctx.aspect_ratio, game_loop.ctx.near_clip_dist, game_loop.ctx.far_clip_dist);
     auto projection_ui = matrix4::identity();
     auto ui_framebuffer = create_framebuffer(current_client_width, current_client_height);
 
@@ -777,7 +776,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     if (game.initialize_memory)
     {
-        game.initialize_memory(&ctx, game_memory);
+        game.initialize_memory(&game_loop.ctx, game_loop.game_memory);
     }
     else
     {
@@ -788,44 +787,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    auto cpu_square = make_square();
-    auto gpu_square = load_mesh(cpu_square);
-
-    auto cpu_cube = make_cube();
-    auto gpu_cube = load_mesh(cpu_cube);
-
-    auto cpu_square_uv = make_square_uv();
-    auto gpu_square_uv = load_mesh(cpu_square_uv);
-
-
-    auto cpu_sphere = make_sphere();
-    auto gpu_sphere = load_mesh(cpu_sphere);
-
-    auto cpu_tetrahedron = make_platonic_tetrahedron();
-    auto gpu_tetrahedron = load_mesh(cpu_tetrahedron);
-
-    auto cpu_platonic_cube = make_platonic_cube();
-    auto gpu_platonic_cube = load_mesh(cpu_cube);
-
-    auto cpu_octahedron = make_platonic_octahedron();
-    auto gpu_octahedron = load_mesh(cpu_octahedron);
-
-    auto cpu_icosahedron = make_platonic_icosahedron();
-    auto gpu_icosahedron = load_mesh(cpu_icosahedron);
-
-    auto cpu_ico_sphere = make_ico_sphere(ctx.temporary_allocator, global_arena);
-    auto gpu_ico_sphere = load_mesh(cpu_ico_sphere);
-
-
-    auto shader_color = compile_shaders(vs_single_color, fs_pass_color);
-    auto shader_ground = compile_shaders(vs_ground, fs_pass_color);
-    auto shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
-    auto shader_text = compile_shaders(vs_text, fs_text);
-    auto shader_phong = compile_shaders(vs_phong, fs_phong);
-    auto shader_sun = compile_shaders(vs_sun, fs_sun);
-
-    auto font_content = platform::load_file("font_14x26.png", &global_arena);
-    auto font_bitmap = image::load_png(&global_arena, &ctx.temporary_allocator, font_content);
+    auto font_content = platform::load_file("font_14x26.png", &game_loop.allocator);
+    auto font_bitmap = image::load_png(&game_loop.allocator, &game_loop.ctx.temporary_allocator, font_content);
     auto font_texture = load_texture(font_bitmap);
     console::print("Font texture is id=%d\n", font_texture.id);
 
@@ -840,10 +803,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     GL_CHECK_ERRORS();
 
-    uint32 frame_counter = 0;
-
-    running = true;
-    while (running)
+    game_loop.frame_counter = 0;
+    game_loop.is_running = true;
+    while (game_loop.is_running)
     {
 #if DLL_BUILD
         uint64 dll_file_time = win32::get_file_time(game_dll_buffer);
@@ -870,14 +832,14 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (viewport_changed)
         {
-            auto viewport = gfx::viewport::make(current_client_width, current_client_height, ctx.aspect_ratio);
+            auto viewport = gfx::viewport::make(current_client_width, current_client_height, game_loop.ctx.aspect_ratio);
             glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
             viewport_changed = false;
 
-            ctx.viewport = viewport;
+            game_loop.ctx.viewport = viewport;
 
-            ctx.window_width = current_client_width;
-            ctx.window_height = current_client_height;
+            game_loop.ctx.window_width = current_client_width;
+            game_loop.ctx.window_height = current_client_height;
 
             projection_ui = matrix4::translate(-1, 1, 0)
                           * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
@@ -887,14 +849,18 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-            game.update_and_render(&ctx, game_memory, &input);
+            game.update_and_render(&game_loop.ctx, game_loop.game_memory, &input);
         }
 
-        for (auto cmd : ctx.exec_commands)
+        for (auto cmd : game_loop.ctx.exec_commands)
         {
-            if (cmd.tag == ExecutionCommand_ExitGame) running = false;
+            if (cmd.tag == ExecutionCommand_ExitGame) game_loop.is_running = false;
+#if DEBUG
+            if (cmd.tag == ExecutionCommand_DebugDraw_Off) game_loop.is_debug_graph_fps_active = false;
+            if (cmd.tag == ExecutionCommand_DebugDraw_Fps) TOGGLE(game_loop.is_debug_graph_fps_active);
+#endif // DEBUG
         }
-        ctx.exec_commands.clear();
+        game_loop.ctx.exec_commands.clear();
 
         GL_CHECK_ERRORS();
 
@@ -904,7 +870,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         GL_CHECK_ERRORS();
 
-        for (auto cmd : ctx.rend_commands)
+        for (auto cmd : game_loop.ctx.rend_commands)
         {
             if (cmd.tag == RenderCommand_SetupCamera)
             {
@@ -912,29 +878,29 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             }
             else if (cmd.tag == RenderCommand_RenderSquare)
             {
-                glUseProgram(shader_color.id);
+                glUseProgram(game_loop.shader_color.id);
 
-                shader_color.uniform("u_model", cmd.model);
-                shader_color.uniform("u_view", view);
-                shader_color.uniform("u_projection", projection);
-                shader_color.uniform("u_color", cmd.color);
+                game_loop.shader_color.uniform("u_model", cmd.model);
+                game_loop.shader_color.uniform("u_view", view);
+                game_loop.shader_color.uniform("u_projection", projection);
+                game_loop.shader_color.uniform("u_color", cmd.color);
 
-                glBindVertexArray(gpu_square.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_square.ibo);
-                glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+                glBindVertexArray(game_loop.mesh_square.vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, game_loop.mesh_square.ibo);
+                glDrawElements(GL_TRIANGLES, game_loop.mesh_square.count, GL_UNSIGNED_INT, NULL);
             }
             else if (cmd.tag == RenderCommand_RenderMesh)
             {
                 gpu_mesh *mesh = NULL;
-                if (cmd.mesh_tag == RenderMesh_Square) mesh = &gpu_square;
-                if (cmd.mesh_tag == RenderMesh_Cube) mesh = &gpu_cube;
-                if (cmd.mesh_tag == RenderMesh_Sphere) mesh = &gpu_ico_sphere;
+                if (cmd.mesh_tag == RenderMesh_Square) mesh = &game_loop.mesh_square;
+                if (cmd.mesh_tag == RenderMesh_Cube) mesh = &game_loop.mesh_cube;
+                if (cmd.mesh_tag == RenderMesh_Sphere) mesh = &game_loop.mesh_sphere;
 
                 shader *shader = NULL;
-                if (cmd.shader_tag == RenderShader_SingleColor) shader = &shader_color;
-                if (cmd.shader_tag == RenderShader_Ground) shader = &shader_ground;
-                if (cmd.shader_tag == RenderShader_Phong) shader = &shader_phong;
-                if (cmd.shader_tag == RenderShader_Sun) shader = &shader_sun;
+                if (cmd.shader_tag == RenderShader_SingleColor) shader = &game_loop.shader_color;
+                if (cmd.shader_tag == RenderShader_Ground) shader = &game_loop.shader_ground;
+                if (cmd.shader_tag == RenderShader_Phong) shader = &game_loop.shader_phong;
+                if (cmd.shader_tag == RenderShader_Sun) shader = &game_loop.shader_sun;
 
                 if (mesh && shader)
                 {
@@ -975,8 +941,8 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
                 // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 draw_platonic_solid(
-                    gpu_ico_sphere,
-                    shader_phong,
+                    game_loop.mesh_sphere,
+                    game_loop.shader_phong,
                     cmd.color,
                     to_matrix4(tm), view, projection);
                 // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -986,7 +952,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 ASSERT_FAIL();
             }
         }
-        ctx.rend_commands.clear();
+        game_loop.ctx.rend_commands.clear();
 
         GL_CHECK_ERRORS();
 
@@ -996,47 +962,47 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         GL_CHECK_ERRORS();
 
-        for (auto cmd : ctx.rend_commands_ui)
+        for (auto cmd : game_loop.ctx.rend_commands_ui)
         {
             if (cmd.tag == RenderCommand_RenderUi)
             {
-                glUseProgram(shader_color.id);
+                glUseProgram(game_loop.shader_color.id);
 
-                shader_color.uniform("u_model", cmd.model);
-                shader_color.uniform("u_view", matrix4::identity());
-                shader_color.uniform("u_projection", projection_ui);
-                shader_color.uniform("u_color", cmd.color);
+                game_loop.shader_color.uniform("u_model", cmd.model);
+                game_loop.shader_color.uniform("u_view", matrix4::identity());
+                game_loop.shader_color.uniform("u_projection", projection_ui);
+                game_loop.shader_color.uniform("u_color", cmd.color);
 
-                glBindVertexArray(gpu_square.vao);
-                glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+                glBindVertexArray(game_loop.mesh_square.vao);
+                glDrawElements(GL_TRIANGLES, game_loop.mesh_square.count, GL_UNSIGNED_INT, NULL);
             }
             else if (cmd.tag == RenderCommand_RenderBanner)
             {
                 auto pNDC = projection * view * matrix4::translate(cmd.position) * V4(0, 0, 0, 1);
                 pNDC /= pNDC.w;
-                auto pUI = matrix4::scale(0.5f * ctx.viewport.width, - 0.5f * ctx.viewport.height, 1)
+                auto pUI = matrix4::scale(0.5f * game_loop.ctx.viewport.width, - 0.5f * game_loop.ctx.viewport.height, 1)
                          * matrix4::translate(1, -1, 0)
                          * pNDC;
                 auto m = matrix4::translate(pUI.xyz) * cmd.model;
 
                 // proj_ui * translate(pUI) * scale * p
 
-                glUseProgram(shader_color.id);
+                glUseProgram(game_loop.shader_color.id);
 
-                shader_color.uniform("u_model", m);
-                shader_color.uniform("u_view", matrix4::identity());
-                shader_color.uniform("u_projection", projection_ui);
-                shader_color.uniform("u_color", cmd.color);
+                game_loop.shader_color.uniform("u_model", m);
+                game_loop.shader_color.uniform("u_view", matrix4::identity());
+                game_loop.shader_color.uniform("u_projection", projection_ui);
+                game_loop.shader_color.uniform("u_color", cmd.color);
 
-                glBindVertexArray(gpu_square.vao);
-                glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+                glBindVertexArray(game_loop.mesh_square.vao);
+                glDrawElements(GL_TRIANGLES, game_loop.mesh_square.count, GL_UNSIGNED_INT, NULL);
             }
             else if (cmd.tag == RenderCommand_RenderText)
             {
-                glUseProgram(shader_text.id);
-                shader_text.uniform("u_model", cmd.model);
-                shader_text.uniform("u_projection", projection_ui);
-                shader_text.uniform("u_color", cmd.color);
+                glUseProgram(game_loop.shader_text.id);
+                game_loop.shader_text.uniform("u_model", cmd.model);
+                game_loop.shader_text.uniform("u_projection", projection_ui);
+                game_loop.shader_text.uniform("u_color", cmd.color);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, font_texture.id);
@@ -1046,7 +1012,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 uint32 count = 0;
 
                 string_view strview = string_view::from(cmd.cstr);
-                auto temp_memory = ctx.temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                auto temp_memory = game_loop.ctx.temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
                 ASSERT(temp_memory.data);
                 auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
 
@@ -1080,9 +1046,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                     count += 6;
                 }
 
-                glBindVertexArray(gpu_square_uv.vao);
+                glBindVertexArray(game_loop.mesh_square_uv.vao);
 
-                glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, game_loop.mesh_square_uv.vbo);
                 glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -1093,7 +1059,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 ASSERT_FAIL();
             }
         }
-        ctx.rend_commands_ui.clear();
+        game_loop.ctx.rend_commands_ui.clear();
 
         GL_CHECK_ERRORS();
 
@@ -1103,27 +1069,37 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
             glDisable(GL_DEPTH_TEST);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glUseProgram(shader_framebuffer.id);
-            shader_framebuffer.uniform("u_framebuffer", 0);
+            glUseProgram(game_loop.shader_framebuffer.id);
+            game_loop.shader_framebuffer.uniform("u_framebuffer", 0);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, ui_framebuffer.color_texture_id);
 
-            glBindVertexArray(gpu_square.vao);
-            glDrawElements(GL_TRIANGLES, gpu_square.count, GL_UNSIGNED_INT, NULL);
+            glBindVertexArray(game_loop.mesh_square.vao);
+            glDrawElements(GL_TRIANGLES, game_loop.mesh_square.count, GL_UNSIGNED_INT, NULL);
 
             glEnable(GL_DEPTH_TEST);
         }
 
         GL_CHECK_ERRORS();
 
+#if DEBUG
+        if (game_loop.is_debug_graph_fps_active)
+        {
+            game_loop.debug_graph_fps.graph[(game_loop.debug_graph_fps.index++) % game_loop.debug_graph_fps.count] = input.dt * 1000.f;
+            draw_debug_graph(&game_loop.debug_graph_fps, &game_loop.mesh_square, &game_loop.shader_color);
+        }
+#endif // DEBUG
+
         SwapBuffers(window.DeviceContext);
 
-        ctx.temporary_allocator.reset();
+        game_loop.ctx.temporary_allocator.reset();
+        game_loop.frame_counter += 1;
 
         timepoint end_of_frame = platform::clock::now();
         last_frame_dt = (float32) get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
+
     }
 
     return 0;
@@ -1132,6 +1108,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
 #include <memory/allocator.cpp>
 #include <os/platform_win32.cpp>
+
+#include "game_loop.cpp"
+#include "debug_graph.cpp"
 
 #if DLL_BUILD
 #include <memory_bucket.cpp>

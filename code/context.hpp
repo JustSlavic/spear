@@ -18,8 +18,6 @@ typedef memory_buffer debug_load_file_t(memory_allocator allocator, char const *
 struct context
 {
     memory_allocator temporary_allocator;
-    memory_allocator resource_allocator;
-    memory_allocator renderer_allocator;
 
     void *game_state;
 
