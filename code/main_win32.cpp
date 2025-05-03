@@ -836,7 +836,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     int32 game_update_frequency_hz = monitor_refresh_rate_hz;
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
     float32 last_frame_dt = target_seconds_per_frame;
-    timepoint last_timepoint = platform::wall_clock::now();
+    timepoint last_timepoint = platform::clock::now();
 
     GL_CHECK_ERRORS();
 
@@ -892,7 +892,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         for (auto cmd : ctx.exec_commands)
         {
-            if (cmd.kind == exec_command::exit) running = false;
+            if (cmd.tag == ExecutionCommand_ExitGame) running = false;
         }
         ctx.exec_commands.clear();
 
@@ -1121,7 +1121,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         ctx.temporary_allocator.reset();
 
-        timepoint end_of_frame = platform::wall_clock::now();
+        timepoint end_of_frame = platform::clock::now();
         last_frame_dt = (float32) get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
     }
