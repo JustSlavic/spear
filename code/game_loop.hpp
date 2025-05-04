@@ -11,6 +11,11 @@ struct game_loop_data
 {
     context ctx;
 
+    int32 screen_width;
+    int32 screen_height;
+
+    bool32 viewport_changed;
+
     memory_buffer memory;
     memory_buffer game_memory;
 
@@ -35,6 +40,8 @@ struct game_loop_data
     shader shader_phong;
     shader shader_sun;
 
+    texture font_texture;
+
 #if DEBUG
     debug_graph debug_graph_fps;
     bool32 is_debug_graph_fps_active;
@@ -42,7 +49,7 @@ struct game_loop_data
 };
 
 
-void init_loop(game_loop_data *data);
+void init_loop(game_loop_data *data, platform::window *);
 void iter_loop(game_loop_data *data);
 
 

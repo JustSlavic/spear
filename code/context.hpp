@@ -21,9 +21,6 @@ struct context
 
     void *game_state;
 
-    uint32 screen_width;
-    uint32 screen_height;
-
     uint32 window_width;
     uint32 window_height;
 

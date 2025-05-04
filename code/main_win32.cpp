@@ -22,7 +22,6 @@ typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 GLOBAL uint32 current_client_width;
 GLOBAL uint32 current_client_height;
-GLOBAL bool32 viewport_changed;
 
 
 #define WGL_DRAW_TO_WINDOW_ARB            0x2001
@@ -577,7 +576,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
         {
             current_client_width  = LOWORD(lParam);
             current_client_height = HIWORD(lParam);
-            viewport_changed = true;
+            game_loop.viewport_changed = true;
         }
         break;
 
@@ -717,18 +716,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    init_loop(&game_loop);
-
-    int32 monitor_refresh_rate_hz = GetDeviceCaps(window.DeviceContext, VREFRESH);
-    game_loop.ctx.screen_width = GetDeviceCaps(window.DeviceContext, HORZRES);
-    game_loop.ctx.screen_height = GetDeviceCaps(window.DeviceContext, VERTRES);
-    game_loop.ctx.aspect_ratio = 16.0f / 9.0f;
-    game_loop.ctx.near_clip_dist = 0.05f;
-    game_loop.ctx.near_clip_width = 2 * game_loop.ctx.near_clip_dist * tanf(0.5f * to_radians(60));
-    game_loop.ctx.near_clip_height = game_loop.ctx.near_clip_width / game_loop.ctx.aspect_ratio;
-    game_loop.ctx.far_clip_dist = 10000.f;
-    game_loop.ctx.debug_load_file = NULL;
-    game_loop.ctx.temporary_allocator = game_loop.temporary_allocator;
+    init_loop(&game_loop, (platform::window *) &window);
 
     auto view = matrix4::identity();
     auto projection = make_projection_matrix_fov(to_radians(60), game_loop.ctx.aspect_ratio, game_loop.ctx.near_clip_dist, game_loop.ctx.far_clip_dist);
@@ -740,6 +728,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
     // auto xinput = win32::xinput::load();
 
     // ======================================================================
+
 #if DLL_BUILD
     char cwd[256] = {};
     uint32 program_path_size = win32::get_program_path(instance, cwd, ARRAY_COUNT(cwd));
@@ -787,16 +776,9 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    auto font_content = platform::load_file("font_14x26.png", &game_loop.allocator);
-    auto font_bitmap = image::load_png(&game_loop.allocator, &game_loop.ctx.temporary_allocator, font_content);
-    auto font_texture = load_texture(font_bitmap);
-    console::print("Font texture is id=%d\n", font_texture.id);
-
-    // ======================================================================
-
     input_state input = {};
 
-    int32 game_update_frequency_hz = monitor_refresh_rate_hz;
+    int32 game_update_frequency_hz = platform::get_monitor_refresh_rate_hz((platform::window *) &window);
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
     float32 last_frame_dt = target_seconds_per_frame;
     timepoint last_timepoint = platform::clock::now();
@@ -830,11 +812,11 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         input.dt   = last_frame_dt;
         input.time = last_timepoint;
 
-        if (viewport_changed)
+        if (game_loop.viewport_changed)
         {
             auto viewport = gfx::viewport::make(current_client_width, current_client_height, game_loop.ctx.aspect_ratio);
             glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
-            viewport_changed = false;
+            game_loop.viewport_changed = false;
 
             game_loop.ctx.viewport = viewport;
 
@@ -984,9 +966,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                          * matrix4::translate(1, -1, 0)
                          * pNDC;
                 auto m = matrix4::translate(pUI.xyz) * cmd.model;
-
-                // proj_ui * translate(pUI) * scale * p
-
                 glUseProgram(game_loop.shader_color.id);
 
                 game_loop.shader_color.uniform("u_model", m);
@@ -1005,7 +984,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 game_loop.shader_text.uniform("u_color", cmd.color);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, font_texture.id);
+                glBindTexture(GL_TEXTURE_2D, game_loop.font_texture.id);
 
                 float32 posx = 0.f;
                 float32 posy = 0.f;
@@ -1099,7 +1078,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         timepoint end_of_frame = platform::clock::now();
         last_frame_dt = (float32) get_seconds(end_of_frame - last_timepoint);
         last_timepoint = end_of_frame;
-
     }
 
     return 0;

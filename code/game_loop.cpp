@@ -3,7 +3,7 @@
 #include <memory/allocator.hpp>
 
 
-void init_loop(game_loop_data *data)
+void init_loop(game_loop_data *data, platform::window *window)
 {
     data->memory = platform::allocate_pages((void *) TERABYTES(1), MEGABYTES(100));
     data->allocator = memory_allocator::make_arena(data->memory);
@@ -33,6 +33,21 @@ void init_loop(game_loop_data *data)
     data->debug_graph_fps.count = 512;
     data->debug_graph_fps.max_value = 1000.f / 30.f;
 #endif // DEBUG
+
+    data->ctx.temporary_allocator = data->temporary_allocator;
+    platform::get_monitor_resolution(window, &data->screen_width, &data->screen_height);
+
+    data->ctx.aspect_ratio = (float32) data->screen_width / (float32) data->screen_height;
+    data->ctx.near_clip_dist = 0.05f;
+    data->ctx.near_clip_width = 2 * data->ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    data->ctx.near_clip_height = data->ctx.near_clip_width / data->ctx.aspect_ratio;
+    data->ctx.far_clip_dist = 10000.f;
+
+
+    auto font_content = platform::load_file("font_14x26.png", &data->allocator);
+    auto font_bitmap = image::load_png(&data->allocator, &data->ctx.temporary_allocator, font_content);
+    data->font_texture = load_texture(font_bitmap);
+    console::print("Font texture is id=%d\n", data->font_texture.id);
 
     data->frame_counter = 0;
 }
