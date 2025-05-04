@@ -113,6 +113,19 @@ void make_jacobian_nxn(float32 *Y, float32 *J, uint32 n);
 
 void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
 {
+    for (int i = 0; i < count; i++)
+    {
+        float32 M1 = in[0].M;
+        vector3 X1 = in[0].X;
+        vector3 V1 = in[0].P / M1;
+
+        for (int j = 0; j < count; j++)
+        {
+            if (i == j) continue;
+        }
+    }
+
+
     float32 M1 = in[0].M;
     vector3 X1 = in[0].X;
     vector3 V1 = in[0].P / M1;
@@ -133,6 +146,10 @@ void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
 
     // ====== Make Jacobian here ======
     float32 J[6*6] = {};
+
+    //     dY   dY
+    // J = ---, ---
+    //     dx1  dx2
     // ================================
 
     float32 I_hJ[6*6];
@@ -140,7 +157,7 @@ void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
         for (int j = 1; j <= 6; j++)
             I_hJ[Ix(i, j)] = ((i == j) ? 1.0f : 0.f) - h*J[Ix(i, j)];
 
-    float32 F0[6];
+    float32 F0[6] = {};
     F0[0] = Gm2_d3 * d.x;
     F0[1] = Gm2_d3 * d.y;
     F0[2] = Gm2_d3 * d.z;

@@ -416,7 +416,6 @@ gpu_mesh load_mesh(cpu_mesh mesh)
                             : (uint32) mesh.vbo.size / (sizeof(float32) * mesh.vbl.total_count);
 
     console::print("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, count = %d)\n", vao_id, vbo_id, ibo_id, result.count);
-    GL_CHECK_ERRORS();
     return result;
 }
 
