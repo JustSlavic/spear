@@ -22,6 +22,8 @@ struct game_loop_data
     memory_allocator allocator;
     memory_allocator temporary_allocator;
 
+    input_state input;
+
     bool32 is_running;
     uint64 frame_counter;
 

@@ -776,7 +776,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    input_state input = {};
 
     int32 game_update_frequency_hz = platform::get_monitor_refresh_rate_hz((platform::window *) &window);
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
@@ -800,17 +799,17 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
 #endif // DLL_BUILD
 
-        reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
-        reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
-        reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
-        input.mouse.scroll = 0;
-        process_pending_messages(&input);
-        win32::get_mouse_pos(&window, &input.mouse.x, &input.mouse.y);
+        reset_transitions(game_loop.input.keyboard.buttons, KB_KEY_COUNT);
+        reset_transitions(game_loop.input.mouse.buttons, MOUSE_KEY_COUNT);
+        reset_transitions(game_loop.input.keyboard_and_mouse.buttons, Button_Count);
+        game_loop.input.mouse.scroll = 0;
+        process_pending_messages(&game_loop.input);
+        win32::get_mouse_pos(&window, &game_loop.input.mouse.x, &game_loop.input.mouse.y);
         // for (int i = 0; i < 4; i++)
-        //     xinput.process_gamepad_state(input.gamepads + i, i);
+        //     xinput.process_gamepad_state(game_loop.input.gamepads + i, i);
 
-        input.dt   = last_frame_dt;
-        input.time = last_timepoint;
+        game_loop.input.dt   = last_frame_dt;
+        game_loop.input.time = last_timepoint;
 
         if (game_loop.viewport_changed)
         {
@@ -831,7 +830,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
         if (game.update_and_render)
         {
-            game.update_and_render(&game_loop.ctx, game_loop.game_memory, &input);
+            game.update_and_render(&game_loop.ctx, game_loop.game_memory, &game_loop.input);
         }
 
         for (auto cmd : game_loop.ctx.exec_commands)
@@ -1065,7 +1064,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 #if DEBUG
         if (game_loop.is_debug_graph_fps_active)
         {
-            game_loop.debug_graph_fps.graph[(game_loop.debug_graph_fps.index++) % game_loop.debug_graph_fps.count] = input.dt * 1000.f;
+            game_loop.debug_graph_fps.graph[(game_loop.debug_graph_fps.index++) % game_loop.debug_graph_fps.count] = game_loop.input.dt * 1000.f;
             draw_debug_graph(&game_loop.debug_graph_fps, &game_loop.mesh_square, &game_loop.shader_color);
         }
 #endif // DEBUG
