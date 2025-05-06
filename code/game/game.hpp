@@ -124,6 +124,8 @@ enum
 
     PlayerAction_Follow1,
     PlayerAction_Follow2,
+    PlayerAction_Follow3,
+    PlayerAction_Follow4,
 
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,

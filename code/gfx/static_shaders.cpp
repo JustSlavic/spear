@@ -152,7 +152,7 @@ void main()
     vec3 light_position = vec3(0.f, 0.f, 0.f);
     vec3 light_direction = normalize(light_position - fragment_position);
 
-    float ambient_light = 0.01;
+    float ambient_light = 0.f;
     vec3 ambient_color = ambient_light * fragment_color.rgb;
 
     float diffuse_light = max(dot(normalize(fragment_normal), light_direction), 0.0);

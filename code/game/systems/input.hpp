@@ -96,16 +96,10 @@ void camera_movement(game_state *gs, input_state *input)
 
 void move_camera(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_press_count(gs, input, PlayerAction_Follow1))
-    {
-        gs->entity_to_follow = gs->planets[0];
-        // gs->camera_fly_mode = false;
-    }
-    if (get_press_count(gs, input, PlayerAction_Follow2))
-    {
-        gs->entity_to_follow = gs->planets[1];
-        // gs->camera_fly_mode = false;
-    }
+    if (get_press_count(gs, input, PlayerAction_Follow1)) gs->entity_to_follow = gs->planets[0];
+    if (get_press_count(gs, input, PlayerAction_Follow2)) gs->entity_to_follow = gs->planets[1];
+    if (get_press_count(gs, input, PlayerAction_Follow3)) gs->entity_to_follow = gs->planets[2];
+    if (get_press_count(gs, input, PlayerAction_Follow4)) gs->entity_to_follow = gs->planets[3];
     if (gs->entity_to_follow != ecs::INVALID_ENTITY_ID)
     {
         float32 d_distance = 0.f;

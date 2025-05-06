@@ -95,17 +95,6 @@ void render_planets(context *ctx, game_state *gs, input_state *input)
         auto *e = gs->entities + eid.get_index();
         ctx->render_planet(e->position, e->radius, V4(e->color, 1), e->orientation, shader_tag);
 
-        {
-            auto Oxy = V3(e->position.x, e->position.y, 0.f);
-            auto tm = transform::translate(0.5f * (e->position + Oxy))
-                    * transform::scale_x(0.01f)
-                    * transform::scale_y(0.5f * norm(e->position - Oxy));
-            auto rot = quaternion::rotate_x(to_radians(90.f));
-            tm.sx = apply_unit_quaternion(rot, tm.sx);
-            tm.sy = apply_unit_quaternion(rot, tm.sy);
-            tm.sz = apply_unit_quaternion(rot, tm.sz);
-            ctx->render_square(to_matrix4(tm), V4(1.f, 1.f, 1.f, 0.4f), RenderShader_SingleColor);
-        }
 #if 0
         {
             auto m1 = matrix4::identity();

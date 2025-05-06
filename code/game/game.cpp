@@ -185,6 +185,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     bind_action_to_button(&gs->player_actions, Keyboard_1, PlayerAction_Follow1);
     bind_action_to_button(&gs->player_actions, Keyboard_2, PlayerAction_Follow2);
+    bind_action_to_button(&gs->player_actions, Keyboard_3, PlayerAction_Follow3);
+    bind_action_to_button(&gs->player_actions, Keyboard_4, PlayerAction_Follow4);
 
     bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
 
@@ -195,7 +197,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->double_click_interval = duration::milliseconds(5);
 
     gs->camera = game::camera::look_at(V3(0, 0, 250), V3(0, 0, 0), V3(0, 1, 0));
-    gs->camera_speed = 5.f;
+    gs->camera_speed = 30.f;
 
     gs->turn_no = 1;
     gs->turn_timer_enabled = false;
@@ -245,7 +247,14 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     spawn_planet(gs, V3(0),               V3(0.f, 0.f, 0.f),    10.0f,  10000.f, V3(0.8f, 0.8f, 0.2f));
     spawn_planet(gs, V3(50.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.4f, 0.7f));
-    spawn_planet(gs, V3(-50.f, 0.f, 0.f),  V3(0.f, -sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.7f, 0.4f));
+    spawn_planet(gs, V3(-300.f, 0.f, 0.f),
+        V3(0.1f, -sqrtf(0.1f * 10000.f / 300.f), 0.f) + V3(0.f, -sqrtf(0.1f * 10.f / 10.f), -0.1f),
+        0.5f, 1.f, V3(0.2f, 0.2f, 0.2f));
+    spawn_planet(gs, V3(-310.f, 0.f, 0.f),
+        V3(0.f, -sqrtf(0.1f * 10000.f / 310.f), 0.f),
+        2.f, 10.f, V3(0.2f, 0.7f, 0.4f));
+
+
 
     // sqrt(GM/r)
 
