@@ -113,7 +113,7 @@ void make_jacobian_nxn(float32 *Y, float32 *J, uint32 n);
 
 void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
 {
-    for (int i = 0; i < count; i++)
+    for (uint32 i = 0; i < count; i++)
     {
         float32 Mi = in[i].M;
         vector3 Xi = in[i].X;
@@ -122,7 +122,7 @@ void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
         vector3 F0[32] = {};
 
         // float32 J[6*6] = {};
-        for (int j = 0; j < count; j++)
+        for (uint32 j = 0; j < count; j++)
         {
             if (i == j) continue;
 

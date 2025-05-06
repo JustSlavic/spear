@@ -245,7 +245,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     spawn_planet(gs, V3(0),               V3(0.f, 0.f, 0.f),    10.0f,  10000.f, V3(0.8f, 0.8f, 0.2f));
     spawn_planet(gs, V3(50.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.4f, 0.7f));
-    spawn_planet(gs, V3(-50.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / -50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.7f, 0.4f));
+    spawn_planet(gs, V3(-50.f, 0.f, 0.f),  V3(0.f, -sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.7f, 0.4f));
 
     // sqrt(GM/r)
 

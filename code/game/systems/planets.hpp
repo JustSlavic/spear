@@ -144,32 +144,20 @@ void render_planets(context *ctx, game_state *gs, input_state *input)
 #endif
     }
 
-    if (gs->planets.size() == 2)
     {
-        auto *planet1 = gs->entities + gs->planets[0].get_index();
-        auto *planet2 = gs->entities + gs->planets[1].get_index();
-
-        auto *body1 = phys::get_rigid_body(&gs->phys_world, planet1->phys_world_handle);
-        auto *body2 = phys::get_rigid_body(&gs->phys_world, planet2->phys_world_handle);
-
-        auto m1 = body1->M;
-        auto m2 = body2->M;
-        auto x1 = body1->X;
-        auto x2 = body2->X;
-        auto p1 = body1->P;
-        auto p2 = body2->P;
-
-        float32 G = 0.1f;
-        float32 K1 = 0.5f * norm_squared(p1) / m1;
-        float32 K2 = 0.5f * norm_squared(p2) / m2;
-        float32 U  = G*m1*m2 / norm(x2 - x1);
-        float32 E = K1 + K2 - U;
-
+        float32 E = 0.f;
+        for (uint32 i = 0; i < gs->planets.size(); i++)
         {
-            auto buffer = ctx->temporary_allocator.allocate_buffer(64);
-            snprintf((char *) buffer.data, 63, "E = %f", E);
-            ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
+            auto *planet = gs->entities + gs->planets[i].get_index();
+            auto *body = phys::get_rigid_body(&gs->phys_world, planet->phys_world_handle);
+
+            float32 G = 0.1f;
+            float32 K = 0.5f * norm_squared(body->P) / body->M;
+            E += K;
         }
+        auto buffer = ctx->temporary_allocator.allocate_buffer(64);
+        snprintf((char *) buffer.data, 63, "E = %f", E);
+        ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
     }
 
     // ctx->render_banner(V3(0), matrix4::scale_x(50), V4(1));
