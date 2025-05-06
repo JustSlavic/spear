@@ -115,149 +115,186 @@ void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
 {
     for (int i = 0; i < count; i++)
     {
-        float32 M1 = in[0].M;
-        vector3 X1 = in[0].X;
-        vector3 V1 = in[0].P / M1;
+        float32 Mi = in[i].M;
+        vector3 Xi = in[i].X;
+        vector3 Vi = in[i].P / Mi;
 
+        vector3 F0[32] = {};
+
+        // float32 J[6*6] = {};
         for (int j = 0; j < count; j++)
         {
             if (i == j) continue;
+
+            float32 Mj = in[j].M;
+            vector3 Xj = in[j].X;
+            vector3 Vj = in[j].P / Mj;
+
+            vector3 d = Xj - Xi;
+
+            float32 denom3 = powf(norm_squared(d), 3.f/2.f);
+            float32 Gmi_d3 = PHYS_G*Mi/denom3;
+            float32 Gmj_d3 = PHYS_G*Mj/denom3;
+
+            float32 denom5 = powf(norm_squared(d), 5.f/2.f);
+            float32 Gmi_d5 = PHYS_G*Mi/denom5;
+            float32 Gmj_d5 = PHYS_G*Mj/denom5;
+
+            F0[i] += Gmj_d3 * d;
+
+            // ====== Make Jacobian here ======
+            //     dY   dY
+            // J = ---, ---
+            //     dx1  dx2
+            // ================================
         }
+
+        // ====== Make better approximation ======
+        // =======================================
+
+        vector3 V_prime = Vi + h * F0[i];
+
+        out[i].M = in[i].M;
+        out[i].X = Xi + h * V_prime;
+        out[i].P = Mi * V_prime;
+        out[i].Q = in[i].Q;
+        out[i].L = in[i].L;
+        out[i].I = in[i].I;
     }
 
 
-    float32 M1 = in[0].M;
-    vector3 X1 = in[0].X;
-    vector3 V1 = in[0].P / M1;
+    // float32 M1 = in[0].M;
+    // vector3 X1 = in[0].X;
+    // vector3 V1 = in[0].P / M1;
 
-    float32 M2 = in[1].M;
-    vector3 X2 = in[1].X;
-    vector3 V2 = in[1].P / M2;
+    // float32 M2 = in[1].M;
+    // vector3 X2 = in[1].X;
+    // vector3 V2 = in[1].P / M2;
 
-    vector3 d = X2 - X1;
+    // vector3 d = X2 - X1;
 
-    float32 denom3 = powf(norm_squared(d), 3.f/2.f);
-    float32 Gm1_d3 = PHYS_G*M1/denom3;
-    float32 Gm2_d3 = PHYS_G*M2/denom3;
+    // float32 denom3 = powf(norm_squared(d), 3.f/2.f);
+    // float32 Gm1_d3 = PHYS_G*M1/denom3;
+    // float32 Gm2_d3 = PHYS_G*M2/denom3;
 
-    float32 denom5 = powf(norm_squared(d), 5.f/2.f);
-    float32 Gm1_d5 = PHYS_G*M1/denom5;
-    float32 Gm2_d5 = PHYS_G*M2/denom5;
+    // float32 denom5 = powf(norm_squared(d), 5.f/2.f);
+    // float32 Gm1_d5 = PHYS_G*M1/denom5;
+    // float32 Gm2_d5 = PHYS_G*M2/denom5;
 
     // ====== Make Jacobian here ======
-    float32 J[6*6] = {};
+    // float32 J[6*6] = {};
 
     //     dY   dY
     // J = ---, ---
     //     dx1  dx2
     // ================================
 
-    float32 I_hJ[6*6];
-    for (int i = 1; i <= 6; i++)
-        for (int j = 1; j <= 6; j++)
-            I_hJ[Ix(i, j)] = ((i == j) ? 1.0f : 0.f) - h*J[Ix(i, j)];
+    // float32 I_hJ[6*6];
+    // for (int i = 1; i <= 6; i++)
+    //     for (int j = 1; j <= 6; j++)
+    //         I_hJ[Ix(i, j)] = ((i == j) ? 1.0f : 0.f) - h*J[Ix(i, j)];
 
-    float32 F0[6] = {};
-    F0[0] = Gm2_d3 * d.x;
-    F0[1] = Gm2_d3 * d.y;
-    F0[2] = Gm2_d3 * d.z;
-    F0[3] = Gm1_d3 * (-d.x);
-    F0[4] = Gm1_d3 * (-d.y);
-    F0[5] = Gm1_d3 * (-d.z);
+    // float32 F0[6] = {};
+    // F0[0] = Gm2_d3 * d.x;
+    // F0[1] = Gm2_d3 * d.y;
+    // F0[2] = Gm2_d3 * d.z;
+    // F0[3] = Gm1_d3 * (-d.x);
+    // F0[4] = Gm1_d3 * (-d.y);
+    // F0[5] = Gm1_d3 * (-d.z);
 
-    // Initial guess of dY (hF(Y0))
-    float32 dY0_[6];
-    float32 dY1_[6];
+    // // Initial guess of dY (hF(Y0))
+    // float32 dY0_[6];
+    // float32 dY1_[6];
 
-    float32 *dY0 = dY0_;
-    float32 *dY1 = dY1_;
+    // float32 *dY0 = dY0_;
+    // float32 *dY1 = dY1_;
 
-    dY0[0] = h * F0[0];
-    dY0[1] = h * F0[1];
-    dY0[2] = h * F0[2];
-    dY0[3] = h * F0[3];
-    dY0[4] = h * F0[4];
-    dY0[5] = h * F0[5];
+    // dY0[0] = h * F0[0];
+    // dY0[1] = h * F0[1];
+    // dY0[2] = h * F0[2];
+    // dY0[3] = h * F0[3];
+    // dY0[4] = h * F0[4];
+    // dY0[5] = h * F0[5];
 
-    for (int approx_step = 0; approx_step < 3; approx_step++)
-    {
-        for (int i = 0; i < 6; i++)
-        {
-            float32 acc = 0.f;
-            for (int j = 0; j < 6; j++)
-            {
-                if (i != j)
-                {
-                    acc += I_hJ[Ix(i+1, j+1)] * dY0[j];
-                }
-            }
+    // for (int approx_step = 0; approx_step < 3; approx_step++)
+    // {
+    //     for (int i = 0; i < 6; i++)
+    //     {
+    //         float32 acc = 0.f;
+    //         for (int j = 0; j < 6; j++)
+    //         {
+    //             if (i != j)
+    //             {
+    //                 acc += I_hJ[Ix(i+1, j+1)] * dY0[j];
+    //             }
+    //         }
 
-            dY1[i] = (h*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
-        }
+    //         dY1[i] = (h*F0[i] - acc) / I_hJ[Ix(i+1, i+1)];
+    //     }
 
-        float32 *tmp = dY0;
-        dY0 = dY1;
-        dY1 = tmp;
-    }
+    //     float32 *tmp = dY0;
+    //     dY0 = dY1;
+    //     dY1 = tmp;
+    // }
 
-    float32 new_vx1 = V1.x + dY0[0];
-    float32 new_vy1 = V1.y + dY0[1];
-    float32 new_vz1 = V1.z + dY0[2];
+    // float32 new_vx1 = V1.x + dY0[0];
+    // float32 new_vy1 = V1.y + dY0[1];
+    // float32 new_vz1 = V1.z + dY0[2];
 
-    float32 new_vx2 = V2.x + dY0[3];
-    float32 new_vy2 = V2.y + dY0[4];
-    float32 new_vz2 = V2.z + dY0[5];
+    // float32 new_vx2 = V2.x + dY0[3];
+    // float32 new_vy2 = V2.y + dY0[4];
+    // float32 new_vz2 = V2.z + dY0[5];
 
-    // P
-    out[0].P.x = M1 * new_vx1;
-    out[0].P.y = M1 * new_vy1;
-    out[0].P.z = M1 * new_vz1;
+    // // P
+    // out[0].P.x = M1 * new_vx1;
+    // out[0].P.y = M1 * new_vy1;
+    // out[0].P.z = M1 * new_vz1;
 
-    out[1].P.x = M2 * new_vx2;
-    out[1].P.y = M2 * new_vy2;
-    out[1].P.z = M2 * new_vz2;
+    // out[1].P.x = M2 * new_vx2;
+    // out[1].P.y = M2 * new_vy2;
+    // out[1].P.z = M2 * new_vz2;
 
     // X
-    out[0].X.x = X1.x + h * new_vx1;
-    out[0].X.y = X1.y + h * new_vy1;
-    out[0].X.z = X1.z + h * new_vz1;
+    // out[0].X.x = X1.x + h * new_vx1;
+    // out[0].X.y = X1.y + h * new_vy1;
+    // out[0].X.z = X1.z + h * new_vz1;
 
-    out[1].X.x = X2.x + h * new_vx2;
-    out[1].X.y = X2.y + h * new_vy2;
-    out[1].X.z = X2.z + h * new_vz2;
+    // out[1].X.x = X2.x + h * new_vx2;
+    // out[1].X.y = X2.y + h * new_vy2;
+    // out[1].X.z = X2.z + h * new_vz2;
 
-    for (uint32 i = 0; i < count; i++)
-    {
-        float32 M = in[i].M;
-        quaternion Q = in[i].Q;
-        vector3 L = in[i].L;
-        vector3 I = in[i].I;
+    // for (uint32 i = 0; i < count; i++)
+    // {
+    //     float32 M = in[i].M;
+    //     quaternion Q = in[i].Q;
+    //     vector3 L = in[i].L;
+    //     vector3 I = in[i].I;
 
-        /*
-                    | y^2 + z^2    -yx       -zx    |
-            I = int(| -xy       x^2 + z^2    -zy    |)
-                    | -xz          -yz    x^2 + y^2 |
+    //     /*
+    //                 | y^2 + z^2    -yx       -zx    |
+    //         I = int(| -xy       x^2 + z^2    -zy    |)
+    //                 | -xz          -yz    x^2 + y^2 |
 
-                       | b^2 + c^2     0         0     |
-            I = 1/12 V |     0     a^2 + c^2     0     |
-                       |     0         0     a^2 + b^2 |
-        */
-        matrix3 invI0 = {};
-        invI0._11 = I.x;
-        invI0._22 = I.y;
-        invI0._33 = I.z;
+    //                    | b^2 + c^2     0         0     |
+    //         I = 1/12 V |     0     a^2 + c^2     0     |
+    //                    |     0         0     a^2 + b^2 |
+    //     */
+    //     matrix3 invI0 = {};
+    //     invI0._11 = I.x;
+    //     invI0._22 = I.y;
+    //     invI0._33 = I.z;
 
-        vector3 omega = apply_unit_quaternion(Q,
-            invI0 * apply_unit_quaternion(conjugated(Q), L));
+    //     vector3 omega = apply_unit_quaternion(Q,
+    //         invI0 * apply_unit_quaternion(conjugated(Q), L));
 
-        Q += 0.5f * quaternion::pure(omega) * Q * h;
-        normalize(Q);
+    //     Q += 0.5f * quaternion::pure(omega) * Q * h;
+    //     normalize(Q);
 
-        out[i].Q = Q;
-        out[i].L = L;
-        out[i].I = I;
-        out[i].M = M;
-    }
+    //     out[i].Q = Q;
+    //     out[i].L = L;
+    //     out[i].I = I;
+    //     out[i].M = M;
+    // }
 }
 
 
