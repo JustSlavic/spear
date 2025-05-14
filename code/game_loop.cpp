@@ -3,57 +3,70 @@
 #include <memory/allocator.hpp>
 
 
-void init_loop(game_loop_data *data, platform::window *window)
+void game_loop__initialize(game_loop_data *loop, platform::window *window)
 {
-    data->memory = platform::allocate_pages((void *) TERABYTES(1), MEGABYTES(100));
-    data->allocator = memory_allocator::make_arena(data->memory);
-    data->game_memory = data->allocator.allocate_buffer(MEGABYTES(5));
-    data->temporary_allocator = data->allocator.allocate_arena(MEGABYTES(10));
+    loop->memory = platform::allocate_pages((void *) TERABYTES(1), MEGABYTES(100));
+    loop->allocator = memory_allocator::make_arena(loop->memory);
+    loop->game_memory = loop->allocator.allocate_buffer(MEGABYTES(5));
+    loop->temporary_allocator = loop->allocator.allocate_arena(MEGABYTES(10));
 
-    data->mesh_square = load_mesh(make_square());
-    data->mesh_square_uv = load_mesh(make_square_uv());
-    data->mesh_tetrahedron = load_mesh(make_platonic_tetrahedron());
-    data->mesh_cube = load_mesh(make_platonic_cube());
-    data->mesh_octahedron = load_mesh(make_platonic_octahedron());
-    data->mesh_icosahedron = load_mesh(make_platonic_icosahedron());
-    data->mesh_sphere = load_mesh(make_ico_sphere(data->temporary_allocator, data->allocator));
+    loop->mesh_square = load_mesh(make_square());
+    loop->mesh_square_uv = load_mesh(make_square_uv());
+    loop->mesh_tetrahedron = load_mesh(make_platonic_tetrahedron());
+    loop->mesh_cube = load_mesh(make_platonic_cube());
+    loop->mesh_octahedron = load_mesh(make_platonic_octahedron());
+    loop->mesh_icosahedron = load_mesh(make_platonic_icosahedron());
+    loop->mesh_sphere = load_mesh(make_ico_sphere(loop->temporary_allocator, loop->allocator));
 
-    data->shader_color = compile_shaders(vs_single_color, fs_pass_color);
-    data->shader_ground = compile_shaders(vs_ground, fs_pass_color);
-    data->shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
-    data->shader_text = compile_shaders(vs_text, fs_text);
-    data->shader_phong = compile_shaders(vs_phong, fs_phong);
-    data->shader_sun = compile_shaders(vs_sun, fs_sun);
+    loop->shader_color = compile_shaders(vs_single_color, fs_pass_color);
+    loop->shader_ground = compile_shaders(vs_ground, fs_pass_color);
+    loop->shader_framebuffer = compile_shaders(vs_framebuffer, fs_framebuffer);
+    loop->shader_text = compile_shaders(vs_text, fs_text);
+    loop->shader_phong = compile_shaders(vs_phong, fs_phong);
+    loop->shader_sun = compile_shaders(vs_sun, fs_sun);
 
 #if DEBUG
-    data->is_debug_graph_fps_active = false;
-    data->debug_graph_fps.memory = data->allocator.allocate_buffer(sizeof(float32) * 512);
-    data->debug_graph_fps.graph = (float32 *) data->debug_graph_fps.memory.data;
-    data->debug_graph_fps.index = 0;
-    data->debug_graph_fps.count = 512;
-    data->debug_graph_fps.max_value = 1000.f / 30.f;
+    loop->is_debug_graph_fps_active = false;
+    loop->debug_graph_fps.memory = loop->allocator.allocate_buffer(sizeof(float32) * 512);
+    loop->debug_graph_fps.graph = (float32 *) loop->debug_graph_fps.memory.data;
+    loop->debug_graph_fps.index = 0;
+    loop->debug_graph_fps.count = 512;
+    loop->debug_graph_fps.max_value = 1000.f / 30.f;
 #endif // DEBUG
 
-    data->ctx.temporary_allocator = data->temporary_allocator;
-    platform::get_monitor_resolution(window, &data->screen_width, &data->screen_height);
+    loop->ctx.temporary_allocator = loop->temporary_allocator;
+    platform::get_monitor_resolution(window, &loop->screen_width, &loop->screen_height);
 
-    data->ctx.aspect_ratio = (float32) data->screen_width / (float32) data->screen_height;
-    data->ctx.near_clip_dist = 0.05f;
-    data->ctx.near_clip_width = 2 * data->ctx.near_clip_dist * tanf(0.5f * to_radians(60));
-    data->ctx.near_clip_height = data->ctx.near_clip_width / data->ctx.aspect_ratio;
-    data->ctx.far_clip_dist = 10000.f;
+    loop->ctx.aspect_ratio = (float32) loop->screen_width / (float32) loop->screen_height;
+    loop->ctx.near_clip_dist = 0.05f;
+    loop->ctx.near_clip_width = 2 * loop->ctx.near_clip_dist * tanf(0.5f * to_radians(60));
+    loop->ctx.near_clip_height = loop->ctx.near_clip_width / loop->ctx.aspect_ratio;
+    loop->ctx.far_clip_dist = 10000.f;
 
+    auto font_content = platform::load_file("font_14x26.png", &loop->allocator);
+    auto font_bitmap = image::load_png(&loop->allocator, &loop->ctx.temporary_allocator, font_content);
+    loop->font_texture = load_texture(font_bitmap);
+    console::print("Font texture is id=%d\n", loop->font_texture.id);
 
-    auto font_content = platform::load_file("font_14x26.png", &data->allocator);
-    auto font_bitmap = image::load_png(&data->allocator, &data->ctx.temporary_allocator, font_content);
-    data->font_texture = load_texture(font_bitmap);
-    console::print("Font texture is id=%d\n", data->font_texture.id);
-
-    data->frame_counter = 0;
+    loop->frame_counter = 0;
 }
 
-
-void iter_loop(game_loop_data *data)
+void game_loop__update_viewport(game_loop_data *loop)
 {
-    data->frame_counter += 1;
+    if (loop->viewport_changed)
+    {
+        auto viewport = gfx::viewport::make(current_client_width, current_client_height, loop->ctx.aspect_ratio);
+        glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
+        loop->viewport_changed = false;
+
+        loop->ctx.viewport = viewport;
+
+        loop->ctx.window_width = current_client_width;
+        loop->ctx.window_height = current_client_height;
+    }
+}
+
+void game_loop__iterate(game_loop_data *loop)
+{
+    loop->frame_counter += 1;
 }

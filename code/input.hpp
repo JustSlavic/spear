@@ -195,6 +195,7 @@ struct keyboard_and_mouse_input
 {
     button_state buttons[Button_Count];
     int32 x, y;
+    int32 x_prev, y_prev;
     int32 scroll;
 };
 

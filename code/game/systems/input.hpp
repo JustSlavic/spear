@@ -72,6 +72,7 @@ void camera_movement(game_state *gs, input_state *input)
     if (get_hold_count(gs, input, PlayerAction_RotateCameraRight)) camera_rotate_q *= quaternion::rotate(-0.01f, gs->camera.up);
     if (get_hold_count(gs, input, PlayerAction_RotateCameraRollLeft)) camera_rotate_q *= quaternion::rotate(-0.01f, gs->camera.forward);
     if (get_hold_count(gs, input, PlayerAction_RotateCameraRollRight)) camera_rotate_q *= quaternion::rotate(0.01f, gs->camera.forward);
+
     // if (get_hold_count(gs, input, PlayerAction_RotateCameraUp)) camera_rotate_q = gs->camera.up * gs->camera.forward;
 
     if (get_hold_count(input->gamepads[0][GP_DPAD_LEFT])) camera_move_direction -= V3(1, 0, 0);
@@ -82,8 +83,8 @@ void camera_movement(game_state *gs, input_state *input)
     if (get_hold_count(input->gamepads[0][GP_RIGHT_SHOULDER])) camera_move_direction -= V3(0, 0, 1);
 
     camera_move_direction += V3(input->gamepads[0].left_stick.x, input->gamepads[0].left_stick.y, 0);
+    camera_move_direction += V3(0.f, 0.f, (float32) input->keyboard_and_mouse.scroll);
 
-    // if (input->mouse.scroll != 0)
     // {
     //     float k = 15.f * gs->camera.position.z;
     //     camera_move_direction += k * input->mouse.scroll * gs->camera.forward;
@@ -96,10 +97,30 @@ void camera_movement(game_state *gs, input_state *input)
 
 void move_camera(context *ctx, game_state *gs, input_state *input)
 {
-    if (get_press_count(gs, input, PlayerAction_Follow1)) gs->entity_to_follow = gs->planets[0];
-    if (get_press_count(gs, input, PlayerAction_Follow2)) gs->entity_to_follow = gs->planets[1];
-    if (get_press_count(gs, input, PlayerAction_Follow3)) gs->entity_to_follow = gs->planets[2];
-    if (get_press_count(gs, input, PlayerAction_Follow4)) gs->entity_to_follow = gs->planets[3];
+    if (get_press_count(gs, input, PlayerAction_FollowPlanetNext))
+    {
+        if (gs->planet_follow_index + 1 < gs->planets.size())
+        {
+            gs->planet_follow_index += 1;
+            gs->entity_to_follow = gs->planets[gs->planet_follow_index];
+        }
+    }
+    if (get_press_count(gs, input, PlayerAction_FollowPlanetPrev))
+    {
+        if (gs->planet_follow_index > 0 && gs->planets.size() > 0)
+        {
+            gs->planet_follow_index -= 1;
+            gs->entity_to_follow = gs->planets[gs->planet_follow_index];
+        }
+    }
+    if (get_press_count(gs, input, PlayerAction_FollowPlanetStop))
+    {
+        gs->entity_to_follow = ecs::INVALID_ENTITY_ID;
+        gs->camera = game::camera::make_at(
+            gs->camera__default_position,
+            gs->camera__default_direction,
+            gs->camera__default_up);
+    }
     if (gs->entity_to_follow != ecs::INVALID_ENTITY_ID)
     {
         float32 d_distance = 0.f;
@@ -111,7 +132,8 @@ void move_camera(context *ctx, game_state *gs, input_state *input)
         {
             d_distance -= 1.f;
         }
-        gs->follow_distance += d_distance * gs->camera_speed * input->dt;
+        d_distance += sign((float32) input->keyboard_and_mouse.scroll) * 1.f;
+        gs->follow_distance = max(gs->min_follow_distance, gs->follow_distance + d_distance * gs->camera_speed * input->dt);
     }
     if (gs->camera_fly_mode)
     {

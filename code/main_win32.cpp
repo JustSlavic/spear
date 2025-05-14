@@ -337,13 +337,6 @@ void draw_platonic_solid(gpu_mesh mesh, shader s, vector4 c, matrix4 m, matrix4 
 
 namespace win32 {
 
-memory_buffer allocate_memory(void *base_address, usize size)
-{
-    memory_buffer result;
-    result.data = (byte *) VirtualAlloc(base_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    result.size = size;
-    return result;
-}
 
 int32 get_width(RECT rectangle)
         {
@@ -363,14 +356,6 @@ struct window
     HDC DeviceContext;
 };
 
-void get_mouse_pos(window *w, int32 *x, int32 *y)
-{
-    POINT pos;
-    GetCursorPos(&pos);
-    ScreenToClient(w->Handle, &pos);
-    *x = pos.x;
-    *y = pos.y;
-}
 
 uint32 get_program_path(HINSTANCE instance, char *buffer, uint32 buffer_size)
 {
@@ -621,7 +606,7 @@ void process_pending_messages(input_state *input)
             case WM_MOUSEMOVE:
                 break;
 
-            case WM_MOUSEWHEEL: input->mouse.scroll += GET_WHEEL_DELTA_WPARAM(message.wParam);
+            case WM_MOUSEWHEEL: input->keyboard_and_mouse.scroll += GET_WHEEL_DELTA_WPARAM(message.wParam);
                 break;
 
             case WM_LBUTTONDOWN: process_button_state(&input->mouse[MOUSE_LEFT], true);
@@ -716,7 +701,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-    init_loop(&game_loop, (platform::window *) &window);
+    game_loop__initialize(&game_loop, (platform::window *) &window);
 
     auto view = matrix4::identity();
     auto projection = make_projection_matrix_fov(to_radians(60), game_loop.ctx.aspect_ratio, game_loop.ctx.near_clip_dist, game_loop.ctx.far_clip_dist);
@@ -776,7 +761,6 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
 
     // ======================================================================
 
-
     int32 game_update_frequency_hz = platform::get_monitor_refresh_rate_hz((platform::window *) &window);
     float32 target_seconds_per_frame = 1.0f / game_update_frequency_hz;
     float32 last_frame_dt = target_seconds_per_frame;
@@ -799,32 +783,18 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
         }
 #endif // DLL_BUILD
 
-        reset_transitions(game_loop.input.keyboard.buttons, KB_KEY_COUNT);
-        reset_transitions(game_loop.input.mouse.buttons, MOUSE_KEY_COUNT);
         reset_transitions(game_loop.input.keyboard_and_mouse.buttons, Button_Count);
-        game_loop.input.mouse.scroll = 0;
+        game_loop.input.keyboard_and_mouse.scroll = 0;
         process_pending_messages(&game_loop.input);
-        win32::get_mouse_pos(&window, &game_loop.input.mouse.x, &game_loop.input.mouse.y);
         // for (int i = 0; i < 4; i++)
         //     xinput.process_gamepad_state(game_loop.input.gamepads + i, i);
 
         game_loop.input.dt   = last_frame_dt;
         game_loop.input.time = last_timepoint;
 
-        if (game_loop.viewport_changed)
-        {
-            auto viewport = gfx::viewport::make(current_client_width, current_client_height, game_loop.ctx.aspect_ratio);
-            glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
-            game_loop.viewport_changed = false;
-
-            game_loop.ctx.viewport = viewport;
-
-            game_loop.ctx.window_width = current_client_width;
-            game_loop.ctx.window_height = current_client_height;
-
-            projection_ui = matrix4::translate(-1, 1, 0)
-                          * matrix4::scale(2.0f/viewport.width, -2.0f/viewport.height, 1);
-        }
+        game_loop__update_viewport(&game_loop);
+        projection_ui = matrix4::translate(-1, 1, 0)
+                      * matrix4::scale(2.0f/game_loop.ctx.viewport.width, -2.0f/game_loop.ctx.viewport.height, 1);
 
         GL_CHECK_ERRORS();
 

@@ -122,10 +122,9 @@ enum
     PlayerAction_RotateCameraRollLeft,
     PlayerAction_RotateCameraRollRight,
 
-    PlayerAction_Follow1,
-    PlayerAction_Follow2,
-    PlayerAction_Follow3,
-    PlayerAction_Follow4,
+    PlayerAction_FollowPlanetNext,
+    PlayerAction_FollowPlanetPrev,
+    PlayerAction_FollowPlanetStop,
 
     PlayerAction_SpawnMonster,
     PlayerAction_SpawnStone,
@@ -193,8 +192,15 @@ struct game_state
 
     game::camera camera;
     float32 camera_speed;
+
+    vector3 camera__default_position;
+    vector3 camera__default_direction;
+    vector3 camera__default_up;
+
     ecs::entity_id entity_to_follow;
+    int32 planet_follow_index;
     float32 follow_distance;
+    float32 min_follow_distance;
 
     bool camera_fly_mode;
     timepoint exit_press_time;

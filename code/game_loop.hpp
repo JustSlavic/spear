@@ -51,8 +51,9 @@ struct game_loop_data
 };
 
 
-void init_loop(game_loop_data *data, platform::window *);
-void iter_loop(game_loop_data *data);
+void game_loop__initialize(game_loop_data *data, platform::window *);
+void game_loop__update_viewport(game_loop_data *loop);
+void game_loop__iterate(game_loop_data *data);
 
 
 #endif // GAME_LOOP_HPP
