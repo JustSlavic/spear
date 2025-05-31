@@ -252,6 +252,61 @@ int main()
     auto cpu_square = make_square();
     auto gpu_square = load_mesh(cpu_square);
 
+    gpu_mesh gpu_instanced_square = {};
+    {
+        static vector2 translations[100] = {};
+        int index = 0;
+        float offset = 0.1f;
+        for (int y = -10; y < 10; y += 2)
+        {
+            for (int x = -10; x < 10; x += 2)
+            {
+                vector2 translation;
+                translation.x = (float)x / 10.0f + offset;
+                translation.y = (float)y / 10.0f + offset;
+                translations[index++] = translation;
+            }
+        }
+
+        // store instance data in an array buffer
+        // --------------------------------------
+        unsigned int instanceVBO;
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vector2) * 100, &translations[0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        static float quadVertices[] = {
+            // positions     // colors
+            -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+             0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+            -0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+            -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+             0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+             0.05f,  0.05f,  0.0f, 1.0f, 1.0f
+        };
+        unsigned int quadVAO, quadVBO;
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+        // also set instance data
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+
+        gpu_instanced_square.vbo = quadVBO;
+        gpu_instanced_square.vao = quadVAO;
+    }
+
     auto cpu_cube = make_cube();
     auto gpu_cube = load_mesh(cpu_cube);
 
@@ -282,6 +337,7 @@ int main()
     auto shader_text = compile_shaders(vs_text, fs_text);
     auto shader_phong = compile_shaders(vs_phong, fs_phong);
     auto shader_sun = compile_shaders(vs_sun, fs_sun);
+    auto shader_for_instanced_mesh = compile_shaders(vs_instanced, fs_pass_color);
 
     auto font_content = platform::load_file("font_14x26.png", &global_arena);
     auto font_bitmap = image::load_png(&global_arena, &temporary_allocator, font_content);
@@ -577,6 +633,23 @@ int main()
             }
         }
 #endif
+
+        // ---------- Instancing ---------- //
+
+        {
+            glUseProgram(shader_for_instanced_mesh.id);
+
+            auto m = matrix4::scale(0.5);
+            shader_for_instanced_mesh.uniform("u_model", m);
+            shader_for_instanced_mesh.uniform("u_view", matrix4::identity());
+            shader_for_instanced_mesh.uniform("u_projection", matrix4::identity());
+            shader_for_instanced_mesh.uniform("u_color", V4(0.1, 0.8, 0.3, 1));
+            glBindVertexArray(gpu_instanced_square.vao);
+            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100); // 100 triangles of 6 vertices each
+            glBindVertexArray(0);
+        }
+
+        // -------------------------------- //
 
         glBindFramebuffer(GL_FRAMEBUFFER, ui_framebuffer.framebuffer_id);
         glClearColor(0.f, 0.f, 0.f, 0.f);

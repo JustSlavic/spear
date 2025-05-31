@@ -196,3 +196,19 @@ void main()
     result_color = vec4(sun_color, 1.0);
 }
 )GLSL";
+
+GLOBAL char const *vs_instanced = R"GLSL(
+#version 410
+
+layout (location = 0) in vec2 vertex_position;
+layout (location = 1) in vec3 vertex_color;
+layout (location = 2) in vec2 vertex_offset;
+
+out vec4 fragment_color;
+
+void main()
+{
+    gl_Position = vec4(vertex_position + vertex_offset, 0.0, 1.0);
+    fragment_color = vertex_color;
+}
+)GLSL";
