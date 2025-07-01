@@ -123,6 +123,39 @@ void render_stones(context *ctx, game_state *gs, input_state *)
     }
 }
 
+void draw_map_2(context *ctx, game_state *gs, input_state *)
+{
+    // for (int k = 0; k < gs->map2.dim_z; k++)
+    int k = gs->map2.origin_z;
+    {
+        for (int j = 0; j < gs->map2.dim_y; j++)
+        {
+            for (int i = 0; i < gs->map2.dim_x; i++)
+            {
+                printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
+
+                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                {
+                    float32 x = (float32) i - (float32) gs->map2.origin_x;
+                    float32 y = (float32) j - (float32) gs->map2.origin_y;
+                    float32 z = (float32) k - (float32) gs->map2.origin_z;
+                    auto c = V4((float32) i / gs->map2.dim_x,
+                                (float32) j / gs->map2.dim_y,
+                                (float32) k / gs->map2.dim_z,
+                                1);
+                    auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45);
+                    ctx->render_cube(m, c, RenderShader_Ground);
+                }
+                if (k == gs->map2.origin_z && gs->map2.get(i, j, k) != GameMapOccupation_Ground)
+                {
+                    // printf("NOT GROUND AT (%d, %d, %d);\n", i, j, k);
+                }
+            }
+            printf("\n");
+        }
+    }
+}
+
 void draw_health_bar(context *ctx, entity *e, float32 x, float32 y, float32 z)
 {
     // Render hp

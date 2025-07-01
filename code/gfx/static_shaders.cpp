@@ -43,8 +43,7 @@ uniform vec4 u_color;
 
 void main()
 {
-    vec4 world_pos = u_model * vec4(vertex_position, 1.0);
-    float z = clamp(world_pos.z + 0.5, 0.0, 1.0);
+    float z = clamp(vertex_position.z + 0.5, 0.0, 1.0);
 
     fragment_color = u_color * z;
     gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);

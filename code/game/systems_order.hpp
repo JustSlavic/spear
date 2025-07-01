@@ -51,15 +51,16 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     // render_monsters(ctx, gs, input);
     // render_stones(ctx, gs, input);
     // render_timer(ctx, gs, input);
-    if (gs->is_in_battle)
-    {
-        // render_battle_queue(ctx, gs, input);
-    }
+    // if (gs->is_in_battle)
+    // {
+    //     render_battle_queue(ctx, gs, input);
+    // }
     // render_dialogue(ctx, gs, input);
     // render_field(ctx, gs, input);
+    draw_map_2(ctx, gs, input);
 
-    render_planets(ctx, gs, input);
-    render_grid(ctx);
+    // render_planets(ctx, gs, input);
+    // render_grid(ctx);
 
     render_camera_position(ctx, gs);
 }

@@ -72,6 +72,7 @@ struct entity
 
     bool invincible;
 
+    // RPG stuff
     int x;
     int y;
 
@@ -142,6 +143,30 @@ struct game_state;
 uint32 get_press_count(game_state *gs, input_state *input, uint32 action_id);
 uint32 get_release_count(game_state *gs, input_state *input, uint32 action_id);
 uint32 get_hold_count(game_state *gs, input_state *input, uint32 action_id);
+
+enum
+{
+    GameMapOccupation_Empty,
+    GameMapOccupation_Ground,
+};
+
+struct game_map
+{
+    uint32 dim_x, dim_y, dim_z;
+    uint32 origin_x, origin_y, origin_z;
+    array<uint32> data;
+
+    uint32 get(int i, int j, int k)
+    {
+        return data[k * dim_x * dim_y + j * dim_x + i];
+    }
+
+    void set(int i, int j, int k, uint32 v)
+    {
+        data[k * dim_x * dim_y + j * dim_x + i] = v;
+    }
+};
+
 
 struct game_field
 {
@@ -227,6 +252,8 @@ struct game_state
 
     float32 field_render__gap;
     game_field field;
+
+    game_map map2;
 };
 
 

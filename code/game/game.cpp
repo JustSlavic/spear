@@ -191,16 +191,46 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     memset(gs->map, 0, sizeof(ecs::entity_id) * 5 * 5);
 
+    gs->map2.dim_x = 10;
+    gs->map2.dim_y = 10;
+    gs->map2.dim_z = 10;
+    gs->map2.origin_x = 4;
+    gs->map2.origin_y = 4;
+    gs->map2.origin_z = 2;
+    gs->map2.data = gs->allocator.allocate_array<uint32>(gs->map2.dim_x * gs->map2.dim_y * gs->map2.dim_z);
+    gs->map2.data.resize(gs->map2.data.capacity());
+    // for (int j = 0; j < gs->map2.dim_y; j++)
+    // {
+    //     for (int i = 0; i < gs->map2.dim_x; i++)
+    //     {
+    //         gs->map2.set(i, j, gs->map2.origin_z, GameMapOccupation_Ground);
+    //     }
+    // }
+    gs->map2.set(0, 3, gs->map2.origin_z, GameMapOccupation_Ground);
+    gs->map2.set(0, 4, gs->map2.origin_z, GameMapOccupation_Ground);
+
+    for (int j = 0; j < gs->map2.dim_y; j++)
+    {
+        for (int i = 0; i < gs->map2.dim_x; i++)
+        {
+            printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
+        }
+        printf("\n");
+    }
+
     gs->field = create_game_field(gs->allocator, 3, 3);
 
     gs->double_click_interval = duration::milliseconds(5);
 
-    gs->camera__default_position = V3(0, 0, 250);
+    gs->camera__default_position = V3(0, -5, 5);
     gs->camera__default_direction = V3(0, 0, -1);
     gs->camera__default_up = V3(0, 1, 0);
 
-    gs->camera = game::camera::look_at(V3(0, 0, 250), V3(0, 0, 0), V3(0, 1, 0));
-    gs->camera_speed = 100.f;
+    gs->camera = game::camera::look_at(
+        gs->camera__default_position,
+        gs->camera__default_direction,
+        gs->camera__default_up);
+    gs->camera_speed = 10.f;
 
     gs->turn_no = 1;
     gs->turn_timer_enabled = false;

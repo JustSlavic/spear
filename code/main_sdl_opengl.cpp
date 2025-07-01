@@ -336,11 +336,10 @@ int main()
     running = true;
     while (running)
     {
-        reset_transitions(input.keyboard.buttons, KB_KEY_COUNT);
-        reset_transitions(input.mouse.buttons, MOUSE_KEY_COUNT);
         reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
         process_pending_messages(&input);
-        sdl::get_mouse_pos(&input.mouse.x, &input.mouse.y);
+        input.keyboard_and_mouse.scroll = 0;
+        sdl::get_mouse_pos(&input.keyboard_and_mouse.x, &input.keyboard_and_mouse.y);
         input.dt = last_frame_dt;
         input.time = last_timepoint;
 

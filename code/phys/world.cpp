@@ -121,7 +121,7 @@ void update_step(rigid_body *in, rigid_body *out, uint32 count, float32 h)
 
         vector3 F0[32] = {};
 
-        // float32 J[6*6] = {};
+        float32 J[6*6] = {};
         for (uint32 j = 0; j < count; j++)
         {
             if (i == j) continue;
