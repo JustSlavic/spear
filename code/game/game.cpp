@@ -50,7 +50,7 @@ void game_state::set_map_eid(int x, int y, ecs::entity_id eid)
 game_field create_game_field(memory_allocator a, uint32 width, uint32 height)
 {
     game_field result = {};
-    result.map = a.allocate_array<ecs::entity_id>(width * height);
+    result.map = ALLOCATE_ARRAY(a, ecs::entity_id, width*height);
     result.width = width;
     result.height = height;
     return result;
@@ -145,13 +145,14 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
     auto arena = memory_allocator::make_arena(game_memory);
+    arena.print_debug();
 
     auto gs = arena.allocate<game_state>();
     gs->allocator = arena;
     ctx->game_state = gs;
 
 #define PHYS_MAX_BODY_COUNT 32
-    gs->phys_world.memory = arena.allocate_buffer(2 * PHYS_MAX_BODY_COUNT * sizeof(phys::rigid_body) + PHYS_MAX_BODY_COUNT * sizeof(vector3));
+    gs->phys_world.memory = ALLOCATE_BUFFER(arena, 2 * PHYS_MAX_BODY_COUNT * sizeof(phys::rigid_body) + PHYS_MAX_BODY_COUNT * sizeof(vector3));
     gs->phys_world.Y = (phys::rigid_body *) gs->phys_world.memory.data;
     gs->phys_world.Y0 = (phys::rigid_body *) (gs->phys_world.memory.data + PHYS_MAX_BODY_COUNT * sizeof(phys::rigid_body));
     gs->phys_world.capacity = PHYS_MAX_BODY_COUNT;
@@ -197,17 +198,19 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->map2.origin_x = 4;
     gs->map2.origin_y = 4;
     gs->map2.origin_z = 2;
-    gs->map2.data = gs->allocator.allocate_array<uint32>(gs->map2.dim_x * gs->map2.dim_y * gs->map2.dim_z);
+    gs->map2.data = ALLOCATE_ARRAY(arena, uint32, gs->map2.dim_x * gs->map2.dim_y * gs->map2.dim_z);
     gs->map2.data.resize(gs->map2.data.capacity());
-    // for (int j = 0; j < gs->map2.dim_y; j++)
-    // {
-    //     for (int i = 0; i < gs->map2.dim_x; i++)
-    //     {
-    //         gs->map2.set(i, j, gs->map2.origin_z, GameMapOccupation_Ground);
-    //     }
-    // }
+    for (int j = 0; j < gs->map2.dim_y; j++)
+    {
+        for (int i = 0; i < gs->map2.dim_x; i++)
+        {
+            gs->map2.set(i, j, gs->map2.origin_z, GameMapOccupation_Ground);
+        }
+    }
     gs->map2.set(0, 3, gs->map2.origin_z, GameMapOccupation_Ground);
     gs->map2.set(0, 4, gs->map2.origin_z, GameMapOccupation_Ground);
+
+    ALLOCATE_BUFFER(arena, 10000);
 
     for (int j = 0; j < gs->map2.dim_y; j++)
     {
@@ -218,7 +221,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         printf("\n");
     }
 
-    gs->field = create_game_field(gs->allocator, 3, 3);
+    gs->field = create_game_field(arena, 3, 3);
 
     gs->double_click_interval = duration::milliseconds(5);
 

@@ -241,7 +241,7 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
 
     if (!contents) return result;
 
-    auto zlib_stream = memory_bucket::from(temporary->allocate_buffer(contents.size));
+    auto zlib_stream = memory_bucket::from(ALLOCATE_BUFFER(*temporary, contents.size));
 
     uint8 *data = (uint8 *) contents.data;
 
@@ -338,7 +338,7 @@ bitmap load_png(memory_allocator *allocator, memory_allocator *temporary, memory
             // @note additional + height for filter types at the start of each scanline
             result.size = result.width * result.height * (result.bits_per_pixel / 8) + result.height;
 
-            auto buffer_1 = allocator->allocate_buffer(result.size, alignof(uint32));
+            auto buffer_1 = ALLOCATE_ALIGNED_BUFFER(*allocator, result.size, alignof(uint32));
             result.pixels = buffer_1.data;
 
             decoder.output = zlib::create_stream(result.pixels, result.size);
@@ -654,7 +654,7 @@ bool32 decode_idat_chunk(zlib::decoder *decoder, memory_allocator *temporary_all
 
                 auto clen_huffman = compute_huffman(temporary_allocator, CLEN_code_lengths, ARRAY_COUNT(CLEN_code_lengths));
 
-                auto LITLEN_DIST_code_length_buffer = temporary_allocator->allocate_buffer((HLIT + HDIST)*sizeof(uint32));
+                auto LITLEN_DIST_code_length_buffer = ALLOCATE_BUFFER(*temporary_allocator, (HLIT + HDIST)*sizeof(uint32));
                 auto LITLEN_DIST_code_lengths = make_array<uint32>(LITLEN_DIST_code_length_buffer);
 
                 LITLEN_DIST_code_lengths.resize(LITLEN_DIST_code_lengths.capacity());
@@ -771,7 +771,7 @@ array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_len
         uint32 code;
     };
 
-    auto huffman_table_buffer = a->allocate_buffer(code_lengths_count * sizeof(huffman_table_entry));
+    auto huffman_table_buffer = ALLOCATE_BUFFER(*a, code_lengths_count * sizeof(huffman_table_entry));
     auto huffman_table = make_array<huffman_table_entry>(huffman_table_buffer);
     huffman_table.resize(huffman_table.capacity());
 
@@ -823,7 +823,7 @@ array<huffman_entry> compute_huffman(memory_allocator *a, uint32 const *code_len
         }
     }
 
-    auto huffman_buffer = a->allocate_buffer((1ull << maximum_code_length) * sizeof(huffman_entry));
+    auto huffman_buffer = ALLOCATE_BUFFER(*a, (1ull << maximum_code_length) * sizeof(huffman_entry));
     auto huffman = make_array<huffman_entry>(huffman_buffer);
     huffman.resize(huffman.capacity());
     {

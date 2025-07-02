@@ -72,7 +72,7 @@ archetype make_archetype(memory_allocator allocator, component_and_value *comps,
         result.comps.push_back(comps[i]);
         entity_size += comps[i].comp.size;
     }
-    result.chunk.memory = allocator.allocate_buffer(entity_size * ECS_ARCH_MAX_COUNT);
+    result.chunk.memory = ALLOCATE_BUFFER(allocator, entity_size * ECS_ARCH_MAX_COUNT);
     result.chunk.eids.resize(result.chunk.eids.capacity());
     return result;
 }

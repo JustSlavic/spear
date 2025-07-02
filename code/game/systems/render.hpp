@@ -132,7 +132,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
         {
             for (int i = 0; i < gs->map2.dim_x; i++)
             {
-                printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
+                // printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
 
                 if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
                 {
@@ -151,7 +151,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
                     // printf("NOT GROUND AT (%d, %d, %d);\n", i, j, k);
                 }
             }
-            printf("\n");
+            // printf("\n");
         }
     }
 }
@@ -247,7 +247,7 @@ void render_battle_queue(context *ctx, game_state *gs, input_state *)
         // auto color = V4(0.4, 0.4, 0.4, 1);
         // ctx->render_ui(matrix4::translate((float32) x, (float32) y, 0.f) * matrix4::scale(10, 10, 1), color);
 
-        auto string_buffer = ctx->temporary_allocator.allocate_buffer(32);
+        auto string_buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 32);
         auto str = make_array<char>(string_buffer);
         int n = eid.id;
         while (n > 0)
@@ -288,7 +288,7 @@ void render_dialogue(context *ctx, game_state *gs, input_state *input)
 
 void render_camera_position(context *ctx, game_state *gs)
 {
-    auto buffer = ctx->temporary_allocator.allocate_buffer(64);
+    auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
     auto p = gs->camera.position;
     snprintf((char *) buffer.data, 63, "Camera.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
     ctx->render_text(matrix4::translate(10.f, 100.f, 0.f), V4(1), (char const *) buffer.data);

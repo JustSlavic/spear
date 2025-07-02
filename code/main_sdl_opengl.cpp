@@ -171,7 +171,7 @@ int main()
     auto global_memory = sdl::allocate_memory((void *) TERABYTES(1), MEGABYTES(50));
     auto global_arena  = memory_allocator::make_arena(global_memory);
 
-    auto game_memory = global_arena.allocate_buffer(MEGABYTES(5));
+    auto game_memory = ALLOCATE_BUFFER(global_arena, MEGABYTES(5));
     auto temporary_allocator = global_arena.allocate_arena(MEGABYTES(5));
 
     // ======================================================================
@@ -296,7 +296,7 @@ int main()
 #if DEBUG
     bool32 debug_draw_fps_graph_active = false;
     debug_graph debug_fps_graph = {};
-    debug_fps_graph.memory = global_arena.allocate_buffer(sizeof(float32) * 512);
+    debug_fps_graph.memory = ALLOCATE_BUFFER(global_arena, sizeof(float32) * 512);
     debug_fps_graph.graph = (float32 *) debug_fps_graph.memory.data;
     debug_fps_graph.index = 0;
     debug_fps_graph.count = 512;
@@ -641,7 +641,7 @@ int main()
                     uint32 count = 0;
 
                     string_view strview = string_view::from(cmd.cstr);
-                    auto temp_memory = temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                    auto temp_memory = ALLOCATE_ALIGNED_BUFFER(temporary_allocator, strview.size * 24 * sizeof(float32), alignof(float32));
                     auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
 
                     char c = 0;

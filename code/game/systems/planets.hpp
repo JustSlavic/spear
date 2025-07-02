@@ -144,7 +144,7 @@ void render_planets(context *ctx, game_state *gs, input_state *input)
             float32 K = 0.5f * norm_squared(body->P) / body->M;
             E += K;
         }
-        auto buffer = ctx->temporary_allocator.allocate_buffer(64);
+        auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
         snprintf((char *) buffer.data, 63, "E = %f", E);
         ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
     }

@@ -6,9 +6,9 @@ namespace ecs {
 entity_manager entity_manager::initialize(memory_allocator a)
 {
     entity_manager result = {};
-    result.descriptions = a.allocate_array<entity_description>(ECS_MAX_ENTITIES);
+    result.descriptions = ALLOCATE_ARRAY(a, entity_description, ECS_MAX_ENTITIES);
     result.descriptions.resize(ECS_MAX_ENTITIES);
-    result.empty_slots = a.allocate_array<entity_idx_t>(ECS_MAX_ENTITIES);
+    result.empty_slots = ALLOCATE_ARRAY(a, entity_idx_t, ECS_MAX_ENTITIES);
     result.empty_slots.resize(ECS_MAX_ENTITIES);
 
     for (int i = 0; i < ECS_MAX_ENTITIES; i++)

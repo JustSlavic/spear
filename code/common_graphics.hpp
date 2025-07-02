@@ -456,7 +456,7 @@ int compile_shader(char const *source_code, int shader_type)
         GLsizei length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, (GLint *) &length);
 
-        auto message = mallocator().allocate_buffer(length + 1);
+        auto message = ALLOCATE_BUFFER(mallocator(), length + 1);
 
         glGetShaderInfoLog(id, length, (GLsizei *) &length, (char *) message.data);
         glDeleteShader(id);

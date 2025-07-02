@@ -334,13 +334,13 @@ subdivide_result subdivide_triangles(memory_allocator a, array<vector3> vertices
 {
     subdivide_result result = {};
     usize edge_count = 3 * triangles.size(); // Every triangles has 3 edges, but every edge is edge for two triangles
-    result.vertices = a.allocate_array<vector3>(vertices.size() + edge_count / 2);
-    result.triangles = a.allocate_array<triangle>(4 * triangles.size());
+    result.vertices = ALLOCATE_ARRAY(a, vector3, vertices.size() + edge_count / 2);
+    result.triangles = ALLOCATE_ARRAY(a, triangle, 4 * triangles.size());
 
     // I will need index map, which will map pairs of indices, to the single index
     // of vertex, which will divide selected edge
     usize index_map_dim = vertices.size();
-    auto index_map = a.allocate_array<uint32>(index_map_dim * index_map_dim);
+    auto index_map = ALLOCATE_ARRAY(a, uint32, index_map_dim * index_map_dim);
     index_map.resize(index_map_dim * index_map_dim);
 
     // Copy all current vertices
@@ -405,7 +405,7 @@ cpu_mesh make_ico_sphere(memory_allocator temp_allocator, memory_allocator alloc
     float a = 1.0f;
     float b = 1.0f / phi;
 
-    auto vertices = temp_allocator.allocate_array<vector3>(12);
+    auto vertices = ALLOCATE_ARRAY(temp_allocator, vector3, 12);
     vertices.push_back(V3( b,  a,  0));
     vertices.push_back(V3( 0,  b,  a));
     vertices.push_back(V3( a,  0,  b));
@@ -419,7 +419,7 @@ cpu_mesh make_ico_sphere(memory_allocator temp_allocator, memory_allocator alloc
     vertices.push_back(V3( 0, -b, -a));
     vertices.push_back(V3(-a,  0, -b));
 
-    auto triangles = temp_allocator.allocate_array<triangle>(20);
+    auto triangles = ALLOCATE_ARRAY(temp_allocator, triangle, 20);
     triangles.push_back(T(3, 0, 7));
     triangles.push_back(T(0, 3, 1));
     triangles.push_back(T(8, 4, 1));
@@ -446,7 +446,7 @@ cpu_mesh make_ico_sphere(memory_allocator temp_allocator, memory_allocator alloc
     subdivide_result subdiv = subdivide_triangles(temp_allocator, subdiv1.vertices, subdiv1.triangles);
 
 
-    auto vbo = allocator.allocate_buffer(subdiv.vertices.size() * (2 * sizeof(vector3)));
+    auto vbo = ALLOCATE_BUFFER(allocator, subdiv.vertices.size() * (2 * sizeof(vector3)));
     auto vbo_data = (float32 *) vbo.data;
     auto vbo_count = 0;
     for (int i = 0; i < subdiv.vertices.size(); i++)
@@ -461,7 +461,7 @@ cpu_mesh make_ico_sphere(memory_allocator temp_allocator, memory_allocator alloc
         vbo_data[vbo_count++] = subdiv.vertices[i].z / normal;
     }
 
-    auto ibo = allocator.allocate_buffer(subdiv.triangles.size() * sizeof(triangle));
+    auto ibo = ALLOCATE_BUFFER(allocator, subdiv.triangles.size() * sizeof(triangle));
     auto ibo_data = (uint32 *) ibo.data;
     auto ibo_count = 0;
     for (int i = 0; i < subdiv.triangles.size(); i++)
