@@ -840,6 +840,24 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, game_loop.mesh_square.ibo);
                 glDrawElements(GL_TRIANGLES, game_loop.mesh_square.count, GL_UNSIGNED_INT, NULL);
             }
+            else if (cmd.tag == RenderCommand_RenderCube)
+            {
+                shader *s = NULL;
+                if (cmd.shader_tag == RenderShader_SingleColor) s = &game_loop.shader_color;
+                if (cmd.shader_tag == RenderShader_Ground) s = &game_loop.shader_ground;
+                if (cmd.shader_tag == RenderShader_Phong) s = &game_loop.shader_phong;
+                if (cmd.shader_tag == RenderShader_Sun) s = &game_loop.shader_sun;
+
+                glUseProgram(s->id);
+
+                s->uniform("u_model", cmd.model);
+                s->uniform("u_view", view);
+                s->uniform("u_projection", projection);
+                s->uniform("u_color", cmd.color);
+
+                glBindVertexArray(game_loop.mesh_cube.vao);
+                glDrawArrays(GL_TRIANGLES, 0, game_loop.mesh_cube.count);
+            }
             else if (cmd.tag == RenderCommand_RenderMesh)
             {
                 gpu_mesh *mesh = NULL;
