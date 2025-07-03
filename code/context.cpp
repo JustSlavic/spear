@@ -58,7 +58,7 @@ void context::render_square(matrix4 m, vector4 c, render_shader_tag s)
 
 void context::render_cube(matrix4 m, vector4 c, render_shader_tag s)
 {
-    rend_command cmd = { RenderCommand_RenderCube };
+    rend_command cmd = { RenderCommand_RenderMesh };
     cmd.model = m;
     cmd.color = c;
     cmd.shader_tag = s;

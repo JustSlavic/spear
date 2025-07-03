@@ -200,9 +200,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
     gs->map2.origin_z = 2;
     gs->map2.data = ALLOCATE_ARRAY(arena, uint32, gs->map2.dim_x * gs->map2.dim_y * gs->map2.dim_z);
     gs->map2.data.resize(gs->map2.data.capacity());
-    for (int j = 0; j < gs->map2.dim_y; j++)
+    for (uint32 j = 0; j < gs->map2.dim_y; j++)
     {
-        for (int i = 0; i < gs->map2.dim_x; i++)
+        for (uint32 i = 0; i < gs->map2.dim_x; i++)
         {
             gs->map2.set(i, j, gs->map2.origin_z, GameMapOccupation_Ground);
         }
@@ -212,9 +212,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     ALLOCATE_BUFFER(arena, 10000);
 
-    for (int j = 0; j < gs->map2.dim_y; j++)
+    for (uint32 j = 0; j < gs->map2.dim_y; j++)
     {
-        for (int i = 0; i < gs->map2.dim_x; i++)
+        for (uint32 i = 0; i < gs->map2.dim_x; i++)
         {
             printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
         }

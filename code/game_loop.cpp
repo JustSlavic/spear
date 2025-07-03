@@ -7,7 +7,7 @@ void game_loop__initialize(game_loop_data *loop, platform::window *window)
 {
     loop->memory = platform::allocate_pages((void *) TERABYTES(1), MEGABYTES(100));
     loop->allocator = memory_allocator::make_arena(loop->memory);
-    loop->game_memory = loop->allocator.allocate_buffer(MEGABYTES(5));
+    loop->game_memory = ALLOCATE_BUFFER(loop->allocator, MEGABYTES(5));
     loop->temporary_allocator = loop->allocator.allocate_arena(MEGABYTES(10));
 
     loop->mesh_square = load_mesh(make_square());
@@ -27,7 +27,7 @@ void game_loop__initialize(game_loop_data *loop, platform::window *window)
 
 #if DEBUG
     loop->is_debug_graph_fps_active = false;
-    loop->debug_graph_fps.memory = loop->allocator.allocate_buffer(sizeof(float32) * 512);
+    loop->debug_graph_fps.memory = ALLOCATE_BUFFER(loop->allocator, sizeof(float32) * 512);
     loop->debug_graph_fps.graph = (float32 *) loop->debug_graph_fps.memory.data;
     loop->debug_graph_fps.index = 0;
     loop->debug_graph_fps.count = 512;

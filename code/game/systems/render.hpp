@@ -126,15 +126,15 @@ void render_stones(context *ctx, game_state *gs, input_state *)
 void draw_map_2(context *ctx, game_state *gs, input_state *)
 {
     // for (int k = 0; k < gs->map2.dim_z; k++)
-    int k = gs->map2.origin_z;
+    uint32 k = gs->map2.origin_z;
     {
-        for (int j = 0; j < gs->map2.dim_y; j++)
+        for (uint32 j = 0; j < gs->map2.dim_y; j++)
         {
-            for (int i = 0; i < gs->map2.dim_x; i++)
+            for (uint32 i = 0; i < gs->map2.dim_x; i++)
             {
                 // printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
 
-                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                // if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
                 {
                     float32 x = (float32) i - (float32) gs->map2.origin_x;
                     float32 y = (float32) j - (float32) gs->map2.origin_y;
@@ -143,7 +143,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
                                 (float32) j / gs->map2.dim_y,
                                 (float32) k / gs->map2.dim_z,
                                 1);
-                    auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45);
+                    auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45f);
                     ctx->render_cube(m, c, RenderShader_Ground);
                 }
                 if (k == gs->map2.origin_z && gs->map2.get(i, j, k) != GameMapOccupation_Ground)

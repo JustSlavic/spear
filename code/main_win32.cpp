@@ -960,7 +960,7 @@ int32 WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, i
                 uint32 count = 0;
 
                 string_view strview = string_view::from(cmd.cstr);
-                auto temp_memory = game_loop.ctx.temporary_allocator.allocate_buffer(strview.size * 24 * sizeof(float32), alignof(float32));
+                auto temp_memory = ALLOCATE_ALIGNED_BUFFER(game_loop.ctx.temporary_allocator, strview.size * 24 * sizeof(float32), alignof(float32));
                 ASSERT(temp_memory.data);
                 auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
 
