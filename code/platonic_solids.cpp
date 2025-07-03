@@ -45,10 +45,8 @@ cpu_mesh make_platonic_tetrahedron()
     return result;
 }
 
-cpu_mesh make_platonic_cube()
+cpu_mesh make_platonic_cube(float32 a)
 {
-    float32 a = 0.5773502691896258f; // 1 / sqrt(3)
-
     static float32 vbo_data[] = {
         -a,  a, -a,  0,  0, -1,
         -a, -a, -a,  0,  0, -1,

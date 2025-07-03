@@ -13,7 +13,7 @@ void game_loop__initialize(game_loop_data *loop, platform::window *window)
     loop->mesh_square = load_mesh(make_square());
     loop->mesh_square_uv = load_mesh(make_square_uv());
     loop->mesh_tetrahedron = load_mesh(make_platonic_tetrahedron());
-    loop->mesh_cube = load_mesh(make_platonic_cube());
+    loop->mesh_cube = load_mesh(make_platonic_cube(1.f));
     loop->mesh_octahedron = load_mesh(make_platonic_octahedron());
     loop->mesh_icosahedron = load_mesh(make_platonic_icosahedron());
     loop->mesh_sphere = load_mesh(make_ico_sphere(loop->temporary_allocator, loop->allocator));

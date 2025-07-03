@@ -207,8 +207,6 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
             gs->map2.set(i, j, gs->map2.origin_z, GameMapOccupation_Ground);
         }
     }
-    gs->map2.set(0, 3, gs->map2.origin_z, GameMapOccupation_Ground);
-    gs->map2.set(0, 4, gs->map2.origin_z, GameMapOccupation_Ground);
 
     ALLOCATE_BUFFER(arena, 10000);
 

@@ -10,9 +10,13 @@ namespace phys {
 
 handle create_rigid_body(phys::world *world)
 {
-    handle result = { world->count };
-    world->count += 1;
-    memset(world->Y0 + result.index * PHYS_BODY_DIMENSIONS, 0, PHYS_BODY_SIZE);
+    handle result = {};
+    if (world->count < world->capacity)
+    {
+        result.index = world->count;
+        world->count += 1;
+        memset(world->Y0 + result.index, 0, PHYS_BODY_SIZE);
+    }
     return result;
 }
 

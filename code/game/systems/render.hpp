@@ -134,7 +134,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
             {
                 // printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
 
-                // if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
                 {
                     float32 x = (float32) i - (float32) gs->map2.origin_x;
                     float32 y = (float32) j - (float32) gs->map2.origin_y;
