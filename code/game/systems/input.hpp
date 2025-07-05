@@ -54,6 +54,7 @@ void ghost_view_mode(context *ctx, game_state *gs, input_state *input)
     }
 }
 
+// @feature0002
 void camera_movement(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
@@ -155,35 +156,35 @@ void heal_hero(context *ctx, game_state *gs, input_state *input)
 
 void spawn_entities(context *ctx, game_state *gs, input_state *input)
 {
-    if (gs->intersected)
-    {
-        if (game::cell_is_empty(gs, gs->intersect_x, gs->intersect_y))
-        {
-            if (get_press_count(gs, input, PlayerAction_SpawnMonster))
-            {
-                game::spawn_monster(gs, gs->intersect_x, gs->intersect_y);
-            }
-            else if (get_press_count(gs, input, PlayerAction_SpawnStone))
-            {
-                game::spawn_stone(gs, gs->intersect_x, gs->intersect_y);
-            }
-        }
-    }
+    // if (gs->intersected)
+    // {
+        // if (game::cell_is_empty(gs, gs->intersect_x, gs->intersect_y))
+        // {
+        //     if (get_press_count(gs, input, PlayerAction_SpawnMonster))
+        //     {
+        //         game::spawn_monster(gs, gs->intersect_x, gs->intersect_y);
+        //     }
+        //     else if (get_press_count(gs, input, PlayerAction_SpawnStone))
+        //     {
+        //         game::spawn_stone(gs, gs->intersect_x, gs->intersect_y);
+        //     }
+        // }
+    // }
 }
 
 void select_entity(context *ctx, game_state *gs, input_state *input)
 {
-    entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
-    if (gs->intersected && gs->get_map_eid(gs->intersect_x, gs->intersect_y) != ecs::INVALID_ENTITY_ID &&
-        !game::entity_can_walk_here(gs, selected_entity, gs->intersect_x, gs->intersect_y) &&
-        !gs->selecting_direction_of_action)
-    {
-        if (get_press_count(input->mouse[MOUSE_LEFT]))
-        {
-            gs->selected_entity_eid = gs->get_map_eid(gs->intersect_x, gs->intersect_y);
-            selected_entity = game::get_entity(gs, gs->selected_entity_eid);
-        }
-    }
+    // entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
+    // if (gs->intersected && gs->get_map_eid(gs->intersect_x, gs->intersect_y) != ecs::INVALID_ENTITY_ID &&
+    //     !game::entity_can_walk_here(gs, selected_entity, gs->intersect_x, gs->intersect_y) &&
+    //     !gs->selecting_direction_of_action)
+    // {
+    //     if (get_press_count(input->mouse[MOUSE_LEFT]))
+    //     {
+    //         gs->selected_entity_eid = gs->get_map_eid(gs->intersect_x, gs->intersect_y);
+    //         selected_entity = game::get_entity(gs, gs->selected_entity_eid);
+    //     }
+    // }
 }
 
 

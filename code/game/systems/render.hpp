@@ -44,71 +44,6 @@ void render_character_page(context *ctx, game_state *gs, input_state *)
     }
 }
 
-void render_field(context *ctx, game_state *gs, input_state *)
-{
-    float32 mult = 2.f + gs->field_render__gap;
-    for (int x = 0; x < gs->field.width; x++)
-    {
-        for (int y = 0; y < gs->field.height; y++)
-        {
-            auto c = V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
-            auto m = matrix4::translate(mult*(x - gs->field.width / 2),
-                                        mult*(y - gs->field.height / 2),
-                                        0.f);
-            ctx->render_cube(m, c, RenderShader_Ground);
-        }
-    }
-}
-
-void render_ground(context *ctx, game_state *gs, input_state *)
-{
-    entity *selected_entity = game::get_entity(gs, gs->hero_eid);
-    for (int x = -2; x <= 2; x++)
-    {
-        for (int y = -2; y <= 2; y++)
-        {
-            auto c = gs->world_view == WORLD_VIEW__GHOST
-                ? V4(0.2 + 0.1f * y, 0.6 + 0.1f * x, 0.7 - 0.1f * x, 1)
-                : V4(0.8 - 0.1f * x, 0.5 + 0.1f * y, 0.3 + 0.1f * x, 1);
-
-            if (gs->selecting_direction_of_action)
-            {
-                if (game::cell_is_adjacent_to_entity(selected_entity, x, y))
-                {
-                    c += V4(0.3, 0.3, 0.3, 0);
-                }
-            }
-            else if (selected_entity && gs->selected_entity_eid == gs->hero_eid)
-            {
-                if (game::entity_can_walk_here(gs, selected_entity, x, y))
-                {
-                    c += V4(0.3, 0.3, 0.3, 0);
-                }
-
-                if (x == selected_entity->action.x &&
-                    y == selected_entity->action.y)
-                {
-                    if (selected_entity->action.kind == ENTITY_ACTION_MOVE)
-                        c = gs->move_color;
-                    else if (selected_entity->action.kind == ENTITY_ACTION_LEFT_ARM)
-                        c = gs->defence_color;
-                    else if (selected_entity->action.kind == ENTITY_ACTION_RIGHT_ARM)
-                        c = gs->attack_color;
-                }
-            }
-
-            if (gs->intersected && x == gs->intersect_x && y == gs->intersect_y)
-            {
-                c += V4(0.3, 0.3, 0.3, 1);
-            }
-
-            auto m = matrix4::translate(2.3f*x, 2.3f*y, 0.f);
-
-            ctx->render_cube(m, c, RenderShader_Ground);
-        }
-    }
-}
-
 void render_stones(context *ctx, game_state *gs, input_state *)
 {
     for (auto stone_eid : gs->stones)
@@ -125,33 +60,52 @@ void render_stones(context *ctx, game_state *gs, input_state *)
 
 void draw_map_2(context *ctx, game_state *gs, input_state *)
 {
-    // for (int k = 0; k < gs->map2.dim_z; k++)
-    uint32 k = gs->map2.origin_z;
+    {
+        auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
+        snprintf((char *) buffer.data, 63,
+            "intersect ijk = %d, %d, %d", gs->intersect_i, gs->intersect_j, gs->intersect_k);
+        ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
+    }
+    {
+        auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
+        snprintf((char *) buffer.data, 63,
+            "intersect t = %f", gs->intersect_t);
+        ctx->render_text(matrix4::translate(10.f, 200.f, 0.f), V4(1), (char const *) buffer.data);
+    }
+    {
+        auto c = V4(1, 0, 1, 1);
+        auto m = matrix4::translate(gs->intersection)
+               * matrix4::scale(0.05f);
+        ctx->render_cube(m, c, RenderShader_SingleColor);
+    }
+
+    for (int k = 0; k < gs->map2.dim_z; k++)
     {
         for (uint32 j = 0; j < gs->map2.dim_y; j++)
         {
             for (uint32 i = 0; i < gs->map2.dim_x; i++)
             {
-                // printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
-
                 if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    float32 x = (float32) i - (float32) gs->map2.origin_x;
-                    float32 y = (float32) j - (float32) gs->map2.origin_y;
-                    float32 z = (float32) k - (float32) gs->map2.origin_z;
                     auto c = V4((float32) i / gs->map2.dim_x,
                                 (float32) j / gs->map2.dim_y,
                                 (float32) k / gs->map2.dim_z,
                                 1);
+                    if (gs->intersected &&
+                        gs->intersect_i == i &&
+                        gs->intersect_j == j &&
+                        gs->intersect_k == k)
+                    {
+                        c = V4(c.rgb * 1.2f, 1.0f);
+                    }
+
+                    float32 x = (float32) i - (float32) gs->map2.origin_x;
+                    float32 y = (float32) j - (float32) gs->map2.origin_y;
+                    float32 z = (float32) k - (float32) gs->map2.origin_z;
                     auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45f);
                     ctx->render_cube(m, c, RenderShader_Ground);
                 }
-                if (k == gs->map2.origin_z && gs->map2.get(i, j, k) != GameMapOccupation_Ground)
-                {
-                    // printf("NOT GROUND AT (%d, %d, %d);\n", i, j, k);
-                }
             }
-            // printf("\n");
         }
     }
 }
@@ -190,13 +144,13 @@ void render_hero(context *ctx, game_state *gs, input_state *)
     entity *hero = game::get_entity(gs, gs->hero_eid);
     if (hero)
     {
-        float32 x = 2.3f*hero->x;
-        float32 y = 2.3f*hero->y;
-        float32 z = 2;
-        float height = hero->eid == gs->selected_entity_eid ? gs->selected_entity_height
-                     : gs->regular_entity_height;
+        float32 x = (float32) hero->x - gs->map2.origin_x;
+        float32 y = (float32) hero->y - gs->map2.origin_y;
+        float32 z = (float32) hero->z - gs->map2.origin_z;
+        // float height = hero->eid == gs->selected_entity_eid ? gs->selected_entity_height
+        //              : gs->regular_entity_height;
         auto m = matrix4::translate(x, y, z) *
-                 matrix4::scale(0.5f, 0.5f, height);
+                 matrix4::scale(0.35f, 0.35f, 0.35f);
 
         ctx->render_cube(m, V4(1, 1, 1, 1), RenderShader_SingleColor);
         draw_health_bar(ctx, hero, x, y, z);
@@ -208,28 +162,28 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
     for (int i = 0; i < gs->monsters.size(); i++)
     {
         entity *monster = game::get_entity(gs, gs->monsters[i]);
-        float32 x = monster->x + 1.3f*monster->x;
-        float32 y = monster->y + 1.3f*monster->y;
-        float32 z = 2;
-        float height = monster->eid == gs->selected_entity_eid ? gs->selected_entity_height
-                     : gs->regular_entity_height;
-
+        float32 x = (float32) monster->x - gs->map2.origin_x;
+        float32 y = (float32) monster->y - gs->map2.origin_y;
+        float32 z = (float32) monster->z - gs->map2.origin_z;
+        // float height = monster->eid == gs->selected_entity_eid ? gs->selected_entity_height
+        //              : gs->regular_entity_height;
         auto m = matrix4::translate(x, y, z) *
-                 matrix4::scale(0.5f, 0.5f, height);
-        ctx->render_cube(m, V4(0.9, 0.2, 0.7, 1), RenderShader_SingleColor);
+                 matrix4::scale(0.35f, 0.35f, 0.35f);
+
+        ctx->render_cube(m, V4(0.9, 0.4, 0.2, 1), RenderShader_SingleColor);
         draw_health_bar(ctx, monster, x, y, z);
 
-        if (monster->action.kind != ENTITY_ACTION_NONE)
-        {
-            auto color = monster->action.kind == ENTITY_ACTION_MOVE ? gs->move_color :
-                         monster->action.kind == ENTITY_ACTION_LEFT_ARM ? gs->defence_color :
-                         monster->action.kind == ENTITY_ACTION_RIGHT_ARM ? gs->attack_color :
-                         V4(1, 1, 1, 1);
-            ctx->render_square(matrix4::translate((float32) (monster->action.x - monster->x),
-                                                  (float32) (monster->action.y - monster->y),
-                                                  (float32) (-gs->selected_entity_height)) * m,
-                color, RenderShader_SingleColor);
-        }
+        // if (monster->action.kind != ENTITY_ACTION_NONE)
+        // {
+        //     auto color = monster->action.kind == ENTITY_ACTION_MOVE ? gs->move_color :
+        //                  monster->action.kind == ENTITY_ACTION_LEFT_ARM ? gs->defence_color :
+        //                  monster->action.kind == ENTITY_ACTION_RIGHT_ARM ? gs->attack_color :
+        //                  V4(1, 1, 1, 1);
+        //     ctx->render_square(matrix4::translate((float32) (monster->action.x - monster->x),
+        //                                           (float32) (monster->action.y - monster->y),
+        //                                           (float32) (-gs->selected_entity_height)) * m,
+        //         color, RenderShader_SingleColor);
+        // }
     }
 }
 

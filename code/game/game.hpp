@@ -75,6 +75,7 @@ struct entity
     // RPG stuff
     int x;
     int y;
+    int z;
 
     int hp;
     int max_hp;
@@ -148,6 +149,7 @@ enum
 {
     GameMapOccupation_Empty,
     GameMapOccupation_Ground,
+    GameMapOccupation_Entity,
 };
 
 struct game_map
@@ -185,6 +187,7 @@ struct game_state
     memory_allocator allocator;
 
     entity entities[ECS_MAX_ENTITIES];
+    ecs::entity_id hero_eid;
     static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
     static_array<ecs::entity_id, 25> stones;
     static_array<ecs::entity_id, 100> planets;
@@ -198,7 +201,6 @@ struct game_state
 
     ecs::entity_manager entity_manager;
 
-    ecs::entity_id hero_eid;
     ecs::entity_id selected_entity_eid;
 
     world_view_state world_view;
@@ -216,8 +218,8 @@ struct game_state
     bool is_in_battle;
 
     game::camera camera;
+    // @feature0002 - 2025.07.05
     float32 camera_speed;
-
     vector3 camera__default_position;
     vector3 camera__default_direction;
     vector3 camera__default_up;
@@ -234,11 +236,15 @@ struct game_state
     vector4 defence_color;
     vector4 attack_color;
 
+    // @feature0001 - 2025.07.05
     bool32 intersected;
     float32 intersect_t;
-    int intersect_x;
-    int intersect_y;
+    int intersect_i;
+    int intersect_j;
+    int intersect_k;
+    vector3 intersection;
 
+    // @todo move this into input library
     duration double_click_interval;
 
     float selected_entity_height = 0.8f;

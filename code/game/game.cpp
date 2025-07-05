@@ -208,17 +208,6 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
         }
     }
 
-    ALLOCATE_BUFFER(arena, 10000);
-
-    for (uint32 j = 0; j < gs->map2.dim_y; j++)
-    {
-        for (uint32 i = 0; i < gs->map2.dim_x; i++)
-        {
-            printf("%s", gs->map2.get(i, j, gs->map2.origin_z) > 0 ? "X" : " ");
-        }
-        printf("\n");
-    }
-
     gs->field = create_game_field(arena, 3, 3);
 
     gs->double_click_interval = duration::milliseconds(5);
@@ -271,30 +260,30 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     test_es_gen(&base_entity_archetype);
 
-    game::spawn_hero(gs, 0, 0);
-    game::spawn_monster(gs, -2,  2);
-    game::spawn_monster(gs,  2, -1);
-    game::spawn_monster(gs, -1,  2);
+    game::spawn_hero(gs, 0, 0, 3);
+    game::spawn_monster(gs, 2, 2, 3);
+    game::spawn_monster(gs, 2, 1, 4);
+    game::spawn_monster(gs, 1, 2, 5);
 
-    game::spawn_stone(gs, -1,  1);
-    game::spawn_stone(gs, -1, -1);
-    game::spawn_stone(gs,  1,  1);
-    game::spawn_stone(gs,  1, -1);
+    // game::spawn_stone(gs, -1,  1);
+    // game::spawn_stone(gs, -1, -1);
+    // game::spawn_stone(gs,  1,  1);
+    // game::spawn_stone(gs,  1, -1);
 
-    spawn_planet(gs, V3(0),               V3(0.f, 0.f, 0.f),    10.0f,  10000.f, V3(0.8f, 0.8f, 0.2f));
-    spawn_planet(gs, V3(50.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.4f, 0.7f));
-    spawn_planet(gs, V3(-300.f, 0.f, 0.f),
-        V3(0.1f, -sqrtf(0.1f * 10000.f / 300.f), 0.f) + V3(0.f, -sqrtf(0.1f * 10.f / 10.f), -0.1f),
-        0.5f, 1.f, V3(0.2f, 0.2f, 0.2f));
-    spawn_planet(gs, V3(-310.f, 0.f, 0.f),
-        V3(0.f, -sqrtf(0.1f * 10000.f / 310.f), 0.f),
-        2.f, 10.f, V3(0.2f, 0.7f, 0.4f));
-    spawn_planet(gs, V3(510.f, 34.f, -1.f),
-        V3(0.f, sqrtf(0.1f * 10000.f / 510.f), 1.f),
-        2.f, 10.f, V3(0.3f, 0.4f, 0.6f));
-    spawn_planet(gs, V3(610.f, 300.f, 0.f),
-        V3(3.f, sqrtf(0.1f * 10000.f / 610.f), -1.f),
-        2.f, 10.f, V3(0.2f, 0.2f, 0.8f));
+    // spawn_planet(gs, V3(0),               V3(0.f, 0.f, 0.f),    10.0f,  10000.f, V3(0.8f, 0.8f, 0.2f));
+    // spawn_planet(gs, V3(50.f, 0.f, 0.f),  V3(0.f, sqrtf(0.1f * 10000.f / 50.f), 0.f), 0.5f,  1.f,    V3(0.2f, 0.4f, 0.7f));
+    // spawn_planet(gs, V3(-300.f, 0.f, 0.f),
+    //     V3(0.1f, -sqrtf(0.1f * 10000.f / 300.f), 0.f) + V3(0.f, -sqrtf(0.1f * 10.f / 10.f), -0.1f),
+    //     0.5f, 1.f, V3(0.2f, 0.2f, 0.2f));
+    // spawn_planet(gs, V3(-310.f, 0.f, 0.f),
+    //     V3(0.f, -sqrtf(0.1f * 10000.f / 310.f), 0.f),
+    //     2.f, 10.f, V3(0.2f, 0.7f, 0.4f));
+    // spawn_planet(gs, V3(510.f, 34.f, -1.f),
+    //     V3(0.f, sqrtf(0.1f * 10000.f / 510.f), 1.f),
+    //     2.f, 10.f, V3(0.3f, 0.4f, 0.6f));
+    // spawn_planet(gs, V3(610.f, 300.f, 0.f),
+    //     V3(3.f, sqrtf(0.1f * 10000.f / 610.f), -1.f),
+    //     2.f, 10.f, V3(0.2f, 0.2f, 0.8f));
     // sqrt(GM/r)
 
     // spawn_planet(gs, position, V3(10.0f, 0.0f, 10.0f), 1.0f, 0.1f, V3(1));

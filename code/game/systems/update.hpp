@@ -19,12 +19,13 @@ void battle_queue_push(game_state *gs, ecs::entity_id eid)
     }
 }
 
+// @feature0001
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 {
-    auto mouse_pos_x =  cvt((float32) input->mouse.x,
+    auto mouse_pos_x =  cvt((float32) input->keyboard_and_mouse.x,
         (float32) ctx->viewport.offset_x, (float32) ctx->viewport.offset_x + ctx->viewport.width,
         -1.f, 1.f);
-    auto mouse_pos_y = -cvt((float32) input->mouse.y,
+    auto mouse_pos_y = -cvt((float32) input->keyboard_and_mouse.y,
         (float32) ctx->viewport.offset_y, (float32) ctx->viewport.offset_y + ctx->viewport.height,
         -1.f, 1.f);
 
@@ -42,37 +43,45 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
     return result;
 }
 
-void find_selection_tile(context *ctx, game_state *gs, input_state *input)
+// @feature0001
+void find_intersection_with_ground(context *ctx, game_state *gs, input_state *input)
 {
-    vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
-    vector3 intersection;
-    {
-        auto Oxy = make_plane3(0, 0, 1, 0);
-        auto line = make_line3(ray_direction, gs->camera.position);
-        auto intersection_p = outer(Oxy, line);
-        intersection = intersection_p.vector / intersection_p.w;
-    }
-
     gs->intersected = false;
     gs->intersect_t = infinity;
-    gs->intersect_x = 0;
-    gs->intersect_y = 0;
-    for (int x = -2; x <= 2; x++)
+    gs->intersect_i = 0;
+    gs->intersect_j = 0;
+    gs->intersect_k = 0;
+    gs->intersection = V3(0);
+
+    vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
+    for (uint32 k = 0; k < gs->map2.dim_z; k++)
     {
-        for (int y = -2; y <= 2; y++)
+        for (uint32 j = 0; j < gs->map2.dim_y; j++)
         {
-            auto center = V3(x + 1.3f*x, y + 1.3f*y, 0);
-            rectangle3 aabb = rectangle3::from_center_radius(center, 1, 1, 1);
-
-            float tmin;
-            int intersect_cube = intersect_ray_aabb(gs->camera.position, ray_direction, aabb, &tmin);
-
-            if (intersect_cube && tmin < gs->intersect_t)
+            for (uint32 i = 0; i < gs->map2.dim_x; i++)
             {
-                gs->intersected = true;
-                gs->intersect_t = tmin;
-                gs->intersect_x = x;
-                gs->intersect_y = y;
+                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                {
+                    auto x = (float32) i - gs->map2.origin_x;
+                    auto y = (float32) j - gs->map2.origin_y;
+                    auto z = (float32) k - gs->map2.origin_z;
+                    auto center = V3(x, y, z);
+                    auto r = 0.45f; // @todo: pull this from game state
+                    rectangle3 aabb = rectangle3::from_center_radius(center, r, r, r);
+
+                    float t;
+                    int intersect_cube = intersect_ray_aabb(gs->camera.position, ray_direction, aabb, &t);
+
+                    if (intersect_cube && t < gs->intersect_t)
+                    {
+                        gs->intersected = true;
+                        gs->intersect_t = t;
+                        gs->intersect_i = i;
+                        gs->intersect_j = j;
+                        gs->intersect_k = k;
+                        gs->intersection = gs->camera.position + ray_direction * t;
+                    }
+                }
             }
         }
     }
@@ -95,11 +104,11 @@ void get_entity_movement(game_state *gs, input_state *input, entity *e, int *x, 
     int dx = 0;
     int dy = 0;
 
-    if (gs->intersected && get_press_count(input->mouse[MOUSE_LEFT]))
-    {
-        dx = gs->intersect_x - e->x;
-        dy = gs->intersect_y - e->y;
-    }
+    // if (gs->intersected && get_press_count(input->mouse[MOUSE_LEFT]))
+    // {
+    //     dx = gs->intersect_x - e->x;
+    //     dy = gs->intersect_y - e->y;
+    // }
     if (get_press_count(input->keyboard[KB_W])) dy += 1;
     if (get_press_count(input->keyboard[KB_A])) dx -= 1;
     if (get_press_count(input->keyboard[KB_S])) dy -= 1;
@@ -318,7 +327,7 @@ void next_turn(context *ctx, game_state *gs, input_state *input)
 
         if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
         {
-            spawn_hero(gs, 0, 0);
+            spawn_hero(gs, 0, 0, 0);
         }
     }
 }

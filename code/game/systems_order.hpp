@@ -26,7 +26,7 @@ void process_input(context *ctx, game_state *gs, input_state *input)
 void update_stage(context *ctx, game_state *gs, input_state *input)
 {
     enter_battle_on_enemies_present(ctx, gs, input);
-    find_selection_tile(ctx, gs, input);
+    find_intersection_with_ground(ctx, gs, input);
     if (gs->is_in_battle)
     {
         entity_action(ctx, gs, input);
@@ -45,10 +45,9 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
 void render_stage(context *ctx, game_state *gs, input_state *input)
 {
     setup_render_camera(ctx, gs, input);
-    // render_ground(ctx, gs, input);
     // render_character_page(ctx, gs, input);
-    // render_hero(ctx, gs, input);
-    // render_monsters(ctx, gs, input);
+    render_hero(ctx, gs, input);
+    render_monsters(ctx, gs, input);
     // render_stones(ctx, gs, input);
     // render_timer(ctx, gs, input);
     // if (gs->is_in_battle)
@@ -56,7 +55,6 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     //     render_battle_queue(ctx, gs, input);
     // }
     // render_dialogue(ctx, gs, input);
-    // render_field(ctx, gs, input);
     draw_map_2(ctx, gs, input);
 
     // render_planets(ctx, gs, input);

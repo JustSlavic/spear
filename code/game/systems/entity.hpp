@@ -96,27 +96,33 @@ void on_entity_spawned(game_state *gs, entity *e)
     }
 }
 
-ecs::entity_id spawn_entity(game_state *gs, int x, int y, entity **p)
+ecs::entity_id spawn_entity(game_state *gs, int x, int y, int z, entity **p)
 {
     ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
-    if (cell_is_empty(gs, x, y))
+    if (gs->map2.get(x, y, z) == GameMapOccupation_Empty)
     {
         eid = gs->entity_manager.create_entity();
         auto *entity = gs->entities + eid.get_index();
         entity->eid = eid;
         entity->x = x;
         entity->y = y;
-        gs->set_map_eid(x, y, eid);
+        entity->z = z;
 
+        gs->map2.set(x, y, z, GameMapOccupation_Entity);
+        printf("Entity eid=%d created on tile (%d, %d, %d)\n", eid.id, x, y, z);
         if (p) *p = entity;
+    }
+    else
+    {
+        printf("Error: spawn_entity at (%d, %d, %d); The cell is occupied!\n", x, y, z);
     }
     return eid;
 }
 
-ecs::entity_id spawn_hero(game_state *gs, int x, int y)
+ecs::entity_id spawn_hero(game_state *gs, int x, int y, int z)
 {
     entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
+    auto eid = spawn_entity(gs, x, y, z, &e);
     if (e)
     {
         e->kind = ENTITY_HERO;
@@ -128,7 +134,7 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
 
         gs->selected_entity_eid = eid;
         gs->hero_eid = eid;
-        console::print("hero_id = %d\n", eid.id);
+        console::print("hero_eid=%d\n", eid.id);
 
         on_entity_spawned(gs, e);
     }
@@ -136,10 +142,10 @@ ecs::entity_id spawn_hero(game_state *gs, int x, int y)
     return eid;
 }
 
-ecs::entity_id spawn_monster(game_state *gs, int x, int y)
+ecs::entity_id spawn_monster(game_state *gs, int x, int y, int z)
 {
     entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
+    auto eid = spawn_entity(gs, x, y, z, &e);
     if (e)
     {
         e->kind = ENTITY_MONSTER;
@@ -150,7 +156,7 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
         e->agility = 1;
 
         gs->monsters.push_back(eid);
-        console::print("monster_eid = %d\n", eid.id);
+        console::print("monster_eid=%d\n", eid.id);
 
         on_entity_spawned(gs, e);
     }
@@ -158,17 +164,17 @@ ecs::entity_id spawn_monster(game_state *gs, int x, int y)
     return eid;
 }
 
-ecs::entity_id spawn_stone(game_state *gs, int x, int y)
+ecs::entity_id spawn_stone(game_state *gs, int x, int y, int z)
 {
     entity *e = NULL;
-    auto eid = spawn_entity(gs, x, y, &e);
+    auto eid = spawn_entity(gs, x, y, z, &e);
     if (e)
     {
         e->kind = ENTITY_STONE;
         e->invincible = true;
 
         gs->stones.push_back(eid);
-        console::print("stone_eid = %d\n", eid.id);
+        console::print("stone_eid=%d\n", eid.id);
     }
     return eid;
 }
