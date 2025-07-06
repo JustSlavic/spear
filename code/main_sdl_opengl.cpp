@@ -330,7 +330,7 @@ int main()
 
     input_state input = {};
 
-    float32 last_frame_dt = 0.016f;
+    duration last_frame_dt = duration::microseconds(16);
     timepoint last_timepoint = now();
 
     running = true;
@@ -340,8 +340,8 @@ int main()
         process_pending_messages(&input);
         input.keyboard_and_mouse.scroll = 0;
         sdl::get_mouse_pos(&input.keyboard_and_mouse.x, &input.keyboard_and_mouse.y);
-        input.dt = last_frame_dt;
-        input.time = last_timepoint;
+        input.dt = get_seconds(last_frame_dt);
+        input.time = get_seconds(last_timepoint);
 
         if (viewport_changed)
         {
@@ -670,7 +670,7 @@ int main()
                         };
 
                         seri_buffer.push(vbo_data, sizeof(vbo_data));
-                        posx += g.width + 2; // 2 pixels between characters
+                        posx += g.width; // 2 pixels between characters
                         count += 6;
                     }
 
@@ -721,7 +721,7 @@ int main()
         temporary_allocator.reset();
 
         timepoint end_of_frame = now();
-        last_frame_dt = get_seconds(end_of_frame - last_timepoint);
+        last_frame_dt = end_of_frame - last_timepoint;
         last_timepoint = end_of_frame;
     }
 

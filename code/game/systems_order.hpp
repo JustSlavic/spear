@@ -20,23 +20,14 @@ void process_input(context *ctx, game_state *gs, input_state *input)
     spawn_entities(ctx, gs, input);
     move_camera(ctx, gs, input);
     select_entity(ctx, gs, input);
-    debug_toggle_battle(ctx, gs, input);
 }
 
 void update_stage(context *ctx, game_state *gs, input_state *input)
 {
-    enter_battle_on_enemies_present(ctx, gs, input);
     find_intersection_with_ground(ctx, gs, input);
-    if (gs->is_in_battle)
-    {
-        entity_action(ctx, gs, input);
-    }
-    else
-    {
-        move_selected_entity(ctx, gs, input);
-    }
-    remove_dead_entities(ctx, gs, input);
-    next_turn(ctx, gs, input);
+
+    move_input(ctx, gs, input);
+    update_move_animations(ctx, gs, input);
 
     move_planets(gs);
     camera_follow(ctx, gs, input);
@@ -57,8 +48,8 @@ void render_stage(context *ctx, game_state *gs, input_state *input)
     // render_dialogue(ctx, gs, input);
     draw_map_2(ctx, gs, input);
 
-    // render_planets(ctx, gs, input);
-    // render_grid(ctx);
+    render_planets(ctx, gs, input);
+    render_grid(ctx);
 
     render_camera_position(ctx, gs);
 }

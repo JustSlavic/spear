@@ -19,7 +19,7 @@ void battle_queue_push(game_state *gs, ecs::entity_id eid)
     }
 }
 
-// @feature0001
+// @feature1
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
 {
     auto mouse_pos_x =  cvt((float32) input->keyboard_and_mouse.x,
@@ -43,7 +43,7 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input_state *input)
     return result;
 }
 
-// @feature0001
+// @feature1
 void find_intersection_with_ground(context *ctx, game_state *gs, input_state *input)
 {
     gs->intersected = false;
@@ -54,17 +54,17 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input_state *in
     gs->intersection = V3(0);
 
     vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
-    for (uint32 k = 0; k < gs->map2.dim_z; k++)
+    for (uint32 k = 0; k < gs->map.dim_z; k++)
     {
-        for (uint32 j = 0; j < gs->map2.dim_y; j++)
+        for (uint32 j = 0; j < gs->map.dim_y; j++)
         {
-            for (uint32 i = 0; i < gs->map2.dim_x; i++)
+            for (uint32 i = 0; i < gs->map.dim_x; i++)
             {
-                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                if (gs->map.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    auto x = (float32) i - gs->map2.origin_x;
-                    auto y = (float32) j - gs->map2.origin_y;
-                    auto z = (float32) k - gs->map2.origin_z;
+                    auto x = (float32) i - gs->map.origin_x;
+                    auto y = (float32) j - gs->map.origin_y;
+                    auto z = (float32) k - gs->map.origin_z;
                     auto center = V3(x, y, z);
                     auto r = 0.45f; // @todo: pull this from game state
                     rectangle3 aabb = rectangle3::from_center_radius(center, r, r, r);
@@ -87,296 +87,30 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input_state *in
     }
 }
 
-void move_entity(game_state *gs, entity *e, int x, int y)
-{
-    if (gs->get_map_eid(x, y) != ecs::INVALID_ENTITY_ID)
-        return;
-
-    gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
-    gs->set_map_eid(x, y, e->eid);
-
-    e->x = x;
-    e->y = y;
-}
-
-void get_entity_movement(game_state *gs, input_state *input, entity *e, int *x, int *y)
-{
-    int dx = 0;
-    int dy = 0;
-
-    // if (gs->intersected && get_press_count(input->mouse[MOUSE_LEFT]))
-    // {
-    //     dx = gs->intersect_x - e->x;
-    //     dy = gs->intersect_y - e->y;
-    // }
-    if (get_press_count(input->keyboard[KB_W])) dy += 1;
-    if (get_press_count(input->keyboard[KB_A])) dx -= 1;
-    if (get_press_count(input->keyboard[KB_S])) dy -= 1;
-    if (get_press_count(input->keyboard[KB_D])) dx += 1;
-
-    *x = e->x + dx;
-    *y = e->y + dy;
-}
-
-void move_selected_entity(context *ctx, game_state *gs, input_state *input)
-{
-    entity *selected_entity = game::get_entity(gs, gs->selected_entity_eid);
-    if (selected_entity)
-    {
-        int x = 0, y = 0;
-        get_entity_movement(gs, input, selected_entity, &x, &y);
-        if (game::entity_can_walk_here(gs, selected_entity, x, y))
-        {
-            move_entity(gs, selected_entity, x, y);
-        }
-    }
-}
-
-void cmd_start_battle(game_state *gs)
-{
-    gs->battle_queue.push_back(gs->hero_eid);
-    for (auto monster_eid : gs->monsters)
-    {
-        gs->battle_queue.push_back(monster_eid);
-    }
-    gs->action_input = null_action();
-    gs->selecting_direction_of_action = false;
-    gs->turn_no = 0;
-    gs->is_in_battle = true;
-}
-
-void cmd_end_battle(game_state *gs)
-{
-    gs->battle_queue.clear();
-    gs->is_in_battle = false;
-}
-
-void debug_toggle_battle(context *ctx, game_state *gs, input_state *input)
-{
-    if (get_press_count(input->keyboard[KB_K]))
-    {
-        if (gs->is_in_battle)
-        {
-            cmd_end_battle(gs);
-        }
-        else
-        {
-            cmd_start_battle(gs);
-        }
-    }
-}
-
-void choose_hero_action(context *ctx, game_state *gs, input_state *input)
-{
-    if (gs->battle_queue.size() < 2)
-    {
-        cmd_end_battle(gs);
-        return;
-    }
-
-    entity *hero = get_entity(gs, gs->hero_eid);
-
-    int x, y;
-    get_entity_movement(gs, input, hero, &x, &y);
-
-    if (get_press_count(input->keyboard[KB_Q]))
-    {
-        gs->action_input.kind = ENTITY_ACTION_LEFT_ARM;
-        TOGGLE(gs->selecting_direction_of_action);
-    }
-    else if (get_press_count(input->keyboard[KB_E]))
-    {
-        gs->action_input.kind = ENTITY_ACTION_RIGHT_ARM;
-        TOGGLE(gs->selecting_direction_of_action);
-    }
-    else
-    {
-
-    }
-
-    if (gs->is_coords_valid(x, y) &&
-        game::cell_is_adjacent_to_entity(hero, x, y))
-    {
-        gs->action_input.x = x;
-        gs->action_input.y = y;
-        if (!gs->selecting_direction_of_action)
-        {
-            gs->action_input.kind = ENTITY_ACTION_MOVE;
-        }
-
-        if (gs->action_input.kind == ENTITY_ACTION_MOVE)
-        {
-            if (game::entity_can_walk_here(gs, hero, gs->action_input.x, gs->action_input.y))
-            {
-                hero->action = gs->action_input;
-                gs->selecting_direction_of_action = false;
-            }
-        }
-        else if (gs->action_input.kind != ENTITY_ACTION_NONE)
-        {
-            hero->action = gs->action_input;
-            gs->selecting_direction_of_action = false;
-        }
-    }
-}
-
-void choose_bots_action(context *ctx, game_state *gs, input_state *input)
-{
-    entity *hero = get_entity(gs, gs->hero_eid);
-    if (hero == NULL) return;
-
-    entity *monster = get_active_entity(gs);
-    if (monster == NULL) return;
-
-    a_star_move moves[25] = {};
-    bool32 path_exists = a_star(ctx, gs,
-        monster->x, monster->y,
-        hero->x, hero->y,
-        moves, ARRAY_COUNT(moves), true);
-    if (path_exists)
-    {
-        int dx = 0;
-        int dy = 0;
-
-        if (moves[0] == P_ML) dx = -1;
-        if (moves[0] == P_MR) dx = 1;
-        if (moves[0] == P_MU) dy = 1;
-        if (moves[0] == P_MD) dy = -1;
-
-        int x = monster->x + dx;
-        int y = monster->y + dy;
-
-        if (x == hero->x && y == hero->y)
-        {
-            monster->action.kind = ENTITY_ACTION_RIGHT_ARM;
-        }
-        else
-        {
-            monster->action.kind = ENTITY_ACTION_MOVE;
-        }
-        monster->action.x = x;
-        monster->action.y = y;
-    }
-}
-
-void apply_entity_action(game_state *gs, entity *e)
-{
-    e->state = idle_state();
-    auto enemy_eid = gs->get_map_eid(e->action.x, e->action.y);
-    if (e->action.kind == ENTITY_ACTION_MOVE)
-    {
-        console::print("%d at (%d, %d) moves to (%d, %d)\n",
-            e->eid.id, e->x, e->y, e->action.x, e->action.y);
-        move_entity(gs, e, e->action.x, e->action.y);
-    }
-    else if (e->action.kind == ENTITY_ACTION_RIGHT_ARM)
-    {
-        console::print("%d at (%d, %d) attacks %d at (%d, %d)\n",
-            e->eid.id, e->x, e->y,
-            enemy_eid.id, e->action.x, e->action.y);
-
-        auto eid = gs->get_map_eid(e->action.x, e->action.y);
-        if (eid == ecs::INVALID_ENTITY_ID) return;
-
-        auto *attacker = e;
-        auto *victim = get_entity(gs, eid);
-
-        if (!((victim->state.kind == ENTITY_STATE_DEFENCE) &&
-              (victim->state.x == attacker->x) &&
-              (victim->state.y == attacker->y)))
-        {
-            victim->hp -= 1;
-        }
-    }
-    else if (e->action.kind == ENTITY_ACTION_LEFT_ARM)
-    {
-        console::print("%d at (%d, %d) defences from %d at (%d, %d)\n",
-            e->eid.id, e->x, e->y,
-            enemy_eid.id, e->action.x, e->action.y);
-
-        e->state.kind = ENTITY_STATE_DEFENCE;
-        e->state.x = e->action.x;
-        e->state.y = e->action.y;
-    }
-}
-
-void next_turn(context *ctx, game_state *gs, input_state *input)
-{
-    if (gs->battle_queue.size() < 2)
-    {
-        cmd_end_battle(gs);
-        return;
-    }
-
-    bool force_new_turn = get_press_count(input->keyboard[KB_SPACE]);
-    bool timer_new_turn = gs->turn_timer_enabled &&
-                          (input->time >= (gs->turn_start_time + gs->seconds_for_turn));
-
-    if (force_new_turn || timer_new_turn)
-    {
-        // @attention NEW TURN !!!
-        console::print("> new turn \n");
-
-        entity *active_entity = get_active_entity(gs);
-        apply_entity_action(gs, active_entity);
-        active_entity->action = null_action();
-
-        gs->turn_no += 1;
-        gs->battle_queue_current_slot = (gs->battle_queue_current_slot + 1) % gs->battle_queue.size();
-        gs->selected_entity_eid = get_active_entity_eid(gs);
-
-        if (gs->hero_eid == ecs::INVALID_ENTITY_ID)
-        {
-            spawn_hero(gs, 0, 0, 0);
-        }
-    }
-}
-
-
-void entity_action(context *ctx, game_state *gs, input_state *input)
-{
-    auto active_entity_eid = get_active_entity_eid(gs);
-    if (active_entity_eid == gs->hero_eid)
-    {
-        choose_hero_action(ctx, gs, input);
-    }
-    else
-    {
-        choose_bots_action(ctx, gs, input);
-    }
-}
-
-void remove_dead_entities(context *, game_state *gs, input_state *)
-{
-    auto *hero = get_entity(gs, gs->hero_eid);
-    if (hero && hero->hp <= 0)
-    {
-        remove_entity(gs, hero);
-    }
-    for (auto monster_eid : gs->monsters)
-    {
-        auto *monster = get_entity(gs, monster_eid);
-        if (monster->hp <= 0)
-        {
-            remove_entity(gs, monster);
-        }
-    }
-}
-
-void enter_battle_on_enemies_present(context *, game_state *gs, input_state *)
-{
-    if (!gs->monsters.empty() && !gs->is_in_battle)
-    {
-        cmd_start_battle(gs);
-    }
-}
-
 void camera_follow(context *, game_state *gs, input_state *)
 {
     auto *e = get_entity(gs, gs->entity_to_follow);
     if (e)
     {
         gs->camera.position = e->position - normalized(gs->camera.forward) * gs->follow_distance;
+    }
+}
+
+// @feature3 - 06.07.2025
+void update_move_animations(context *ctx, game_state *gs, input_state *input)
+{
+    if (auto e = get_entity(gs, gs->hero_eid))
+    {
+        if (input->time < e->move_animation_end_time)
+        {
+            auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
+            snprintf((char *) buffer.data, 63,
+                "move_animation_t = %f", e->move_animation_t);
+            ctx->render_text(
+                matrix4::translate(100.f, 280.f, 0.f),
+                V4(1), (char const *) buffer.data);
+            e->move_animation_t += input->dt;
+        }
     }
 }
 

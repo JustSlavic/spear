@@ -246,7 +246,7 @@ struct input_state
     mouse_device mouse;
     gamepad_device gamepads[4];
     float32 dt;
-    timepoint time;
+    float32 time;
 };
 
 

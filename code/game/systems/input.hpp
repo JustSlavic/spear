@@ -12,7 +12,7 @@ void game_exit(context *ctx, game_state *gs, input_state *input)
 {
     if (get_release_count(gs, input, PlayerAction_ExitGame))
     {
-        if (get_seconds(input->time - gs->exit_press_time) < 1)
+        if ((input->time - gs->exit_press_time) < 1.f)
         {
             ctx->exit_game();
         }
@@ -54,7 +54,7 @@ void ghost_view_mode(context *ctx, game_state *gs, input_state *input)
     }
 }
 
-// @feature0002
+// @feature2
 void camera_movement(game_state *gs, input_state *input)
 {
     auto camera_move_direction = V3(0, 0, 0);
@@ -185,6 +185,17 @@ void select_entity(context *ctx, game_state *gs, input_state *input)
     //         selected_entity = game::get_entity(gs, gs->selected_entity_eid);
     //     }
     // }
+}
+
+void move_input(context *ctx, game_state *gs, input_state *input)
+{
+    // @feature3 - 06.07.2025
+    if (get_press_count(input->keyboard_and_mouse.buttons[Keyboard_H]))
+    {
+        auto *e = get_entity(gs, gs->hero_eid);
+        e->move_animation_end_time = input->time + e->move_animation_duration;
+        e->move_animation_t = 0.f;
+    }
 }
 
 

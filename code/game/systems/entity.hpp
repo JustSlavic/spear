@@ -21,26 +21,6 @@ entity_state idle_state()
     return result;
 }
 
-bool cell_is_empty(game_state *gs, int x, int y)
-{
-    if (!gs->is_coords_valid(x, y)) return false;
-    return gs->get_map_eid(x, y) == ecs::INVALID_ENTITY_ID;
-}
-
-bool cell_is_adjacent_to_entity(entity *e, int x, int y)
-{
-    return e &&
-           ((x == e->x + 1 && y == e->y) ||
-            (x == e->x - 1 && y == e->y) ||
-            (y == e->y + 1 && x == e->x) ||
-            (y == e->y - 1 && x == e->x));
-}
-
-bool entity_can_walk_here(game_state *gs, entity *e, int x, int y)
-{
-    return e && cell_is_empty(gs, x, y) && cell_is_adjacent_to_entity(e, x, y);
-}
-
 entity *get_entity(game_state *gs, ecs::entity_id eid)
 {
     entity *result = NULL;
@@ -77,7 +57,6 @@ void remove_entity(game_state *gs, entity *e)
         gs->monsters.erase_first_unsorted(e->eid);
     }
 
-    gs->set_map_eid(e->x, e->y, ecs::INVALID_ENTITY_ID);
     gs->entity_manager.destroy_entity(e->eid);
     gs->battle_queue.erase_first(e->eid);
     gs->battle_queue_current_slot = (gs->battle_queue_current_slot % gs->battle_queue.size());
@@ -96,25 +75,28 @@ void on_entity_spawned(game_state *gs, entity *e)
     }
 }
 
-ecs::entity_id spawn_entity(game_state *gs, int x, int y, int z, entity **p)
+ecs::entity_id spawn_entity(game_state *gs, int tile_x, int tile_y, int tile_z, entity **p)
 {
     ecs::entity_id eid = ecs::INVALID_ENTITY_ID;
-    if (gs->map2.get(x, y, z) == GameMapOccupation_Empty)
+    if (gs->map.get(tile_x, tile_y, tile_z) == GameMapOccupation_Empty)
     {
         eid = gs->entity_manager.create_entity();
         auto *entity = gs->entities + eid.get_index();
         entity->eid = eid;
-        entity->x = x;
-        entity->y = y;
-        entity->z = z;
+        entity->tile_x = tile_x;
+        entity->tile_y = tile_y;
+        entity->tile_z = tile_z;
+        entity->move_animation_t = 0.f;
+        entity->move_animation_end_time = -1.f;
+        entity->move_animation_duration = 1.f;
 
-        gs->map2.set(x, y, z, GameMapOccupation_Entity);
-        printf("Entity eid=%d created on tile (%d, %d, %d)\n", eid.id, x, y, z);
+        gs->map.set(tile_x, tile_y, tile_z, GameMapOccupation_Entity);
+        printf("Entity eid=%d created on tile (%d, %d, %d)\n", eid.id, tile_x, tile_y, tile_z);
         if (p) *p = entity;
     }
     else
     {
-        printf("Error: spawn_entity at (%d, %d, %d); The cell is occupied!\n", x, y, z);
+        printf("Error: spawn_entity at (%d, %d, %d); The cell is occupied!\n", tile_x, tile_y, tile_z);
     }
     return eid;
 }

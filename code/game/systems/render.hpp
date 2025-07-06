@@ -44,20 +44,6 @@ void render_character_page(context *ctx, game_state *gs, input_state *)
     }
 }
 
-void render_stones(context *ctx, game_state *gs, input_state *)
-{
-    for (auto stone_eid : gs->stones)
-    {
-        entity *stone = game::get_entity(gs, stone_eid);
-        float32 x = stone->x + 1.3f*stone->x;
-        float32 y = stone->y + 1.3f*stone->y;
-        float32 z = 2;
-
-        auto m = matrix4::translate(x, y, z);
-        ctx->render_cube(m, V4(0.6, 0.8, 0.1, 1), RenderShader_SingleColor);
-    }
-}
-
 void draw_map_2(context *ctx, game_state *gs, input_state *)
 {
     {
@@ -79,17 +65,17 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
         ctx->render_cube(m, c, RenderShader_SingleColor);
     }
 
-    for (int k = 0; k < gs->map2.dim_z; k++)
+    for (int k = 0; k < gs->map.dim_z; k++)
     {
-        for (uint32 j = 0; j < gs->map2.dim_y; j++)
+        for (uint32 j = 0; j < gs->map.dim_y; j++)
         {
-            for (uint32 i = 0; i < gs->map2.dim_x; i++)
+            for (uint32 i = 0; i < gs->map.dim_x; i++)
             {
-                if (gs->map2.get(i, j, k) == GameMapOccupation_Ground)
+                if (gs->map.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    auto c = V4((float32) i / gs->map2.dim_x,
-                                (float32) j / gs->map2.dim_y,
-                                (float32) k / gs->map2.dim_z,
+                    auto c = V4((float32) i / gs->map.dim_x,
+                                (float32) j / gs->map.dim_y,
+                                (float32) k / gs->map.dim_z,
                                 1);
                     if (gs->intersected &&
                         gs->intersect_i == i &&
@@ -99,9 +85,9 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
                         c = V4(c.rgb * 1.2f, 1.0f);
                     }
 
-                    float32 x = (float32) i - (float32) gs->map2.origin_x;
-                    float32 y = (float32) j - (float32) gs->map2.origin_y;
-                    float32 z = (float32) k - (float32) gs->map2.origin_z;
+                    float32 x = (float32) i - (float32) gs->map.origin_x;
+                    float32 y = (float32) j - (float32) gs->map.origin_y;
+                    float32 z = (float32) k - (float32) gs->map.origin_z;
                     auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45f);
                     ctx->render_cube(m, c, RenderShader_Ground);
                 }
@@ -144,9 +130,9 @@ void render_hero(context *ctx, game_state *gs, input_state *)
     entity *hero = game::get_entity(gs, gs->hero_eid);
     if (hero)
     {
-        float32 x = (float32) hero->x - gs->map2.origin_x;
-        float32 y = (float32) hero->y - gs->map2.origin_y;
-        float32 z = (float32) hero->z - gs->map2.origin_z;
+        float32 x = (float32) hero->tile_x - gs->map.origin_x;
+        float32 y = (float32) hero->tile_y - gs->map.origin_y;
+        float32 z = (float32) hero->tile_z - gs->map.origin_z;
         // float height = hero->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
         auto m = matrix4::translate(x, y, z) *
@@ -162,9 +148,9 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
     for (int i = 0; i < gs->monsters.size(); i++)
     {
         entity *monster = game::get_entity(gs, gs->monsters[i]);
-        float32 x = (float32) monster->x - gs->map2.origin_x;
-        float32 y = (float32) monster->y - gs->map2.origin_y;
-        float32 z = (float32) monster->z - gs->map2.origin_z;
+        float32 x = (float32) monster->tile_x - gs->map.origin_x;
+        float32 y = (float32) monster->tile_y - gs->map.origin_y;
+        float32 z = (float32) monster->tile_z - gs->map.origin_z;
         // float height = monster->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
         auto m = matrix4::translate(x, y, z) *
@@ -221,7 +207,7 @@ void render_timer(context *ctx, game_state *gs, input_state *input)
 {
     if (gs->turn_timer_enabled)
     {
-        float32 t = (float32) (1.f - get_seconds(input->time - gs->turn_start_time) / get_seconds(gs->seconds_for_turn));
+        float32 t = (float32) (1.f - (input->time - gs->turn_start_time) / gs->seconds_for_turn);
         vector4 color = V4(sin((t - 3) * pi * 0.5f),
                            -cos((t + 1) * pi * 0.5f),
                            0, 1);

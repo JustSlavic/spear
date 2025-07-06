@@ -9,5 +9,6 @@ how all of them connect with each other, and history of changes.
 
 ## List of game mechanics
 
-1. @feature0001: Select a tile with a mouse pointer.
-2. @feature0002: Free camera.
+1. @feature1: Select a tile with a mouse pointer.
+2. @feature2: Free camera.
+3. @feature3: Moving between tiles has animation time.

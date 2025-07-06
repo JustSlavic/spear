@@ -73,15 +73,22 @@ struct entity
     bool invincible;
 
     // RPG stuff
-    int x;
-    int y;
-    int z;
+    // int x;
+    // int y;
+    // int z;
+
+    int tile_x, tile_y, tile_z;
 
     int hp;
     int max_hp;
     
     int strength;
     int agility;
+
+    // @feature3 - 2025.07.06
+    float32 move_animation_t;
+    float32 move_animation_end_time;
+    float32 move_animation_duration;
 
     // Planet stuff
     vector3 position;
@@ -188,8 +195,8 @@ struct game_state
 
     entity entities[ECS_MAX_ENTITIES];
     ecs::entity_id hero_eid;
-    static_array<ecs::entity_id, ECS_MAX_ENTITIES> monsters;
-    static_array<ecs::entity_id, 25> stones;
+    static_array<ecs::entity_id, 100> monsters;
+    static_array<ecs::entity_id, 100> stones;
     static_array<ecs::entity_id, 100> planets;
 
     phys::world phys_world;
@@ -207,8 +214,8 @@ struct game_state
 
     bool turn_timer_enabled;
     int turn_no;
-    duration seconds_for_turn;
-    timepoint turn_start_time;
+    float32 seconds_for_turn;
+    float32 turn_start_time;
 
     entity_action action_input;
     bool selecting_direction_of_action;
@@ -218,7 +225,7 @@ struct game_state
     bool is_in_battle;
 
     game::camera camera;
-    // @feature0002 - 2025.07.05
+    // @feature2 - 2025.07.05
     float32 camera_speed;
     vector3 camera__default_position;
     vector3 camera__default_direction;
@@ -230,13 +237,13 @@ struct game_state
     float32 min_follow_distance;
 
     bool camera_fly_mode;
-    timepoint exit_press_time;
+    float32 exit_press_time;
 
     vector4 move_color;
     vector4 defence_color;
     vector4 attack_color;
 
-    // @feature0001 - 2025.07.05
+    // @feature1 - 2025.07.05
     bool32 intersected;
     float32 intersect_t;
     int intersect_i;
@@ -250,16 +257,7 @@ struct game_state
     float selected_entity_height = 0.8f;
     float regular_entity_height = 0.3f;
 
-    bool is_coords_valid(int x, int y);
-    ecs::entity_id get_map_eid(int x, int y);
-    void set_map_eid(int x, int y, ecs::entity_id eid);
-
-    ecs::entity_id map[5][5];
-
-    float32 field_render__gap;
-    game_field field;
-
-    game_map map2;
+    game_map map;
 };
 
 
