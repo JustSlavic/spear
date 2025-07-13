@@ -79,6 +79,7 @@ struct entity
 
     // RPG stuff
     vector3i tile;
+    vector3 position;
 
     int hp;
     int max_hp;
@@ -88,12 +89,14 @@ struct entity
 
     // @feature3 - 2025.07.06
     float32 move_animation_t;
+    float32 move_animation_start_time;
     float32 move_animation_end_time;
     float32 move_animation_duration;
-    vector3i tile_to_move;
+    vector3i move_from;
+    vector3i move_to;
 
     // Planet stuff
-    vector3 position;
+    // vector3 position; // Already defined for RPG
     float32 radius;
     vector3 color;
     quaternion orientation;
@@ -164,7 +167,6 @@ enum
 struct game_map
 {
     vector3i dim;
-    vector3i origin;
     array<uint32> data;
 
     uint32 get(int i, int j, int k)

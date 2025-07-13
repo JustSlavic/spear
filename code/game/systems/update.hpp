@@ -60,10 +60,7 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input_state *in
             {
                 if (gs->map.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    auto x = (float32) i - gs->map.origin.x;
-                    auto y = (float32) j - gs->map.origin.y;
-                    auto z = (float32) k - gs->map.origin.z;
-                    auto center = V3(x, y, z);
+                    auto center = V3(i, j, k);
                     auto r = 0.45f; // @todo: pull this from game state
                     rectangle3 aabb = rectangle3::from_center_radius(center, r, r, r);
 
@@ -99,13 +96,32 @@ void update_move_animations(context *ctx, game_state *gs, input_state *input)
     {
         if (input->time < e->move_animation_end_time)
         {
+            vector3 from = to_vector3(e->move_from);
+            vector3 to = to_vector3(e->move_to);
+            float32 t = cvt(e->move_animation_t, 0.f, e->move_animation_duration, 0.f, 1.f);
+            vector3 p = lerp(from, to, t);
+            e->position = p;
+
+            {
+                auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
+                snprintf((char *) buffer.data, 63,
+                    "t = %f p = (%5.2f, %5.2f, %5.2f)", e->move_animation_t,
+                        p.x, p.y, p.z);
+                ctx->render_text(
+                    matrix4::translate(100.f, 280.f, 0.f),
+                    V4(1), (char const *) buffer.data);
+            }
+
+            e->move_animation_t += input->dt;
+        }
+
+        {
             auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
             snprintf((char *) buffer.data, 63,
-                "move_animation_t = %f", e->move_animation_t);
+                "e->move_animation_t = %f", e->move_animation_t);
             ctx->render_text(
-                matrix4::translate(100.f, 280.f, 0.f),
+                matrix4::translate(100.f, 320.f, 0.f),
                 V4(1), (char const *) buffer.data);
-            e->move_animation_t += input->dt;
         }
     }
 }

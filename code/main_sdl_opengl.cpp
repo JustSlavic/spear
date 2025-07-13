@@ -336,6 +336,8 @@ int main()
     running = true;
     while (running)
     {
+        temporary_allocator.reset();
+
         reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
         process_pending_messages(&input);
         input.keyboard_and_mouse.scroll = 0;
@@ -717,8 +719,6 @@ int main()
 #endif
 
         SDL_GL_SwapWindow(window);
-
-        temporary_allocator.reset();
 
         timepoint end_of_frame = now();
         last_frame_dt = end_of_frame - last_timepoint;

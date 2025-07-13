@@ -82,10 +82,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
                         c = V4(c.rgb * 1.2f, 1.0f);
                     }
 
-                    float32 x = (float32) i - (float32) gs->map.origin.x;
-                    float32 y = (float32) j - (float32) gs->map.origin.y;
-                    float32 z = (float32) k - (float32) gs->map.origin.z;
-                    auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45f);
+                    auto m = matrix4::translate((float32) i, (float32) j, (float32) k) * matrix4::scale(0.45f);
                     ctx->render_cube(m, c, RenderShader_Ground);
                 }
             }
@@ -127,16 +124,16 @@ void render_hero(context *ctx, game_state *gs, input_state *)
     entity *hero = game::get_entity(gs, gs->hero_eid);
     if (hero)
     {
-        float32 x = (float32) hero->tile.x - gs->map.origin.x;
-        float32 y = (float32) hero->tile.y - gs->map.origin.y;
-        float32 z = (float32) hero->tile.z - gs->map.origin.z;
+        // float32 x = (float32) hero->tile.x;
+        // float32 y = (float32) hero->tile.y;
+        // float32 z = (float32) hero->tile.z;
         // float height = hero->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
-        auto m = matrix4::translate(x, y, z) *
+        auto m = matrix4::translate(hero->position) *
                  matrix4::scale(0.35f, 0.35f, 0.35f);
 
         ctx->render_cube(m, V4(1, 1, 1, 1), RenderShader_SingleColor);
-        draw_health_bar(ctx, hero, x, y, z);
+        draw_health_bar(ctx, hero, hero->position.x, hero->position.y, hero->position.z);
     }
 }
 
@@ -145,7 +142,7 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
     for (int i = 0; i < gs->monsters.size(); i++)
     {
         entity *monster = game::get_entity(gs, gs->monsters[i]);
-        vector3 p = to_vector3(monster->tile - gs->map.origin);
+        vector3 p = to_vector3(monster->tile);
         // float height = monster->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
         auto m = matrix4::translate(p) *
@@ -226,6 +223,14 @@ void render_camera_position(context *ctx, game_state *gs)
     auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
     auto p = gs->camera.position;
     snprintf((char *) buffer.data, 63, "Camera.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
+    ctx->render_text(matrix4::translate(10.f, 100.f, 0.f), V4(1), (char const *) buffer.data);
+}
+
+void render_hero_position(context *ctx, game_state *gs)
+{
+    auto p = get_entity(gs, gs->hero_eid)->position;
+    auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
+    snprintf((char *) buffer.data, 63, "Hero.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
     ctx->render_text(matrix4::translate(10.f, 100.f, 0.f), V4(1), (char const *) buffer.data);
 }
 

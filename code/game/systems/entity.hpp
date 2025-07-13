@@ -84,6 +84,7 @@ ecs::entity_id spawn_entity(game_state *gs, int tile_x, int tile_y, int tile_z, 
         auto *entity = gs->entities + eid.get_index();
         entity->eid = eid;
         entity->tile = make_vector3i(tile_x, tile_y, tile_z);
+        entity->position = make_vector3(tile_x, tile_y, tile_z);
         entity->move_animation_t = 0.f;
         entity->move_animation_end_time = -1.f;
         entity->move_animation_duration = 1.f;
@@ -166,9 +167,9 @@ bool32 entity_can_move_to(game_state *gs, entity *e, int32 x, int32 y, int32 z)
         (0 <= y && y < gs->map.dim.y) &&
         (0 <= z && z < gs->map.dim.z))
     {
-        if (absolute(e->tile.x - x) &&
-            absolute(e->tile.y - y) &&
-            absolute(e->tile.z - z))
+        if (absolute(e->tile.x - x) < 2 &&
+            absolute(e->tile.y - y) < 2 &&
+            absolute(e->tile.z - z) < 2)
         {
             result = true;
         }

@@ -193,15 +193,25 @@ void entity_move_input(context *ctx, game_state *gs, input_state *input)
     auto *e = get_entity(gs, gs->hero_eid);
     if (get_press_count(input->keyboard_and_mouse.buttons[Keyboard_H]))
     {
+        e->move_animation_start_time = input->time;
         e->move_animation_end_time = input->time + e->move_animation_duration;
         e->move_animation_t = 0.f;
     }
     if (get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
     {
-        printf("Click!\n");
-        if (entity_can_move_to(gs, e, gs->intersect_tile.x, gs->intersect_tile.y, gs->intersect_tile.z))
+        int tile_x = gs->intersect_tile.x;
+        int tile_y = gs->intersect_tile.y;
+        int tile_z = gs->intersect_tile.z + 1;
+        printf("Click at (%d, %d, %d)!\n", tile_x, tile_y, tile_z);
+        if (entity_can_move_to(gs, e, tile_x, tile_y, tile_z))
         {
             printf("Can go to!\n");
+            e->move_from = e->tile;
+            e->move_to = make_vector3i(tile_x, tile_y, tile_z);
+            e->tile = e->move_to;
+            e->move_animation_start_time = input->time;
+            e->move_animation_end_time = input->time + e->move_animation_duration;
+            e->move_animation_t = 0.f;
         }
     }
 }
