@@ -48,23 +48,21 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input_state *in
 {
     gs->intersected = false;
     gs->intersect_t = infinity;
-    gs->intersect_i = 0;
-    gs->intersect_j = 0;
-    gs->intersect_k = 0;
+    gs->intersect_tile = make_vector3i(0);
     gs->intersection = V3(0);
 
     vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
-    for (uint32 k = 0; k < gs->map.dim_z; k++)
+    for (uint32 k = 0; k < gs->map.dim.z; k++)
     {
-        for (uint32 j = 0; j < gs->map.dim_y; j++)
+        for (uint32 j = 0; j < gs->map.dim.y; j++)
         {
-            for (uint32 i = 0; i < gs->map.dim_x; i++)
+            for (uint32 i = 0; i < gs->map.dim.x; i++)
             {
                 if (gs->map.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    auto x = (float32) i - gs->map.origin_x;
-                    auto y = (float32) j - gs->map.origin_y;
-                    auto z = (float32) k - gs->map.origin_z;
+                    auto x = (float32) i - gs->map.origin.x;
+                    auto y = (float32) j - gs->map.origin.y;
+                    auto z = (float32) k - gs->map.origin.z;
                     auto center = V3(x, y, z);
                     auto r = 0.45f; // @todo: pull this from game state
                     rectangle3 aabb = rectangle3::from_center_radius(center, r, r, r);
@@ -76,9 +74,7 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input_state *in
                     {
                         gs->intersected = true;
                         gs->intersect_t = t;
-                        gs->intersect_i = i;
-                        gs->intersect_j = j;
-                        gs->intersect_k = k;
+                        gs->intersect_tile = make_vector3i(i, j, k);
                         gs->intersection = gs->camera.position + ray_direction * t;
                     }
                 }

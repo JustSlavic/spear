@@ -20,12 +20,12 @@
 
 namespace ecs {
 
+typedef void process_event_cb_t(uint32 event_type, void *event_memory, uint32 event_size);
 
 struct entity_description
 {
     entity_gen_t generation;
 };
-
 
 struct entity_manager
 {

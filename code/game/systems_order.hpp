@@ -26,7 +26,7 @@ void update_stage(context *ctx, game_state *gs, input_state *input)
 {
     find_intersection_with_ground(ctx, gs, input);
 
-    move_input(ctx, gs, input);
+    entity_move_input(ctx, gs, input);
     update_move_animations(ctx, gs, input);
 
     move_planets(gs);

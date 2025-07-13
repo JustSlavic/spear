@@ -187,14 +187,22 @@ void select_entity(context *ctx, game_state *gs, input_state *input)
     // }
 }
 
-void move_input(context *ctx, game_state *gs, input_state *input)
+void entity_move_input(context *ctx, game_state *gs, input_state *input)
 {
     // @feature3 - 06.07.2025
+    auto *e = get_entity(gs, gs->hero_eid);
     if (get_press_count(input->keyboard_and_mouse.buttons[Keyboard_H]))
     {
-        auto *e = get_entity(gs, gs->hero_eid);
         e->move_animation_end_time = input->time + e->move_animation_duration;
         e->move_animation_t = 0.f;
+    }
+    if (get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
+    {
+        printf("Click!\n");
+        if (entity_can_move_to(gs, e, gs->intersect_tile.x, gs->intersect_tile.y, gs->intersect_tile.z))
+        {
+            printf("Can go to!\n");
+        }
     }
 }
 

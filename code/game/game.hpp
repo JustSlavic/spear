@@ -16,6 +16,11 @@
 
 // #define printf
 
+enum game_event
+{
+    GameEvent_ExitTheGame,
+};
+
 enum world_view_state
 {
     WORLD_VIEW__NORMAL,
@@ -73,11 +78,7 @@ struct entity
     bool invincible;
 
     // RPG stuff
-    // int x;
-    // int y;
-    // int z;
-
-    int tile_x, tile_y, tile_z;
+    vector3i tile;
 
     int hp;
     int max_hp;
@@ -89,6 +90,7 @@ struct entity
     float32 move_animation_t;
     float32 move_animation_end_time;
     float32 move_animation_duration;
+    vector3i tile_to_move;
 
     // Planet stuff
     vector3 position;
@@ -161,18 +163,18 @@ enum
 
 struct game_map
 {
-    uint32 dim_x, dim_y, dim_z;
-    uint32 origin_x, origin_y, origin_z;
+    vector3i dim;
+    vector3i origin;
     array<uint32> data;
 
     uint32 get(int i, int j, int k)
     {
-        return data[k * dim_x * dim_y + j * dim_x + i];
+        return data[k * dim.x * dim.y + j * dim.x + i];
     }
 
     void set(int i, int j, int k, uint32 v)
     {
-        data[k * dim_x * dim_y + j * dim_x + i] = v;
+        data[k * dim.x * dim.y + j * dim.x + i] = v;
     }
 };
 
@@ -244,12 +246,10 @@ struct game_state
     vector4 attack_color;
 
     // @feature1 - 2025.07.05
-    bool32 intersected;
-    float32 intersect_t;
-    int intersect_i;
-    int intersect_j;
-    int intersect_k;
-    vector3 intersection;
+    bool32   intersected;
+    float32  intersect_t;
+    vector3i intersect_tile;
+    vector3  intersection;
 
     // @todo move this into input library
     duration double_click_interval;

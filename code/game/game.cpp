@@ -166,19 +166,15 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     bind_action_to_button(&gs->player_actions, Keyboard_Up, PlayerAction_RotateCameraUp);
 
-    gs->map.dim_x = 10;
-    gs->map.dim_y = 10;
-    gs->map.dim_z = 10;
-    gs->map.origin_x = 4;
-    gs->map.origin_y = 4;
-    gs->map.origin_z = 2;
-    gs->map.data = ALLOCATE_ARRAY(arena, uint32, gs->map.dim_x * gs->map.dim_y * gs->map.dim_z);
+    gs->map.dim = make_vector3i(10);
+    gs->map.origin = make_vector3i(4, 4, 2);
+    gs->map.data = ALLOCATE_ARRAY(arena, uint32, gs->map.dim.x * gs->map.dim.y * gs->map.dim.z);
     gs->map.data.resize(gs->map.data.capacity());
-    for (uint32 j = 0; j < gs->map.dim_y; j++)
+    for (uint32 j = 0; j < gs->map.dim.y; j++)
     {
-        for (uint32 i = 0; i < gs->map.dim_x; i++)
+        for (uint32 i = 0; i < gs->map.dim.x; i++)
         {
-            gs->map.set(i, j, gs->map.origin_z, GameMapOccupation_Ground);
+            gs->map.set(i, j, gs->map.origin.z, GameMapOccupation_Ground);
         }
     }
 

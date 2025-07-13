@@ -83,9 +83,7 @@ ecs::entity_id spawn_entity(game_state *gs, int tile_x, int tile_y, int tile_z, 
         eid = gs->entity_manager.create_entity();
         auto *entity = gs->entities + eid.get_index();
         entity->eid = eid;
-        entity->tile_x = tile_x;
-        entity->tile_y = tile_y;
-        entity->tile_z = tile_z;
+        entity->tile = make_vector3i(tile_x, tile_y, tile_z);
         entity->move_animation_t = 0.f;
         entity->move_animation_end_time = -1.f;
         entity->move_animation_duration = 1.f;
@@ -159,6 +157,23 @@ ecs::entity_id spawn_stone(game_state *gs, int x, int y, int z)
         console::print("stone_eid=%d\n", eid.id);
     }
     return eid;
+}
+
+bool32 entity_can_move_to(game_state *gs, entity *e, int32 x, int32 y, int32 z)
+{
+    bool32 result = false;
+    if ((0 <= x && x < gs->map.dim.x) &&
+        (0 <= y && y < gs->map.dim.y) &&
+        (0 <= z && z < gs->map.dim.z))
+    {
+        if (absolute(e->tile.x - x) &&
+            absolute(e->tile.y - y) &&
+            absolute(e->tile.z - z))
+        {
+            result = true;
+        }
+    }
+    return result;
 }
 
 

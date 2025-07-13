@@ -49,7 +49,7 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
     {
         auto buffer = ALLOCATE_BUFFER(ctx->temporary_allocator, 64);
         snprintf((char *) buffer.data, 63,
-            "intersect ijk = %d, %d, %d", gs->intersect_i, gs->intersect_j, gs->intersect_k);
+            "intersect ijk = %d, %d, %d", gs->intersect_tile.x, gs->intersect_tile.y, gs->intersect_tile.z);
         ctx->render_text(matrix4::translate(10.f, 150.f, 0.f), V4(1), (char const *) buffer.data);
     }
     {
@@ -65,29 +65,26 @@ void draw_map_2(context *ctx, game_state *gs, input_state *)
         ctx->render_cube(m, c, RenderShader_SingleColor);
     }
 
-    for (int k = 0; k < gs->map.dim_z; k++)
+    for (int k = 0; k < gs->map.dim.z; k++)
     {
-        for (uint32 j = 0; j < gs->map.dim_y; j++)
+        for (uint32 j = 0; j < gs->map.dim.y; j++)
         {
-            for (uint32 i = 0; i < gs->map.dim_x; i++)
+            for (uint32 i = 0; i < gs->map.dim.x; i++)
             {
                 if (gs->map.get(i, j, k) == GameMapOccupation_Ground)
                 {
-                    auto c = V4((float32) i / gs->map.dim_x,
-                                (float32) j / gs->map.dim_y,
-                                (float32) k / gs->map.dim_z,
+                    auto c = V4((float32) i / gs->map.dim.x,
+                                (float32) j / gs->map.dim.y,
+                                (float32) k / gs->map.dim.z,
                                 1);
-                    if (gs->intersected &&
-                        gs->intersect_i == i &&
-                        gs->intersect_j == j &&
-                        gs->intersect_k == k)
+                    if (gs->intersected && gs->intersect_tile == make_vector3i(i, j, k))
                     {
                         c = V4(c.rgb * 1.2f, 1.0f);
                     }
 
-                    float32 x = (float32) i - (float32) gs->map.origin_x;
-                    float32 y = (float32) j - (float32) gs->map.origin_y;
-                    float32 z = (float32) k - (float32) gs->map.origin_z;
+                    float32 x = (float32) i - (float32) gs->map.origin.x;
+                    float32 y = (float32) j - (float32) gs->map.origin.y;
+                    float32 z = (float32) k - (float32) gs->map.origin.z;
                     auto m = matrix4::translate(x, y, z) * matrix4::scale(0.45f);
                     ctx->render_cube(m, c, RenderShader_Ground);
                 }
@@ -130,9 +127,9 @@ void render_hero(context *ctx, game_state *gs, input_state *)
     entity *hero = game::get_entity(gs, gs->hero_eid);
     if (hero)
     {
-        float32 x = (float32) hero->tile_x - gs->map.origin_x;
-        float32 y = (float32) hero->tile_y - gs->map.origin_y;
-        float32 z = (float32) hero->tile_z - gs->map.origin_z;
+        float32 x = (float32) hero->tile.x - gs->map.origin.x;
+        float32 y = (float32) hero->tile.y - gs->map.origin.y;
+        float32 z = (float32) hero->tile.z - gs->map.origin.z;
         // float height = hero->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
         auto m = matrix4::translate(x, y, z) *
@@ -148,16 +145,14 @@ void render_monsters(context *ctx, game_state *gs, input_state *)
     for (int i = 0; i < gs->monsters.size(); i++)
     {
         entity *monster = game::get_entity(gs, gs->monsters[i]);
-        float32 x = (float32) monster->tile_x - gs->map.origin_x;
-        float32 y = (float32) monster->tile_y - gs->map.origin_y;
-        float32 z = (float32) monster->tile_z - gs->map.origin_z;
+        vector3 p = to_vector3(monster->tile - gs->map.origin);
         // float height = monster->eid == gs->selected_entity_eid ? gs->selected_entity_height
         //              : gs->regular_entity_height;
-        auto m = matrix4::translate(x, y, z) *
+        auto m = matrix4::translate(p) *
                  matrix4::scale(0.35f, 0.35f, 0.35f);
 
         ctx->render_cube(m, V4(0.9, 0.4, 0.2, 1), RenderShader_SingleColor);
-        draw_health_bar(ctx, monster, x, y, z);
+        draw_health_bar(ctx, monster, p.x, p.y, p.z);
 
         // if (monster->action.kind != ENTITY_ACTION_NONE)
         // {
@@ -233,6 +228,9 @@ void render_camera_position(context *ctx, game_state *gs)
     snprintf((char *) buffer.data, 63, "Camera.P = %4.2f, %4.2f, %4.2f", p.x, p.y, p.z);
     ctx->render_text(matrix4::translate(10.f, 100.f, 0.f), V4(1), (char const *) buffer.data);
 }
+
+
+
 
 } // namespace game
 
