@@ -48,28 +48,6 @@ void game_field::set_eid(int32 x, int32 y, ecs::entity_id eid)
 }
 
 
-void test_es(int32 width, int32 height)
-{
-    console::print("width = %d; height = %d;\n", width, height);
-}
-
-
-void test_es_gen(ecs::archetype *archetype)
-{
-    auto width_comp = archetype->get_component_by_name("width");
-    auto height_comp = archetype->get_component_by_name("height");
-    auto age_comp = archetype->get_component_by_name("age");
-
-    for (uint32 index_in_chunk = 0; index_in_chunk < archetype->chunk.eids.size(); index_in_chunk++)
-    {
-        if (archetype->chunk.eids[index_in_chunk] == ecs::INVALID_ENTITY_ID)
-            continue;
-        test_es(*(int32 *) (archetype->chunk.memory.data + width_comp.offset_in_chunk + index_in_chunk * width_comp.size),
-                *(int32 *) (archetype->chunk.memory.data + height_comp.offset_in_chunk + index_in_chunk * height_comp.size));
-    }
-}
-
-
 void bind_action_to_button(action_set *set, uint32 button_id, uint32 action_id)
 {
     if (action_id < ARRAY_COUNT(set->buttons))
@@ -208,23 +186,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_buffer game_memory)
 
     // Init ECS
     gs->entity_manager = ecs::entity_manager::initialize(mallocator());
-
-    ecs::component_and_value comps[] = {
-        // ECS_COMPONENT("eid", ecs::entity_id, ecs::INVALID_ENTITY_ID)
-        ECS_COMPONENT("width", int32, 1),
-        ECS_COMPONENT("height", int32, 2),
-        ECS_COMPONENT("age", bool, true),
-    };
-
-    auto base_entity_archetype = ecs::make_archetype(gs->allocator, comps, ARRAY_COUNT(comps));
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-    base_entity_archetype.push_entity(gs->entity_manager.create_entity());
-
-    test_es_gen(&base_entity_archetype);
+    auto entity_archetype_id = ecs::make_archetype(&gs->entity_manager, sizeof(entity));
 
     game::spawn_hero(gs, 0, 0, 3);
     game::spawn_monster(gs, 2, 2, 3);

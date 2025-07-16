@@ -25,18 +25,23 @@ typedef void process_event_cb_t(uint32 event_type, void *event_memory, uint32 ev
 struct entity_description
 {
     entity_gen_t generation;
+    archetype_idx_t archetype_index;
+    entity_idx_t index_in_archetype;
 };
 
 struct entity_manager
 {
+    memory_allocator allocator;
+
     array<entity_description> descriptions;
     array<entity_idx_t> empty_slots;
     uint64 p_read;
     uint64 p_write;
+    array<archetype> archetypes;
 
     static entity_manager initialize(memory_allocator a);
 
-    entity_id create_entity();
+    entity_id create_entity(archetype_idx_t archetype_index = 0);
     void destroy_entity(entity_id);
     bool is_entity_exists(entity_id);
 
@@ -47,6 +52,8 @@ struct entity_manager
     void send_event_immediate(EventType &&evt);
 };
 
+
+archetype_idx_t make_archetype(entity_manager *em, uint32 entity_size);
 
 template <typename EventType>
 void entity_manager::send_event(EventType &&evt)

@@ -87,7 +87,7 @@ ecs::entity_id spawn_entity(game_state *gs, int tile_x, int tile_y, int tile_z, 
         entity->position = make_vector3(tile_x, tile_y, tile_z);
         entity->move_animation_t = 0.f;
         entity->move_animation_end_time = -1.f;
-        entity->move_animation_duration = 1.f;
+        entity->move_animation_duration = 0.2f;
 
         gs->map.set(tile_x, tile_y, tile_z, GameMapOccupation_Entity);
         printf("Entity eid=%d created on tile (%d, %d, %d)\n", eid.id, tile_x, tile_y, tile_z);
