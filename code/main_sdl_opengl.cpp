@@ -339,8 +339,8 @@ int main()
         temporary_allocator.reset();
 
         reset_transitions(input.keyboard_and_mouse.buttons, Button_Count);
-        process_pending_messages(&input);
         input.keyboard_and_mouse.scroll = 0;
+        process_pending_messages(&input);
         sdl::get_mouse_pos(&input.keyboard_and_mouse.x, &input.keyboard_and_mouse.y);
         input.dt = get_seconds(last_frame_dt);
         input.time = get_seconds(last_timepoint);
@@ -734,7 +734,7 @@ int main()
 
 #include <memory/allocator.cpp>
 #include <string_id.cpp>
-#include <game/game.cpp>
+#include <game_old/game.cpp>
 #include <image/png.cpp>
 #include <crc.cpp>
 #include <os/platform_posix.cpp>
