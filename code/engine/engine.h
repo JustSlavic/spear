@@ -46,13 +46,14 @@ typedef struct
     gpu_mesh mesh_icosahedron;
     gpu_mesh mesh_sphere;
     gpu_mesh mesh_ico_sphere;
+    gpu_mesh mesh_ui_frame;
     gpu_shader shader_single_color;
     gpu_shader shader_ground;
     gpu_shader shader_framebuffer;
     gpu_shader shader_text;
     gpu_shader shader_phong;
     gpu_shader shader_sun;
-
+    gpu_shader shader_ui_frame;
 } engine;
 
 void spear_engine_init(engine *engine);

@@ -3,31 +3,34 @@
 
 #include <corelibs/base.h>
 #include <corelibs/math.h>
+#include <gamelibs/entity_manager.h>
 
-typedef enum
+enum
 {
-    UiBehaviour_Nothing   = 0,
-    UiBehaviour_Visible   = 1 << 0,
-    UiBehaviour_Hoverable = 1 << 1,
-    UiBehaviour_Clickable = 1 << 2,
-} ui_behaviour;
+    UiBehaviour_Invalid   = 0,
+
+    UiBehaviour_Visible   = 0x1,
+    UiBehaviour_Hoverable = 0x2,
+    UiBehaviour_Clickable = 0x4,
+};
 
 typedef struct
 {
     entity_id parent;
-
     uint32 behaviour_flags;
 
+    // UiElement
     vector2 position;
-    vector2 scale;
-    float32 rotation;
     float32 width;
     float32 height;
+    vector2 scale;
+    float32 rotation;
 
-    // UiBehaviour_Visible
-    bool32 is_visible;
+    // UiDrawable
+    bool is_visible;
+
     // UiBehaviour_Hoverable or UiBehaviour_Clickable
-    vector2 area_min, area_max;
+    // vector2 area_min, area_max;
 } ui_element;
 
 typedef struct
@@ -39,9 +42,10 @@ typedef struct
 } ui;
 
 
-void ui_element_init(ui_element *e);
-void ui_element_hoverable_init(ui_element *e);
-void ui_element_clickable_init(ui_element *e);
+void ui_init(ui *ui, entity_id root);
+void ui_element_flag_set(ui_element *e, uint32 flag);
+void ui_element_flag_clear(ui_element *e, uint32 flag);
+bool ui_element_flag_test(ui_element *e, uint32 flag);
 
 
 #endif // _SPEAR_UI_H

@@ -104,16 +104,13 @@ void renderer_setup_camera(renderer *r, vector3 pos, vector3 dir, vector3 up)
     r->view_matrix = make_lookat_matrix_from_camera(pos, dir, up);
 }
 
-void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color)
+static void renderer_draw_mesh_internal(renderer *r, matrix4 model, matrix4 view, matrix4 projection, gpu_mesh m, gpu_shader s, vector4 color)
 {
     glUseProgram(s.id);
 
-    matrix4 view = r->view_matrix;
-    matrix4 proj = r->proj_matrix;
-
     render_shader_uniform_matrix4f(s, "u_model", (float32 *) &model);
     render_shader_uniform_matrix4f(s, "u_view", (float32 *) &view);
-    render_shader_uniform_matrix4f(s, "u_projection", (float32 *) &proj);
+    render_shader_uniform_matrix4f(s, "u_projection", (float32 *) &projection);
     render_shader_uniform_vector4f(s, "u_color", (float32 *) &color);
 
     glBindVertexArray(m.vao);
@@ -126,6 +123,39 @@ void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, ve
     {
         glDrawArrays(GL_TRIANGLES, 0, m.vertex_count);
     }
+}
+
+void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color)
+{
+    matrix4 view = r->view_matrix;
+    matrix4 proj = r->proj_matrix;
+    renderer_draw_mesh_internal(r, model, view, proj, m, s, color);
+}
+
+void renderer_draw_mesh_ui(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color)
+{
+    matrix4 view = m4f_identity();
+    matrix4 proj = r->proj_matrix_ui;
+    renderer_draw_mesh_internal(r, model, view, proj, m, s, color);
+}
+
+void renderer_draw_ui_frame(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color, float width, float height)
+{
+    glUseProgram(s.id);
+
+    matrix4 view = m4f_identity();
+    matrix4 proj = r->proj_matrix_ui;
+
+    render_shader_uniform_matrix4f(s, "u_model", (float32 *) &model);
+    render_shader_uniform_matrix4f(s, "u_view", (float32 *) &view);
+    render_shader_uniform_matrix4f(s, "u_projection", (float32 *) &proj);
+    render_shader_uniform_vector4f(s, "u_color", (float32 *) &color);
+    render_shader_uniform_float(s, "u_width", width);
+    render_shader_uniform_float(s, "u_height", height);
+
+    glBindVertexArray(m.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
+    glDrawElements(GL_TRIANGLES, m.element_count, GL_UNSIGNED_INT, NULL);
 }
 
 viewport render_viewport_create(int32 width, int32 height, float32 desired_aspect_ratio)
@@ -168,34 +198,6 @@ void render_vertex_buffer_layout_push(vertex_buffer_layout *layout, uint32 eleme
     layout->element_counts[layout->count] = element_count;
     layout->stride += (element_size * element_count);
     layout->count += 1;
-}
-
-// @todo: remove it when no longer needed
-cpu_mesh render_make_square_mesh_on_cpu()
-{
-    static float32 vbo_data[] = {
-        -1.0f, -1.0f,  0.0f,
-         1.0f, -1.0f,  0.0f,
-         1.0f,  1.0f,  0.0f,
-        -1.0f,  1.0f,  0.0f,
-    };
-
-    static uint32 ibo_data[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0, // second triangle
-    };
-
-    memory_view vbo = memory_view_create(vbo_data, sizeof(vbo_data));
-    memory_view ibo = memory_view_create(ibo_data, sizeof(ibo_data));
-    vertex_buffer_layout vbl = {};
-    render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
-
-    cpu_mesh result;
-    result.vbo = vbo;
-    result.ibo = ibo;
-    result.vbl = vbl;
-
-    return result;
 }
 
 gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)

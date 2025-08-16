@@ -1,17 +1,23 @@
 #include "ui.h"
 
 
-void ui_element_init(ui_element *e)
+void ui_init(ui *ui, entity_id root)
 {
-    memset(e, 0, sizeof(*e));
+    ui->root = root;
 }
 
-void ui_element_hoverable_init(ui_element *e)
+void ui_element_flag_set(ui_element *e, uint32 flag)
 {
-
+    e->behaviour_flags = (e->behaviour_flags | flag);
 }
 
-void ui_element_clickable_init(ui_element *e)
+void ui_element_flag_clear(ui_element *e, uint32 flag)
 {
+    e->behaviour_flags = (e->behaviour_flags & (~flag));
+}
 
+bool ui_element_flag_test(ui_element *e, uint32 flag)
+{
+    bool result = (e->behaviour_flags & flag) > 0;
+    return result;
 }

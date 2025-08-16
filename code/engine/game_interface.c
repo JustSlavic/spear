@@ -32,7 +32,7 @@ void context_render_command_push_square(context *ctx, render_command_draw_shader
 {
     render_command cmd = { .tag = RenderCommand_DrawMesh };
     cmd.mesh_tag = RenderCommand_DrawMesh_Square;
-    cmd.shader_tag = shader_tag;
+    cmd.mesh_shader_tag = shader_tag;
     cmd.mesh_position = position;
     context_render_command_push(ctx, cmd);
 }
@@ -41,9 +41,21 @@ void context_render_command_push_cube(context *ctx, render_command_draw_shader_t
 {
     render_command cmd = { .tag = RenderCommand_DrawMesh };
     cmd.mesh_tag = RenderCommand_DrawMesh_Cube;
-    cmd.shader_tag = shader_tag;
+    cmd.mesh_shader_tag = shader_tag;
     cmd.mesh_position = position;
     cmd.mesh_scale = scale;
     cmd.mesh_color = color;
+    context_render_command_push(ctx, cmd);
+}
+
+void context_render_command_push_ui(context *ctx, vector2 p, float width, float height, vector4 color, float frame_width, vector4 frame_color)
+{
+    render_command cmd = { .tag = RenderCommand_DrawUi };
+    cmd.ui_position = p;
+    cmd.ui_width = width;
+    cmd.ui_height = height;
+    cmd.ui_color = color;
+    cmd.ui_frame_width = frame_width;
+    cmd.ui_frame_color = frame_color;
     context_render_command_push(ctx, cmd);
 }

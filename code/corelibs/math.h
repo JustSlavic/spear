@@ -74,7 +74,6 @@ vector4 v4f_scale(float32 a, vector4 v);
 vector4 v4f_add(vector4 v, vector4 w);
 vector4 v4f_sub(vector4 v, vector4 w);
 float32 v4f_dot(vector4 v, vector4 w);
-vector4 v4f_cross(vector4 v, vector4 w);
 float32 v4f_norm_squared(vector4 v);
 float32 v4f_norm(vector4 v);
 vector4 v4f_normalize(vector4 v);
@@ -173,6 +172,11 @@ typedef union matrix4
     float32 e[4][4];
 } matrix4;
 
+matrix4 m4f_identity(void);
+matrix4 m4f_translate(float tx, float ty, float tz);
+matrix4 m4f_scale(float sx, float sy, float sz);
+matrix4 m4f_mul(matrix4 a, matrix4 b);
+
 typedef union transform
 {
     struct
@@ -188,11 +192,26 @@ typedef union transform
     float32 e[4][3];
 } transform;
 
-matrix4 identitym4f(void);
-matrix4 translatem4f(float tx, float ty, float tz);
-matrix4 scalem4f(float sx, float sy, float sz);
-
-matrix4 mulm4f(matrix4 a, matrix4 b);
+transform tm_identity(void);
+transform tm_scale_x (float32 sx);
+transform tm_scale_y (float32 sy);
+transform tm_scale_z (float32 sz);
+transform tm_scale   (float32 sx, float32 sy, float32 sz);
+transform tm_translate_x (float32 tx);
+transform tm_translate_y (float32 ty);
+transform tm_translate_z (float32 tz);
+transform tm_translate   (float32 tx, float32 ty, float32 tz);
+transform tm_rotate_x (float32 rx);
+transform tm_rotate_y (float32 ry);
+transform tm_rotate_z (float32 rz);
+float32 tm_determinant(transform tm);
+transform tm_inverse(transform tm);
+matrix4 tm_to_m4f(transform tm);
+vector3 tm_transform_point3f(transform tm, vector3 v);
+vector4 tm_transform_point4f(transform tm, vector4 v);
+vector3 tm_transform_vector3f(transform tm, vector3 v);
+vector4 tm_transform_vector4f(transform tm, vector4 v);
+transform tm_mul(transform s, transform f);
 
 
 #endif // _SPEAR_CORELIBS_BASE_VECTOR2_H

@@ -24,6 +24,7 @@ typedef enum render_command_tag
 
     RenderCommand_SetupCamera,
     RenderCommand_DrawMesh,
+    RenderCommand_DrawUi,
 } render_command_tag;
 
 typedef enum render_command_draw_mesh_tag
@@ -45,16 +46,32 @@ typedef enum render_command_draw_shader_tag
 typedef struct render_command
 {
     render_command_tag tag;
-
-    vector3 camera_position;
-    vector3 camera_forward;
-    vector3 camera_up;
-
-    render_command_draw_mesh_tag mesh_tag;
-    render_command_draw_shader_tag shader_tag;
-    vector3 mesh_position;
-    vector3 mesh_scale;
-    vector4 mesh_color;
+    union
+    {
+        struct // RenderCommand_SetupCamera
+        {
+            vector3 camera_position;
+            vector3 camera_forward;
+            vector3 camera_up;
+        };
+        struct // RenderCommand_DrawMesh
+        {
+            render_command_draw_mesh_tag mesh_tag;
+            render_command_draw_shader_tag mesh_shader_tag;
+            vector3 mesh_position;
+            vector3 mesh_scale;
+            vector4 mesh_color;
+        };
+        struct // RenderCommand_DrawUi
+        {
+            vector2 ui_position;
+            float ui_width;
+            float ui_height;
+            float ui_frame_width;
+            vector4 ui_color;
+            vector4 ui_frame_color;
+        };
+    };
 } render_command;
 
 typedef struct context
@@ -81,6 +98,7 @@ void context_engine_command_push_exit(context *ctx);
 void context_render_command_push_camera(context *ctx, vector3 position, vector3 forward, vector3 up);
 void context_render_command_push_square(context *ctx, render_command_draw_shader_tag shader_tag, vector3 position, quaternion orientation, float scale_x, float scale_y);
 void context_render_command_push_cube(context *ctx, render_command_draw_shader_tag shader_tag, vector3 position, vector3 scale, vector4 color);
+void context_render_command_push_ui(context *ctx, vector2 p, float width, float height, vector4 color, float frame_width, vector4 frame_color);
 
 #define INITIALIZE_MEMORY_FUNCTION_T(NAME) void NAME(context *ctx, memory_view game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION_T(initialize_memory_t);

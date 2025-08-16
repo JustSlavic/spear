@@ -13,6 +13,7 @@ cpu_mesh mesh_octahedron_create(void);
 cpu_mesh mesh_icosahedron_create(void);
 cpu_mesh mesh_sphere_create(int n, int m);
 cpu_mesh mesh_ico_sphere_create(memory_allocator allocator, memory_allocator temp_allocator);
+cpu_mesh mesh_ui_frame_create(void);
 
 
 #endif // _SPEAR_ENGINE_PRIMITIVE_MESHES_H

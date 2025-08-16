@@ -53,6 +53,7 @@ void spear_engine_create_meshes(engine *engine)
     engine->mesh_icosahedron = render_load_mesh_to_gpu(mesh_icosahedron_create());
     engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
     engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
+    engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
 }
 
 void spear_engine_compile_shaders(engine *engine)
@@ -63,6 +64,7 @@ void spear_engine_compile_shaders(engine *engine)
     engine->shader_text = render_compile_shaders(vs_text, fs_text);
     engine->shader_phong = render_compile_shaders(vs_phong, fs_phong);
     engine->shader_sun = render_compile_shaders(vs_sun, fs_sun);
+    engine->shader_ui_frame = render_compile_shaders(vs_frame, fs_pass_color);
 }
 
 void spear_engine_load_game_dll(engine *engine)
@@ -113,6 +115,11 @@ void spear_engine_update_viewport(engine *engine, int width, int height)
         engine->game_context.viewport_offset_y = viewport.offset_y;
         engine->game_context.viewport_width = viewport.width;
         engine->game_context.viewport_height = viewport.height;
+
+        engine->renderer.proj_matrix_ui =
+            m4f_mul(
+                m4f_translate(-1, 1, 0),
+                m4f_scale(2.f / viewport.width, -2.f/viewport.height, 1));
     }
 }
 
@@ -162,18 +169,42 @@ void spear_engine_game_update(engine *engine)
 static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
 {
     matrix4 model =
-        mulm4f(
-            translatem4f(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z),
-            scalem4f(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z)
+        m4f_mul(
+            m4f_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z),
+            m4f_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z)
         );
     gpu_mesh m = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
                  cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
                  engine->mesh_cube;
-    gpu_shader s = cmd.shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
-                   cmd.shader_tag == RenderCommand_DrawShader_Ground ? engine->shader_ground :
+    gpu_shader s = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
+                   cmd.mesh_shader_tag == RenderCommand_DrawShader_Ground ? engine->shader_ground :
                    engine->shader_single_color;
 
     renderer_draw_mesh(&engine->renderer, model, m, s, cmd.mesh_color);
+}
+
+static void spear_engine_draw_ui(engine *engine, render_command cmd)
+{
+    matrix4 model = m4f_mul(
+        m4f_translate(cmd.ui_position.x, cmd.ui_position.y, 0),
+        m4f_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1));
+    gpu_mesh m = engine->mesh_square;
+    gpu_shader s = engine->shader_single_color;
+    vector4 color = v4f(1, 1, 1, 1);
+    renderer_draw_mesh_ui(&engine->renderer, model, m, s, color);
+
+    if (cmd.ui_frame_width != 0.f)
+    {
+        glDisable(GL_DEPTH_TEST);
+        renderer_draw_ui_frame(&engine->renderer,
+            model,
+            engine->mesh_ui_frame,
+            engine->shader_ui_frame,
+            cmd.ui_frame_color,
+            cmd.ui_frame_width * 0.5f,
+            cmd.ui_frame_width * 0.5f);
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 void spear_engine_game_render(engine *engine)
@@ -200,6 +231,12 @@ void spear_engine_game_render(engine *engine)
             case RenderCommand_DrawMesh:
             {
                 spear_engine_draw_mesh_internal(engine, cmd);
+            }
+            break;
+
+            case RenderCommand_DrawUi:
+            {
+                spear_engine_draw_ui(engine, cmd);
             }
             break;
 

@@ -197,3 +197,35 @@ GLSL(
         result_color = vec4(sun_color, 1.0);
     }
 );
+
+static char const *vs_frame =
+"#version 400\n"
+GLSL(
+    layout (location = 0) in vec2 vertex_position;
+    layout (location = 1) in vec2 vertex_displacement_weight;
+
+    out vec4 fragment_color;
+
+    uniform mat4 u_model;
+    uniform mat4 u_view;
+    uniform mat4 u_projection;
+    uniform vec4 u_color;
+
+    // Use negative sign for inner border
+    // and positive sign for outer border
+    uniform float u_width;
+    uniform float u_height;
+
+    void main()
+    {
+        vec4 p = u_projection * u_view * u_model * vec4(vertex_position, 0.0, 1.0);
+        vec4 d = u_projection * vec4(vertex_displacement_weight, 0.0, 0.0);
+        fragment_color = u_color;
+
+        vec4 displacement = vec4(d.x * u_width, d.y * u_height, 0.f, 0.f);
+        // Add border width to the vertices that need to move
+        // We should subtract the displacement to follow the rule written above
+        p -= displacement;
+        gl_Position = p;
+    }
+);

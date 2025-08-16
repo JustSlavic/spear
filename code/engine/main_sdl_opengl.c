@@ -184,8 +184,9 @@ int main(void)
 #include <corelibs/memory/allocator.c>
 #include <gamelibs/input.c>
 #include <gamelibs/camera.c>
+#include <gamelibs/entity_manager.c>
+#include <gamelibs/ui.c>
 #include <engine/engine.c>
 #include <engine/game_interface.c>
 #include <engine/primitive_meshes.c>
 #include <engine/graphics/render.c>
-#include <engine/entity_manager.c>

@@ -5,7 +5,8 @@
 #include <corelibs/math.h>
 #include <corelibs/memory/allocator.h>
 #include <gamelibs/camera.h>
-#include <engine/entity_manager.h>
+#include <gamelibs/entity_manager.h>
+#include <gamelibs/ui.h>
 
 typedef enum
 {
@@ -13,6 +14,7 @@ typedef enum
 
     Entity_Hero,
     Entity_Monster,
+    Entity_UiElement,
 } entity_tag;
 
 typedef struct entity
@@ -28,6 +30,8 @@ typedef struct entity
     float32 move_animation_duration;
     vector3i move_from;
     vector3i move_to;
+
+    ui_element ui;
 } entity;
 
 enum
@@ -58,8 +62,17 @@ typedef struct game_state
 {
     memory_allocator game_allocator;
 
-    entity entities[MAX_ENTITIES];
+    entity *entities;
     entity_manager em;
+
+    entity_id *monsters;
+    uint32 monster_count;
+    uint32 monster_capacity;
+
+    ui ui;
+    entity_id *ui_elements;
+    uint32 ui_element_count;
+    uint32 ui_element_capacity;
 
     entity_id hero;
 

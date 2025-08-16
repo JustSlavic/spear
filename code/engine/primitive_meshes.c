@@ -626,3 +626,49 @@ cpu_mesh mesh_ico_sphere_create(memory_allocator allocator, memory_allocator tem
 }
 
 #undef T
+
+cpu_mesh mesh_ui_frame_create(void)
+{
+    // 3--------2
+    // |\      /|
+    // | 7----6 |
+    // | |    | |
+    // | 4----5 |
+    // |/      \|
+    // 0--------1
+
+    static float32 vbo_data[] = {
+        -1.f, -1.f,  0.f,  0.f,
+         1.f, -1.f,  0.f,  0.f,
+         1.f,  1.f,  0.f,  0.f,
+        -1.f,  1.f,  0.f,  0.f,
+        -1.f, -1.f,  1.f,  1.f,
+         1.f, -1.f, -1.f,  1.f,
+         1.f,  1.f, -1.f, -1.f,
+        -1.f,  1.f,  1.f, -1.f,
+    };
+
+    static uint32 ibo_data[] = {
+        0, 1, 4,
+        4, 1, 5,
+        1, 2, 5,
+        5, 2, 6,
+        2, 3, 6,
+        6, 3, 7,
+        3, 0, 7,
+        7, 0, 4,
+    };
+
+    memory_view vbo = memory_view_create(vbo_data, sizeof(vbo_data));
+    memory_view ibo = memory_view_create(ibo_data, sizeof(ibo_data));
+    vertex_buffer_layout vbl = {};
+    render_vertex_buffer_layout_push(&vbl, sizeof(float), 2);
+    render_vertex_buffer_layout_push(&vbl, sizeof(float), 2);
+
+    cpu_mesh result = {};
+    result.vbo = vbo;
+    result.ibo = ibo;
+    result.vbl = vbl;
+
+    return result;
+}
