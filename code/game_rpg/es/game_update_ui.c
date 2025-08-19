@@ -73,139 +73,90 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
         }
     }
 
-    // if (hovered)
-    // {
-    //     if (!s->active)
-    //     {
-    //         // I found element under mouse, and no element is active! That's good, I can set myself as hot.
-    //         if (s->hot)
-    //         {
-    //             // There's something hot already, check if it's what I found.
-    //             if (s->hot == hovered)
-    //             {
-    //                 // The element I found under the mouse is exactly what I have hot. I will do nothing then.
-    //             }
-    //             else
-    //             {
-    //                 for (auto child : iterate_attaches(s, s->hot))
-    //                 {
-    //                     if (child.type == UI_HOVERABLE)
-    //                     {
-    //                         auto *p = s->hoverables.data() + child.index;
-    //                         p->callbacks.on_leave_internal(s, s->hot);
-    //                         p->callbacks.on_leave(s, s->hot);
-    //                         break;
-    //                     }
-    //                 }
-    //                 s->hot = hovered;
-    //                 for (auto child : iterate_attaches(s, s->hot))
-    //                 {
-    //                     if (child.type == UI_HOVERABLE)
-    //                     {
-    //                         auto *p = s->hoverables.data() + child.index;
-    //                         p->callbacks.on_enter(s, s->hot);
-    //                         p->callbacks.on_enter_internal(s, s->hot);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         else
-    //         {
-    //             // There's nothing hot yet, let's make our element hot.
-    //             s->hot = hovered;
-    //             for (auto child : iterate_attaches(s, s->hot))
-    //             {
-    //                 if (child.type == UI_HOVERABLE)
-    //                 {
-    //                     auto *p = s->hoverables.data() + child.index;
-    //                     p->callbacks.on_enter(s, s->hot);
-    //                     p->callbacks.on_enter_internal(s, s->hot);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         // If there's already something active
-    //         if (s->hot == hovered)
-    //         {
-    //             // What I found is already hot, do nothing
-    //         }
-    //         else if (hovered == s->active)
-    //         {
-    //             // What I found is the thing I have active, but it's not hot, make it hot again
-    //             s->hot = hovered;
-    //             for (auto child : iterate_attaches(s, s->hot))
-    //             {
-    //                 if (child.type == UI_HOVERABLE)
-    //                 {
-    //                     auto *p = s->hoverables.data() + child.index;
-    //                     p->callbacks.on_enter(s, s->hot);
-    //                     p->callbacks.on_enter_internal(s, s->hot);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // else
-    // {
-    //     if (s->hot)
-    //     {
-    //         // I didn't find anything under the mouse, but I have a hot element? Make it cold again.
-    //         for (auto child : iterate_attaches(s, s->hot))
-    //         {
-    //             if (child.type == UI_HOVERABLE)
-    //             {
-    //                 auto *p = s->hoverables.data() + child.index;
-    //                 p->callbacks.on_leave_internal(s, s->hot);
-    //                 p->callbacks.on_leave(s, s->hot);
-    //                 break;
-    //             }
-    //         }
-    //         s->hot = null_handle();
-    //     }
-    // }
+    if (hovered)
+    {
+        if (!gs->ui.active)
+        {
+            // I found element under mouse, and no element is active!
+            // That's good, maybe I can set myself as hot.
+            if (gs->ui.hot)
+            {
+                // There's something hot already, check if it's what I found.
+                if (gs->ui.hot == hovered)
+                {
+                    // The element I found under the mouse is exactly what I have hot.
+                    // I will do nothing then.
+                }
+                else
+                {
+                    // @todo: call the 'on_hoverable_leave' event on hot element
+                    printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+                    gs->ui.hot = hovered;
+                    // @todo: call the 'on_hoverable_enter' event on hot element
+                    printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                }
+            }
+            else
+            {
+                // There's nothing hot yet, let's make our element hot.
+                gs->ui.hot = hovered;
+                // @todo: call the 'on_hoverable_enter' event on hot element
+                printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+            }
+        }
+        else
+        {
+            // If there's already something active
+            if (gs->ui.hot == hovered)
+            {
+                // What I found is already hot, do nothing
+            }
+            else if (hovered == gs->ui.active)
+            {
+                // What I found is the thing I have active, but it's not hot,
+                // make it hot again
+                gs->ui.hot = hovered;
+                // @todo: call the 'on_hoverable_enter' event on hot element
+                printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+            }
+        }
+    }
+    else
+    {
+        if (gs->ui.hot)
+        {
+            // I didn't find anything under the mouse,
+            // but I have a hot element? Make it cold again.
 
-    // if (get_press_count(inp->mouse[MOUSE_LEFT]))
-    // {
-    //     s->active = s->hot;
-    //     if (s->active)
-    //     {
-    //         for (auto child : iterate_attaches(s, s->active))
-    //         {
-    //             if (child.type == UI_CLICKABLE)
-    //             {
-    //                 if (s->active == s->hot)
-    //                 {
-    //                     auto *p = s->clickables.data() + child.index;
-    //                     p->callbacks.on_press_internal(s, s->active);
-    //                     p->callbacks.on_press(s, s->active);
-    //                 }
+            // @todo: call the 'on_hoverable_leave' event on hot element
+            printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+            gs->ui.hot = INVALID_ENTITY_ID;
+        }
+    }
 
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
+    if (input_button_get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
+    {
+        gs->ui.active = gs->ui.hot;
+        if (gs->ui.active)
+        {
+            entity *e = get_entity(gs, gs->ui.active);
+            if (ui_element_flag_test(&e->ui, UiBehaviour_Clickable))
+            {
+                printf("UI: press on ui element (eid=%d)\n", gs->ui.active);
+            }
+        }
+    }
 
-    // if (get_release_count(inp->mouse[MOUSE_LEFT]))
-    // {
-    //     if (s->active)
-    //     {
-    //         for (auto child : iterate_attaches(s, s->active))
-    //         {
-    //             if (child.type == UI_CLICKABLE)
-    //             {
-    //                 auto *p = s->clickables.data() + child.index;
-    //                 if (s->active == s->hot)
-    //                 {
-    //                     p->callbacks.on_release(s, s->active);
-    //                 }
-    //                 p->callbacks.on_release_internal(s, s->active);
-    //             }
-    //         }
-    //         s->active = null_handle();
-    //     }
-    // }
-
+    if (input_button_get_release_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
+    {
+        if (gs->ui.active)
+        {
+            entity *e = get_entity(gs, gs->ui.active);
+            if (ui_element_flag_test(&e->ui, UiBehaviour_Clickable))
+            {
+                printf("UI: release on ui element (eid=%d)\n", gs->ui.active);
+            }
+            gs->ui.active = INVALID_ENTITY_ID;
+        }
+    }
 }

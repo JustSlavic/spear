@@ -33,6 +33,7 @@ typedef struct
 
     // UiDrawable
     bool is_visible;
+    vector4 color;
 
     // UiBehaviour_Hoverable
     vector2 hover_area_min, hover_area_max;

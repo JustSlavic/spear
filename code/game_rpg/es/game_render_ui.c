@@ -15,7 +15,7 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
             .ui_tm = e->ui.tm_to_root,
             .ui_width = e->ui.width,
             .ui_height = e->ui.height,
-            .ui_color = e->ui.hovered ? v4f(0, 1, 0, 1) : v4f(1, 1, 1, 1),
+            .ui_color = e->ui.hovered ? v4f(0, 1, 0, 1) : e->ui.color,
         };
         context_render_command_push(ctx, cmd);
     }

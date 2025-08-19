@@ -242,13 +242,13 @@ void spear_engine_game_render(engine *engine)
             {
                 renderer_setup_camera(&engine->renderer,
                     cmd.camera_position, cmd.camera_forward, cmd.camera_up);
-                glDisable(GL_DEPTH_TEST);
-                renderer_draw_mesh_ui(&engine->renderer,
-                    m4f_scale(10000.f, 10000.f, 1.f),
-                    engine->mesh_square,
-                    engine->shader_single_color,
-                    v4f(0.1f, 0.1f, 0.1f, 1.f));
-                glEnable(GL_DEPTH_TEST);
+                // glDisable(GL_DEPTH_TEST);
+                // renderer_draw_mesh_ui(&engine->renderer,
+                //     m4f_scale(10000.f, 10000.f, 1.f),
+                //     engine->mesh_square,
+                //     engine->shader_single_color,
+                //     v4f(0.1f, 0.1f, 0.1f, 1.f));
+                // glEnable(GL_DEPTH_TEST);
             }
             break;
 
