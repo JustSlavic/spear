@@ -2,7 +2,7 @@
 
 void game_update_hero_move(context *ctx, game_state *gs, input *input)
 {
-    entity *e = get_entity(gs, gs->hero);
+    entity *e = get_hero(gs);
     float t = e->move_animation_t;
     float duration = e->move_animation_duration;
     if (t < duration)
@@ -15,8 +15,8 @@ void game_update_hero_move(context *ctx, game_state *gs, input *input)
         float start_y = (float) e->move_from.y;
         float end_y = (float) e->move_to.y;
 
-        float x = lerpf(start_x, end_x, normalized_t);
-        float y = lerpf(start_y, end_y, normalized_t);
+        float x = lerp(start_x, end_x, normalized_t);
+        float y = lerp(start_y, end_y, normalized_t);
         e->position.x = x;
         e->position.y = y;
 
@@ -26,7 +26,7 @@ void game_update_hero_move(context *ctx, game_state *gs, input *input)
 
 void game_update_hero_coordinates(context *ctx, game_state *gs, input *input)
 {
-    entity *hero = get_entity(gs, gs->hero);
+    entity *hero = get_hero(gs);
     hero->tile.x = (int) roundf(hero->position.x);
     hero->tile.y = (int) roundf(hero->position.y);
     hero->tile.z = (int) roundf(hero->position.z);

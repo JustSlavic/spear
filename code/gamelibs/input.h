@@ -107,9 +107,14 @@ enum
 
 typedef struct
 {
+    int32 x, y;
+} input_mouse_position;
+
+typedef struct
+{
     input_button buttons[Button_Count];
-    int32 mouse_x, mouse_y;
-    int32 mouse_prev_x, mouse_prev_y;
+    input_mouse_position window_mouse;
+    input_mouse_position viewport_mouse;
     int32 mouse_scroll;
 } input_keyboard_and_mouse;
 
@@ -151,8 +156,10 @@ enum
 typedef struct
 {
     input_button buttons[Gamepad_Count];
-    input_gamepad_stick stick_left, stick_right;
-    float32 trigger_left, trigger_right;
+    input_gamepad_stick stick_left;
+    input_gamepad_stick stick_right;
+    float32 trigger_left;
+    float32 trigger_right;
 } input_gamepad;
 
 typedef struct

@@ -376,10 +376,10 @@ quaternion q4f_inverse(quaternion q)
 
 vector3 q4f_apply_unit_quaternion(quaternion q, vector3 v)
 {
-    float32 ww = squaref(q.w);
-    float32 xx = squaref(q.x);
-    float32 yy = squaref(q.y);
-    float32 zz = squaref(q.z);
+    float32 ww = square(q.w);
+    float32 xx = square(q.x);
+    float32 yy = square(q.y);
+    float32 zz = square(q.z);
 
     vector3 result;
     result.x = (ww + xx - yy - zz)*v.x + 2.f*(( q.y*v.z - q.z*v.y)*q.w + (q.y*v.y + q.z*v.z)*q.x);
@@ -392,6 +392,83 @@ vector3 q4f_apply(quaternion q, vector3 v)
 {
     q = q4f_normalize(q);
     vector3 result = q4f_apply_unit_quaternion(q, v);
+    return result;
+}
+
+// ============ matrix3 ============ //
+
+matrix3 m3f_identity(void)
+{
+    matrix3 result = {};
+    result._11 = result._22 = result._33 = 1.f;
+    return result;
+}
+
+matrix3 m3f_scale(float a, matrix3 m)
+{
+    int i, j;
+    matrix3 r;
+    for (j = 0; j < 3; j++)
+    for (i = 0; i < 3; i++)
+        r.e[i][j] = a * m.e[i][j];
+    return r;
+}
+
+float32 m3f_determinant(matrix3 m)
+{
+    float32 result = m._11 * (m._22 * m._33 - m._23 * m._32)
+                   - m._12 * (m._21 * m._33 - m._23 * m._31)
+                   + m._13 * (m._21 * m._32 - m._22 * m._31);
+    return result;
+}
+
+matrix3 m3f_adjoint(matrix3 m)
+{
+    matrix3 result;
+
+    result._11 =  m._22 * m._33 - m._23 * m._32;
+    result._12 = -m._12 * m._33 + m._13 * m._32;
+    result._13 =  m._12 * m._23 - m._13 * m._22;
+
+    result._21 = -m._21 * m._33 + m._23 * m._31;
+    result._22 =  m._11 * m._33 - m._13 * m._31;
+    result._23 = -m._11 * m._23 + m._13 * m._21;
+
+    result._31 =  m._21 * m._32 - m._22 * m._31;
+    result._32 = -m._11 * m._32 + m._12 * m._31;
+    result._33 =  m._11 * m._22 - m._12 * m._21;
+
+    return result;
+}
+
+matrix3 m3f_inverse(matrix3 m)
+{
+    matrix3 result = m3f_identity();
+    float32 det = m3f_determinant(m);
+    if (!is_near_zero(det))
+    {
+        result = m3f_scale(1.0f / det, m3f_adjoint(m));
+    }
+    return result;
+}
+
+matrix3 q4f_to_m3f(quaternion q)
+{
+    float32 s = q4f_norm(q);
+    matrix3 result;
+
+    result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
+    result._12 =       2.f * s * (q.i * q.j - q.k * q.r);
+    result._13 =       2.f * s * (q.i * q.k + q.j * q.r);
+
+    result._21 =       2.f * s * (q.i * q.j + q.k * q.r);
+    result._22 = 1.f - 2.f * s * (q.i * q.i + q.k * q.k);
+    result._23 =       2.f * s * (q.j * q.k - q.i * q.r);
+
+    result._31 =       2.f * s * (q.i * q.k - q.j * q.r);
+    result._32 =       2.f * s * (q.j * q.k + q.i * q.r);
+    result._33 = 1.f - 2.f * s * (q.i * q.i + q.j * q.j);
+
     return result;
 }
 
@@ -465,6 +542,34 @@ matrix4 m4f_transpose(matrix4 m)
     return m;
 }
 
+matrix4 q4f_to_m4f(quaternion q)
+{
+    float32 s = q4f_norm(q);
+    matrix4 result;
+
+    result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
+    result._12 =       2.f * s * (q.i * q.j - q.k * q.r);
+    result._13 =       2.f * s * (q.i * q.k + q.j * q.r);
+    result._14 = 0.f;
+
+    result._21 =       2.f * s * (q.i * q.j + q.k * q.r);
+    result._22 = 1.f - 2.f * s * (q.i * q.i + q.k * q.k);
+    result._23 =       2.f * s * (q.j * q.k - q.i * q.r);
+    result._24 = 0.f;
+
+    result._31 =       2.f * s * (q.i * q.k - q.j * q.r);
+    result._32 =       2.f * s * (q.j * q.k + q.i * q.r);
+    result._33 = 1.f - 2.f * s * (q.i * q.i + q.j * q.j);
+    result._34 = 0.f;
+
+    result._41 = 0.f;
+    result._42 = 0.f;
+    result._43 = 0.f;
+    result._44 = 1.f;
+
+    return result;
+}
+
 // ============ transform ============ //
 
 transform tm_identity(void) { transform tm = {}; tm._11 = tm._22 = tm._33 = 1.f; return tm; }
@@ -480,34 +585,34 @@ transform tm_rotate_x (float32 rx) { transform tm = tm_identity(); float c = cos
 transform tm_rotate_y (float32 ry) { transform tm = tm_identity(); float c = cosf(ry); float s = sinf(ry); tm._11 = tm._33 = c; tm._13 = -(tm._31 = s); return tm; }
 transform tm_rotate_z (float32 rz) { transform tm = tm_identity(); float c = cosf(rz); float s = sinf(rz); tm._11 = tm._22 = c; tm._12 = -(tm._21 = s); return tm; }
 
-// float32 tm_determinant(transform tm)
-// {
-//     float32 result = m4f_determinant(tm.matrix);
-//     return result;
-// }
+float32 tm_determinant(transform tm)
+{
+    float32 result = m3f_determinant(tm.matrix);
+    return result;
+}
 
-// transform tm_inverse(transform tm)
-// {
-//     transform result = {};
+transform tm_inverse(transform tm)
+{
+    transform result = {};
 
-//     float32 det = determinant(tm.matrix);
-//     if (!near_zero(det))
-//     {
-//         result.matrix = (1.0f / det) * adjoint(tm.matrix);
+    float32 det = m3f_determinant(tm.matrix);
+    if (!is_near_zero(det))
+    {
+        result.matrix = m3f_scale(1.0f / det, m3f_adjoint(tm.matrix));
 
-//         float32 m_32_43_33_42 = (tm._32 * tm._43 - tm._33 * tm._42);
-//         float32 m_31_43_33_41 = (tm._31 * tm._43 - tm._33 * tm._41);
-//         float32 m_31_42_32_41 = (tm._31 * tm._42 - tm._32 * tm._41);
-//         float32 m_12_23_13_22 = (tm._12 * tm._23 - tm._13 * tm._22);
-//         float32 m_11_23_13_21 = (tm._11 * tm._23 - tm._13 * tm._21);
-//         float32 m_11_22_12_21 = (tm._11 * tm._22 - tm._12 * tm._21);
+        float32 m_32_43_33_42 = (tm._32 * tm._43 - tm._33 * tm._42);
+        float32 m_31_43_33_41 = (tm._31 * tm._43 - tm._33 * tm._41);
+        float32 m_31_42_32_41 = (tm._31 * tm._42 - tm._32 * tm._41);
+        float32 m_12_23_13_22 = (tm._12 * tm._23 - tm._13 * tm._22);
+        float32 m_11_23_13_21 = (tm._11 * tm._23 - tm._13 * tm._21);
+        float32 m_11_22_12_21 = (tm._11 * tm._22 - tm._12 * tm._21);
 
-//         result._41 = (- tm._21 * m_32_43_33_42 + tm._22 * m_31_43_33_41 - tm._23 * m_31_42_32_41) / det;
-//         result._42 = (  tm._11 * m_32_43_33_42 - tm._12 * m_31_43_33_41 + tm._13 * m_31_42_32_41) / det;
-//         result._43 = (- tm._41 * m_12_23_13_22 + tm._42 * m_11_23_13_21 - tm._43 * m_11_22_12_21) / det;
-//     }
-//     return result;
-// }
+        result._41 = (- tm._21 * m_32_43_33_42 + tm._22 * m_31_43_33_41 - tm._23 * m_31_42_32_41) / det;
+        result._42 = (  tm._11 * m_32_43_33_42 - tm._12 * m_31_43_33_41 + tm._13 * m_31_42_32_41) / det;
+        result._43 = (- tm._41 * m_12_23_13_22 + tm._42 * m_11_23_13_21 - tm._43 * m_11_22_12_21) / det;
+    }
+    return result;
+}
 
 matrix4 tm_to_m4f(transform tm)
 {

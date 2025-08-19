@@ -1,15 +1,22 @@
 #include "collision.h"
 
 
+bool test_aabb_point2f(float aabb_min_x, float aabb_min_y, float aabb_max_x, float aabb_max_y, float px, float py)
+{
+    bool result = (aabb_min_x <= px && px <= aabb_max_x)
+               && (aabb_min_y <= py && py <= aabb_max_y);
+    return result;
+}
+
 float intersect_ray_aabb(vector3 p, vector3 d, vector3 aabb_min, vector3 aabb_max)
 {
-    float tmax = infinity;
+    float tmax = INFINITY;
     float tmin = 0.f;
 
     int i;
     for (i = 0; i < 3; i++)
     {
-        if (fabs(d.e[i]) < eps)
+        if (fabs(d.e[i]) < EPSILON)
         {
             if (p.e[i] < aabb_min.e[i] || p.e[i] > aabb_max.e[i]) return 0;
         }
@@ -27,7 +34,7 @@ float intersect_ray_aabb(vector3 p, vector3 d, vector3 aabb_min, vector3 aabb_ma
             if (t1 > tmin) tmin = t1;
             if (t2 < tmax) tmax = t2;
             // Exit with no collision as soon as slab intersection becomes empty
-            if (tmin > tmax) return infinity;
+            if (tmin > tmax) return INFINITY;
         }
     }
 

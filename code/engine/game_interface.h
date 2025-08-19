@@ -33,6 +33,7 @@ typedef enum render_command_draw_mesh_tag
 
     RenderCommand_DrawMesh_Square,
     RenderCommand_DrawMesh_Cube,
+    RenderCommand_DrawMesh_UiFrame,
 } render_command_draw_mesh_tag;
 
 typedef enum render_command_draw_shader_tag
@@ -64,12 +65,16 @@ typedef struct render_command
         };
         struct // RenderCommand_DrawUi
         {
-            vector2 ui_position;
+            render_command_draw_mesh_tag ui_mesh_tag;
+            render_command_draw_shader_tag ui_shader_tag;
+
+            transform ui_tm;
             float ui_width;
             float ui_height;
-            float ui_frame_width;
             vector4 ui_color;
-            vector4 ui_frame_color;
+            // Optional parameters
+            float ui_frame_width;
+            vector2 ui_offset;
         };
     };
 } render_command;
@@ -94,11 +99,14 @@ typedef struct context
     void *game_state;
 } context;
 
+void context_engine_command_push(context *ctx, engine_command cmd);
+void context_render_command_push(context *ctx, render_command cmd);
+
 void context_engine_command_push_exit(context *ctx);
 void context_render_command_push_camera(context *ctx, vector3 position, vector3 forward, vector3 up);
 void context_render_command_push_square(context *ctx, render_command_draw_shader_tag shader_tag, vector3 position, quaternion orientation, float scale_x, float scale_y);
 void context_render_command_push_cube(context *ctx, render_command_draw_shader_tag shader_tag, vector3 position, vector3 scale, vector4 color);
-void context_render_command_push_ui(context *ctx, vector2 p, float width, float height, vector4 color, float frame_width, vector4 frame_color);
+void context_render_command_push_ui(context *ctx, transform tm, float width, float height, vector4 color, float frame_width, vector4 frame_color);
 
 #define INITIALIZE_MEMORY_FUNCTION_T(NAME) void NAME(context *ctx, memory_view game_memory)
 typedef INITIALIZE_MEMORY_FUNCTION_T(initialize_memory_t);

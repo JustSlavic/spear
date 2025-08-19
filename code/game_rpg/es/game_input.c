@@ -66,7 +66,7 @@ void game_input_hero_move(context *ctx, game_state *gs, input *input)
 
     if (move_x != 0 || move_y != 0)
     {
-        entity *e = get_entity(gs, gs->hero);
+        entity *e = get_hero(gs);
         e->move_from = e->tile;
         e->move_to = v3i(e->tile.x + move_x, e->tile.y + move_y, e->tile.z);
         e->move_animation_t = 0.f;

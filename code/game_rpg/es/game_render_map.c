@@ -12,7 +12,7 @@ void game_render_entity(context *ctx, game_state *gs, entity_id eid)
 
 void game_render_draw_map(context *ctx, game_state *gs, input *input)
 {
-    entity *hero = get_entity(gs, gs->hero);
+    entity *hero = get_hero(gs);
 
     int i, j, k;
     for (k = 0; k < gs->map.dim.z; k++)
@@ -23,10 +23,10 @@ void game_render_draw_map(context *ctx, game_state *gs, input *input)
         if (cell->tag == GameMap_Ground)
         {
             float red = 0.2f;
-            float green = cvtf((float) i,
+            float green = cvt((float) i,
                 0.f, (float) (gs->map.dim.x - 1),
                 0.5f, 0.2f);
-            float blue = cvtf((float) i,
+            float blue = cvt((float) i,
                 0.f, (float) (gs->map.dim.x - 1),
                 0.2f, 0.5f);
 

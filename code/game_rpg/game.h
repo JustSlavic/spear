@@ -58,23 +58,31 @@ game_map_cell *game_map_get(game_map *map, int i, int j, int k);
 bool32 game_map_set_ground(game_map *map, int i, int j, int k);
 bool32 game_map_set_entity(game_map *map, entity_id eid, int i, int j, int k);
 
+typedef struct
+{
+    entity_id *data;
+    uint32 count;
+    uint32 capacity;
+} entity_id_array;
+
+#define entity_id_array_allocate(A, N) ((entity_id_array) { .data = ALLOCATE_ARRAY(A, entity_id, N), .count = 0, .capacity = N })
+void entity_id_array_push(entity_id_array *array, entity_id e);
+
 typedef struct game_state
 {
     memory_allocator game_allocator;
 
     entity *entities;
+
     entity_manager em;
-
-    entity_id *monsters;
-    uint32 monster_count;
-    uint32 monster_capacity;
-
     ui ui;
-    entity_id *ui_elements;
-    uint32 ui_element_count;
-    uint32 ui_element_capacity;
 
-    entity_id hero;
+    entity_id_array heroes;
+    entity_id_array monsters;
+    entity_id_array ui_elements;
+    entity_id_array ui_visibles;
+    entity_id_array ui_hoverables;
+    entity_id_array ui_clickables;
 
     bool is_free_camera;
     vector3 camera_default_position;

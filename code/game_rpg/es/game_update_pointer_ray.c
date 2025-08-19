@@ -4,10 +4,10 @@
 
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
 {
-    float mouse_pos_x =  cvtf(input->keyboard_and_mouse.mouse_x,
+    float mouse_pos_x =  cvt(input->keyboard_and_mouse.window_mouse.x,
         ctx->viewport_offset_x, ctx->viewport_offset_x + ctx->viewport_width,
         -1.f, 1.f);
-    float mouse_pos_y = -cvtf(input->keyboard_and_mouse.mouse_y,
+    float mouse_pos_y = -cvt(input->keyboard_and_mouse.window_mouse.y,
         ctx->viewport_offset_y, ctx->viewport_offset_y + ctx->viewport_height,
         -1.f, 1.f);
 
@@ -32,7 +32,7 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
 void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
 {
     gs->intersected = false;
-    gs->intersect_t = infinity;
+    gs->intersect_t = INFINITY;
     gs->intersect_tile = v3i(0, 0, 0);
     gs->intersection = v3f(0.f, 0.f, 0.f);
 

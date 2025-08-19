@@ -4,6 +4,7 @@
 #include <corelibs/base.h>
 
 
+bool test_aabb_point2f(float aabb_min_x, float aabb_min_y, float aabb_max_x, float aabb_max_y, float px, float py);
 float intersect_ray_aabb(vector3 p, vector3 d, vector3 aabb_min, vector3 aabb_max);
 
 

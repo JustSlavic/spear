@@ -155,6 +155,13 @@ typedef union matrix3
     float32 e[3][3];
 } matrix3;
 
+matrix3 m3f_identity(void);
+matrix3 m3f_scale(float a, matrix3 m);
+float32 m3f_determinant(matrix3 m);
+matrix3 m3f_adjoint(matrix3 m);
+matrix3 m3f_inverse(matrix3 m);
+matrix3 q4f_to_m3f(quaternion q);
+
 typedef union matrix4
 {
     struct
@@ -176,6 +183,7 @@ matrix4 m4f_identity(void);
 matrix4 m4f_translate(float tx, float ty, float tz);
 matrix4 m4f_scale(float sx, float sy, float sz);
 matrix4 m4f_mul(matrix4 a, matrix4 b);
+matrix4 q4f_to_m4f(quaternion q);
 
 typedef union transform
 {
@@ -193,18 +201,18 @@ typedef union transform
 } transform;
 
 transform tm_identity(void);
-transform tm_scale_x (float32 sx);
-transform tm_scale_y (float32 sy);
-transform tm_scale_z (float32 sz);
-transform tm_scale   (float32 sx, float32 sy, float32 sz);
-transform tm_translate_x (float32 tx);
-transform tm_translate_y (float32 ty);
-transform tm_translate_z (float32 tz);
-transform tm_translate   (float32 tx, float32 ty, float32 tz);
-transform tm_rotate_x (float32 rx);
-transform tm_rotate_y (float32 ry);
-transform tm_rotate_z (float32 rz);
-float32 tm_determinant(transform tm);
+transform tm_scale_x(float sx);
+transform tm_scale_y(float sy);
+transform tm_scale_z(float sz);
+transform tm_scale(float sx, float sy, float sz);
+transform tm_translate_x(float tx);
+transform tm_translate_y(float ty);
+transform tm_translate_z(float tz);
+transform tm_translate(float tx, float ty, float tz);
+transform tm_rotate_x(float rx);
+transform tm_rotate_y(float ry);
+transform tm_rotate_z(float rz);
+float tm_determinant(transform tm);
 transform tm_inverse(transform tm);
 matrix4 tm_to_m4f(transform tm);
 vector3 tm_transform_point3f(transform tm, vector3 v);

@@ -1,11 +1,6 @@
 #include "ui.h"
 
 
-void ui_init(ui *ui, entity_id root)
-{
-    ui->root = root;
-}
-
 void ui_element_flag_set(ui_element *e, uint32 flag)
 {
     e->behaviour_flags = (e->behaviour_flags | flag);

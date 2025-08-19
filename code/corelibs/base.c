@@ -1,40 +1,52 @@
 #include "base.h"
 
 
-float32 squaref(float32 x)
+bool is_near_zero_eps(float x, float eps)
 {
-    float32 result = x * x;
+    bool result = (-eps < x && x < eps);
     return result;
 }
 
-float32 degrees_to_radiansf(float32 degrees)
+bool is_near_zero(float x)
 {
-    float32 result = degrees * pi / 180.0f;
+    bool result = is_near_zero_eps(x, EPSILON);
     return result;
 }
 
-float32 radians_to_degreesf(float32 radians)
+float square(float x)
 {
-    float32 result = radians * 180.0f / pi;
+    float result = x * x;
     return result;
 }
 
-float32 lerpf(float32 a, float32 b, float32 t)
+float degrees_to_radians(float degrees)
 {
-    float32 result = (1.f - t) * a + t * b;
+    float result = degrees * PI / 180.0f;
     return result;
 }
 
-float32 clampf(float32 x, float32 a, float32 b)
+float radians_to_degrees(float radians)
+{
+    float result = radians * 180.0f / PI;
+    return result;
+}
+
+float lerp(float a, float b, float t)
+{
+    float result = (1.f - t) * a + t * b;
+    return result;
+}
+
+float clamp(float x, float a, float b)
 {
     if (x < a) return a;
     if (x > b) return b;
     return x;
 }
 
-float32 cvtf(float32 x, float32 a, float32 b, float32 c, float32 d)
+float cvt(float x, float a, float b, float c, float d)
 {
-    float32 y = (clampf(x, a, b) - a) * (d - c) / (b - a) + c;
+    float y = (clamp(x, a, b) - a) * (d - c) / (b - a) + c;
     return y;
 }
 

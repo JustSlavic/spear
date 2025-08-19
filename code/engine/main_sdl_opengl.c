@@ -146,9 +146,12 @@ int main(void)
 
         spear_engine_input_reset_transitions(&g_engine);
         process_pending_messages(&g_engine.input);
-        SDL_GetMouseState(
-            &g_engine.input.keyboard_and_mouse.mouse_x,
-            &g_engine.input.keyboard_and_mouse.mouse_y);
+        // Set mouse pos
+        {
+            int mouse_x, mouse_y;
+            SDL_GetMouseState(&mouse_x, &mouse_y);
+            spear_engine_input_mouse_pos_set(&g_engine, mouse_x, mouse_y);
+        }
 
         g_engine.input.dt = duration_get_seconds(last_frame_dt);
         g_engine.input.time = timepoint_get_seconds(last_timepoint);

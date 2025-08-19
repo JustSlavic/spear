@@ -1,13 +1,13 @@
 #include "game_interface.h"
 
 
-static void context_engine_command_push(context *ctx, engine_command cmd)
+void context_engine_command_push(context *ctx, engine_command cmd)
 {
     ASSERT(ctx->engine_commands_count < ARRAY_COUNT(ctx->engine_commands));
     ctx->engine_commands[ctx->engine_commands_count++] = cmd;
 }
 
-static void context_render_command_push(context *ctx, render_command cmd)
+void context_render_command_push(context *ctx, render_command cmd)
 {
     ASSERT(ctx->render_commands_count < ARRAY_COUNT(ctx->render_commands));
     ctx->render_commands[ctx->render_commands_count++] = cmd;
@@ -45,17 +45,5 @@ void context_render_command_push_cube(context *ctx, render_command_draw_shader_t
     cmd.mesh_position = position;
     cmd.mesh_scale = scale;
     cmd.mesh_color = color;
-    context_render_command_push(ctx, cmd);
-}
-
-void context_render_command_push_ui(context *ctx, vector2 p, float width, float height, vector4 color, float frame_width, vector4 frame_color)
-{
-    render_command cmd = { .tag = RenderCommand_DrawUi };
-    cmd.ui_position = p;
-    cmd.ui_width = width;
-    cmd.ui_height = height;
-    cmd.ui_color = color;
-    cmd.ui_frame_width = frame_width;
-    cmd.ui_frame_color = frame_color;
     context_render_command_push(ctx, cmd);
 }

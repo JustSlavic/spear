@@ -89,11 +89,11 @@ typedef uint32               bool32;
 
 #define PRINT_BOOL(X) ((X) ? "true" : "false")
 
-#define eps      (1e-6)
-#define infinity (1.f / 0.f)
-#define pi       (3.1415926535897932384626433832795028841971693993751058209749445923078164062)
-#define half_pi  (1.5707963267948966192313216916397514420985846996875529104874722961539082031)
-#define two_pi   (6.2831853071795864769252867665590057683943387987502116419498891846156328125)
+#define EPSILON  (1e-6)
+#define INFINITY (1.f / 0.f)
+#define PI       (3.1415926535897932384626433832795028841971693993751058209749445923078164062)
+#define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031)
+#define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125)
 
 typedef struct
 {
@@ -104,15 +104,16 @@ typedef struct
 
 #define CL_HERE ((code_location){ .function=__FUNCTION__, .filename=__FILE__, .line=__LINE__ })
 
-float32 degrees_to_radiansf(float32 degrees);
-float32 radians_to_degreesf(float32 radians);
+float degrees_to_radians(float degrees);
+float radians_to_degrees(float radians);
 
-bool32 is_finite(float32 x);
+bool is_near_zero(float x);
+bool is_near_zero_eps(float x, float eps);
 
-float32 squaref(float32 x);
-float32 lerpf(float32 a, float32 b, float32 t);
-float32 clampf(float32 x, float32 a, float32 b);
-float32 cvtf(float32 x, float32 a, float32 b, float32 c, float32 d);
+float square(float x);
+float lerp(float a, float b, float t);
+float clamp(float x, float a, float b);
+float cvt(float x, float a, float b, float c, float d);
 
 int get_alignment(void *pointer);
 uint32 get_padding(void *pointer, uint64 alignment);

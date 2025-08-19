@@ -358,10 +358,10 @@ cpu_mesh mesh_sphere_create(int n, int m)
 
     for (i = 0; i < n; i++)
     {
-        float32 a = pi * (i + 1) / (n + 1);
+        float32 a = PI * (i + 1) / (n + 1);
         for (j = 0; j < m; j++)
         {
-            float32 b = 2.f * pi * j / m;
+            float32 b = 2.f * PI * j / m;
 
             float32 x = sinf(a) * cosf(b);
             float32 y = sinf(a) * sinf(b);
