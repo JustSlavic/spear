@@ -217,40 +217,49 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
 
     entity_id ui_A = ui_element_push(gs, INVALID_ENTITY_ID);
     entity_id ui_B = ui_element_push(gs, ui_A);
-    entity_id ui_C = ui_element_push(gs, ui_B);
+    entity_id ui_C = ui_element_push(gs, ui_A);
     entity_id ui_D = ui_element_push(gs, ui_A);
 
     entity *e;
     if ((e = get_entity(gs, ui_A)))
     {
-        e->ui.position.x = 200;
-        e->ui.position.y = 200;
-        e->ui.color = v4f(0.7, 0.2, 0.2, 1);
+        e->ui.position.x = 600;
+        e->ui.position.y = 600;
     }
     if ((e = get_entity(gs, ui_B)))
     {
-        e->ui.position.x = 100.f;
-        e->ui.position.y = 100.f;
-        e->ui.color = v4f(0.7, 0.2, 0.8, 1);
+        e->ui.position.x = -100.f;
+        e->ui.position.y = 0.f;
+        e->ui.width = 90;
+        e->ui.height = 90;
+        e->ui.color = v4f(0.8, 0.2, 0.2, 1);
     }
     if ((e = get_entity(gs, ui_C)))
     {
-        e->ui.position.x = 100.f;
-        e->ui.position.y = 100.f;
-        e->ui.color = v4f(0.7, 0.8, 0.2, 1);
+        e->ui.position.x = 0.f;
+        e->ui.position.y = 0.f;
+        e->ui.width = 90;
+        e->ui.height = 90;
+        e->ui.color = v4f(0.2, 0.2, 0.8, 1);
     }
     if ((e = get_entity(gs, ui_D)))
     {
-        e->ui.position.x = 0.f;
-        e->ui.position.y = 200.f;
-        e->ui.color = v4f(0.5, 0.5, 0.2, 1);
+        printf("e = %d\n", ui_D);
+        e->ui.position.x = 100.f;
+        e->ui.position.y = 0.f;
+        e->ui.width = 90;
+        e->ui.height = 90;
+        e->ui.color = v4f(0.2, 0.8, 0.2, 1);
     }
-    ui_drawable_push(gs, ui_A);
     ui_drawable_push(gs, ui_B);
     ui_drawable_push(gs, ui_C);
     ui_drawable_push(gs, ui_D);
-    ui_hoverable_push(gs, ui_A, -50, -50, 50, 50);
-    ui_clickable_push(gs, ui_A);
+    ui_hoverable_push(gs, ui_B, -50, -50, 50, 50);
+    ui_clickable_push(gs, ui_B);
+    ui_hoverable_push(gs, ui_C, -50, -50, 50, 50);
+    ui_clickable_push(gs, ui_C);
+    ui_hoverable_push(gs, ui_D, -50, -50, 50, 50);
+    ui_clickable_push(gs, ui_D);
 
     entity *hero = game_entity_push(gs, Entity_Hero, 3, 3);
     UNUSED(hero);

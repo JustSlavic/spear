@@ -25,6 +25,10 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
 
         vector2 min = e->ui.hover_area_min;
         vector2 max = e->ui.hover_area_max;
+
+        // printf("%d: min = %5.2f, %5.2f; max = %5.2f, %5.2f\n",
+        //     gs->ui_visibles.data[i],
+        //     min.x, min.y, max.x, max.y);
         vector2 size = v2f_sub(max, min);
         vector2 center = v2f_scale(0.5f, v2f_add(min, max));
 
@@ -36,8 +40,8 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
             .ui_tm = e->ui.tm_to_root,
             .ui_width = size.x,
             .ui_height = size.y,
-            .ui_color = v4f(0.5, 0.5, 0.5, 1),
-            .ui_frame_width = 5,
+            .ui_color = v4f(0.9, 0.9, 0.9, 1),
+            .ui_frame_width = 2,
             .ui_offset = center,
         };
         context_render_command_push(ctx, cmd);

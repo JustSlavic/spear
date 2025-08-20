@@ -153,9 +153,11 @@ void renderer_draw_ui_frame(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s
     render_shader_uniform_float(s, "u_width", width);
     render_shader_uniform_float(s, "u_height", height);
 
+    glDisable(GL_DEPTH_TEST);
     glBindVertexArray(m.vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
     glDrawElements(GL_TRIANGLES, m.element_count, GL_UNSIGNED_INT, NULL);
+    glEnable(GL_DEPTH_TEST);
 }
 
 viewport render_viewport_create(int32 width, int32 height, float32 desired_aspect_ratio)

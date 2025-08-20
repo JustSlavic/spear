@@ -202,6 +202,10 @@ static void spear_engine_draw_ui(engine *engine, render_command cmd)
             m4f_mul(
                 m4f_translate(cmd.ui_offset.x, cmd.ui_offset.y, 0),
                 m4f_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1)));
+
+        if (cmd.ui_width < 50)
+            printf("!!! cmd.ui_width = %f\n", cmd.ui_width);
+
         renderer_draw_ui_frame(&engine->renderer,
             model,
             engine->mesh_ui_frame,

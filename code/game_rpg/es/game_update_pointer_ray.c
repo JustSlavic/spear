@@ -36,6 +36,11 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
     gs->intersect_tile = v3i(0, 0, 0);
     gs->intersection = v3f(0.f, 0.f, 0.f);
 
+    if (gs->ui.hot)
+    {
+        return;
+    }
+
     vector3 ray_direction = compute_pointer_ray(ctx, gs, input);
     UNUSED(ray_direction);
     int i, j, k;
