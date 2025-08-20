@@ -5,6 +5,15 @@
 #include <stdio.h>
 
 
+void push_event(game_state *gs, event event)
+{
+    ASSERT(gs->event_count < gs->event_capacity);
+    if (gs->event_count < gs->event_capacity)
+    {
+        gs->events[gs->event_count++] = event;
+    }
+}
+
 game_map_cell *game_map_get(game_map *map, int i, int j, int k)
 {
     ASSERT(0 <= i && i < map->dim.x);
@@ -184,6 +193,9 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ctx->game_state = gs;
     gs->game_allocator = game_arena;
 
+    gs->event_count = 0;
+    gs->event_capacity = 10;
+    gs->events = ALLOCATE_ARRAY(game_arena, event, gs->event_capacity);
     gs->entities = ALLOCATE_ARRAY(game_arena, entity, MAX_ENTITIES);
 
     gs->heroes = entity_id_array_allocate(game_arena, 1);
@@ -233,6 +245,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         e->ui.width = 90;
         e->ui.height = 90;
         e->ui.color = v4f(0.8, 0.2, 0.2, 1);
+        e->ui_id = EntityUiId_SpellFireball;
     }
     if ((e = get_entity(gs, ui_C)))
     {

@@ -17,6 +17,18 @@ typedef enum
     Entity_UiElement,
 } entity_tag;
 
+typedef enum
+{
+    Spell_Invalid = 0,
+    Spell_Fireball,
+} spell_id;
+
+typedef enum
+{
+    EntityUiId_Invalid = 0,
+    EntityUiId_SpellFireball,
+} entity_ui_id;
+
 typedef struct entity
 {
     uint32 tag;
@@ -32,6 +44,7 @@ typedef struct entity
     vector3i move_to;
 
     ui_element ui;
+    uint32 ui_id;
 } entity;
 
 enum
@@ -68,12 +81,31 @@ typedef struct
 #define entity_id_array_allocate(A, N) ((entity_id_array) { .data = ALLOCATE_ARRAY(A, entity_id, N), .count = 0, .capacity = N })
 void entity_id_array_push(entity_id_array *array, entity_id e);
 
+typedef enum
+{
+    Event_Invalid = 0,
+
+    Event_UiEnter,
+    Event_UiLeave,
+    Event_UiPress,
+    Event_UiRelease,
+} event_tag;
+
+typedef struct
+{
+    event_tag tag;
+    entity_id eid; // What entity this event is sent to
+} event;
+
 typedef struct game_state
 {
     memory_allocator game_allocator;
 
-    entity *entities;
+    event *events;
+    uint32 event_count;
+    uint32 event_capacity;
 
+    entity *entities;
     entity_manager em;
     ui ui;
 
@@ -97,6 +129,8 @@ typedef struct game_state
     vector3  intersection;
 
     float64 exit_press_time;
+
+    uint32 spell_id;
 } game_state;
 
 entity *get_entity(game_state *gs, entity_id eid);

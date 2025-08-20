@@ -90,10 +90,12 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
                 else
                 {
                     // @todo: call the 'on_hoverable_leave' event on hot element
-                    printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+                    // printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+                    push_event(gs, (event){ .tag = Event_UiLeave, .eid = gs->ui.hot, });
                     gs->ui.hot = hovered;
                     // @todo: call the 'on_hoverable_enter' event on hot element
-                    printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                    // printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                    push_event(gs, (event){ .tag = Event_UiEnter, .eid = gs->ui.hot, });
                 }
             }
             else
@@ -101,7 +103,8 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
                 // There's nothing hot yet, let's make our element hot.
                 gs->ui.hot = hovered;
                 // @todo: call the 'on_hoverable_enter' event on hot element
-                printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                // printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                push_event(gs, (event){ .tag = Event_UiEnter, .eid = gs->ui.hot, });
             }
         }
         else
@@ -117,7 +120,8 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
                 // make it hot again
                 gs->ui.hot = hovered;
                 // @todo: call the 'on_hoverable_enter' event on hot element
-                printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                // printf("UI: enter ui element (eid=%d)\n", gs->ui.hot);
+                push_event(gs, (event){ .tag = Event_UiEnter, .eid = gs->ui.hot, });
             }
         }
     }
@@ -129,7 +133,8 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
             // but I have a hot element? Make it cold again.
 
             // @todo: call the 'on_hoverable_leave' event on hot element
-            printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+            // printf("UI: leave ui element (eid=%d)\n", gs->ui.hot);
+            push_event(gs, (event){ .tag = Event_UiLeave, .eid = gs->ui.hot, });
             gs->ui.hot = INVALID_ENTITY_ID;
         }
     }
@@ -142,7 +147,7 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
             entity *e = get_entity(gs, gs->ui.active);
             if (ui_element_flag_test(&e->ui, UiBehaviour_Clickable))
             {
-                printf("UI: press on ui element (eid=%d)\n", gs->ui.active);
+                push_event(gs, (event){ .tag = Event_UiPress, .eid = gs->ui.hot, });
             }
         }
     }
@@ -154,7 +159,7 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
             entity *e = get_entity(gs, gs->ui.active);
             if (ui_element_flag_test(&e->ui, UiBehaviour_Clickable))
             {
-                printf("UI: release on ui element (eid=%d)\n", gs->ui.active);
+                push_event(gs, (event){ .tag = Event_UiRelease, .eid = gs->ui.hot, });
             }
             gs->ui.active = INVALID_ENTITY_ID;
         }

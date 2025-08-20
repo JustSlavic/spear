@@ -74,3 +74,16 @@ void game_input_hero_move(context *ctx, game_state *gs, input *input)
         e->move_animation_end_time = input->time + e->move_animation_duration;
     }
 }
+
+void game_input_hero_spell(context *ctx, game_state *gs, input *input)
+{
+    if (gs->spell_id &&
+        input_button_get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
+    {
+        gs->spell_id = Spell_Invalid;
+        printf("CAST SPELL at %d, %d, %d\n",
+            gs->intersect_tile.x,
+            gs->intersect_tile.y,
+            gs->intersect_tile.z);
+    }
+}
