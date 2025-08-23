@@ -59,15 +59,15 @@ int get_alignment(void *pointer)
     return 1;
 }
 
-uint32 get_padding(void *pointer, uint64 alignment)
+uint64 get_padding(void *pointer, uint64 alignment)
 {
-    uint32 result = (alignment - ((uint64) pointer & (alignment - 1))) & (alignment - 1);
+    uint64 result = (alignment - ((uint64) pointer & (alignment - 1))) & (alignment - 1);
     return result;
 }
 
 void *align_pointer(void *pointer, uint64 alignment)
 {
-    void *result = pointer + get_padding(pointer, alignment);
+    void *result = (byte *) pointer + get_padding(pointer, alignment);
     return result;
 }
 
@@ -147,7 +147,7 @@ float64 timepoint_get_milliseconds(timepoint t)
 
 float64 timepoint_get_microseconds(timepoint t)
 {
-    float64 result = t.microseconds;
+    float64 result = (float64) t.microseconds;
     return result;
 }
 
@@ -165,7 +165,7 @@ float64 duration_get_milliseconds(duration t)
 
 float64 duration_get_microseconds(duration t)
 {
-    float64 result = t.microseconds;
+    float64 result = (float64) t.microseconds;
     return result;
 }
 

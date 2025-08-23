@@ -2,6 +2,7 @@
 #define _SPEAR_ENGINE_H
 
 #include <corelibs/base.h>
+#include <corelibs/memory/allocator.h>
 #include <corelibs/platform.h>
 #include <gamelibs/input.h>
 #include "graphics/render.h"
@@ -18,7 +19,7 @@ typedef struct
     bool32 running;
 
     /* Dynamic loading and hot reload */
-    dll *game_dll;
+    struct dll *game_dll;
     timestamp_t game_dll_timestamp;
     initialize_memory_t *initialize_memory;
     update_and_render_t *update_and_render;

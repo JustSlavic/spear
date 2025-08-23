@@ -23,6 +23,28 @@
     // Nothing yet
 #endif
 
+#if COMPILER_MSVC
+    typedef          __int8  int8;
+    typedef          __int16 int16;
+    typedef          __int32 int32;
+    typedef          __int64 int64;
+    typedef unsigned __int8  uint8;
+    typedef unsigned __int16 uint16;
+    typedef unsigned __int32 uint32;
+    typedef unsigned __int64 uint64;
+    typedef float            float32;
+    typedef double           float64;
+
+    #define FORCE_INLINE __forceinline
+    #define DLL_EXPORT __declspec(dllexport)
+
+    #if DEBUG
+    #define DEBUG_BREAK __debugbreak
+    #else
+    #define DEBUG_BREAK
+    #endif // DEBUG
+#endif
+
 #if COMPILER_CLANG
     typedef   signed char        int8;
     typedef   signed short       int16;
@@ -34,7 +56,6 @@
     typedef unsigned long long   uint64;
     typedef float                float32;
     typedef double               float64;
-    typedef uint32               uint;
 
     #define FORCE_INLINE         __attribute__((always_inline)) inline
     #define DLL_EXPORT           extern
@@ -44,8 +65,11 @@
     #else
     #define DEBUG_BREAK
     #endif // DEBUG
+
+    #define INFINITY (1.f / 0.f)
 #endif
 
+typedef uint32               uint;
 typedef  int64               isize;
 typedef uint64               usize;
 typedef uint8                byte;
@@ -55,7 +79,7 @@ typedef uint32               bool32;
 #define false                0
 #define NULL                 0
 
-#if OS_MAC
+#if OS_MAC || OS_WINDOWS
     typedef int64 timestamp_t;
 #endif
 
@@ -89,11 +113,10 @@ typedef uint32               bool32;
 
 #define PRINT_BOOL(X) ((X) ? "true" : "false")
 
-#define EPSILON  (1e-6)
-#define INFINITY (1.f / 0.f)
-#define PI       (3.1415926535897932384626433832795028841971693993751058209749445923078164062)
-#define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031)
-#define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125)
+#define EPSILON  (1e-6f)
+#define PI       (3.1415926535897932384626433832795028841971693993751058209749445923078164062f)
+#define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031f)
+#define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125f)
 
 typedef struct
 {
@@ -116,7 +139,7 @@ float clamp(float x, float a, float b);
 float cvt(float x, float a, float b, float c, float d);
 
 int get_alignment(void *pointer);
-uint32 get_padding(void *pointer, uint64 alignment);
+uint64 get_padding(void *pointer, uint64 alignment);
 void *align_pointer(void *pointer, uint64 alignment);
 
 usize cstring_size_no0(char const *cstr);

@@ -12,7 +12,7 @@
 
             "windows": {
                 "shell_cmd": "call $folder\\build.bat",
-                "working_dir": "$folder\\build",
+                "working_dir": "$folder",
                 "file_regex": "^((?:\\w\\:|\\.{1,2})[\\d\\w\\\\\\.\\/\\s\\(\\)]+)\\((\\d+)\\)\\:()(.*)$",
                 "syntax": "Packages/User/sublime-setup/polar_build_output_msvc.sublime-syntax",
             },

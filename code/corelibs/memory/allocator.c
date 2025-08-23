@@ -1,5 +1,6 @@
 #include "allocator.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -37,7 +38,7 @@ memory_allocator memory_allocator_arena_create(void *memory, uint64 size)
     ASSERT_MSG(size >= 4096,
         "Cannot create memory arena, because given buffer size is less than 4k memory page. Given buffer is %llu bytes.", size);
     ASSERT_MSG(((uint64) memory) % alignof(memory_allocator_arena) == 0,
-        "Cannot create memory arena, because alignment of given buffer is not %lu bytes.", alignof(memory_allocator_arena));
+        "Cannot create memory arena, because alignment of given buffer is not %llu bytes.", alignof(memory_allocator_arena));
     memory_allocator_arena *arena = (memory_allocator_arena *) memory;
     arena->tag = MemoryAllocator_Arena;
     arena->size = size - sizeof(memory_allocator_arena);
@@ -67,8 +68,8 @@ void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignme
     if (tag == MemoryAllocator_Arena)
     {
         memory_allocator_arena *arena = (memory_allocator_arena *) a;
-        void *base = ((void *) arena) + arena->used;
-        uint32 padding = get_padding(base, alignment);
+        byte *base = ((byte *) arena) + arena->used;
+        uint64 padding = get_padding(base, alignment);
 
         if (arena->used + size + padding <= arena->size)
         {

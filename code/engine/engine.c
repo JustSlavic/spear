@@ -2,6 +2,9 @@
 #include "static_shaders.c"
 #include "primitive_meshes.h"
 
+#include <math.h>
+
+
 void spear_engine_init(engine *engine)
 {
     engine->running = false;
@@ -19,11 +22,12 @@ void spear_engine_init(engine *engine)
     engine->memory.size = memory_size;
 
     engine->allocator = memory_allocator_arena_create(memory, allocator_size);
-    engine->temporary = memory_allocator_arena_create(memory + allocator_size, temporary_size);
-    engine->game_memory.data = memory + allocator_size + temporary_size;
+    engine->temporary = memory_allocator_arena_create((byte *) memory + allocator_size, temporary_size);
+    engine->game_memory.data = (byte *) memory + allocator_size + temporary_size;
     engine->game_memory.size = game_memory_size;
 
-    engine->game_dll = ALLOCATE(engine->allocator, dll);
+    engine->game_dll = memory_allocator_allocate(engine->allocator, sizeof(struct dll), alignof(struct dll), (code_location) {});
+    // engine->game_dll = ALLOCATE(engine->allocator, struct dll);
 
     engine->fov = degrees_to_radians(60);
     printf("fov = %f\n", engine->fov);
@@ -78,8 +82,8 @@ void spear_engine_load_game_dll(engine *engine)
             platform_dll_close(engine->game_dll);
         }
         platform_dll_open(engine->game_dll, "spear_game.so");
-        engine->initialize_memory = platform_dll_get_function(engine->game_dll, "initialize_memory");
-        engine->update_and_render = platform_dll_get_function(engine->game_dll, "update_and_render");
+        engine->initialize_memory = (initialize_memory_t *) platform_dll_get_function(engine->game_dll, "initialize_memory");
+        engine->update_and_render = (update_and_render_t *) platform_dll_get_function(engine->game_dll, "update_and_render");
         if (engine->initialize_memory && engine->update_and_render)
         {
             engine->game_dll_timestamp = dll_last_modified_time;
@@ -156,7 +160,7 @@ void spear_engine_game_update(engine *engine)
         printf("Could not run 'update_and_render' function.\n");
     }
 
-    int engine_command_index;
+    uint engine_command_index;
     for (engine_command_index = 0;
          engine_command_index < engine->game_context.engine_commands_count;
          engine_command_index++)
@@ -234,10 +238,10 @@ void spear_engine_game_render(engine *engine)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    int render_command_index;
+    uint render_command_index;
     for (render_command_index = 0;
-        render_command_index < engine->game_context.render_commands_count;
-        render_command_index++)
+         render_command_index < engine->game_context.render_commands_count;
+         render_command_index++)
     {
         render_command cmd = engine->game_context.render_commands[render_command_index];
         switch (cmd.tag)
