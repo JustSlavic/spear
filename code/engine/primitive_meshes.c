@@ -35,10 +35,10 @@ cpu_mesh mesh_tetrahedron_create(void)
     float32 c = sqrtf(2.0f / 9.0f);
     float32 d = sqrtf(2.0f / 3.0f);
 
-    vector3 n0 = v3f_normalize(v3f_cross(v3f(  c, -d, 1+a), v3f(  c,  d, 1+a)));
-    vector3 n1 = v3f_normalize(v3f_cross(v3f(  c,  d, 1+a), v3f( -b,  0, 1+a)));
-    vector3 n2 = v3f_normalize(v3f_cross(v3f( -b,  0, 1+a), v3f(  c, -d, 1+a)));
-    vector3 n3 = v3f_normalize(v3f_cross(v3f(b+c, -d,   0), v3f(b+c, -d,   0)));
+    vector3 n0 = vector3_normalize(vector3_cross(vector3_create(  c, -d, 1+a), vector3_create(  c,  d, 1+a)));
+    vector3 n1 = vector3_normalize(vector3_cross(vector3_create(  c,  d, 1+a), vector3_create( -b,  0, 1+a)));
+    vector3 n2 = vector3_normalize(vector3_cross(vector3_create( -b,  0, 1+a), vector3_create(  c, -d, 1+a)));
+    vector3 n3 = vector3_normalize(vector3_cross(vector3_create(b+c, -d,   0), vector3_create(b+c, -d,   0)));
 
     static float32 vbo_data[72];
     int i = 0;
@@ -141,15 +141,15 @@ cpu_mesh mesh_cube_create(void)
 
 cpu_mesh mesh_octahedron_create(void)
 {
-    vector3 n0 = v3f_normalize(v3f_cross(v3f( 1, -1,  0), v3f( 1,  0, -1)));
-    vector3 n1 = v3f_normalize(v3f_cross(v3f(-1,  0, -1), v3f(-1, -1,  0)));
-    vector3 n2 = v3f_normalize(v3f_cross(v3f(-1,  1,  0), v3f(-1,  0, -1)));
-    vector3 n3 = v3f_normalize(v3f_cross(v3f( 1,  0, -1), v3f( 1,  1,  0)));
+    vector3 n0 = vector3_normalize(vector3_cross(vector3_create( 1, -1,  0), vector3_create( 1,  0, -1)));
+    vector3 n1 = vector3_normalize(vector3_cross(vector3_create(-1,  0, -1), vector3_create(-1, -1,  0)));
+    vector3 n2 = vector3_normalize(vector3_cross(vector3_create(-1,  1,  0), vector3_create(-1,  0, -1)));
+    vector3 n3 = vector3_normalize(vector3_cross(vector3_create( 1,  0, -1), vector3_create( 1,  1,  0)));
 
-    vector3 n4 = v3f_normalize(v3f_cross(v3f( 1,  0,  1), v3f( 1, -1,  0)));
-    vector3 n5 = v3f_normalize(v3f_cross(v3f(-1, -1,  0), v3f(-1,  0,  1)));
-    vector3 n6 = v3f_normalize(v3f_cross(v3f(-1,  0,  1), v3f(-1,  1,  0)));
-    vector3 n7 = v3f_normalize(v3f_cross(v3f( 1,  1,  0), v3f( 1,  0,  1)));
+    vector3 n4 = vector3_normalize(vector3_cross(vector3_create( 1,  0,  1), vector3_create( 1, -1,  0)));
+    vector3 n5 = vector3_normalize(vector3_cross(vector3_create(-1, -1,  0), vector3_create(-1,  0,  1)));
+    vector3 n6 = vector3_normalize(vector3_cross(vector3_create(-1,  0,  1), vector3_create(-1,  1,  0)));
+    vector3 n7 = vector3_normalize(vector3_cross(vector3_create( 1,  1,  0), vector3_create( 1,  0,  1)));
 
     static float32 vbo_data[144];
     int i = 0;
@@ -296,12 +296,12 @@ cpu_mesh mesh_icosahedron_create(void)
         int i1 = (vertex_index + 1) * 6;
         int i2 = (vertex_index + 2) * 6;
 
-        vector3 v0 = v3f(vbo_data[i0], vbo_data[i0 + 1], vbo_data[i0 + 2]);
-        vector3 v1 = v3f(vbo_data[i1], vbo_data[i1 + 1], vbo_data[i1 + 2]);
-        vector3 v2 = v3f(vbo_data[i2], vbo_data[i2 + 1], vbo_data[i2 + 2]);
-        vector3 normal = v3f_normalize(v3f_cross(v3f_sub(v0, v1), v3f_sub(v0, v2)));
+        vector3 v0 = vector3_create(vbo_data[i0], vbo_data[i0 + 1], vbo_data[i0 + 2]);
+        vector3 v1 = vector3_create(vbo_data[i1], vbo_data[i1 + 1], vbo_data[i1 + 2]);
+        vector3 v2 = vector3_create(vbo_data[i2], vbo_data[i2 + 1], vbo_data[i2 + 2]);
+        vector3 normal = vector3_normalize(vector3_cross(vector3_sub(v0, v1), vector3_sub(v0, v2)));
 
-        float norm_v0 = v3f_norm(v0);
+        float norm_v0 = vector3_norm(v0);
         vbo_data[i0    ] = vbo_data[i0    ] / norm_v0;
         vbo_data[i0 + 1] = vbo_data[i0 + 1] / norm_v0;
         vbo_data[i0 + 2] = vbo_data[i0 + 2] / norm_v0;
@@ -309,7 +309,7 @@ cpu_mesh mesh_icosahedron_create(void)
         vbo_data[i0 + 4] = normal.y;
         vbo_data[i0 + 5] = normal.z;
 
-        float norm_v1 = v3f_norm(v1);
+        float norm_v1 = vector3_norm(v1);
         vbo_data[i1    ] = vbo_data[i1    ] / norm_v1;
         vbo_data[i1 + 1] = vbo_data[i1 + 1] / norm_v1;
         vbo_data[i1 + 2] = vbo_data[i1 + 2] / norm_v1;
@@ -317,7 +317,7 @@ cpu_mesh mesh_icosahedron_create(void)
         vbo_data[i1 + 4] = normal.y;
         vbo_data[i1 + 5] = normal.z;
 
-        float norm_v2 = v3f_norm(v2);
+        float norm_v2 = vector3_norm(v2);
         vbo_data[i2    ] = vbo_data[i2    ] / norm_v2;
         vbo_data[i2 + 1] = vbo_data[i2 + 1] / norm_v2;
         vbo_data[i2 + 2] = vbo_data[i2 + 2] / norm_v2;
@@ -443,8 +443,8 @@ typedef struct subdivide
 
 subdivide subdivide_triangles(memory_allocator allocator, subdivide input)
 {
-    int i, j;
-    usize edge_count = 3 * input.triangle_count;
+    uint i, j;
+    uint32 edge_count = 3 * input.triangle_count;
 
     subdivide result = {};
     // Every triangle has 3 edges, but every edge is edge for two triangles,
@@ -486,7 +486,7 @@ subdivide subdivide_triangles(memory_allocator allocator, subdivide input)
             if (index == 0)
             {
                 index = vertex_i;
-                vector3 v01 = v3f_scale(0.5f, v3f_add(result.vertices[i0], result.vertices[i1]));
+                vector3 v01 = vector3_scale(0.5f, vector3_add(result.vertices[i0], result.vertices[i1]));
                 result.vertices[vertex_i++] = v01;
                 index_map[i0 * index_map_dim + i1] = (uint32) index;
                 index_map[i1 * index_map_dim + i0] = (uint32) index;
@@ -498,7 +498,7 @@ subdivide subdivide_triangles(memory_allocator allocator, subdivide input)
 
     // Now when we have vertices and index_map
     // we can create new index buffer object (ibo)
-    int triangle_index;
+    uint triangle_index;
     for (triangle_index = 0; triangle_index < input.triangle_count; triangle_index++)
     {
         /*
@@ -528,7 +528,7 @@ subdivide subdivide_triangles(memory_allocator allocator, subdivide input)
 
 cpu_mesh mesh_ico_sphere_create(memory_allocator allocator, memory_allocator temp_allocator)
 {
-    int i;
+    uint i;
 
     // Create initial subdivide
     subdivide init;
@@ -539,18 +539,18 @@ cpu_mesh mesh_ico_sphere_create(memory_allocator allocator, memory_allocator tem
 
         uint32 vertex_count = 0;
         vector3 *vertices = ALLOCATE_ARRAY(temp_allocator, vector3, 12);
-        vertices[vertex_count++] = v3f( b,  a,  0);
-        vertices[vertex_count++] = v3f( 0,  b,  a);
-        vertices[vertex_count++] = v3f( a,  0,  b);
-        vertices[vertex_count++] = v3f(-b,  a,  0);
-        vertices[vertex_count++] = v3f( 0, -b,  a);
-        vertices[vertex_count++] = v3f( a,  0, -b);
-        vertices[vertex_count++] = v3f( b, -a,  0);
-        vertices[vertex_count++] = v3f( 0,  b, -a);
-        vertices[vertex_count++] = v3f(-a,  0,  b);
-        vertices[vertex_count++] = v3f(-b, -a,  0);
-        vertices[vertex_count++] = v3f( 0, -b, -a);
-        vertices[vertex_count++] = v3f(-a,  0, -b);
+        vertices[vertex_count++] = vector3_create( b,  a,  0);
+        vertices[vertex_count++] = vector3_create( 0,  b,  a);
+        vertices[vertex_count++] = vector3_create( a,  0,  b);
+        vertices[vertex_count++] = vector3_create(-b,  a,  0);
+        vertices[vertex_count++] = vector3_create( 0, -b,  a);
+        vertices[vertex_count++] = vector3_create( a,  0, -b);
+        vertices[vertex_count++] = vector3_create( b, -a,  0);
+        vertices[vertex_count++] = vector3_create( 0,  b, -a);
+        vertices[vertex_count++] = vector3_create(-a,  0,  b);
+        vertices[vertex_count++] = vector3_create(-b, -a,  0);
+        vertices[vertex_count++] = vector3_create( 0, -b, -a);
+        vertices[vertex_count++] = vector3_create(-a,  0, -b);
         ASSERT(vertex_count = 12);
 
         uint32 triangle_count = 0;
@@ -593,7 +593,7 @@ cpu_mesh mesh_ico_sphere_create(memory_allocator allocator, memory_allocator tem
     uint32 vbo_count = 0;
     for (i = 0; i < subdiv.vertex_count; i++)
     {
-        float32 normal = v3f_norm(subdiv.vertices[i]);
+        float32 normal = vector3_norm(subdiv.vertices[i]);
 
         vbo_data[vbo_count++] = subdiv.vertices[i].x / normal;
         vbo_data[vbo_count++] = subdiv.vertices[i].y / normal;

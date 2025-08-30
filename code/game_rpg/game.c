@@ -108,8 +108,8 @@ entity *game_entity_push(game_state *gs, uint32 tag, int x, int y)
         if (e)
         {
             e->tag = tag;
-            e->tile = v3i(x, y, 3);
-            e->position = v3f(x, y, 3);
+            e->tile = vector3i_create(x, y, 3);
+            e->position = vector3_create((float) x, (float) y, 3.f);
             e->move_animation_duration = 0.5f;
             e->move_animation_t = 0.5f;
 
@@ -131,10 +131,10 @@ entity_id ui_element_push(game_state *gs, entity_id parent_id)
         {
             e->tag = Entity_UiElement;
             e->ui.parent = parent_id;
-            e->ui.position = v2f(100, 100);
+            e->ui.position = vector2_create(100, 100);
             e->ui.width = 100;
             e->ui.height = 100;
-            e->ui.scale = v2f(1, 1);
+            e->ui.scale = vector2_create(1, 1);
             e->ui.rotation = 0.f;
 
             entity_id_array_push(&gs->ui_elements, eid);
@@ -205,7 +205,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     gs->ui_hoverables = entity_id_array_allocate(game_arena, 10);
     gs->ui_clickables = entity_id_array_allocate(game_arena, 10);
 
-    gs->map.dim = v3i(10, 10, 10);
+    gs->map.dim = vector3i_create(10, 10, 10);
     gs->map.data = ALLOCATE_ARRAY(game_arena, uint32, gs->map.dim.x * gs->map.dim.y * gs->map.dim.z);
 
     for (j = 0; j < gs->map.dim.y; j++)
@@ -216,13 +216,13 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         }
     }
 
-    vector3 at = v3f(0, 0, 0);
-    gs->camera_default_position = v3f(4.5, -4, 15);
-    gs->camera_default_forward = v3f_sub(at, gs->camera_default_position);
-    gs->camera_default_up = v3f(0, 0, 1);
+    vector3 at = vector3_create(0, 0, 0);
+    gs->camera_default_position = vector3_create(4.5, -4, 15);
+    gs->camera_default_forward = vector3_sub(at, gs->camera_default_position);
+    gs->camera_default_up = vector3_create(0, 0, 1);
     gs->camera = camera_create_look_at(
         gs->camera_default_position,
-        v3f(4.5f, 4.5f, 0.f),
+        vector3_create(4.5f, 4.5f, 0.f),
         gs->camera_default_up);
 
     entity_manager_init(&gs->em, game_arena);
@@ -244,7 +244,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         e->ui.position.y = 0.f;
         e->ui.width = 90;
         e->ui.height = 90;
-        e->ui.color = v4f(0.8, 0.2, 0.2, 1);
+        e->ui.color = vector4_create(0.8f, 0.2f, 0.2f, 1.f);
         e->ui_id = EntityUiId_SpellFireball;
     }
     if ((e = get_entity(gs, ui_C)))
@@ -253,7 +253,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         e->ui.position.y = 0.f;
         e->ui.width = 90;
         e->ui.height = 90;
-        e->ui.color = v4f(0.2, 0.2, 0.8, 1);
+        e->ui.color = vector4_create(0.2f, 0.2f, 0.8f, 1.f);
     }
     if ((e = get_entity(gs, ui_D)))
     {
@@ -262,7 +262,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         e->ui.position.y = 0.f;
         e->ui.width = 90;
         e->ui.height = 90;
-        e->ui.color = v4f(0.2, 0.8, 0.2, 1);
+        e->ui.color = vector4_create(0.2f, 0.8f, 0.2f, 1.f);
     }
     ui_drawable_push(gs, ui_B);
     ui_drawable_push(gs, ui_C);
@@ -285,3 +285,15 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_view game_memory, input *input)
     game_state *gs = (game_state *) ctx->game_state;
     game_on_every_frame(ctx, gs, input);
 }
+
+#if DLL_BUILD
+#include <corelibs/base.c>
+#include <corelibs/math.c>
+#include <corelibs/memory/allocator.c>
+#include <corelibs/collision.c>
+#include <gamelibs/camera.c>
+#include <gamelibs/entity_manager.c>
+#include <gamelibs/ui.c>
+#include <gamelibs/input.c>
+#include <engine/game_interface.c>
+#endif

@@ -5,17 +5,17 @@ void ui_update_transform_recursive(game_state *gs, entity *e)
     if (e->ui.tm_updated) return;
 
     e->ui.tm =
-        tm_mul(
-            tm_translate(e->ui.position.x, e->ui.position.y, 0),
-            tm_mul(
-                tm_rotate_z(degrees_to_radians(e->ui.rotation)),
-                tm_scale(e->ui.scale.x, e->ui.scale.y, 1)));
+        transform_mul(
+            transform_translate((float) e->ui.position.x, (float) e->ui.position.y, 0),
+            transform_mul(
+                transform_rotate_z(degrees_to_radians(e->ui.rotation)),
+                transform_scale(e->ui.scale.x, e->ui.scale.y, 1)));
     if (e->ui.parent)
     {
         entity *parent = get_entity(gs, e->ui.parent);
         ui_update_transform_recursive(gs, parent);
 
-        e->ui.tm_to_root = tm_mul(parent->ui.tm_to_root, e->ui.tm);
+        e->ui.tm_to_root = transform_mul(parent->ui.tm_to_root, e->ui.tm);
     }
     else
     {
@@ -46,7 +46,7 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
     game_update_ui_transforms(gs, &gs->ui_elements);
 
     uint32 i;
-    vector3 mouse_position = v3f(input->keyboard_and_mouse.viewport_mouse.x, input->keyboard_and_mouse.viewport_mouse.y, 0);
+    vector3 mouse_position = vector3_create((float) input->keyboard_and_mouse.viewport_mouse.x, (float) input->keyboard_and_mouse.viewport_mouse.y, 0);
 
     entity_id hovered = INVALID_ENTITY_ID;
     UNUSED(hovered);
@@ -55,8 +55,8 @@ void game_update_ui(context *ctx, game_state *gs, input *input)
         entity_id eid = gs->ui_hoverables.data[i];
         entity *e = get_entity(gs, eid);
 
-        transform inverse_transform = tm_inverse(e->ui.tm_to_root);
-        vector3 mouse_position_local = tm_transform_point3f(inverse_transform, mouse_position);
+        transform inverse_transform = transform_inverse(e->ui.tm_to_root);
+        vector3 mouse_position_local = transform_transform_point3f(inverse_transform, mouse_position);
 
         bool is_inside = test_aabb_point2f(
             e->ui.hover_area_min.x,

@@ -39,10 +39,14 @@ void *platform_dll_get_function(dll *dll, char const *function_name)
 
 timestamp_t platform_file_get_last_modified_time(char const *filename)
 {
+    timestamp_t result = 0;
     WIN32_FILE_ATTRIBUTE_DATA file_data;
-    GetFileAttributesExA(filename, GetFileExInfoStandard, &file_data);
-    FILETIME file_time = file_data.ftLastWriteTime;
-    timestamp_t result = (timestamp_t) ((uint64) file_time.dwLowDateTime) | (((uint64) file_time.dwHighDateTime) << 32);
+    BOOL success = GetFileAttributesExA(filename, GetFileExInfoStandard, &file_data);
+    if (success)
+    {
+        FILETIME file_time = file_data.ftLastWriteTime;
+        result = (timestamp_t) ((uint64) file_time.dwLowDateTime) | (((uint64) file_time.dwHighDateTime) << 32);
+    }
     return result;
 }
 

@@ -3,7 +3,7 @@
 
 void game_render_ui(context *ctx, game_state *gs, input *input)
 {
-    int i;
+    uint i;
     for (i = 0; i < gs->ui_visibles.count; i++)
     {
         entity *e = get_entity(gs, gs->ui_visibles.data[i]);
@@ -15,7 +15,7 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
             .ui_tm = e->ui.tm_to_root,
             .ui_width = e->ui.width,
             .ui_height = e->ui.height,
-            .ui_color = e->ui.hovered ? v4f(0, 1, 0, 1) : e->ui.color,
+            .ui_color = e->ui.hovered ? vector4_create(0, 1, 0, 1) : e->ui.color,
         };
         context_render_command_push(ctx, cmd);
     }
@@ -29,8 +29,8 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
         // printf("%d: min = %5.2f, %5.2f; max = %5.2f, %5.2f\n",
         //     gs->ui_visibles.data[i],
         //     min.x, min.y, max.x, max.y);
-        vector2 size = v2f_sub(max, min);
-        vector2 center = v2f_scale(0.5f, v2f_add(min, max));
+        vector2 size = vector2_sub(max, min);
+        vector2 center = vector2_scale(0.5f, vector2_add(min, max));
 
         render_command cmd =
         {
@@ -40,7 +40,7 @@ void game_render_ui(context *ctx, game_state *gs, input *input)
             .ui_tm = e->ui.tm_to_root,
             .ui_width = size.x,
             .ui_height = size.y,
-            .ui_color = v4f(0.9, 0.9, 0.9, 1),
+            .ui_color = vector4_create(0.9f, 0.9f, 0.9f, 1.f),
             .ui_frame_width = 2,
             .ui_offset = center,
         };

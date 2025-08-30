@@ -4,93 +4,28 @@
 #include "base.h"
 
 
-typedef union vector2f
-{
-    struct { float32 x, y; };
-    struct { float32 _e1, _e2; };
-    float32 e[2];
-} vector2f;
-typedef vector2f vector2;
+typedef struct { float32 x, y;       } vector2;
 
-vector2 v2f(float x, float y);
-vector2 v2f_negate(vector2 a);
-vector2 v2f_scale(float32 a, vector2 v);
-vector2 v2f_add(vector2 a, vector2 b);
-vector2 v2f_sub(vector2 a, vector2 b);
-float32 v2f_dot(vector2 a, vector2 b);
-float32 v2f_norm_squared(vector2 a);
-float32 v2f_norm(vector2 a);
-vector2 v2f_normalize(vector2 a);
-
-typedef union vector2i
-{
-    struct { int32 x, y; };
-    int32 e[2];
-} vector2i;
-
-typedef union vector3f
+typedef union
 {
     struct { float32 x, y, z; };
-    struct { float32 r, g, b; };
-    struct { vector2 xy; };
-    struct { float32 _e1, _e2, _e3; };
     float32 e[3];
-} vector3f;
-typedef vector3f vector3;
+} vector3;
 
-vector3 v3f(float x, float y, float z);
-vector3 v3f_negate(vector3 a);
-vector3 v3f_scale(float32 a, vector3 v);
-vector3 v3f_add(vector3 a, vector3 b);
-vector3 v3f_sub(vector3 a, vector3 b);
-float32 v3f_dot(vector3 a, vector3 b);
-vector3 v3f_cross(vector3 a, vector3 b);
-float32 v3f_norm_squared(vector3 a);
-float32 v3f_norm(vector3 a);
-vector3 v3f_normalize(vector3 a);
-
-typedef union vector3i
-{
-    struct { int32 x, y, z; };
-    int32 e[3];
-} vector3i;
-
-vector3i v3i(int x, int y, int z);
-
-typedef union vector4f
+typedef union
 {
     struct { float32 x, y, z, w; };
     struct { float32 r, g, b, a; };
-    struct { vector3 xyz; };
-    struct { vector3 rgb; };
-    struct { float32 _e1, _e2, _e3, _e4; };
+    struct { vector3 xyz; float32 pad1; };
+    struct { vector3 rgb; float32 pad2; };
     float32 e[4];
-} vector4f;
-typedef vector4f vector4;
+} vector4;
 
-vector4 v4f(float x, float y, float z, float w);
-vector4 v4f_negate(vector4 v);
-vector4 v4f_scale(float32 a, vector4 v);
-vector4 v4f_add(vector4 v, vector4 w);
-vector4 v4f_sub(vector4 v, vector4 w);
-float32 v4f_dot(vector4 v, vector4 w);
-float32 v4f_norm_squared(vector4 v);
-float32 v4f_norm(vector4 v);
-vector4 v4f_normalize(vector4 v);
+typedef struct { int32 x, y;       } vector2i;
+typedef struct { int32 x, y, z;    } vector3i;
+typedef struct { int32 x, y, z, w; } vector4i;
 
-typedef union vector4i
-{
-    struct { int32 x, y, z, w; };
-    struct { int32 _e1, _e2, _e3, _e4; };
-    int32 e[4];
-} vector4i;
-
-typedef union complex
-{
-    struct { float32 re, im; };
-    struct { float32 _1, _e12; };
-    float32 e[2];
-} complex;
+typedef struct { float32 re, im; } complex;
 
 typedef union quaternion
 {
@@ -108,25 +43,6 @@ typedef union quaternion
     struct { float32 pad1; vector3 axis; };
     float32 e[4];
 } quaternion;
-
-quaternion q4f(float w, float x, float y, float z);
-quaternion q4f_identity(void);
-quaternion q4f_rotate_x(float rx);
-quaternion q4f_rotate_y(float ry);
-quaternion q4f_rotate_z(float rz);
-quaternion q4f_rotate(float radians, vector3 axis);
-quaternion q4f_pure(vector3 v);
-quaternion q4f_scale(float a, quaternion q);
-quaternion q4f_add(quaternion a, quaternion b);
-quaternion q4f_sub(quaternion a, quaternion b);
-quaternion q4f_mul(quaternion a, quaternion b);
-quaternion q4f_conjugate(quaternion a);
-float32 q4f_norm_squared(quaternion a);
-float32 q4f_norm(quaternion a);
-quaternion q4f_normalize(quaternion a);
-quaternion q4f_inverse(quaternion a);
-vector3 q4f_apply_unit_quaternion(quaternion q, vector3 v);
-vector3 q4f_apply(quaternion q, vector3 v);
 
 typedef union matrix2
 {
@@ -155,13 +71,6 @@ typedef union matrix3
     float32 e[3][3];
 } matrix3;
 
-matrix3 m3f_identity(void);
-matrix3 m3f_scale(float a, matrix3 m);
-float32 m3f_determinant(matrix3 m);
-matrix3 m3f_adjoint(matrix3 m);
-matrix3 m3f_inverse(matrix3 m);
-matrix3 q4f_to_m3f(quaternion q);
-
 typedef union matrix4
 {
     struct
@@ -179,12 +88,6 @@ typedef union matrix4
     float32 e[4][4];
 } matrix4;
 
-matrix4 m4f_identity(void);
-matrix4 m4f_translate(float tx, float ty, float tz);
-matrix4 m4f_scale(float sx, float sy, float sz);
-matrix4 m4f_mul(matrix4 a, matrix4 b);
-matrix4 q4f_to_m4f(quaternion q);
-
 typedef union transform
 {
     struct
@@ -200,26 +103,92 @@ typedef union transform
     float32 e[4][3];
 } transform;
 
-transform tm_identity(void);
-transform tm_scale_x(float sx);
-transform tm_scale_y(float sy);
-transform tm_scale_z(float sz);
-transform tm_scale(float sx, float sy, float sz);
-transform tm_translate_x(float tx);
-transform tm_translate_y(float ty);
-transform tm_translate_z(float tz);
-transform tm_translate(float tx, float ty, float tz);
-transform tm_rotate_x(float rx);
-transform tm_rotate_y(float ry);
-transform tm_rotate_z(float rz);
-float tm_determinant(transform tm);
-transform tm_inverse(transform tm);
-matrix4 tm_to_m4f(transform tm);
-vector3 tm_transform_point3f(transform tm, vector3 v);
-vector4 tm_transform_point4f(transform tm, vector4 v);
-vector3 tm_transform_vector3f(transform tm, vector3 v);
-vector4 tm_transform_vector4f(transform tm, vector4 v);
-transform tm_mul(transform s, transform f);
+
+vector2 vector2_create(float x, float y);
+vector2 vector2_negate(vector2 a);
+vector2 vector2_scale(float32 a, vector2 v);
+vector2 vector2_add(vector2 a, vector2 b);
+vector2 vector2_sub(vector2 a, vector2 b);
+float32 vector2_dot(vector2 a, vector2 b);
+float32 vector2_norm_squared(vector2 a);
+float32 vector2_norm(vector2 a);
+vector2 vector2_normalize(vector2 a);
+
+vector3 vector3_create(float x, float y, float z);
+vector3 vector3_negate(vector3 a);
+vector3 vector3_scale(float32 a, vector3 v);
+vector3 vector3_add(vector3 a, vector3 b);
+vector3 vector3_sub(vector3 a, vector3 b);
+float32 vector3_dot(vector3 a, vector3 b);
+vector3 vector3_cross(vector3 a, vector3 b);
+float32 vector3_norm_squared(vector3 a);
+float32 vector3_norm(vector3 a);
+vector3 vector3_normalize(vector3 a);
+
+vector3i vector3i_create(int x, int y, int z);
+
+vector4 vector4_create(float x, float y, float z, float w);
+vector4 vector4_negate(vector4 v);
+vector4 vector4_scale(float32 a, vector4 v);
+vector4 vector4_add(vector4 v, vector4 w);
+vector4 vector4_sub(vector4 v, vector4 w);
+float32 vector4_dot(vector4 v, vector4 w);
+float32 vector4_norm_squared(vector4 v);
+float32 vector4_norm(vector4 v);
+vector4 vector4_normalize(vector4 v);
+
+quaternion quaternion_create(float w, float x, float y, float z);
+quaternion quaternion_create_pure(vector3 v);
+quaternion quaternion_create_identity(void);
+quaternion quaternion_rotate_x(float rx);
+quaternion quaternion_rotate_y(float ry);
+quaternion quaternion_rotate_z(float rz);
+quaternion quaternion_rotate(float radians, vector3 axis);
+quaternion quaternion_scale(float a, quaternion q);
+quaternion quaternion_add(quaternion a, quaternion b);
+quaternion quaternion_sub(quaternion a, quaternion b);
+quaternion quaternion_mul(quaternion a, quaternion b);
+quaternion quaternion_conjugate(quaternion a);
+float32 quaternion_norm_squared(quaternion a);
+float32 quaternion_norm(quaternion a);
+quaternion quaternion_normalize(quaternion a);
+quaternion quaternion_inverse(quaternion a);
+vector3 quaternion_apply_unit(quaternion q, vector3 v);
+vector3 quaternion_apply(quaternion q, vector3 v);
+
+matrix3 matrix3_identity(void);
+matrix3 matrix3_scale(float a, matrix3 m);
+float32 matrix3_determinant(matrix3 m);
+matrix3 matrix3_adjoint(matrix3 m);
+matrix3 matrix3_inverse(matrix3 m);
+matrix3 quaternion_to_matrix3(quaternion q);
+
+matrix4 matrix4_identity(void);
+matrix4 matrix4_translate(float tx, float ty, float tz);
+matrix4 matrix4_scale(float sx, float sy, float sz);
+matrix4 matrix4_mul(matrix4 a, matrix4 b);
+matrix4 quaterion_to_matrix4(quaternion q);
+
+transform transform_identity(void);
+transform transform_scale_x(float sx);
+transform transform_scale_y(float sy);
+transform transform_scale_z(float sz);
+transform transform_scale(float sx, float sy, float sz);
+transform transform_translate_x(float tx);
+transform transform_translate_y(float ty);
+transform transform_translate_z(float tz);
+transform transform_translate(float tx, float ty, float tz);
+transform transform_rotate_x(float rx);
+transform transform_rotate_y(float ry);
+transform transform_rotate_z(float rz);
+float transform_determinant(transform tm);
+transform transform_inverse(transform tm);
+matrix4 transform_to_matrix4(transform tm);
+vector3 transform_transform_point3f(transform tm, vector3 v);
+vector4 transform_transform_point4f(transform tm, vector4 v);
+vector3 transform_transform_vector3f(transform tm, vector3 v);
+vector4 transform_transform_vector4f(transform tm, vector4 v);
+transform transform_mul(transform s, transform f);
 
 
 #endif // _SPEAR_CORELIBS_BASE_VECTOR2_H

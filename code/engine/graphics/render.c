@@ -1,5 +1,9 @@
 #include "render.h"
 
+#if OS_WINDOWS
+#include "opengl_win32.h"
+#endif
+
 
 // static matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 // {
@@ -66,37 +70,42 @@ static matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, flo
 
 static matrix4 make_lookat_matrix_from_camera(vector3 p, vector3 forward, vector3 up)
 {
-    vector3 f = v3f_normalize(forward);
-    vector3 s = v3f_normalize(v3f_cross(f, up));
-    vector3 u = v3f_cross(s, f);
+    vector3 f = vector3_normalize(forward);
+    vector3 s = vector3_normalize(vector3_cross(f, up));
+    vector3 u = vector3_cross(s, f);
 
     matrix4 result = {};
-    result._1 = v4f( s.x,  s.y,  s.z, -v3f_dot(s, p));
-    result._2 = v4f( u.x,  u.y,  u.z, -v3f_dot(u, p));
-    result._3 = v4f(-f.x, -f.y, -f.z,  v3f_dot(f, p));
-    result._4 = v4f(   0,    0,    0,          1.f);
+    result._1 = vector4_create( s.x,  s.y,  s.z, -vector3_dot(s, p));
+    result._2 = vector4_create( u.x,  u.y,  u.z, -vector3_dot(u, p));
+    result._3 = vector4_create(-f.x, -f.y, -f.z,  vector3_dot(f, p));
+    result._4 = vector4_create(   0,    0,    0,          1.f);
 
     return result;
 }
 
 // static matrix4 make_lookat_matrix_at(vector3 eye, vector3 at, vector3 up)
 // {
-//     vector3 f = v3f_normalize(sub3f(at, eye));
-//     vector3 s = v3f_normalize(v3f_cross(f, up));
-//     vector3 u = v3f_cross(s, f);
+//     vector3 f = vector3_normalize(sub3f(at, eye));
+//     vector3 s = vector3_normalize(vector3_cross(f, up));
+//     vector3 u = vector3_cross(s, f);
 
 //     matrix4 result = {};
-//     result._1 = v4f( s.x,  s.y,  s.z, -v3f_dot(s, eye));
-//     result._2 = v4f( u.x,  u.y,  u.z, -v3f_dot(u, eye));
-//     result._3 = v4f(-f.x, -f.y, -f.z,  v3f_dot(f, eye));
+//     result._1 = v4f( s.x,  s.y,  s.z, -vector3_dot(s, eye));
+//     result._2 = v4f( u.x,  u.y,  u.z, -vector3_dot(u, eye));
+//     result._3 = v4f(-f.x, -f.y, -f.z,  vector3_dot(f, eye));
 //     result._4 = v4f(   0,    0,    0,            1.f);
 
 //     return result;
 // }
 
-void renderer_setup_projection(renderer *r, float fov, float aspect_ratio, float near, float far)
+void renderer_init_api(renderer *r)
 {
-    r->proj_matrix = make_projection_matrix_fov(fov, aspect_ratio, near, far);
+    opengl_init();
+}
+
+void renderer_setup_projection(renderer *r, float fov, float aspect_ratio, float near_plane_distance, float far_plane_distance)
+{
+    r->proj_matrix = make_projection_matrix_fov(fov, aspect_ratio, near_plane_distance, far_plane_distance);
 }
 
 void renderer_setup_camera(renderer *r, vector3 pos, vector3 dir, vector3 up)
@@ -134,7 +143,7 @@ void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, ve
 
 void renderer_draw_mesh_ui(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color)
 {
-    matrix4 view = m4f_identity();
+    matrix4 view = matrix4_identity();
     matrix4 proj = r->proj_matrix_ui;
     renderer_draw_mesh_internal(r, model, view, proj, m, s, color);
 }
@@ -143,7 +152,7 @@ void renderer_draw_ui_frame(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s
 {
     glUseProgram(s.id);
 
-    matrix4 view = m4f_identity();
+    matrix4 view = matrix4_identity();
     matrix4 proj = r->proj_matrix_ui;
 
     render_shader_uniform_matrix4f(s, "u_model", (float32 *) &model);
@@ -249,8 +258,8 @@ gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)
     result.vbo = vbo_id;
     result.ibo = ibo_id;
     result.vao = vao_id;
-    result.vertex_count = mesh.vbo.size / mesh.vbl.stride;
-    result.element_count = mesh.ibo.size / sizeof(uint32);
+    result.vertex_count = (uint32) (mesh.vbo.size / mesh.vbl.stride);
+    result.element_count = (uint32) (mesh.ibo.size / sizeof(uint32));
 
     printf("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, vertex_count = %d, element_count = %d)\n", vao_id, vbo_id, ibo_id, result.vertex_count, result.element_count);
     return result;

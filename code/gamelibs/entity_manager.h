@@ -19,7 +19,7 @@ typedef struct
 {
     memory_allocator allocator;
     uint32 *generations;
-    uint64 *empty_slots;
+    uint32 *empty_slots;
     uint64 read_index;
     uint64 write_index;
 } entity_manager;

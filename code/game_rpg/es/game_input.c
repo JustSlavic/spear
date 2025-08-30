@@ -18,37 +18,37 @@ void game_input_camera_move(context *ctx, game_state *gs, input *input)
     if (!gs->is_free_camera) return;
 
     float32 move_speed = 5.f;
-    vector3 right = v3f_cross(gs->camera.forward, gs->camera.up);
+    vector3 right = vector3_cross(gs->camera.forward, gs->camera.up);
 
-    vector3 dp = v3f(0, 0, 0);
-    quaternion dq = q4f_identity();
+    vector3 dp = vector3_create(0, 0, 0);
+    quaternion dq = quaternion_create_identity();
 
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_A]))
-        dp = v3f_sub(dp, right);
+        dp = vector3_sub(dp, right);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_D]))
-        dp = v3f_add(dp, right);
+        dp = vector3_add(dp, right);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_W]))
-        dp = v3f_add(dp, gs->camera.up);
+        dp = vector3_add(dp, gs->camera.up);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_S]))
-        dp = v3f_sub(dp, gs->camera.up);
+        dp = vector3_sub(dp, gs->camera.up);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_F]))
-        dp = v3f_add(dp, gs->camera.forward);
+        dp = vector3_add(dp, gs->camera.forward);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_B]))
-        dp = v3f_sub(dp, gs->camera.forward);
+        dp = vector3_sub(dp, gs->camera.forward);
 
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_Up]))
-        dq = q4f_mul(q4f_rotate(0.01f, right), dq);
+        dq = quaternion_mul(quaternion_rotate(0.01f, right), dq);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_Down]))
-        dq = q4f_mul(q4f_rotate(-0.01f, right), dq);
+        dq = quaternion_mul(quaternion_rotate(-0.01f, right), dq);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_Left]))
-        dq = q4f_mul(q4f_rotate(0.01f, gs->camera.up), dq);
+        dq = quaternion_mul(quaternion_rotate(0.01f, gs->camera.up), dq);
     if (input_button_get_hold_count(input->keyboard_and_mouse.buttons[Keyboard_Right]))
-        dq = q4f_mul(q4f_rotate(-0.01f, gs->camera.up), dq);
+        dq = quaternion_mul(quaternion_rotate(-0.01f, gs->camera.up), dq);
 
-    dp = v3f_normalize(dp);
-    gs->camera.position = v3f_add(v3f_scale(input->dt * move_speed, dp), gs->camera.position);
-    gs->camera.forward = q4f_apply_unit_quaternion(dq, gs->camera.forward);
-    gs->camera.up = q4f_apply_unit_quaternion(dq, gs->camera.up);
+    dp = vector3_normalize(dp);
+    gs->camera.position = vector3_add(vector3_scale((float32) (input->dt * move_speed), dp), gs->camera.position);
+    gs->camera.forward = quaternion_apply_unit(dq, gs->camera.forward);
+    gs->camera.up = quaternion_apply_unit(dq, gs->camera.up);
 }
 
 void game_input_hero_move(context *ctx, game_state *gs, input *input)
@@ -68,10 +68,10 @@ void game_input_hero_move(context *ctx, game_state *gs, input *input)
     {
         entity *e = get_hero(gs);
         e->move_from = e->tile;
-        e->move_to = v3i(e->tile.x + move_x, e->tile.y + move_y, e->tile.z);
+        e->move_to = vector3i_create(e->tile.x + move_x, e->tile.y + move_y, e->tile.z);
         e->move_animation_t = 0.f;
-        e->move_animation_start_time = input->time;
-        e->move_animation_end_time = input->time + e->move_animation_duration;
+        e->move_animation_start_time = (float32) input->time;
+        e->move_animation_end_time = (float32) input->time + e->move_animation_duration;
     }
 }
 

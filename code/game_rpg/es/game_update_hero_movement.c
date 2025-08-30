@@ -20,7 +20,7 @@ void game_update_hero_move(context *ctx, game_state *gs, input *input)
         e->position.x = x;
         e->position.y = y;
 
-        e->move_animation_t += input->dt;
+        e->move_animation_t += (float32) input->dt;
     }
 }
 

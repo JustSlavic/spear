@@ -80,7 +80,7 @@ void game_process_event(game_state *gs, event event)
 
 void game_process_events(game_state *gs)
 {
-    int i;
+    uint i;
     for (i = 0; i < gs->event_count; i++)
     {
         game_process_event(gs, gs->events[i]);

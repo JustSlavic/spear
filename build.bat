@@ -21,15 +21,9 @@ for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "0
 
 
 cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Febin/spear_engine /Tccode/engine/main_win32.c /link /SUBSYSTEM:WINDOWS /PDB:spear.pdb %LINKER_FLAGS% %LIBS%
+cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Febin/spear_game /Tccode/game_rpg/game.c /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
 
+rem clang -std=c89 -g -Wall -Werror -Wno-comment -DDLL_BUILD -Icode -o bin/spear_engine_clang.exe code/engine/main_win32.c -lopengl32 -lGdi32 -lUser32
 
-rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fespear ../code/main_win32.cpp /link /PDB:spear.pdb %LINKER_FLAGS% %LIBS%
-rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
-
-rem cl /nologo /Fetest_pointers ../code/main_test.cpp
 
 del lock.tmp
-
-rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/geometric_algebra_visualized/app.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
-rem cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Fegame ../code/game_platformer/game.cpp /LD /link /PDB:%PDB_FILENAME% %LINKER_FLAGS%
-    

@@ -38,87 +38,6 @@ static wglCreateContextAttribsARBType *wglCreateContextAttribsARB;
 static wglSwapIntervalEXTType *wglSwapIntervalEXT;
 static wglGetSwapIntervalEXTType *wglGetSwapIntervalEXT;
 
-#define GL_DEPTH_STENCIL                  0x84F9
-#define GL_ARRAY_BUFFER                   0x8892
-#define GL_STATIC_DRAW                    0x88E4
-#define GL_FRAGMENT_SHADER                0x8B30
-#define GL_VERTEX_SHADER                  0x8B31
-#define GL_COMPILE_STATUS                 0x8B81
-
-/* ClearBufferMask */
-#define GL_DEPTH_BUFFER_BIT               0x00000100
-#define GL_STENCIL_BUFFER_BIT             0x00000400
-#define GL_COLOR_BUFFER_BIT               0x00004000
-
-/* Boolean */
-#define GL_FALSE                          0
-#define GL_TRUE                           1
-
-/* DataType */
-#define GL_FLOAT                          0x1406
-
-typedef char GLchar;
-typedef long long GLsizeiptr;
-
-typedef void glGenBuffersType(GLsizei n, GLuint *buffers);
-typedef void glBindBufferType(GLenum target, GLuint buffer);
-typedef void glBufferDataType(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
-typedef void glGenVertexArraysType(GLsizei n, GLuint *arrays);
-typedef void glBindVertexArrayType(GLuint array);
-typedef void glVertexAttribPointerType(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
-typedef void glEnableVertexAttribArrayType(GLuint index);
-typedef GLuint glCreateShaderType(GLenum shaderType);
-typedef void glShaderSourceType(GLuint shader, GLsizei count, const GLchar **string, const GLint *length);
-typedef void glCompileShaderType(GLuint shader);
-typedef GLuint glCreateProgramType(void);
-typedef void glAttachShaderType(GLuint program, GLuint shader);
-typedef void glDetachShaderType(GLuint program, GLuint shader);
-typedef void glLinkProgramType(GLuint program);
-typedef void glUseProgramType(GLuint program);
-typedef void glGetShaderivType(GLuint shader, GLenum pname, GLint *params);
-
-static glGenBuffersType *glGenBuffers;
-static glBindBufferType *glBindBuffer;
-static glBufferDataType *glBufferData;
-static glGenVertexArraysType *glGenVertexArrays;
-static glBindVertexArrayType *glBindVertexArray;
-static glVertexAttribPointerType *glVertexAttribPointer;
-static glEnableVertexAttribArrayType *glEnableVertexAttribArray;
-static glCreateShaderType *glCreateShader;
-static glShaderSourceType *glShaderSource;
-static glCompileShaderType *glCompileShader;
-static glCreateProgramType *glCreateProgram;
-static glAttachShaderType *glAttachShader;
-static glDetachShaderType *glDetachShader;
-static glLinkProgramType *glLinkProgram;
-static glUseProgramType *glUseProgram;
-static glGetShaderivType *glGetShaderiv;
-
-bool initialize_opengl(void)
-{
-#define WGL_GET_PROC_ADDRESS(NAME) NAME = (NAME##Type *) wglGetProcAddress(STRINGIFY(NAME)); \
-    if (NAME == NULL) return false;
-
-    WGL_GET_PROC_ADDRESS(glGenBuffers);
-    WGL_GET_PROC_ADDRESS(glBindBuffer);
-    WGL_GET_PROC_ADDRESS(glBufferData);
-    WGL_GET_PROC_ADDRESS(glGenVertexArrays);
-    WGL_GET_PROC_ADDRESS(glBindVertexArray);
-    WGL_GET_PROC_ADDRESS(glVertexAttribPointer);
-    WGL_GET_PROC_ADDRESS(glEnableVertexAttribArray);
-    WGL_GET_PROC_ADDRESS(glCreateShader);
-    WGL_GET_PROC_ADDRESS(glShaderSource);
-    WGL_GET_PROC_ADDRESS(glCompileShader);
-    WGL_GET_PROC_ADDRESS(glCreateProgram);
-    WGL_GET_PROC_ADDRESS(glAttachShader);
-    WGL_GET_PROC_ADDRESS(glDetachShader);
-    WGL_GET_PROC_ADDRESS(glLinkProgram);
-    WGL_GET_PROC_ADDRESS(glUseProgram);
-    WGL_GET_PROC_ADDRESS(glGetShaderiv);
-
-#undef WGL_GET_PROC_ADDRESS
-    return true;
-}
 
 int get_width(RECT rectangle)
 {
@@ -142,9 +61,6 @@ typedef struct window
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 static engine g_engine;
-static bool is_running;
-static uint32 current_client_width;
-static uint32 current_client_height;
 
 window create_window(HINSTANCE Instance, int ClientWidth, int ClientHeight, MainWindowCallbackType *WindowCallback)
 {
@@ -162,6 +78,13 @@ window create_window(HINSTANCE Instance, int ClientWidth, int ClientHeight, Main
     WindowClass.hbrBackground = BlackBrush;
 
     ATOM WindowClassAtom = RegisterClassA(&WindowClass);
+    if (!WindowClassAtom)
+    {
+        MessageBeep(MB_ICONERROR);
+        MessageBoxA(0, "System error! Could not register window class.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
+        return (window) {};
+    }
+
     RECT WindowRectangle = { 0, 0, (int) ClientWidth, (int) ClientHeight };
     AdjustWindowRect(&WindowRectangle, WS_OVERLAPPEDWINDOW, false);
 
@@ -262,13 +185,13 @@ MAIN_WINDOW_CALLBACK(window_callback)
     switch (message)
     {
         case WM_SIZE:
-            current_client_width  = LOWORD(lParam);
-            current_client_height = HIWORD(lParam);
+            g_engine.current_client_width = LOWORD(lParam);
+            g_engine.current_client_height = HIWORD(lParam);
         break;
 
         case WM_CLOSE:
         case WM_DESTROY:
-            is_running = false;
+            g_engine.running = false;
         break;
 
         default:
@@ -283,97 +206,46 @@ void process_pending_messages()
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
     {
-        if (message.message == WM_QUIT) is_running = false;
+        if (message.message == WM_QUIT) g_engine.running = false;
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
 }
-
-char const *vertex_shader_text = "#version 410\n"
-"layout (location = 0) in vec2 vertex_position;\n"
-"layout (location = 1) in vec3 vertex_color;\n"
-"out vec4 fragment_color;\n"
-"void main()\n"
-"{\n"
-"    fragment_color = vec4(vertex_color, 1.0);\n"
-"    gl_Position = vec4(vertex_position.x, vertex_position.y, 0.0, 1.0);\n"
-"}\n";
-
-char const *fragment_shader_text =
-"#version 410\n"
-"in vec4 fragment_color;\n"
-"out vec4 result_color;\n"
-"void main()\n"
-"{\n"
-"    result_color = fragment_color;\n"
-"}\n";
 
 int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowCode)
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
     spear_engine_init(&g_engine);
+    window w = create_window(Instance, g_engine.current_client_width, g_engine.current_client_height, window_callback);
+    spear_engine_init_graphics(&g_engine);
+    spear_engine_create_meshes(&g_engine);
+    spear_engine_compile_shaders(&g_engine);
+    spear_engine_load_game_dll(&g_engine, "bin/spear_game.dll");
+    spear_engine_game_init(&g_engine);
 
+    duration last_frame_dt = duration_create_milliseconds(16);
+    timepoint last_timepoint = platform_clock_now();
 
-    window w = create_window(Instance, 1600, 900, window_callback);
-    initialize_opengl();
-
-    glClearColor(0.f, 0.f, 0.f, 1.f);
-    wglSwapIntervalEXT(1);
-
-    uint32_t vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader_id, 1, (char const **) &vertex_shader_text, (int const *) NULL);
-    glCompileShader(vertex_shader_id);
-    int successful;
-    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &successful);
-
-    uint32_t fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader_id, 1, (char const **) &fragment_shader_text, (int const *) NULL);
-    glCompileShader(fragment_shader_id);
-    glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &successful);
-
-    int shader_id = glCreateProgram();
-    glAttachShader(shader_id, vertex_shader_id);
-    glAttachShader(shader_id, fragment_shader_id);
-    glLinkProgram(shader_id);
-
-    float vertices[] =
+    g_engine.running = true;
+    while (g_engine.running)
     {
-        // positions   // colors
-        -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.0f, 0.0f, 1.0f,
+        memory_allocator_arena_reset(g_engine.temporary, CL_HERE);
+        spear_engine_load_game_dll(&g_engine, "bin/spear_game.dll");
 
-        -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.0f, 1.0f, 1.0f
-    };
-
-    uint32_t vao_id, vbo_id;
-    glGenBuffers(1, &vbo_id);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &vao_id);
-    glBindVertexArray(vao_id);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (2 * sizeof(float)));
-
-    is_running = true;
-    while (is_running)
-    {
         process_pending_messages();
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        g_engine.input.dt = duration_get_seconds(last_frame_dt);
+        g_engine.input.time = timepoint_get_seconds(last_timepoint);
 
-        glUseProgram(shader_id);
-        glBindVertexArray(vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        spear_engine_game_update(&g_engine);
+        spear_engine_game_render(&g_engine);
 
         SwapBuffers(w.DeviceContext);
+
+        timepoint end_of_frame = platform_clock_now();
+        last_frame_dt = get_duration_between_timepoints(last_timepoint, end_of_frame);
+        last_timepoint = end_of_frame;
     }
 
     return 0;
@@ -388,3 +260,5 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
 
 #include <engine/engine.c>
 #include <engine/graphics/render.c>
+#include <engine/graphics/opengl_win32.c>
+#include <engine/primitive_meshes.c>

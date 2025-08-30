@@ -75,6 +75,8 @@ typedef uint64               usize;
 typedef uint8                byte;
 typedef uint8                bool;
 typedef uint32               bool32;
+typedef  int64               intptr;
+typedef uint64               uintptr;
 #define true                 1
 #define false                0
 #define NULL                 0

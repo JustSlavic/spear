@@ -130,7 +130,7 @@ int main(void)
 
     spear_engine_create_meshes(&g_engine);
     spear_engine_compile_shaders(&g_engine);
-    spear_engine_load_game_dll(&g_engine);
+    spear_engine_load_game_dll(&g_engine, "spear_game.so");
     spear_engine_game_init(&g_engine);
 
     // ===================================================
@@ -142,7 +142,7 @@ int main(void)
     while (g_engine.running)
     {
         memory_allocator_arena_reset(g_engine.temporary, CL_HERE);
-        spear_engine_load_game_dll(&g_engine);
+        spear_engine_load_game_dll(&g_engine, "spear_game.so");
 
         spear_engine_input_reset_transitions(&g_engine);
         process_pending_messages(&g_engine.input);

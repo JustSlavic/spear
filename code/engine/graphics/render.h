@@ -52,7 +52,7 @@ typedef struct renderer
     matrix4 proj_matrix_ui;
 } renderer;
 
-
+void renderer_init_api(renderer *r);
 void renderer_setup_projection(renderer *r, float fov, float aspect_ratio, float near, float far);
 void renderer_setup_camera(renderer *r, vector3 pos, vector3 dir, vector3 up);
 void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color);

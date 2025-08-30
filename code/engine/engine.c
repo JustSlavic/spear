@@ -41,11 +41,18 @@ void spear_engine_init(engine *engine)
     engine->game_context.near_clip_width = engine->near_clip_width;
     engine->game_context.near_clip_height = engine->near_clip_height;
 
+    engine->renderer.view_matrix = matrix4_identity();
+    engine->renderer.proj_matrix = matrix4_identity();
     renderer_setup_projection(&engine->renderer,
         engine->fov,
         engine->aspect_ratio,
         engine->near_clip_distance,
         engine->far_clip_distance);
+}
+
+void spear_engine_init_graphics(engine *engine)
+{
+    renderer_init_api(&engine->renderer);
 }
 
 void spear_engine_create_meshes(engine *engine)
@@ -71,17 +78,17 @@ void spear_engine_compile_shaders(engine *engine)
     engine->shader_ui_frame = render_compile_shaders(vs_frame, fs_pass_color);
 }
 
-void spear_engine_load_game_dll(engine *engine)
+void spear_engine_load_game_dll(engine *engine, char const *filename)
 {
 #if DLL_BUILD
-    timestamp_t dll_last_modified_time = platform_file_get_last_modified_time("spear_game.so");
+    timestamp_t dll_last_modified_time = platform_file_get_last_modified_time(filename);
     if (engine->game_dll_timestamp < dll_last_modified_time)
     {
         if (platform_dll_is_valid(engine->game_dll))
         {
             platform_dll_close(engine->game_dll);
         }
-        platform_dll_open(engine->game_dll, "spear_game.so");
+        platform_dll_open(engine->game_dll, filename);
         engine->initialize_memory = (initialize_memory_t *) platform_dll_get_function(engine->game_dll, "initialize_memory");
         engine->update_and_render = (update_and_render_t *) platform_dll_get_function(engine->game_dll, "update_and_render");
         if (engine->initialize_memory && engine->update_and_render)
@@ -131,9 +138,9 @@ void spear_engine_update_viewport(engine *engine, int width, int height)
         engine->game_context.viewport_height = viewport.height;
 
         engine->renderer.proj_matrix_ui =
-            m4f_mul(
-                m4f_translate(-1, 1, 0),
-                m4f_scale(2.f / viewport.width, -2.f/viewport.height, 1));
+            matrix4_mul(
+                matrix4_translate(-1, 1, 0),
+                matrix4_scale(2.f / viewport.width, -2.f/viewport.height, 1));
     }
 }
 
@@ -183,9 +190,9 @@ void spear_engine_game_update(engine *engine)
 static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
 {
     matrix4 model =
-        m4f_mul(
-            m4f_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z),
-            m4f_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z)
+        matrix4_mul(
+            matrix4_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z),
+            matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z)
         );
     gpu_mesh m = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
                  cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
@@ -201,11 +208,11 @@ static void spear_engine_draw_ui(engine *engine, render_command cmd)
 {
     if (cmd.mesh_tag == RenderCommand_DrawMesh_UiFrame)
     {
-        matrix4 model = m4f_mul(
-            tm_to_m4f(cmd.ui_tm),
-            m4f_mul(
-                m4f_translate(cmd.ui_offset.x, cmd.ui_offset.y, 0),
-                m4f_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1)));
+        matrix4 model = matrix4_mul(
+            transform_to_matrix4(cmd.ui_tm),
+            matrix4_mul(
+                matrix4_translate(cmd.ui_offset.x, cmd.ui_offset.y, 0),
+                matrix4_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1)));
 
         if (cmd.ui_width < 50)
             printf("!!! cmd.ui_width = %f\n", cmd.ui_width);
@@ -220,9 +227,9 @@ static void spear_engine_draw_ui(engine *engine, render_command cmd)
     }
     else
     {
-        matrix4 model = m4f_mul(
-            tm_to_m4f(cmd.ui_tm),
-            m4f_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1));
+        matrix4 model = matrix4_mul(
+            transform_to_matrix4(cmd.ui_tm),
+            matrix4_scale(0.5f * cmd.ui_width, 0.5f * cmd.ui_height, 1));
         renderer_draw_mesh_ui(&engine->renderer,
             model,
             engine->mesh_square,
@@ -252,7 +259,7 @@ void spear_engine_game_render(engine *engine)
                     cmd.camera_position, cmd.camera_forward, cmd.camera_up);
                 // glDisable(GL_DEPTH_TEST);
                 // renderer_draw_mesh_ui(&engine->renderer,
-                //     m4f_scale(10000.f, 10000.f, 1.f),
+                //     matrix4_scale(10000.f, 10000.f, 1.f),
                 //     engine->mesh_square,
                 //     engine->shader_single_color,
                 //     v4f(0.1f, 0.1f, 0.1f, 1.f));

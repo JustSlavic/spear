@@ -2,7 +2,7 @@
 #include <math.h>
 
 
-vector2 v2f(float x, float y)
+vector2 vector2_create(float x, float y)
 {
     vector2 result = {};
     result.x = x;
@@ -10,7 +10,7 @@ vector2 v2f(float x, float y)
     return result;
 }
 
-vector2 v2f_negate(vector2 v)
+vector2 vector2_negate(vector2 v)
 {
     vector2 result = {};
     result.x = -v.x;
@@ -18,7 +18,7 @@ vector2 v2f_negate(vector2 v)
     return result;
 }
 
-vector2 v2f_scale(float32 a, vector2 v)
+vector2 vector2_scale(float32 a, vector2 v)
 {
     vector2 result = {};
     result.x = a * v.x;
@@ -26,7 +26,7 @@ vector2 v2f_scale(float32 a, vector2 v)
     return result;
 }
 
-vector2 v2f_add(vector2 v, vector2 w)
+vector2 vector2_add(vector2 v, vector2 w)
 {
     vector2 result = {};
     result.x = v.x + w.x;
@@ -34,7 +34,7 @@ vector2 v2f_add(vector2 v, vector2 w)
     return result;
 }
 
-vector2 v2f_sub(vector2 v, vector2 w)
+vector2 vector2_sub(vector2 v, vector2 w)
 {
     vector2 result = {};
     result.x = v.x - w.x;
@@ -42,27 +42,27 @@ vector2 v2f_sub(vector2 v, vector2 w)
     return result;
 }
 
-float32 v2f_dot(vector2 a, vector2 b)
+float32 vector2_dot(vector2 a, vector2 b)
 {
     float32 result = a.x * b.x + a.y * b.y;
     return result;
 }
 
-float v2f_norm_squared(vector2 v)
+float vector2_norm_squared(vector2 v)
 {
-    float result = v2f_dot(v, v);
+    float result = vector2_dot(v, v);
     return result;
 }
 
-float v2f_norm(vector2 v)
+float vector2_norm(vector2 v)
 {
-    float result = sqrtf(v2f_norm_squared(v));
+    float result = sqrtf(vector2_norm_squared(v));
     return result;
 }
 
-vector2 v2f_normalize(vector2 v)
+vector2 vector2_normalize(vector2 v)
 {
-    float norm = v2f_norm(v);
+    float norm = vector2_norm(v);
     if (norm > 0)
     {
         v.x = v.x / norm;
@@ -73,7 +73,7 @@ vector2 v2f_normalize(vector2 v)
 
 // ============ vector3 ============ //
 
-vector3 v3f(float x, float y, float z)
+vector3 vector3_create(float x, float y, float z)
 {
     vector3 result = {};
     result.x = x;
@@ -82,7 +82,7 @@ vector3 v3f(float x, float y, float z)
     return result;
 }
 
-vector3 v3f_negate(vector3 v)
+vector3 vector3_negate(vector3 v)
 {
     vector3 result = {};
     result.x = -v.x;
@@ -91,7 +91,7 @@ vector3 v3f_negate(vector3 v)
     return result;
 }
 
-vector3 v3f_scale(float32 a, vector3 v)
+vector3 vector3_scale(float32 a, vector3 v)
 {
     vector3 result = {};
     result.x = a * v.x;
@@ -100,7 +100,7 @@ vector3 v3f_scale(float32 a, vector3 v)
     return result;
 }
 
-vector3 v3f_add(vector3 a, vector3 b)
+vector3 vector3_add(vector3 a, vector3 b)
 {
     vector3 result = {};
     result.x = a.x + b.x;
@@ -109,7 +109,7 @@ vector3 v3f_add(vector3 a, vector3 b)
     return result;
 }
 
-vector3 v3f_sub(vector3 a, vector3 b)
+vector3 vector3_sub(vector3 a, vector3 b)
 {
     vector3 result = {};
     result.x = a.x - b.x;
@@ -118,13 +118,13 @@ vector3 v3f_sub(vector3 a, vector3 b)
     return result;
 }
 
-float32 v3f_dot(vector3 a, vector3 b)
+float32 vector3_dot(vector3 a, vector3 b)
 {
     float32 result = a.x * b.x + a.y * b.y + a.z * b.z;
     return result;
 }
 
-vector3 v3f_cross(vector3 a, vector3 b)
+vector3 vector3_cross(vector3 a, vector3 b)
 {
     vector3 result;
     result.x = a.y * b.z - a.z * b.y;
@@ -133,21 +133,21 @@ vector3 v3f_cross(vector3 a, vector3 b)
     return result;
 }
 
-float32 v3f_norm_squared(vector3 a)
+float32 vector3_norm_squared(vector3 a)
 {
-    float result = v3f_dot(a, a);
+    float result = vector3_dot(a, a);
     return result;
 }
 
-float32 v3f_norm(vector3 a)
+float32 vector3_norm(vector3 a)
 {
-    float result = sqrtf(v3f_norm_squared(a));
+    float result = sqrtf(vector3_norm_squared(a));
     return result;
 }
 
-vector3 v3f_normalize(vector3 a)
+vector3 vector3_normalize(vector3 a)
 {
-    float norm = v3f_norm(a);
+    float norm = vector3_norm(a);
     if (norm > 0)
     {
         a.x = a.x / norm;
@@ -159,7 +159,7 @@ vector3 v3f_normalize(vector3 a)
 
 // ============ vector3i ============ //
 
-vector3i v3i(int x, int y, int z)
+vector3i vector3i_create(int x, int y, int z)
 {
     vector3i result = {};
     result.x = x;
@@ -170,57 +170,57 @@ vector3i v3i(int x, int y, int z)
 
 // ============ vector4 ============ //
 
-vector4 v4f(float x, float y, float z, float w)
+vector4 vector4_create(float x, float y, float z, float w)
 {
     vector4 result = { .x = x, .y = y, .z = z, .w = w };
     return result;
 }
 
-vector4 v4f_negate(vector4 v)
+vector4 vector4_negate(vector4 v)
 {
     vector4 result = { .x = -v.x, .y = -v.y, .z = -v.z, .w = -v.w };
     return result;
 }
 
-vector4 v4f_scale(float32 a, vector4 v)
+vector4 vector4_scale(float32 a, vector4 v)
 {
     vector4 result = { .x = a * v.x, .y = a * v.y, .z = a * v.z, .w = a * v.w };
     return result;
 }
 
-vector4 v4f_add(vector4 a, vector4 b)
+vector4 vector4_add(vector4 a, vector4 b)
 {
     vector4 result = { .x = a.x + b.x, .y = a.y + b.y, .z = a.z + b.z, .w = a.w + b.w };
     return result;
 }
 
-vector4 v4f_sub(vector4 a, vector4 b)
+vector4 vector4_sub(vector4 a, vector4 b)
 {
     vector4 result = { .x = a.x - b.x, .y = a.y - b.y, .z = a.z - b.z, .w = a.w - b.w };
     return result;
 }
 
-float32 v4f_dot(vector4 a, vector4 b)
+float32 vector4_dot(vector4 a, vector4 b)
 {
     float32 result = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
     return result;
 }
 
-float32 v4f_norm_squared(vector4 v)
+float32 vector4_norm_squared(vector4 v)
 {
-    float32 result = v4f_dot(v, v);
+    float32 result = vector4_dot(v, v);
     return result;
 }
 
-float32 v4f_norm(vector4 v)
+float32 vector4_norm(vector4 v)
 {
-    float32 result = sqrtf(v4f_norm_squared(v));
+    float32 result = sqrtf(vector4_norm_squared(v));
     return result;
 }
 
-vector4 v4f_normalize(vector4 v)
+vector4 vector4_normalize(vector4 v)
 {
-    float32 norm = v4f_norm(v);
+    float32 norm = vector4_norm(v);
     if (norm > 0)
     {
         v.x = v.x / norm;
@@ -233,7 +233,7 @@ vector4 v4f_normalize(vector4 v)
 
 // ============ quaternion ============ //
 
-quaternion q4f(float w, float x, float y, float z)
+quaternion quaternion_create(float w, float x, float y, float z)
 {
     quaternion result = {};
     result.w = w;
@@ -243,14 +243,21 @@ quaternion q4f(float w, float x, float y, float z)
     return result;
 }
 
-quaternion q4f_identity(void)
+quaternion quaternion_create_identity(void)
 {
     quaternion result = {};
     result.r = 1.0f;
     return result;
 }
 
-quaternion q4f_rotate_x(float rx)
+quaternion quaternion_create_pure(vector3 v)
+{
+    quaternion result = {};
+    result.axis = v;
+    return result;
+}
+
+quaternion quaternion_rotate_x(float rx)
 {
     quaternion result = {};
     result._1 = cosf(0.5f * rx);
@@ -258,7 +265,7 @@ quaternion q4f_rotate_x(float rx)
     return result;
 }
 
-quaternion q4f_rotate_y(float ry)
+quaternion quaternion_rotate_y(float ry)
 {
     quaternion result = {};
     result._1 = cosf(0.5f * ry);
@@ -266,7 +273,7 @@ quaternion q4f_rotate_y(float ry)
     return result;
 }
 
-quaternion q4f_rotate_z(float rz)
+quaternion quaternion_rotate_z(float rz)
 {
     quaternion result = {};
     result._1 = cosf(0.5f * rz);
@@ -274,22 +281,15 @@ quaternion q4f_rotate_z(float rz)
     return result;
 }
 
-quaternion q4f_rotate(float radians, vector3 axis)
+quaternion quaternion_rotate(float radians, vector3 axis)
 {
     quaternion result = {};
     result._1 = cosf(0.5f * radians);
-    result.axis = v3f_scale(sinf(0.5f * radians), axis);
+    result.axis = vector3_scale(sinf(0.5f * radians), axis);
     return result;
 }
 
-quaternion q4f_pure(vector3 v)
-{
-    quaternion result = {};
-    result.axis = v;
-    return result;
-}
-
-quaternion q4f_scale(float a, quaternion q)
+quaternion quaternion_scale(float a, quaternion q)
 {
     quaternion result;
     result._1 = a * q._1;
@@ -299,7 +299,7 @@ quaternion q4f_scale(float a, quaternion q)
     return result;
 }
 
-quaternion q4f_add(quaternion a, quaternion b)
+quaternion quaternion_add(quaternion a, quaternion b)
 {
     quaternion result;
     result._1 = a._1 + b._1;
@@ -309,7 +309,7 @@ quaternion q4f_add(quaternion a, quaternion b)
     return result;
 }
 
-quaternion q4f_sub(quaternion a, quaternion b)
+quaternion quaternion_sub(quaternion a, quaternion b)
 {
     quaternion result;
     result._1 = a._1 - b._1;
@@ -319,7 +319,7 @@ quaternion q4f_sub(quaternion a, quaternion b)
     return result;
 }
 
-quaternion q4f_mul(quaternion a, quaternion b)
+quaternion quaternion_mul(quaternion a, quaternion b)
 {
     quaternion r;
     r._1   = a._1*b._1   - a._e32*b._e32 - a._e13*b._e13 - a._e21*b._e21;
@@ -329,7 +329,7 @@ quaternion q4f_mul(quaternion a, quaternion b)
     return r;
 }
 
-quaternion q4f_conjugate(quaternion q)
+quaternion quaternion_conjugate(quaternion q)
 {
     quaternion result;
     result._1 = q._1;
@@ -339,21 +339,21 @@ quaternion q4f_conjugate(quaternion q)
     return result;
 }
 
-float32 q4f_norm_squared(quaternion q)
+float32 quaternion_norm_squared(quaternion q)
 {
     float32 result = q._1*q._1 + q._e32*q._e32 + q._e13*q._e13 + q._e21*q._e21;
     return result;
 }
 
-float32 q4f_norm(quaternion q)
+float32 quaternion_norm(quaternion q)
 {
-    float32 result = sqrtf(q4f_norm_squared(q));
+    float32 result = sqrtf(quaternion_norm_squared(q));
     return result;
 }
 
-quaternion q4f_normalize(quaternion q)
+quaternion quaternion_normalize(quaternion q)
 {
-    float32 n = q4f_norm(q);
+    float32 n = quaternion_norm(q);
     if (n > 0)
     {
         q._1 = q._1 / n;
@@ -364,17 +364,17 @@ quaternion q4f_normalize(quaternion q)
     return q;
 }
 
-quaternion q4f_inverse(quaternion q)
+quaternion quaternion_inverse(quaternion q)
 {
-    float n2 =  q4f_norm_squared(q);
+    float n2 =  quaternion_norm_squared(q);
     if (n2 > 0)
     {
-        q = q4f_scale(1.f / n2, q4f_conjugate(q));
+        q = quaternion_scale(1.f / n2, quaternion_conjugate(q));
     }
     return q;
 }
 
-vector3 q4f_apply_unit_quaternion(quaternion q, vector3 v)
+vector3 quaternion_apply_unit(quaternion q, vector3 v)
 {
     float32 ww = square(q.w);
     float32 xx = square(q.x);
@@ -388,23 +388,23 @@ vector3 q4f_apply_unit_quaternion(quaternion q, vector3 v)
     return result;
 }
 
-vector3 q4f_apply(quaternion q, vector3 v)
+vector3 quaternion_apply(quaternion q, vector3 v)
 {
-    q = q4f_normalize(q);
-    vector3 result = q4f_apply_unit_quaternion(q, v);
+    q = quaternion_normalize(q);
+    vector3 result = quaternion_apply_unit(q, v);
     return result;
 }
 
 // ============ matrix3 ============ //
 
-matrix3 m3f_identity(void)
+matrix3 matrix3_identity(void)
 {
     matrix3 result = {};
     result._11 = result._22 = result._33 = 1.f;
     return result;
 }
 
-matrix3 m3f_scale(float a, matrix3 m)
+matrix3 matrix3_scale(float a, matrix3 m)
 {
     int i, j;
     matrix3 r;
@@ -414,7 +414,7 @@ matrix3 m3f_scale(float a, matrix3 m)
     return r;
 }
 
-float32 m3f_determinant(matrix3 m)
+float32 matrix3_determinant(matrix3 m)
 {
     float32 result = m._11 * (m._22 * m._33 - m._23 * m._32)
                    - m._12 * (m._21 * m._33 - m._23 * m._31)
@@ -422,7 +422,7 @@ float32 m3f_determinant(matrix3 m)
     return result;
 }
 
-matrix3 m3f_adjoint(matrix3 m)
+matrix3 matrix3_adjoint(matrix3 m)
 {
     matrix3 result;
 
@@ -441,20 +441,20 @@ matrix3 m3f_adjoint(matrix3 m)
     return result;
 }
 
-matrix3 m3f_inverse(matrix3 m)
+matrix3 matrix3_inverse(matrix3 m)
 {
-    matrix3 result = m3f_identity();
-    float32 det = m3f_determinant(m);
+    matrix3 result = matrix3_identity();
+    float32 det = matrix3_determinant(m);
     if (!is_near_zero(det))
     {
-        result = m3f_scale(1.0f / det, m3f_adjoint(m));
+        result = matrix3_scale(1.0f / det, matrix3_adjoint(m));
     }
     return result;
 }
 
-matrix3 q4f_to_m3f(quaternion q)
+matrix3 quaternion_to_m3f(quaternion q)
 {
-    float32 s = q4f_norm(q);
+    float32 s = quaternion_norm(q);
     matrix3 result;
 
     result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
@@ -474,7 +474,7 @@ matrix3 q4f_to_m3f(quaternion q)
 
 // ============ matrix4 ============ //
 
-matrix4 m4f_identity(void)
+matrix4 matrix4_identity(void)
 {
     matrix4 result = {};
     result._11 = 1.f;
@@ -484,16 +484,16 @@ matrix4 m4f_identity(void)
     return result;
 }
 
-matrix4 m4f_translate(float tx, float ty, float tz)
+matrix4 matrix4_translate(float tx, float ty, float tz)
 {
-    matrix4 result = m4f_identity();
+    matrix4 result = matrix4_identity();
     result._14 = tx;
     result._24 = ty;
     result._34 = tz;
     return result;
 }
 
-matrix4 m4f_scale(float sx, float sy, float sz)
+matrix4 matrix4_scale(float sx, float sy, float sz)
 {
     matrix4 result = {};
     result._11 = sx;
@@ -503,7 +503,7 @@ matrix4 m4f_scale(float sx, float sy, float sz)
     return result;
 }
 
-matrix4 m4f_mul(matrix4 a, matrix4 b)
+matrix4 matrix4_mul(matrix4 a, matrix4 b)
 {
     matrix4 result;
 
@@ -530,7 +530,7 @@ matrix4 m4f_mul(matrix4 a, matrix4 b)
     return result;
 }
 
-matrix4 m4f_transpose(matrix4 m)
+matrix4 matrix4_transpose(matrix4 m)
 {
     float32 tmp;
     tmp = m._12; m._12 = m._21; m._21 = tmp;
@@ -542,9 +542,9 @@ matrix4 m4f_transpose(matrix4 m)
     return m;
 }
 
-matrix4 q4f_to_m4f(quaternion q)
+matrix4 quaternion_to_m4f(quaternion q)
 {
-    float32 s = q4f_norm(q);
+    float32 s = quaternion_norm(q);
     matrix4 result;
 
     result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
@@ -572,33 +572,33 @@ matrix4 q4f_to_m4f(quaternion q)
 
 // ============ transform ============ //
 
-transform tm_identity(void) { transform tm = {}; tm._11 = tm._22 = tm._33 = 1.f; return tm; }
-transform tm_scale_x (float32 sx) { transform tm = tm_identity(); tm._11 = sx; return tm; }
-transform tm_scale_y (float32 sy) { transform tm = tm_identity(); tm._22 = sy; return tm; }
-transform tm_scale_z (float32 sz) { transform tm = tm_identity(); tm._33 = sz; return tm; }
-transform tm_scale   (float32 sx, float32 sy, float32 sz) { transform tm = tm_identity(); tm._11 = sx; tm._22 = sy; tm._33 = sz; return tm; }
-transform tm_translate_x (float32 tx) { transform tm = tm_identity(); tm._41 = tx; return tm; }
-transform tm_translate_y (float32 ty) { transform tm = tm_identity(); tm._42 = ty; return tm; }
-transform tm_translate_z (float32 tz) { transform tm = tm_identity(); tm._43 = tz; return tm; }
-transform tm_translate   (float32 tx, float32 ty, float32 tz) { transform tm = tm_identity(); tm._41 = tx; tm._42 = ty; tm._43 = tz; return tm; }
-transform tm_rotate_x (float32 rx) { transform tm = tm_identity(); float c = cosf(rx); float s = sinf(rx); tm._22 = tm._33 = c; tm._23 = -(tm._32 = s); return tm; }
-transform tm_rotate_y (float32 ry) { transform tm = tm_identity(); float c = cosf(ry); float s = sinf(ry); tm._11 = tm._33 = c; tm._13 = -(tm._31 = s); return tm; }
-transform tm_rotate_z (float32 rz) { transform tm = tm_identity(); float c = cosf(rz); float s = sinf(rz); tm._11 = tm._22 = c; tm._12 = -(tm._21 = s); return tm; }
+transform transform_identity(void) { transform tm = {}; tm._11 = tm._22 = tm._33 = 1.f; return tm; }
+transform transform_scale_x (float32 sx) { transform tm = transform_identity(); tm._11 = sx; return tm; }
+transform transform_scale_y (float32 sy) { transform tm = transform_identity(); tm._22 = sy; return tm; }
+transform transform_scale_z (float32 sz) { transform tm = transform_identity(); tm._33 = sz; return tm; }
+transform transform_scale   (float32 sx, float32 sy, float32 sz) { transform tm = transform_identity(); tm._11 = sx; tm._22 = sy; tm._33 = sz; return tm; }
+transform transform_translate_x (float32 tx) { transform tm = transform_identity(); tm._41 = tx; return tm; }
+transform transform_translate_y (float32 ty) { transform tm = transform_identity(); tm._42 = ty; return tm; }
+transform transform_translate_z (float32 tz) { transform tm = transform_identity(); tm._43 = tz; return tm; }
+transform transform_translate   (float32 tx, float32 ty, float32 tz) { transform tm = transform_identity(); tm._41 = tx; tm._42 = ty; tm._43 = tz; return tm; }
+transform transform_rotate_x (float32 rx) { transform tm = transform_identity(); float c = cosf(rx); float s = sinf(rx); tm._22 = tm._33 = c; tm._23 = -(tm._32 = s); return tm; }
+transform transform_rotate_y (float32 ry) { transform tm = transform_identity(); float c = cosf(ry); float s = sinf(ry); tm._11 = tm._33 = c; tm._13 = -(tm._31 = s); return tm; }
+transform transform_rotate_z (float32 rz) { transform tm = transform_identity(); float c = cosf(rz); float s = sinf(rz); tm._11 = tm._22 = c; tm._12 = -(tm._21 = s); return tm; }
 
-float32 tm_determinant(transform tm)
+float32 transform_determinant(transform tm)
 {
-    float32 result = m3f_determinant(tm.matrix);
+    float32 result = matrix3_determinant(tm.matrix);
     return result;
 }
 
-transform tm_inverse(transform tm)
+transform transform_inverse(transform tm)
 {
     transform result = {};
 
-    float32 det = m3f_determinant(tm.matrix);
+    float32 det = matrix3_determinant(tm.matrix);
     if (!is_near_zero(det))
     {
-        result.matrix = m3f_scale(1.0f / det, m3f_adjoint(tm.matrix));
+        result.matrix = matrix3_scale(1.0f / det, matrix3_adjoint(tm.matrix));
 
         float32 m_32_43_33_42 = (tm._32 * tm._43 - tm._33 * tm._42);
         float32 m_31_43_33_41 = (tm._31 * tm._43 - tm._33 * tm._41);
@@ -614,18 +614,18 @@ transform tm_inverse(transform tm)
     return result;
 }
 
-matrix4 tm_to_m4f(transform tm)
+matrix4 transform_to_matrix4(transform tm)
 {
     matrix4 result;
     result._1.xyz = tm._1; result._1.w = 0;
     result._2.xyz = tm._2; result._2.w = 0;
     result._3.xyz = tm._3; result._3.w = 0;
     result._4.xyz = tm._4; result._4.w = 1;
-    result = m4f_transpose(result);
+    result = matrix4_transpose(result);
     return result;
 }
 
-vector3 tm_transform_point3f(transform tm, vector3 v)
+vector3 transform_transform_point3f(transform tm, vector3 v)
 {
     vector3 result;
     result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z + tm._41;
@@ -634,7 +634,7 @@ vector3 tm_transform_point3f(transform tm, vector3 v)
     return result;
 }
 
-vector4 tm_transform_point4f(transform tm, vector4 v)
+vector4 transform_transform_point4f(transform tm, vector4 v)
 {
     vector4 result;
     result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z + tm._41*v.w;
@@ -644,7 +644,7 @@ vector4 tm_transform_point4f(transform tm, vector4 v)
     return result;
 }
 
-vector3 tm_transform_vector3f(transform tm, vector3 v)
+vector3 transform_transform_vector3f(transform tm, vector3 v)
 {
 
     vector3 result;
@@ -654,7 +654,7 @@ vector3 tm_transform_vector3f(transform tm, vector3 v)
     return result;
 }
 
-vector4 tm_transform_vector4f(transform tm, vector4 v)
+vector4 transform_transform_vector4f(transform tm, vector4 v)
 {
     vector4 result;
     result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z;
@@ -678,7 +678,7 @@ vector4 tm_transform_vector4f(transform tm, vector4 v)
     | f31 f32 f33 0 |   | s31 s32 s33 0 |
     | f41 f42 f43 1 |   | s41 s42 s43 1 |
 */
-transform tm_mul(transform s, transform f)
+transform transform_mul(transform s, transform f)
 {
     transform result;
 

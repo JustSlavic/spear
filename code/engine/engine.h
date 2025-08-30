@@ -62,9 +62,10 @@ typedef struct
 } engine;
 
 void spear_engine_init(engine *engine);
+void spear_engine_init_graphics(engine *engine);
 void spear_engine_create_meshes(engine *engine);
 void spear_engine_compile_shaders(engine *engine);
-void spear_engine_load_game_dll(engine *engine);
+void spear_engine_load_game_dll(engine *engine, char const *filename);
 void spear_engine_input_reset_transitions(engine *engine);
 void spear_engine_input_mouse_pos_set(engine *engine, int mouse_x, int mouse_y);
 void spear_engine_update_viewport(engine *engine, int width, int height);

@@ -4,11 +4,11 @@
 
 vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
 {
-    float mouse_pos_x =  cvt(input->keyboard_and_mouse.window_mouse.x,
-        ctx->viewport_offset_x, ctx->viewport_offset_x + ctx->viewport_width,
+    float mouse_pos_x = cvt((float) input->keyboard_and_mouse.window_mouse.x,
+        (float) ctx->viewport_offset_x, (float) (ctx->viewport_offset_x + ctx->viewport_width),
         -1.f, 1.f);
-    float mouse_pos_y = -cvt(input->keyboard_and_mouse.window_mouse.y,
-        ctx->viewport_offset_y, ctx->viewport_offset_y + ctx->viewport_height,
+    float mouse_pos_y = -cvt((float) input->keyboard_and_mouse.window_mouse.y,
+        (float) ctx->viewport_offset_y, (float) (ctx->viewport_offset_y + ctx->viewport_height),
         -1.f, 1.f);
 
     float32 clip_d = ctx->near_clip_distance;
@@ -16,16 +16,16 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
     float32 clip_h = ctx->near_clip_height;
 
     vector3 up = gs->camera.up;
-    vector3 right = v3f_cross(gs->camera.forward, gs->camera.up);
+    vector3 right = vector3_cross(gs->camera.forward, gs->camera.up);
 
-    vector3 clip_c = v3f_add(gs->camera.position, v3f_scale(clip_d, gs->camera.forward));
+    vector3 clip_c = vector3_add(gs->camera.position, vector3_scale(clip_d, gs->camera.forward));
     vector3 clip_p =
-        v3f_add(
+        vector3_add(
             clip_c,
-            v3f_add(
-                v3f_scale(mouse_pos_x * 0.5f * clip_w, right),
-                v3f_scale(mouse_pos_y * 0.5f * clip_h, up)));
-    vector3 result = v3f_normalize(v3f_sub(clip_p, gs->camera.position));
+            vector3_add(
+                vector3_scale(mouse_pos_x * 0.5f * clip_w, right),
+                vector3_scale(mouse_pos_y * 0.5f * clip_h, up)));
+    vector3 result = vector3_normalize(vector3_sub(clip_p, gs->camera.position));
     return result;
 }
 
@@ -33,8 +33,8 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
 {
     gs->intersected = false;
     gs->intersect_t = INFINITY;
-    gs->intersect_tile = v3i(0, 0, 0);
-    gs->intersection = v3f(0.f, 0.f, 0.f);
+    gs->intersect_tile = vector3i_create(0, 0, 0);
+    gs->intersection = vector3_create(0.f, 0.f, 0.f);
 
     if (gs->ui.hot)
     {
@@ -51,10 +51,10 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
         game_map_cell *cell = game_map_get(&gs->map, i, j, k);
         if (cell->tag == GameMap_Ground)
         {
-            vector3 center = v3f(i, j, k);
+            vector3 center = vector3_create((float) i, (float) j, (float) k);
             float32 factor = 0.45f; // @todo: pull this from game state
-            vector3 aabb_min = v3f_sub(center, v3f(factor, factor, factor));
-            vector3 aabb_max = v3f_add(center, v3f(factor, factor, factor));
+            vector3 aabb_min = vector3_sub(center, vector3_create(factor, factor, factor));
+            vector3 aabb_max = vector3_add(center, vector3_create(factor, factor, factor));
 
             float t = intersect_ray_aabb(gs->camera.position, ray_direction, aabb_min, aabb_max);
             bool32 intersected = (t < 1000.f);
@@ -62,8 +62,8 @@ void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
             {
                 gs->intersected = true;
                 gs->intersect_t = t;
-                gs->intersect_tile = v3i(i, j, k);
-                gs->intersection = v3f_add(gs->camera.position, v3f_scale(t, ray_direction));
+                gs->intersect_tile = vector3i_create(i, j, k);
+                gs->intersection = vector3_add(gs->camera.position, vector3_scale(t, ray_direction));
             }
         }
         if (cell->tag == GameMap_Entity)
