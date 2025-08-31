@@ -66,24 +66,30 @@ void game_input_hero_move(context *ctx, game_state *gs, input *input)
 
     if (move_x != 0 || move_y != 0)
     {
+        float duration = 0.5f;
         entity *e = get_hero(gs);
-        e->move_from = e->tile;
-        e->move_to = vector3i_create(e->tile.x + move_x, e->tile.y + move_y, e->tile.z);
-        e->move_animation_t = 0.f;
-        e->move_animation_start_time = (float32) input->time;
-        e->move_animation_end_time = (float32) input->time + e->move_animation_duration;
+        game_move_animation_start(e,
+            (float) e->tile.x, (float) e->tile.y, (float) input->time,
+            (float) e->tile.x + move_x, (float) e->tile.y + move_y, (float) input->time + duration);
+        e->tile.x += move_x;
+        e->tile.y += move_y;
     }
 }
 
 void game_input_hero_spell(context *ctx, game_state *gs, input *input)
 {
-    if (gs->spell_id &&
+    if (gs->spell_id && gs->intersected &&
         input_button_get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
     {
+        float duration = 0.5f;
         gs->spell_id = Spell_Invalid;
         printf("CAST SPELL at %d, %d, %d\n",
             gs->intersect_tile.x,
             gs->intersect_tile.y,
             gs->intersect_tile.z);
+        entity *hero = get_hero(gs);
+        game_entity_create_projectile(gs,
+            hero->tile.x, hero->tile.y, input->time,
+            gs->intersect_tile.x, gs->intersect_tile.y, input->time + duration);
     }
 }

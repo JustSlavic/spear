@@ -1,0 +1,8 @@
+#ifndef SPEAR_ENGINE_GRAPHICS_OPENGL_H
+#define SPEAR_ENGINE_GRAPHICS_OPENGL_H
+
+
+bool opengl_init(void);
+
+
+#endif // SPEAR_ENGINE_GRAPHICS_OPENGL_H

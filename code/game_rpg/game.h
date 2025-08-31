@@ -10,11 +10,14 @@
 
 typedef enum
 {
-    Entity_None = 0,
+    Entity_Invalid = 0,
 
     Entity_Hero,
     Entity_Monster,
+    Entity_Projectile,
     Entity_UiElement,
+
+    Entity_ArchetypeCount,
 } entity_tag;
 
 typedef enum
@@ -36,12 +39,12 @@ typedef struct entity
     vector3i tile;
     vector3 position;
 
-    float32 move_animation_t;
     float32 move_animation_start_time;
     float32 move_animation_end_time;
-    float32 move_animation_duration;
-    vector3i move_from;
-    vector3i move_to;
+    float32 move_animation_from_x;
+    float32 move_animation_from_y;
+    float32 move_animation_to_x;
+    float32 move_animation_to_y;
 
     ui_element ui;
     uint32 ui_id;
@@ -80,6 +83,7 @@ typedef struct
 
 #define entity_id_array_allocate(A, N) ((entity_id_array) { .data = ALLOCATE_ARRAY(A, entity_id, N), .count = 0, .capacity = N })
 void entity_id_array_push(entity_id_array *array, entity_id e);
+entity_id entity_id_array_get(entity_id_array *array, int index);
 
 typedef enum
 {
@@ -111,6 +115,7 @@ typedef struct game_state
 
     entity_id_array heroes;
     entity_id_array monsters;
+    entity_id_array projectiles;
     entity_id_array ui_elements;
     entity_id_array ui_visibles;
     entity_id_array ui_hoverables;

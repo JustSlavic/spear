@@ -57,6 +57,28 @@ void entity_id_array_push(entity_id_array *array, entity_id e)
     }
 }
 
+void entity_id_array_remove_eid(entity_id_array *array, entity_id e)
+{
+    uint index;
+    for (index = 0; index < array->count; index++)
+        if (array->data[index] == e) break;
+    if (index < array->count)
+    {
+        array->data[index] = array->data[array->count - 1];
+        array->count -= 1;
+    }
+}
+
+entity_id entity_id_array_get(entity_id_array *array, int index)
+{
+    ASSERT(index < array->count);
+    if (index < array->count)
+    {
+        return array->data[index];
+    }
+    return INVALID_ENTITY_ID;
+}
+
 entity *get_entity(game_state *gs, entity_id eid)
 {
     entity *result = NULL;
@@ -89,11 +111,12 @@ void push_entity(game_state *gs, entity_id *out_eid, entity **out_ptr)
     if (out_ptr) *out_ptr = get_entity(gs, eid);
 }
 
-static entity_id_array *choose_entity_array(game_state *gs, uint32 tag)
+static entity_id_array *choose_entity_array(game_state *gs, uint32 archetype)
 {
-    if (tag == Entity_Hero) return &gs->heroes;
-    if (tag == Entity_Monster) return &gs->monsters;
-    if (tag == Entity_UiElement) return &gs->ui_elements;
+    if (archetype == Entity_Hero) return &gs->heroes;
+    if (archetype == Entity_Monster) return &gs->monsters;
+    if (archetype == Entity_Projectile) return &gs->projectiles;
+    if (archetype == Entity_UiElement) return &gs->ui_elements;
     return NULL;
 }
 
@@ -110,8 +133,6 @@ entity *game_entity_push(game_state *gs, uint32 tag, int x, int y)
             e->tag = tag;
             e->tile = vector3i_create(x, y, 3);
             e->position = vector3_create((float) x, (float) y, 3.f);
-            e->move_animation_duration = 0.5f;
-            e->move_animation_t = 0.5f;
 
             game_map_set_entity(&gs->map, eid, x, y, 3);
             entity_id_array_push(array, eid);
@@ -182,6 +203,44 @@ void ui_clickable_push(game_state *gs, entity_id eid)
     }
 }
 
+void game_move_animation_start(entity *e, float x0, float y0, float t0, float x1, float y1, float t1)
+{
+    e->move_animation_start_time = t0;
+    e->move_animation_end_time = t1;
+    e->move_animation_from_x = x0;
+    e->move_animation_from_y = y0;
+    e->move_animation_to_x = x1;
+    e->move_animation_to_y = y1;
+}
+
+entity_id game_entity_create(game_state *gs, uint32 archetype)
+{
+    ASSERT(archetype < Entity_ArchetypeCount);
+    entity_id eid = entity_manager_entity_create(&gs->em);
+    entity_id_array *array = choose_entity_array(gs, archetype);
+    entity_id_array_push(array, eid);
+    entity *e = get_entity(gs, eid);
+    e->tag = archetype;
+    return eid;
+}
+
+void game_entity_destroy(game_state *gs, entity_id eid)
+{
+    entity *e = get_entity(gs, eid);
+    entity_id_array *array = choose_entity_array(gs, e->tag);
+    entity_id_array_remove_eid(array, eid);
+    entity_manager_entity_destroy(&gs->em, eid);
+}
+
+entity_id game_entity_create_projectile(game_state *gs, int x0, int y0, float64 t0, int x1, int y1, float64 t1)
+{
+    entity_id eid = game_entity_create(gs, Entity_Projectile);
+    entity *e = get_entity(gs, eid);
+    e->position = vector3_create((float) x0, (float) y0, 3.f);
+    game_move_animation_start(e, x0, y0, t0, x1, y1, t1);
+    return eid;
+}
+
 INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
 {
     ASSERT(sizeof(game_state) < game_memory.size);
@@ -200,6 +259,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
 
     gs->heroes = entity_id_array_allocate(game_arena, 1);
     gs->monsters = entity_id_array_allocate(game_arena, 10);
+    gs->projectiles = entity_id_array_allocate(game_arena, 10);
     gs->ui_elements = entity_id_array_allocate(game_arena, 10);
     gs->ui_visibles = entity_id_array_allocate(game_arena, 10);
     gs->ui_hoverables = entity_id_array_allocate(game_arena, 10);

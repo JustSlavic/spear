@@ -38,7 +38,7 @@ memory_allocator memory_allocator_arena_create(void *memory, uint64 size)
     ASSERT_MSG(size >= 4096,
         "Cannot create memory arena, because given buffer size is less than 4k memory page. Given buffer is %llu bytes.", size);
     ASSERT_MSG(((uint64) memory) % alignof(memory_allocator_arena) == 0,
-        "Cannot create memory arena, because alignment of given buffer is not %llu bytes.", alignof(memory_allocator_arena));
+        "Cannot create memory arena, because alignment of given buffer is not %llu bytes.", (uint64) alignof(memory_allocator_arena));
     memory_allocator_arena *arena = (memory_allocator_arena *) memory;
     arena->tag = MemoryAllocator_Arena;
     arena->size = size - sizeof(memory_allocator_arena);

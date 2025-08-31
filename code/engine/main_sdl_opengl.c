@@ -120,6 +120,10 @@ int main(void)
 
     // ===================================================
 
+    spear_engine_init_graphics(&g_engine);
+
+    // ===================================================
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(true);
@@ -193,3 +197,4 @@ int main(void)
 #include <engine/game_interface.c>
 #include <engine/primitive_meshes.c>
 #include <engine/graphics/render.c>
+#include <engine/graphics/opengl_mac.c>

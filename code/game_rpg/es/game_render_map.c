@@ -57,3 +57,23 @@ void game_render_draw_map(context *ctx, game_state *gs, input *input)
         }
     }
 }
+
+void game_render_projectiles(context *ctx, game_state *gs, input *input)
+{
+    uint i;
+    for (i = 0; i < gs->projectiles.count; i++)
+    {
+        entity_id eid = entity_id_array_get(&gs->projectiles, i);
+        entity *e = get_entity(gs, eid);
+        render_command cmd =
+        {
+            .tag = RenderCommand_DrawMesh,
+            .mesh_tag = RenderCommand_DrawMesh_Cube,
+            .mesh_shader_tag = RenderCommand_DrawShader_SingleColor,
+            .mesh_position = e->position,
+            .mesh_scale = vector3_create(0.2f, 0.2f, 0.2f),
+            .mesh_color = vector4_create(1.f, 0.f, 0.f, 1.f),
+        };
+        context_render_command_push(ctx, cmd);
+    }
+}

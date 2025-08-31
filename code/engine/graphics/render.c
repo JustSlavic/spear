@@ -4,6 +4,10 @@
 #include "opengl_win32.h"
 #endif
 
+#if OS_MAC
+#include "opengl.h"
+#endif
+
 
 // static matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
 // {

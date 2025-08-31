@@ -26,7 +26,7 @@ void game_update_stage(context *ctx, game_state *gs, input *input)
 {
     find_intersection_with_ground(ctx, gs, input);
     game_update_hero_move(ctx, gs, input);
-    game_update_hero_coordinates(ctx, gs, input);
+    game_update_projectile_movement(ctx, gs, input);
     game_update_ui(ctx, gs, input);
 }
 
@@ -34,6 +34,7 @@ void game_render_stage(context *ctx, game_state *gs, input *input)
 {
     game_camera_setup(ctx, gs, input);
     game_render_draw_map(ctx, gs, input);
+    game_render_projectiles(ctx, gs, input);
     game_render_pointer_intersection(ctx, gs, input);
     game_render_ui(ctx, gs, input);
 }
