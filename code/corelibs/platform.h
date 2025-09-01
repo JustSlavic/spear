@@ -7,7 +7,8 @@
 typedef struct dll dll;
 
 void *platform_allocate_pages(void *base, usize size);
-
+usize platform_get_file_size(char const *filename);
+uint32 platform_read_file_into_memory(char const *filename, void *memory, usize size);
 void platform_dll_open(dll *dll, char const *path);
 void platform_dll_close(dll *dll);
 bool32 platform_dll_is_valid(dll *dll);

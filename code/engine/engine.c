@@ -1,6 +1,7 @@
 #include "engine.h"
 #include "static_shaders.c"
 #include "primitive_meshes.h"
+#include <corelibs/wavefront_obj.h>
 
 #include <math.h>
 
@@ -21,8 +22,8 @@ void spear_engine_init(engine *engine)
     engine->memory.data = memory;
     engine->memory.size = memory_size;
 
-    engine->allocator = memory_allocator_arena_create(memory, allocator_size);
-    engine->temporary = memory_allocator_arena_create((byte *) memory + allocator_size, temporary_size);
+    engine->allocator = memory_allocator_arena_create(memory, allocator_size, "engine");
+    engine->temporary = memory_allocator_arena_create((byte *) memory + allocator_size, temporary_size, "temporary");
     engine->game_memory.data = (byte *) memory + allocator_size + temporary_size;
     engine->game_memory.size = game_memory_size;
 
@@ -65,6 +66,17 @@ void spear_engine_create_meshes(engine *engine)
     engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
     engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
     engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
+
+    char const *utah_filename = "../data/utah_teapot.obj";
+    usize utah_size = platform_get_file_size(utah_filename);
+    printf("Utah size = %llu\n", utah_size);
+    void *utah_data = ALLOCATE_BUFFER_(engine->temporary, utah_size);
+    uint32 bytes_read = platform_read_file_into_memory(utah_filename, utah_data, utah_size);
+    ASSERT(bytes_read == utah_size);
+    wavefront_obj utah_teapot = wavefront_obj_parse(engine->temporary, utah_data, utah_size);
+    UNUSED(utah_teapot);
+
+    printf("Utah data = %p\n", utah_data);
 }
 
 void spear_engine_compile_shaders(engine *engine)
@@ -199,6 +211,7 @@ static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
                  engine->mesh_cube;
     gpu_shader s = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
                    cmd.mesh_shader_tag == RenderCommand_DrawShader_Ground ? engine->shader_ground :
+                   cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
                    engine->shader_single_color;
 
     renderer_draw_mesh(&engine->renderer, model, m, s, cmd.mesh_color);

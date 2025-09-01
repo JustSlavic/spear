@@ -149,13 +149,14 @@ GLSL(
 
     void main()
     {
-        vec3 light_position = vec3(0.f, 0.f, 0.f);
+        float light_strength = 0.5f;
+        vec3 light_position = vec3(10.f, 10.f, 10.f);
         vec3 light_direction = normalize(light_position - fragment_position);
 
-        float ambient_light = 0.f;
+        float ambient_light = 0.05f;
         vec3 ambient_color = ambient_light * fragment_color.rgb;
 
-        float diffuse_light = max(dot(normalize(fragment_normal), light_direction), 0.0);
+        float diffuse_light = light_strength * max(dot(normalize(fragment_normal), light_direction), 0.0);
         vec3 diffuse_color = diffuse_light * fragment_color.rgb;
 
         result_color = vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);

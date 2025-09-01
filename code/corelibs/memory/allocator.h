@@ -5,7 +5,7 @@
 
 typedef void *memory_allocator;
 
-memory_allocator memory_allocator_arena_create(void *memory, uint64 size);
+memory_allocator memory_allocator_arena_create(void *memory, uint64 size, char const *allocator_name);
 memory_allocator memory_allocator_malloc_create(void);
 
 void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignment, code_location cl);

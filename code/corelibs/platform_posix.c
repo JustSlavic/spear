@@ -3,12 +3,37 @@
 #include <sys/mman.h> // mmap
 #include <dlfcn.h> // dlopen
 #include <sys/stat.h> // stat
+#include <fcntl.h> // open, close
+#include <unistd.h> // read
 
 
 void *platform_allocate_pages(void *base, usize size)
 {
     void *result = mmap(base, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     return result;
+}
+
+usize platform_get_file_size(char const *filename)
+{
+    usize result = 0;
+    struct stat st = {};
+    if (stat(filename, &st) == 0)
+    {
+        result = st.st_size;
+    }
+    return result;
+}
+
+uint32 platform_read_file_into_memory(char const *filename, void *memory, usize size)
+{
+    int fd = open(filename, O_NOFOLLOW, O_RDONLY);
+    if (fd)
+    {
+        uint32 bytes_read = read(fd, memory, size);
+        close(fd);
+        return bytes_read;
+    }
+    return 0;
 }
 
 struct dll

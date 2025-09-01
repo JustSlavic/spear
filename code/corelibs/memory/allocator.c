@@ -18,6 +18,7 @@ typedef struct
     memory_allocator_tag tag;
     uint64 size;
     uint64 used;
+    char const *name;
 } memory_allocator_arena;
 
 typedef struct
@@ -33,7 +34,7 @@ typedef struct
 static memory_allocator_malloc global_memory_allocator_malloc;
 static memory_allocator_os global_memory_allocator_os;
 
-memory_allocator memory_allocator_arena_create(void *memory, uint64 size)
+memory_allocator memory_allocator_arena_create(void *memory, uint64 size, char const *allocator_name)
 {
     ASSERT_MSG(size >= 4096,
         "Cannot create memory arena, because given buffer size is less than 4k memory page. Given buffer is %llu bytes.", size);
@@ -43,6 +44,7 @@ memory_allocator memory_allocator_arena_create(void *memory, uint64 size)
     arena->tag = MemoryAllocator_Arena;
     arena->size = size - sizeof(memory_allocator_arena);
     arena->used = sizeof(memory_allocator_arena);
+    arena->name = allocator_name;
     return arena;
 }
 
@@ -76,17 +78,19 @@ void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignme
             arena->used += (size + padding);
             result = base + padding;
         }
+        printf("Allocator '%s': allocated %llu bytes from '%s()' (%s:%u)\n",
+            arena->name, size, cl.function, cl.filename, cl.line);
     }
     else if (tag == MemoryAllocator_Malloc)
     {
         result = malloc(size);
+        printf("Allocator 'malloc': allocated %llu bytes from '%s()' (%s:%u)\n",
+            size, cl.function, cl.filename, cl.line);
     }
     else
     {
-        fprintf(stderr, "Failed memory_allocator_allocate_ for 'MemoryAllocator_Invalid'\n");
+        ASSERT_MSG(false, "Failed memory_allocator_allocate_ for MemoryAllocator_Invalid");
     }
-    printf("%s:%u: allocated %llu bytes from '%s()'\n",
-        cl.filename, cl.line, size, cl.function);
 
     return result;
 }

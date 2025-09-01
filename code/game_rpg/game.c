@@ -261,7 +261,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
 
     int i, j;
 
-    memory_allocator game_arena = memory_allocator_arena_create(game_memory.data, game_memory.size);
+    memory_allocator game_arena = memory_allocator_arena_create(game_memory.data, game_memory.size, "game");
     game_state *gs = ALLOCATE(game_arena, game_state);
     ctx->game_state = gs;
     gs->game_allocator = game_arena;

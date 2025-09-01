@@ -42,6 +42,7 @@ typedef enum render_command_draw_shader_tag
 
     RenderCommand_DrawShader_SingleColor,
     RenderCommand_DrawShader_Ground,
+    RenderCommand_DrawShader_Phong,
 } render_command_draw_shader_tag;
 
 typedef struct render_command
