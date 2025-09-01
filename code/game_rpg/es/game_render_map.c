@@ -32,7 +32,8 @@ void game_render_draw_map(context *ctx, game_state *gs, input *input)
 
             vector4 color = vector4_create(red, green, blue, 1.f);
             // Color ground that mouse pointer points at
-            if (i == gs->intersect_tile.x &&
+            if (gs->intersected &&
+                i == gs->intersect_tile.x &&
                 j == gs->intersect_tile.y &&
                 k == gs->intersect_tile.z)
             {

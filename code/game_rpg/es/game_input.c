@@ -81,15 +81,16 @@ void game_input_hero_spell(context *ctx, game_state *gs, input *input)
     if (gs->spell_id && gs->intersected &&
         input_button_get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))
     {
-        float duration = 0.5f;
         gs->spell_id = Spell_Invalid;
         printf("CAST SPELL at %d, %d, %d\n",
             gs->intersect_tile.x,
             gs->intersect_tile.y,
             gs->intersect_tile.z);
         entity *hero = get_hero(gs);
+        float duration = 0.5f;
         game_entity_create_projectile(gs,
-            hero->tile.x, hero->tile.y, input->time,
-            gs->intersect_tile.x, gs->intersect_tile.y, input->time + duration);
+            (float) hero->tile.x, (float) hero->tile.y, (float) hero->tile.z, input->time,
+            (float) gs->intersect_tile.x, (float) gs->intersect_tile.y, (float) gs->intersect_tile.z + 1,
+            input->time + duration);
     }
 }

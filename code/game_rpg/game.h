@@ -126,7 +126,9 @@ typedef struct game_state
     vector3 camera_default_forward;
     vector3 camera_default_up;
     camera camera;
+
     game_map map;
+    int map_ground_level;
 
     bool32   intersected;
     float32  intersect_t;

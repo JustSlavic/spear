@@ -130,11 +130,12 @@ entity *game_entity_push(game_state *gs, uint32 tag, int x, int y)
         push_entity(gs, &eid, &e);
         if (e)
         {
+            int z = gs->map_ground_level + 1;
             e->tag = tag;
-            e->tile = vector3i_create(x, y, 3);
-            e->position = vector3_create((float) x, (float) y, 3.f);
+            e->tile = vector3i_create(x, y, z);
+            e->position = vector3_create((float) x, (float) y, (float) z);
 
-            game_map_set_entity(&gs->map, eid, x, y, 3);
+            game_map_set_entity(&gs->map, eid, x, y, z);
             entity_id_array_push(array, eid);
         }
     }
@@ -232,11 +233,24 @@ void game_entity_destroy(game_state *gs, entity_id eid)
     entity_manager_entity_destroy(&gs->em, eid);
 }
 
-entity_id game_entity_create_projectile(game_state *gs, int x0, int y0, float64 t0, int x1, int y1, float64 t1)
+entity_id game_entity_create_hero(game_state *gs, int x, int y)
+{
+    entity_id eid = game_entity_create(gs, Entity_Hero);
+    entity *e = get_entity(gs, eid);
+    int z = gs->map_ground_level + 1;
+    e->tile = vector3i_create(x, y, z);
+    e->position = vector3_create((float) x, (float) y, (float) z);
+    game_map_set_entity(&gs->map, eid, x, y, z);
+    return eid;
+}
+
+entity_id game_entity_create_projectile(game_state *gs,
+    float32 x0, float32 y0, float32 z0, float64 t0,
+    float32 x1, float32 y1, float32 z1, float64 t1)
 {
     entity_id eid = game_entity_create(gs, Entity_Projectile);
     entity *e = get_entity(gs, eid);
-    e->position = vector3_create((float) x0, (float) y0, 3.f);
+    e->position = vector3_create(x0, y0, z0);
     game_move_animation_start(e, x0, y0, t0, x1, y1, t1);
     return eid;
 }
@@ -265,24 +279,28 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     gs->ui_hoverables = entity_id_array_allocate(game_arena, 10);
     gs->ui_clickables = entity_id_array_allocate(game_arena, 10);
 
-    gs->map.dim = vector3i_create(10, 10, 10);
-    gs->map.data = ALLOCATE_ARRAY(game_arena, uint32, gs->map.dim.x * gs->map.dim.y * gs->map.dim.z);
+    gs->map.dim = vector3i_create(5, 5, 3);
+    gs->map.data = ALLOCATE_ARRAY(game_arena, game_map_cell, gs->map.dim.x * gs->map.dim.y * gs->map.dim.z);
+    gs->map_ground_level = 1.f;
 
     for (j = 0; j < gs->map.dim.y; j++)
     {
         for (i = 0; i < gs->map.dim.x; i++)
         {
-            game_map_set_ground(&gs->map, i, j, 2);
+            game_map_set_ground(&gs->map, i, j, gs->map_ground_level);
         }
     }
 
+    vector3 map_center = vector3_create(0.5f * gs->map.dim.x, 0.5f * gs->map.dim.y, gs->map_ground_level);
+    // vector3_add(map_center, vector3_create(0.f, -1.f, 0.f));
+
     vector3 at = vector3_create(0, 0, 0);
-    gs->camera_default_position = vector3_create(4.5, -4, 15);
+    gs->camera_default_position = vector3_create(map_center.x, -3.f, 10.f);
     gs->camera_default_forward = vector3_sub(at, gs->camera_default_position);
     gs->camera_default_up = vector3_create(0, 0, 1);
     gs->camera = camera_create_look_at(
         gs->camera_default_position,
-        vector3_create(4.5f, 4.5f, 0.f),
+        map_center,
         gs->camera_default_up);
 
     entity_manager_init(&gs->em, game_arena);
@@ -317,7 +335,6 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     }
     if ((e = get_entity(gs, ui_D)))
     {
-        printf("e = %d\n", ui_D);
         e->ui.position.x = 100.f;
         e->ui.position.y = 0.f;
         e->ui.width = 90;
@@ -334,8 +351,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ui_hoverable_push(gs, ui_D, -50, -50, 50, 50);
     ui_clickable_push(gs, ui_D);
 
-    entity *hero = game_entity_push(gs, Entity_Hero, 3, 3);
-    UNUSED(hero);
+    game_entity_create_hero(gs, 3, 3);
 }
 
 #include "es/systems.c"
