@@ -4,6 +4,7 @@
 #include <corelibs/base.h>
 #include <corelibs/memory/allocator.h>
 #include <corelibs/platform.h>
+#include <corelibs/bitmap.h>
 #include <gamelibs/input.h>
 #include "graphics/render.h"
 #include "game_interface.h"
@@ -45,6 +46,7 @@ typedef struct
     float far_clip_distance;
 
     gpu_mesh mesh_square;
+    gpu_mesh mesh_square_uv;
     gpu_mesh mesh_tetrahedron;
     gpu_mesh mesh_cube;
     gpu_mesh mesh_octahedron;
@@ -53,12 +55,16 @@ typedef struct
     gpu_mesh mesh_ico_sphere;
     gpu_mesh mesh_ui_frame;
     gpu_shader shader_single_color;
+    gpu_shader shader_textured;
     gpu_shader shader_ground;
     gpu_shader shader_framebuffer;
     gpu_shader shader_text;
     gpu_shader shader_phong;
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
+
+    bitmap test_bmp;
+    gpu_texture test_tx;
 } engine;
 
 void spear_engine_init(engine *engine);

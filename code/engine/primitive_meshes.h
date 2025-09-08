@@ -7,6 +7,7 @@
 
 
 cpu_mesh mesh_square_create(void);
+cpu_mesh mesh_square_create_uv(void);
 cpu_mesh mesh_tetrahedron_create(void);
 cpu_mesh mesh_cube_create(void);
 cpu_mesh mesh_octahedron_create(void);

@@ -320,6 +320,32 @@ gpu_shader render_compile_shaders(char const *vs_code, char const *fs_code)
     return result;
 }
 
+gpu_texture load_texture(bitmap bitmap)
+{
+    gpu_texture result = {};
+
+    if (bitmap.size == 0) return result;
+
+    uint32 id = 0;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    if (bitmap.color_mode == Bitmap_RGBA)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.data);
+    if (bitmap.color_mode == Bitmap_BGR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmap.data);
+    else
+        ASSERT_MSG(false, "Unsupported color type!");
+
+    result.id = id;
+    return result;
+}
+
 void render_shader_uniform_int(gpu_shader shader, char const *name, int32 n)
 {
     int location = glGetUniformLocation(shader.id, name);

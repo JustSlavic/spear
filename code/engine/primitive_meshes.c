@@ -28,6 +28,34 @@ cpu_mesh mesh_square_create(void)
     return result;
 }
 
+cpu_mesh mesh_square_create_uv(void)
+{
+    static float32 vbo_data[] = {
+        -1.0f, -1.0f,  0.0f,    0.0f,  0.0f,
+         1.0f, -1.0f,  0.0f,    1.0f,  0.0f,
+         1.0f,  1.0f,  0.0f,    1.0f,  1.0f,
+        -1.0f,  1.0f,  0.0f,    0.0f,  1.0f,
+    };
+
+    static uint32 ibo_data[] = {
+        0, 1, 2, // first triangle
+        2, 3, 0, // second triangle
+    };
+
+    memory_view vbo = memory_view_create(vbo_data, sizeof(vbo_data));
+    memory_view ibo = memory_view_create(ibo_data, sizeof(ibo_data));
+    vertex_buffer_layout vbl = {};
+    render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
+    render_vertex_buffer_layout_push(&vbl, sizeof(float), 2);
+
+    cpu_mesh result = {};
+    result.vbo = vbo;
+    result.ibo = ibo;
+    result.vbl = vbl;
+
+    return result;
+}
+
 cpu_mesh mesh_tetrahedron_create(void)
 {
     float32 a = 1.0f / 3.0f;

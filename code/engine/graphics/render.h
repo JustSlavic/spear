@@ -44,6 +44,10 @@ typedef struct
     uint32 fs_id;
 } gpu_shader;
 
+typedef struct
+{
+    uint32 id;
+} gpu_texture;
 
 typedef struct renderer
 {
@@ -63,6 +67,7 @@ viewport render_viewport_create(int32 width, int32 height, float32 desired_aspec
 void render_vertex_buffer_layout_push(vertex_buffer_layout *layout, uint32 element_size, uint32 element_count);
 gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh);
 gpu_shader render_compile_shaders(char const *vs_code, char const *fs_code);
+gpu_texture load_texture(bitmap bitmap);
 
 void render_shader_uniform_float(gpu_shader shader, char const *name, float);
 void render_shader_uniform_vector4f(gpu_shader shader, char const *name, float *);

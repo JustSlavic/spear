@@ -29,6 +29,40 @@ GLSL(
     }
 );
 
+static char const *vs_textured =
+"#version 410\n"
+GLSL(
+    layout (location = 0) in vec3 vertex_position;
+    layout (location = 1) in vec2 uv_coordinates;
+
+    out vec2 uv;
+
+    uniform mat4 u_model;
+    uniform mat4 u_view;
+    uniform mat4 u_projection;
+
+    void main()
+    {
+        uv = uv_coordinates;
+        gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
+    }
+);
+
+static char const *fs_textured =
+"#version 410\n"
+GLSL(
+    in vec2 uv;
+    out vec4 result_color;
+
+    uniform sampler2D u_texture0;
+
+    void main()
+    {
+        vec4 tex_color = texture(u_texture0, uv);
+        result_color = tex_color;
+    }
+);
+
 static char const *vs_ground =
 "#version 410\n"
 GLSL(

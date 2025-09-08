@@ -1,7 +1,8 @@
 #include "engine.h"
 #include "static_shaders.c"
 #include "primitive_meshes.h"
-#include <corelibs/wavefront_obj.h>
+#include <corelibs/file_formats/wavefront_obj.h>
+#include <corelibs/file_formats/bmp.h>
 
 #include <math.h>
 
@@ -59,6 +60,7 @@ void spear_engine_init_graphics(engine *engine)
 void spear_engine_create_meshes(engine *engine)
 {
     engine->mesh_square = render_load_mesh_to_gpu(mesh_square_create());
+    engine->mesh_square_uv = render_load_mesh_to_gpu(mesh_square_create_uv());
     engine->mesh_tetrahedron = render_load_mesh_to_gpu(mesh_tetrahedron_create());
     engine->mesh_cube = render_load_mesh_to_gpu(mesh_cube_create());
     engine->mesh_octahedron = render_load_mesh_to_gpu(mesh_octahedron_create());
@@ -67,21 +69,55 @@ void spear_engine_create_meshes(engine *engine)
     engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
     engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
 
-    char const *utah_filename = "../data/utah_teapot.obj";
-    usize utah_size = platform_get_file_size(utah_filename);
-    printf("Utah size = %llu\n", utah_size);
-    void *utah_data = ALLOCATE_BUFFER_(engine->temporary, utah_size);
-    uint32 bytes_read = platform_read_file_into_memory(utah_filename, utah_data, utah_size);
-    ASSERT(bytes_read == utah_size);
-    wavefront_obj utah_teapot = wavefront_obj_parse(engine->temporary, utah_data, utah_size);
-    UNUSED(utah_teapot);
+    // char const *utah_filename = "../data/utah_teapot.obj";
+    // usize utah_size = platform_get_file_size(utah_filename);
+    // printf("Utah size = %llu\n", utah_size);
+    // void *utah_data = ALLOCATE_BUFFER_(engine->temporary, utah_size);
+    // uint32 bytes_read = platform_read_file_into_memory(utah_filename, utah_data, utah_size);
+    // ASSERT(bytes_read == utah_size);
+    // wavefront_obj utah_teapot = wavefront_obj_parse(engine->temporary, utah_data, utah_size);
+    // UNUSED(utah_teapot);
+    // printf("Utah data = %p\n", utah_data);
 
-    printf("Utah data = %p\n", utah_data);
+    char const *file_name = "../misc/test8x8.bmp";
+    usize file_size = platform_get_file_size(file_name);
+    void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+    uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+    ASSERT(bytes_read == file_size);
+
+    void *image_data = NULL;
+    uint32 image_size = 0;
+    int32 bmp_result = bmp_extract_size(file_data, file_size, &image_size);
+    if (bmp_result == BmpDecode_Success && image_size > 0)
+    {
+        image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
+        uint32 width, height, bits_per_pixel, color_mode, is_top_down;
+        bmp_result = bmp_decode(file_data, file_size, image_data, image_size,
+            &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
+
+        if (bmp_result == BmpDecode_Success)
+        {
+            printf("Loaded bmp file: image_size = %u; width = %u; height = %u;\n", image_size, width, height);
+            engine->test_bmp = (bitmap)
+            {
+                .data = image_data,
+                .size = image_size,
+                .width = width,
+                .height = height,
+                .bits_per_pixel = bits_per_pixel,
+                .color_mode = color_mode,
+            };
+
+            engine->test_tx = load_texture(engine->test_bmp);
+            printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+        }
+    }
 }
 
 void spear_engine_compile_shaders(engine *engine)
 {
     engine->shader_single_color = render_compile_shaders(vs_single_color, fs_pass_color);
+    engine->shader_textured = render_compile_shaders(vs_textured, fs_textured);
     engine->shader_ground = render_compile_shaders(vs_ground, fs_pass_color);
     engine->shader_framebuffer = render_compile_shaders(vs_framebuffer, fs_framebuffer);
     engine->shader_text = render_compile_shaders(vs_text, fs_text);
@@ -298,4 +334,19 @@ void spear_engine_game_render(engine *engine)
         }
     }
     engine->game_context.render_commands_count = 0;
+
+    {
+        matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
+        glUseProgram(engine->shader_textured.id);
+        render_shader_uniform_matrix4f(engine->shader_textured, "u_model", (float *) &model);
+        render_shader_uniform_matrix4f(engine->shader_textured, "u_view", (float *) &engine->renderer.view_matrix);
+        render_shader_uniform_matrix4f(engine->shader_textured, "u_projection", (float *) &engine->renderer.proj_matrix);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+
+        glBindVertexArray(engine->mesh_square_uv.vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square_uv.ibo);
+        glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
+    }
 }

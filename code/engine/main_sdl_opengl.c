@@ -189,7 +189,8 @@ int main(void)
 #include <corelibs/collision.c>
 #include <corelibs/platform_posix.c>
 #include <corelibs/memory/allocator.c>
-#include <corelibs/wavefront_obj.c>
+#include <corelibs/file_formats/wavefront_obj.c>
+#include <corelibs/file_formats/bmp.c>
 #include <gamelibs/input.c>
 #include <gamelibs/camera.c>
 #include <gamelibs/entity_manager.c>
