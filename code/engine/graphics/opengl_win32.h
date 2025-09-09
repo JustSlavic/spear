@@ -22,6 +22,9 @@
 #define GL_SAMPLES                                      0x80A9
 #define GL_SAMPLES_ARB                                  0x80A9
 #define GL_SAMPLES_EXT                                  0x80A9
+#define GL_BGR                                          0x80E0
+#define GL_BGRA                                         0x80E1
+#define GL_CLAMP_TO_BORDER                              0x812D
 #define GL_CLAMP_TO_EDGE                                0x812F
 #define GL_FRAMEBUFFER_UNDEFINED                        0x8219
 #define GL_MAJOR_VERSION                                0x821B
@@ -63,13 +66,12 @@
 #define GL_TEXTURE_SWIZZLE_A                            0x8E45
 #define GL_TEXTURE_SWIZZLE_RGBA                         0x8E46
 #define GL_TEXTURE_2D_MULTISAMPLE                       0x9100
-
 // typedef uint8  GLboolean;
 // typedef uint32 GLenum;
 // typedef uint32 GLbitfield;
 // typedef float32 GLclampf;
 
-// typedef void glActiveTextureType(GLenum texture);
+typedef void glActiveTextureType(GLenum texture);
 // typedef void glGenFramebuffersType(isize n, uint32 *ids);
 // typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
 // typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
@@ -109,7 +111,7 @@ typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose
 // typedef void glFramebufferRenderbufferType(GLenum target, GLenum attachment, GLenum renderbuffertarget, uint32 renderbuffer);
 // typedef GLenum glCheckFramebufferStatusType(GLenum target);
 
-// extern glActiveTextureType *glActiveTexture;
+extern glActiveTextureType *glActiveTexture;
 // extern glGenFramebuffersType *glGenFramebuffers;
 // extern glBindFramebufferType *glBindFramebuffer;
 // extern glFramebufferTexture2DType *glFramebufferTexture2D;

@@ -4,9 +4,9 @@
 
 enum
 {
-    BI_RGB  = 0, // No compression
-    BI_RLE8 = 1, // 8bit RLE encoding
-    BI_RLE4 = 2, // 4bit RLE encoding
+    BMP_BI_RGB  = 0, // No compression
+    BMP_BI_RLE8 = 1, // 8bit RLE encoding
+    BMP_BI_RLE4 = 2, // 4bit RLE encoding
 };
 
 char const *bmp_decode_result_to_cstring(bmp_decode_result result)
@@ -20,6 +20,7 @@ char const *bmp_decode_result_to_cstring(bmp_decode_result result)
         case BmpDecode_InfoHeaderSizeNotForty: return "BmpDecode_InfoHeaderSizeNotForty";
         case BmpDecode_InfoHeaderPlanesNotOne: return "BmpDecode_InfoHeaderPlanesNotOne";
     }
+    return NULL;
 }
 
 #define BMP_READ(Type, Variable)                \
@@ -31,7 +32,7 @@ char const *bmp_decode_result_to_cstring(bmp_decode_result result)
         return BmpDecode_UnexpectedEof;         \
     }                                           \
 
-bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *image_size)
+bmp_decode_result bmp_extract_size(void *file_data, usize file_size, usize *image_size)
 {
     uint8 *data = (uint8 *) file_data;
     uint32 index = 0;
@@ -67,7 +68,7 @@ bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *im
     BMP_READ(uint32, info_header_image_size); // Can be 0 if compression is BI_RGB
 
     uint32 compited_image_size = info_header_image_size;
-    if (info_header_image_size == 0 && info_header_compression == BI_RGB)
+    if (info_header_image_size == 0 && info_header_compression == BMP_BI_RGB)
     {
         compited_image_size = info_header_width * info_header_height * info_header_bits_per_pixel / 8;
     }
@@ -76,7 +77,7 @@ bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *im
     return BmpDecode_Success;
 }
 
-bmp_decode_result bmp_decode(void *file_data, uint32 file_size, void *image_data, uint32 image_size, uint32 *out_width, uint32 *out_height, uint32 *bits_per_pixel, uint32 *out_color_mode, bool32 *is_top_down)
+bmp_decode_result bmp_decode(void *file_data, usize file_size, void *image_data, usize image_size, uint32 *out_width, uint32 *out_height, uint32 *bits_per_pixel, uint32 *out_color_mode, bool32 *is_top_down)
 {
     uint8 *data = (uint8 *) file_data;
     uint32 index = 0;

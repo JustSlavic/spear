@@ -71,8 +71,8 @@ void entity_id_array_remove_eid(entity_id_array *array, entity_id e)
 
 entity_id entity_id_array_get(entity_id_array *array, int index)
 {
-    ASSERT(index < array->count);
-    if (index < array->count)
+    ASSERT(index < (int) array->count);
+    if (index < (int) array->count)
     {
         return array->data[index];
     }
@@ -251,7 +251,7 @@ entity_id game_entity_create_projectile(game_state *gs,
     entity_id eid = game_entity_create(gs, Entity_Projectile);
     entity *e = get_entity(gs, eid);
     e->position = vector3_create(x0, y0, z0);
-    game_move_animation_start(e, x0, y0, t0, x1, y1, t1);
+    game_move_animation_start(e, x0, y0, (float) t0, x1, y1, (float) t1);
     return eid;
 }
 
@@ -281,7 +281,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
 
     gs->map.dim = vector3i_create(5, 5, 3);
     gs->map.data = ALLOCATE_ARRAY(game_arena, game_map_cell, gs->map.dim.x * gs->map.dim.y * gs->map.dim.z);
-    gs->map_ground_level = 1.f;
+    gs->map_ground_level = 1;
 
     for (j = 0; j < gs->map.dim.y; j++)
     {
@@ -291,7 +291,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
         }
     }
 
-    vector3 map_center = vector3_create(0.5f * gs->map.dim.x, 0.5f * gs->map.dim.y, gs->map_ground_level);
+    vector3 map_center = vector3_create(0.5f * gs->map.dim.x, 0.5f * gs->map.dim.y, (float) gs->map_ground_level);
     // vector3_add(map_center, vector3_create(0.f, -1.f, 0.f));
 
     vector3 at = vector3_create(0, 0, 0);

@@ -61,6 +61,7 @@ void renderer_setup_projection(renderer *r, float fov, float aspect_ratio, float
 void renderer_setup_camera(renderer *r, vector3 pos, vector3 dir, vector3 up);
 void renderer_draw_mesh(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color);
 void renderer_draw_mesh_ui(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color);
+void renderer_draw_mesh_textured(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, gpu_texture t);
 void renderer_draw_ui_frame(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color, float width, float height);
 
 viewport render_viewport_create(int32 width, int32 height, float32 desired_aspect_ratio);

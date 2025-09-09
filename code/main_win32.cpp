@@ -660,7 +660,6 @@ game_dll load_game_dll(string_view dll_path, string_view temp_dll_path, string_v
     if (!lock_file_exists)
     {
         CopyFile(dll_path.data, temp_dll_path.data, FALSE);
-
         result.dll = win32::dll::load(temp_dll_path.data);
 
         if (result.dll.handle)

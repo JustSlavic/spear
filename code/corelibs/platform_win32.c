@@ -15,6 +15,38 @@ void *platform_allocate_pages(void *base, usize size)
     return result;
 }
 
+usize platform_get_file_size(char const *filename)
+{
+    usize Result = 0;
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle)
+    {
+        LARGE_INTEGER filesize;
+        BOOL GetFileSizeExResult = GetFileSizeEx(FileHandle, &filesize);
+        if (GetFileSizeExResult)
+        {
+            CloseHandle(FileHandle);
+            Result = filesize.QuadPart;
+        }
+    }
+    return Result;
+}
+
+uint32 platform_read_file_into_memory(char const *filename, void *memory, usize size)
+{
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        return 0;
+    }
+
+    DWORD BytesRead;
+    BOOL ReadFileResult = ReadFile(FileHandle, memory, (DWORD) size, &BytesRead, NULL);
+    CloseHandle(FileHandle);
+
+    return BytesRead;
+}
+
 void platform_dll_open(dll *dll, char const *path)
 {
     dll->handle = LoadLibraryA(path);

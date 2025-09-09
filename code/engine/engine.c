@@ -86,8 +86,8 @@ void spear_engine_create_meshes(engine *engine)
     ASSERT(bytes_read == file_size);
 
     void *image_data = NULL;
-    uint32 image_size = 0;
-    int32 bmp_result = bmp_extract_size(file_data, file_size, &image_size);
+    usize image_size = 0;
+    usize bmp_result = bmp_extract_size(file_data, file_size, &image_size);
     if (bmp_result == BmpDecode_Success && image_size > 0)
     {
         image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
@@ -97,7 +97,7 @@ void spear_engine_create_meshes(engine *engine)
 
         if (bmp_result == BmpDecode_Success)
         {
-            printf("Loaded bmp file: image_size = %u; width = %u; height = %u;\n", image_size, width, height);
+            printf("Loaded bmp file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
             engine->test_bmp = (bitmap)
             {
                 .data = image_data,
@@ -335,18 +335,6 @@ void spear_engine_game_render(engine *engine)
     }
     engine->game_context.render_commands_count = 0;
 
-    {
-        matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
-        glUseProgram(engine->shader_textured.id);
-        render_shader_uniform_matrix4f(engine->shader_textured, "u_model", (float *) &model);
-        render_shader_uniform_matrix4f(engine->shader_textured, "u_view", (float *) &engine->renderer.view_matrix);
-        render_shader_uniform_matrix4f(engine->shader_textured, "u_projection", (float *) &engine->renderer.proj_matrix);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
-
-        glBindVertexArray(engine->mesh_square_uv.vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square_uv.ibo);
-        glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
-    }
+    matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
+    renderer_draw_mesh_textured(&engine->renderer, model, engine->mesh_square, engine->shader_textured, engine->test_tx);
 }

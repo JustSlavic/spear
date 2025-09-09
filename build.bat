@@ -17,7 +17,7 @@ SET LINKER_FLAGS=/opt:ref /incremental:no
 rem   Winmm.lib Xinput.lib D3D11.lib D3DCompiler.lib
 
 echo WAITING FOR PDB > lock.tmp
-for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds"') do SET PDB_FILENAME="%%i.pdb"
+for /f "delims=" %%i in ('powershell -command "(New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date)).TotalSeconds"') do SET PDB_FILENAME="bin/%%i.pdb"
 
 
 cl %MSVC_FLAGS% %WARNINGS% %DEFINES% %INCLUDES% /Febin/spear_engine /Tccode/engine/main_win32.c /link /SUBSYSTEM:WINDOWS /PDB:spear.pdb %LINKER_FLAGS% %LIBS%

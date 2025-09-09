@@ -3,10 +3,10 @@ void game_update_hero_move(context *ctx, game_state *gs, input *input)
     entity *e = get_hero(gs);
     if (input->time < e->move_animation_end_time)
     {
-        float t = (input->time - e->move_animation_start_time) /
+        float64 t = (input->time - e->move_animation_start_time) /
             (e->move_animation_end_time - e->move_animation_start_time);
-        float x = lerp(e->move_animation_from_x, e->move_animation_to_x, t);
-        float y = lerp(e->move_animation_from_y, e->move_animation_to_y, t);
+        float x = lerp(e->move_animation_from_x, e->move_animation_to_x, (float) t);
+        float y = lerp(e->move_animation_from_y, e->move_animation_to_y, (float) t);
         e->position.x = x;
         e->position.y = y;
     }
@@ -21,10 +21,10 @@ void game_update_projectile_movement(context *ctx, game_state *gs, input *input)
         entity *e = get_entity(gs, eid);
         if (input->time < e->move_animation_end_time)
         {
-            float t = (input->time - e->move_animation_start_time) /
+            float64 t = (input->time - e->move_animation_start_time) /
                 (e->move_animation_end_time - e->move_animation_start_time);
-            float x = lerp(e->move_animation_from_x, e->move_animation_to_x, t);
-            float y = lerp(e->move_animation_from_y, e->move_animation_to_y, t);
+            float x = lerp(e->move_animation_from_x, e->move_animation_to_x, (float) t);
+            float y = lerp(e->move_animation_from_y, e->move_animation_to_y, (float) t);
             e->position.x = x;
             e->position.y = y;
         }

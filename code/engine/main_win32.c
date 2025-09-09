@@ -255,6 +255,7 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
 #include <corelibs/math.c>
 #include <corelibs/platform_win32.c>
 #include <corelibs/memory/allocator.c>
+#include <corelibs/file_formats/bmp.c>
 
 #include <gamelibs/input.c>
 

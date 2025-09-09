@@ -381,3 +381,18 @@ void render_shader_uniform_matrix4f(gpu_shader shader, char const *name, float *
     int location = glGetUniformLocation(shader.id, name);
     glUniformMatrix4fv(location, 1, GL_TRUE, m);
 }
+
+void renderer_draw_mesh_textured(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, gpu_texture t)
+{
+    glUseProgram(s.id);
+    render_shader_uniform_matrix4f(s, "u_model", (float *) &model);
+    render_shader_uniform_matrix4f(s, "u_view", (float *) &r->view_matrix);
+    render_shader_uniform_matrix4f(s, "u_projection", (float *) &r->proj_matrix);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, t.id);
+
+    glBindVertexArray(m.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.ibo);
+    glDrawElements(GL_TRIANGLES, m.element_count, GL_UNSIGNED_INT, NULL);
+}
