@@ -7,6 +7,7 @@
 #include <corelibs/bitmap.h>
 #include <gamelibs/input.h>
 #include "graphics/render.h"
+#include "audio/audio.h"
 #include "game_interface.h"
 
 
@@ -66,6 +67,8 @@ typedef struct
     uint8 *audio_data;
     uint32 audio_size;
     uint32 audio_pointer;
+
+    audio_buffer master_audio;
 
     bitmap test_bmp;
     gpu_texture test_tx;

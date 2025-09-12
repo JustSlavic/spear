@@ -8,7 +8,7 @@
 #include <math.h>
 
 
-void my_audio_callback(void *userdata, uint8 *buffer_to_write_to, int requested_length)
+void my_audio_callback_test(void *userdata, uint8 *buffer_to_write_to, int requested_length)
 {
     if (userdata)
     {
@@ -80,6 +80,8 @@ void spear_engine_init(engine *engine)
         engine->aspect_ratio,
         engine->near_clip_distance,
         engine->far_clip_distance);
+
+    spear_audio_init(&engine->master_audio);
 }
 
 void spear_engine_init_graphics(engine *engine)
@@ -176,25 +178,10 @@ void spear_engine_create_meshes(engine *engine)
                         printf("    samples_per_second = %u\n", samples_per_second);
                         printf("    bits_per_sample = %u\n", bits_per_sample);
 
-                        SDL_AudioSpec sdl_spec = {};
-                        sdl_spec.format = AUDIO_S16LSB;
-                        sdl_spec.freq = samples_per_second;
-                        sdl_spec.channels = channel_count;
-                        sdl_spec.samples = 0;
-                        sdl_spec.size = 0;
-                        sdl_spec.callback = my_audio_callback;
-                        sdl_spec.userdata = engine;
-
-                        engine->audio_data = sound_data;
-                        engine->audio_size = sound_size;
-
-                        if (SDL_OpenAudio(&sdl_spec, NULL) < 0)
-                        {
-                            printf("SOUND ERROR COULD NOT OPEN AUDIO\n");
-                            return;
-                        }
-
-                        SDL_PauseAudio(0);
+                        engine->master_audio.data = sound_data;
+                        engine->master_audio.size = sound_size;
+                        engine->master_audio.index_read = 0;
+                        engine->master_audio.index_write = 0;
                     }
                     else
                     {
