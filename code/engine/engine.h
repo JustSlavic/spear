@@ -63,6 +63,10 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
+    uint8 *audio_data;
+    uint32 audio_size;
+    uint32 audio_pointer;
+
     bitmap test_bmp;
     gpu_texture test_tx;
 } engine;

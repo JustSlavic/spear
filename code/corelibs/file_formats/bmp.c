@@ -31,7 +31,7 @@ char const *bmp_decode_result_to_cstring(bmp_decode_result result)
         return BmpDecode_UnexpectedEof;         \
     }                                           \
 
-bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *image_size)
+bmp_decode_result bmp_extract_size(void *file_data, usize file_size, uint32 *out_image_size)
 {
     uint8 *data = (uint8 *) file_data;
     uint32 index = 0;
@@ -71,12 +71,19 @@ bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *im
     {
         compited_image_size = info_header_width * info_header_height * info_header_bits_per_pixel / 8;
     }
-    *image_size = compited_image_size;
+    *out_image_size = compited_image_size;
 
     return BmpDecode_Success;
 }
 
-bmp_decode_result bmp_decode(void *file_data, uint32 file_size, void *image_data, uint32 image_size, uint32 *out_width, uint32 *out_height, uint32 *bits_per_pixel, uint32 *out_color_mode, bool32 *is_top_down)
+bmp_decode_result
+bmp_decode(void *file_data, usize file_size,
+           void *image_data, usize image_size,
+           uint32 *out_width,
+           uint32 *out_height,
+           uint32 *out_bits_per_pixel,
+           uint32 *out_color_mode,
+           bool32 *out_is_top_down)
 {
     uint8 *data = (uint8 *) file_data;
     uint32 index = 0;
@@ -130,9 +137,9 @@ bmp_decode_result bmp_decode(void *file_data, uint32 file_size, void *image_data
 
     if (out_width) *out_width = info_header_width;
     if (out_height) *out_height = info_header_height;
-    if (bits_per_pixel) *bits_per_pixel = info_header_bits_per_pixel;
+    if (out_bits_per_pixel) *out_bits_per_pixel = info_header_bits_per_pixel;
     if (out_color_mode) *out_color_mode = Bitmap_BGR;
-    if (is_top_down) *is_top_down = false;
+    if (out_is_top_down) *out_is_top_down = false;
 
     return BmpDecode_Success;
 }

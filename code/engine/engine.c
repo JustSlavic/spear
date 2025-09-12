@@ -3,8 +3,38 @@
 #include "primitive_meshes.h"
 #include <corelibs/file_formats/wavefront_obj.h>
 #include <corelibs/file_formats/bmp.h>
+#include <corelibs/file_formats/wav.h>
 
 #include <math.h>
+
+
+void my_audio_callback(void *userdata, uint8 *buffer_to_write_to, int requested_length)
+{
+    if (userdata)
+    {
+        engine *eng = (engine *) userdata;
+        uint8 *data = eng->audio_data;
+        uint32 size = eng->audio_size;
+        uint32 pointer = eng->audio_pointer;
+
+        if (pointer + requested_length < size)
+        {
+            memcpy(buffer_to_write_to, data + pointer, requested_length);
+
+            eng->audio_pointer += requested_length;
+        }
+        else
+        {
+            uint32 chunk1_size = size - pointer;
+            uint32 chunk2_size = requested_length - chunk1_size;
+
+            memcpy(buffer_to_write_to, data + pointer, chunk1_size);
+            memcpy(buffer_to_write_to + chunk1_size, data, chunk2_size);
+
+            eng->audio_pointer = chunk2_size;
+        }
+    }
+}
 
 
 void spear_engine_init(engine *engine)
@@ -14,8 +44,8 @@ void spear_engine_init(engine *engine)
     engine->current_client_width = 1200;
     engine->current_client_height = 800;
 
-    usize allocator_size = MEGABYTES(1);
-    usize temporary_size = MEGABYTES(1);
+    usize allocator_size = MEGABYTES(5);
+    usize temporary_size = MEGABYTES(5);
     usize game_memory_size = MEGABYTES(2);
     usize memory_size = allocator_size + temporary_size + game_memory_size;
 
@@ -79,37 +109,107 @@ void spear_engine_create_meshes(engine *engine)
     // UNUSED(utah_teapot);
     // printf("Utah data = %p\n", utah_data);
 
-    char const *file_name = "../misc/test8x8.bmp";
-    usize file_size = platform_get_file_size(file_name);
-    void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
-    uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
-    ASSERT(bytes_read == file_size);
-
-    void *image_data = NULL;
-    uint32 image_size = 0;
-    int32 bmp_result = bmp_extract_size(file_data, file_size, &image_size);
-    if (bmp_result == BmpDecode_Success && image_size > 0)
     {
-        image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
-        uint32 width, height, bits_per_pixel, color_mode, is_top_down;
-        bmp_result = bmp_decode(file_data, file_size, image_data, image_size,
-            &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
+        char const *file_name = "../misc/test8x8.bmp";
+        usize file_size = platform_get_file_size(file_name);
+        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+        uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+        ASSERT(bytes_read == file_size);
 
-        if (bmp_result == BmpDecode_Success)
+        void *image_data = NULL;
+        usize image_size = 0;
+        usize decode_result = bmp_extract_size(file_data, file_size, (uint32 *) &image_size);
+        if (decode_result == BmpDecode_Success && image_size > 0)
         {
-            printf("Loaded bmp file: image_size = %u; width = %u; height = %u;\n", image_size, width, height);
-            engine->test_bmp = (bitmap)
+            image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
+            if (image_data)
             {
-                .data = image_data,
-                .size = image_size,
-                .width = width,
-                .height = height,
-                .bits_per_pixel = bits_per_pixel,
-                .color_mode = color_mode,
-            };
+                uint32 width, height, bits_per_pixel, color_mode, is_top_down;
+                decode_result = bmp_decode(file_data, file_size, image_data, image_size,
+                    &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
 
-            engine->test_tx = load_texture(engine->test_bmp);
-            printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+                if (decode_result == BmpDecode_Success)
+                {
+                    printf("Loaded bmp file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
+                    engine->test_bmp = (bitmap)
+                    {
+                        .data = image_data,
+                        .size = image_size,
+                        .width = width,
+                        .height = height,
+                        .bits_per_pixel = bits_per_pixel,
+                        .color_mode = color_mode,
+                    };
+
+                    engine->test_tx = load_texture(engine->test_bmp);
+                    printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+                }
+            }
+        }
+    }
+    {
+        char const *file_name = "../data/birds.wav";
+        usize file_size = platform_get_file_size(file_name);
+        if (file_size > 0)
+        {
+            void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+            uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+            ASSERT(bytes_read == file_size);
+
+            void *sound_data = NULL;
+            usize sound_size = 0;
+            usize decode_result = wav_extract_size(file_data, file_size, &sound_size);
+            if (decode_result == WavDecode_Success && sound_size > 0)
+            {
+                sound_data = ALLOCATE_BUFFER_(engine->allocator, sound_size);
+                if (sound_data)
+                {
+                    uint32 channel_count, samples_per_second, bits_per_sample;
+                    decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
+                        &channel_count, &samples_per_second, &bits_per_sample);
+
+                    if (decode_result == BmpDecode_Success)
+                    {
+                        printf("Loaded wav file:\n");
+                        printf("    sound_size = %llu\n", sound_size);
+                        printf("    channel_count = %u\n", channel_count);
+                        printf("    samples_per_second = %u\n", samples_per_second);
+                        printf("    bits_per_sample = %u\n", bits_per_sample);
+
+                        SDL_AudioSpec sdl_spec = {};
+                        sdl_spec.format = AUDIO_S16LSB;
+                        sdl_spec.freq = samples_per_second;
+                        sdl_spec.channels = channel_count;
+                        sdl_spec.samples = 0;
+                        sdl_spec.size = 0;
+                        sdl_spec.callback = my_audio_callback;
+                        sdl_spec.userdata = engine;
+
+                        engine->audio_data = sound_data;
+                        engine->audio_size = sound_size;
+
+                        if (SDL_OpenAudio(&sdl_spec, NULL) < 0)
+                        {
+                            printf("SOUND ERROR COULD NOT OPEN AUDIO\n");
+                            return;
+                        }
+
+                        SDL_PauseAudio(0);
+                    }
+                    else
+                    {
+                        printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
+                    }
+                }
+            }
+            else
+            {
+                printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
+            }
+        }
+        else
+        {
+            printf("File '%s' does not exist\n", file_name);
         }
     }
 }

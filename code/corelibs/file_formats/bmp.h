@@ -15,8 +15,14 @@ typedef enum
 } bmp_decode_result;
 
 char const *bmp_decode_result_to_cstring(bmp_decode_result result);
-bmp_decode_result bmp_extract_size(void *file_data, uint32 file_size, uint32 *out_size);
-bmp_decode_result bmp_decode(void *filt_data, uint32 file_size, void *out_memory, uint32 out_size, uint32 *out_width, uint32 *out_height, uint32 *bits_per_pixel, uint32 *out_color_mode, bool32 *is_top_down);
+bmp_decode_result bmp_extract_size(void *file_data, usize file_size, uint32 *out_image_size);
+bmp_decode_result bmp_decode(void *file_data, usize file_size,
+                             void *image_data, usize image_size,
+                             uint32 *out_width,
+                             uint32 *out_height,
+                             uint32 *out_bits_per_pixel,
+                             uint32 *out_color_mode,
+                             bool32 *out_is_top_down);
 
 
 #endif // SPEAR_CORELIBS_FILE_FORMATS_H

@@ -191,6 +191,7 @@ int main(void)
 #include <corelibs/memory/allocator.c>
 #include <corelibs/file_formats/wavefront_obj.c>
 #include <corelibs/file_formats/bmp.c>
+#include <corelibs/file_formats/wav.c>
 #include <gamelibs/input.c>
 #include <gamelibs/camera.c>
 #include <gamelibs/entity_manager.c>
