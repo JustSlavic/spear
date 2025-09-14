@@ -77,9 +77,10 @@ typedef uint8                bool;
 typedef uint32               bool32;
 typedef  int64               intptr;
 typedef uint64               uintptr;
+typedef int16                sound_sample_t;
 #define true                 1
 #define false                0
-#define NULL                 0
+#define NULL                 (void *) 0
 
 #if OS_MAC || OS_WINDOWS
     typedef int64 timestamp_t;
@@ -115,10 +116,10 @@ typedef uint64               uintptr;
 
 #define PRINT_BOOL(X) ((X) ? "true" : "false")
 
-#define EPSILON  (1e-6f)
-#define PI       (3.1415926535897932384626433832795028841971693993751058209749445923078164062f)
-#define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031f)
-#define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125f)
+#define EPSILON  (1e-6)
+#define PI       (3.1415926535897932384626433832795028841971693993751058209749445923078164062)
+#define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031)
+#define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125)
 
 typedef struct
 {

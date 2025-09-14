@@ -8,35 +8,6 @@
 #include <math.h>
 
 
-void my_audio_callback_test(void *userdata, uint8 *buffer_to_write_to, int requested_length)
-{
-    if (userdata)
-    {
-        engine *eng = (engine *) userdata;
-        uint8 *data = eng->audio_data;
-        uint32 size = eng->audio_size;
-        uint32 pointer = eng->audio_pointer;
-
-        if (pointer + requested_length < size)
-        {
-            memcpy(buffer_to_write_to, data + pointer, requested_length);
-
-            eng->audio_pointer += requested_length;
-        }
-        else
-        {
-            uint32 chunk1_size = size - pointer;
-            uint32 chunk2_size = requested_length - chunk1_size;
-
-            memcpy(buffer_to_write_to, data + pointer, chunk1_size);
-            memcpy(buffer_to_write_to + chunk1_size, data, chunk2_size);
-
-            eng->audio_pointer = chunk2_size;
-        }
-    }
-}
-
-
 void spear_engine_init(engine *engine)
 {
     engine->running = false;
@@ -81,7 +52,156 @@ void spear_engine_init(engine *engine)
         engine->near_clip_distance,
         engine->far_clip_distance);
 
+    // Allocate sine sound buffer
+    {
+        // Frequency is 44100 samples per second
+        // I want sine wave 300Hz (cycles per second)
+        // That means 1 cycle will take 44100 samples
+        // I will allocate 44100 * channel_count * sizeof(uint16)
+        // for 1 second of sound
+        // in this one second, I will write 300 sine cycles
+        int channel_count = 2;
+        int samples_per_second = 44100; // Hz
+
+        int frame_size  = channel_count * sizeof(sound_sample_t);
+        int frame_count = samples_per_second;
+
+        int buffer_size = frame_count * frame_size;
+        sound_sample_t *buffer = ALLOCATE_BUFFER_(engine->allocator, buffer_size);
+
+        engine->sine_audio.size = buffer_size;
+        engine->sine_audio.data = (uint8 *) buffer;
+
+        int tone_hz = 300; // Hz
+        int wave_period = samples_per_second / tone_hz;
+        sound_sample_t *samples = (sound_sample_t *) engine->sine_audio.data;
+
+        double tone_volume = 2000.0;
+        double sine_time = 0;
+        uint32 frame_index;
+        for (frame_index = 0; frame_index < frame_count; frame_index++)
+        {
+            double t = sine_time;
+            double sine_value = sin(t);
+            int16 sample_value = (int16)(sine_value * tone_volume);
+            *samples++ = sample_value;
+            *samples++ = sample_value;
+            sine_time += TWO_PI / wave_period;
+            if (sine_time > TWO_PI)
+                sine_time = sine_time - TWO_PI;
+        }
+    }
+    engine->audio_latency = 1.0 / 20.0;
+    engine->master_audio = engine->sine_audio;
+    // {
+    //     uint32 channel_count = 2;
+    //     engine->master_audio.size = 44100 * channel_count * sizeof(sound_sample_t);
+    //     engine->master_audio.data = ALLOCATE_BUFFER(engine->allocator, engine->master_audio.size);
+    //     engine->master_audio.index_read = 0;
+    //     engine->master_audio.index_write = 0;
+    // }
+
     spear_audio_init(&engine->master_audio);
+
+    engine->sound_debug_position_count = 100;
+    engine->sound_debug_positions_read = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
+    engine->sound_debug_positions_write = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
+    engine->sound_debug_positions_latency = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
+}
+
+void spear_engine_audio_mix(engine *engine)
+{
+    audio_buffer *audio = &engine->master_audio;
+
+    uint32 channel_count = 2;
+    uint32 latency_frames = engine->audio_latency * 44100;
+    uint32 latency_bytes = latency_frames * channel_count * sizeof(sound_sample_t);
+
+    uint32 R = audio->index_read;
+    uint32 W = audio->index_write;
+    uint32 S = audio->size;
+    uint32 L = (audio->index_read + latency_bytes) % S;
+
+    uint32 write_until_byte = W;
+
+    if (R < L)
+    {
+        // |-------R-------L-------|S
+        if (W < R)
+        {
+            // |---W---R-------L-------|S
+            // We're gonna wait
+        }
+        else if (W < L)
+        {
+            // |-------R---W---L-------|S
+            write_until_byte = (audio->index_write + latency_bytes) % S;
+        }
+        else
+        {
+            // |-------R-------L---W---|S
+            // We're gonna wait
+        }
+    }
+    else
+    {
+        // |-------L-------R-------|S
+        if (W < L)
+        {
+            // |---W---L-------R-------|S
+            write_until_byte = (audio->index_write + latency_bytes) % S;
+        }
+        else if (W < R)
+        {
+            // |-------L---W---R-------|S
+            // We're gonna wait
+        }
+        else
+        {
+            // |-------L-------R---W---|S
+            write_until_byte = (audio->index_write + latency_bytes) % S;
+        }
+    }
+
+
+
+    audio->index_write = write_until_byte;
+
+
+    // }
+
+    // uint32 chunk1_sample_count = chunk1_size / sizeof(sound_sample_t);
+    // uint32 chunk2_sample_count = chunk2_size / sizeof(sound_sample_t);
+
+    // uint32 chunk1_frame_count = chunk1_sample_count / channel_count;
+    // uint32 chunk2_frame_count = chunk2_sample_count / channel_count;
+
+    // printf("Chunk1: size=%u; sample_count=%u; frame_count=%u;    Chunk2: size=%u; sample_count=%u; frame_count=%u;\n",
+    //     chunk1_size, chunk1_sample_count, chunk1_frame_count,
+    //     chunk2_size, chunk2_sample_count, chunk2_frame_count);
+
+    // // sound_sample_t *samples = (sound_sample_t *) (audio->data + audio->index_write);
+    // // uint32 frame_index;
+    // // for (frame_index = 0; frame_index < chunk1_frame_count; frame_index++)
+    // // {
+    // //     // Channel count times
+    // //     *samples++ = 0;
+    // //     *samples++ = 0;
+    // // }
+    // // samples = (sound_sample_t *) audio->data;
+    // // for (frame_index = 0; frame_index < chunk2_frame_count; frame_index++)
+    // // {
+    // //     // Channel count times
+    // //     *samples++ = 0;
+    // //     *samples++ = 0;
+    // // }
+
+    // // printf("Index: %u; Chunk1: %u; Chunk2: %u;\n", audio->index_write, chunk1_size, chunk2_size);
+
+    // audio->index_write = chunk2_size ? chunk2_size : audio->index_write + latency_bytes;
+
+    // // uint32 index_read;
+    // // uint32 index_write;
 }
 
 void spear_engine_init_graphics(engine *engine)
@@ -111,6 +231,7 @@ void spear_engine_create_meshes(engine *engine)
     // UNUSED(utah_teapot);
     // printf("Utah data = %p\n", utah_data);
 
+    // Load texture file
     {
         char const *file_name = "../misc/test8x8.bmp";
         usize file_size = platform_get_file_size(file_name);
@@ -149,6 +270,7 @@ void spear_engine_create_meshes(engine *engine)
             }
         }
     }
+    // Load sound file
     {
         char const *file_name = "../data/birds.wav";
         usize file_size = platform_get_file_size(file_name);
@@ -170,7 +292,7 @@ void spear_engine_create_meshes(engine *engine)
                     decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
                         &channel_count, &samples_per_second, &bits_per_sample);
 
-                    if (decode_result == BmpDecode_Success)
+                    if (decode_result == WavDecode_Success)
                     {
                         printf("Loaded wav file:\n");
                         printf("    sound_size = %llu\n", sound_size);
@@ -178,10 +300,10 @@ void spear_engine_create_meshes(engine *engine)
                         printf("    samples_per_second = %u\n", samples_per_second);
                         printf("    bits_per_sample = %u\n", bits_per_sample);
 
-                        engine->master_audio.data = sound_data;
-                        engine->master_audio.size = sound_size;
-                        engine->master_audio.index_read = 0;
-                        engine->master_audio.index_write = 0;
+                        engine->bird_audio.data = sound_data;
+                        engine->bird_audio.size = sound_size;
+                        engine->bird_audio.index_read = 0;
+                        engine->bird_audio.index_write = 0;
                     }
                     else
                     {
@@ -320,6 +442,8 @@ void spear_engine_game_update(engine *engine)
         }
     }
     engine->game_context.engine_commands_count = 0;
+
+    spear_engine_audio_mix(engine);
 }
 
 static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
@@ -372,7 +496,6 @@ static void spear_engine_draw_ui(engine *engine, render_command cmd)
             engine->shader_single_color,
             cmd.ui_color);
     }
-
 }
 
 void spear_engine_game_render(engine *engine)
@@ -422,6 +545,8 @@ void spear_engine_game_render(engine *engine)
     }
     engine->game_context.render_commands_count = 0;
 
+#if 0
+    // Draw texture debug
     {
         matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
         glUseProgram(engine->shader_textured.id);
@@ -435,5 +560,106 @@ void spear_engine_game_render(engine *engine)
         glBindVertexArray(engine->mesh_square_uv.vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square_uv.ibo);
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
+    }
+#endif
+    // Draw audio debug
+    {
+        uint32 channel_count = 2;
+        uint32 latency_frames = engine->audio_latency * 44100;
+        uint32 latency_bytes = latency_frames * channel_count * sizeof(sound_sample_t);
+
+        uint32 index_read = engine->master_audio.index_read;
+        uint32 index_write = engine->master_audio.index_write;
+
+        float screen_position_read = (float) index_read / engine->master_audio.size * engine->current_client_width;
+        float screen_position_write = (float) index_write / engine->master_audio.size * engine->current_client_width;
+        float screen_position_latency = (float) (index_read + latency_bytes) / engine->master_audio.size * engine->current_client_width;
+
+        uint32 index = engine->sound_debug_position_running_index++;
+        if (engine->sound_debug_position_running_index >= engine->sound_debug_position_count)
+            engine->sound_debug_position_running_index = 0;
+
+        engine->sound_debug_positions_read[index] = screen_position_read;
+        engine->sound_debug_positions_write[index] = screen_position_write;
+        engine->sound_debug_positions_latency[index] = screen_position_latency;
+
+        uint32 i;
+        for (i = 0; i < engine->sound_debug_position_count; i++)
+        {
+            {
+                matrix4 model = matrix4_mul(
+                    matrix4_translate(
+                        engine->sound_debug_positions_read[i],
+                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
+                        0.f),
+                    matrix4_scale(1.f, 50.f, 1.f));
+                matrix4 view = matrix4_identity();
+                vector4 color = vector4_create(1.f, 0.f, 0.f, 1.f);
+                glUseProgram(engine->shader_single_color.id);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+
+                // glActiveTexture(GL_TEXTURE0);
+                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+
+                glBindVertexArray(engine->mesh_square.vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+            }
+            {
+                vector4 color = vector4_create(0.f, 1.f, 0.f, 1.f);
+                float W0 = engine->sound_debug_positions_write[i];
+                float W1 = engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count];
+
+                float p = 0.5f * (W0 + W1);
+                float len = fabs(engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count] - engine->sound_debug_positions_write[i]);
+
+                matrix4 model = matrix4_mul(
+                    matrix4_translate(
+                        p,
+                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
+                        0.f),
+                    matrix4_scale(len*0.5f, 1.f, 1.f));
+                matrix4 view = matrix4_identity();
+                glUseProgram(engine->shader_single_color.id);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+
+                // glActiveTexture(GL_TEXTURE0);
+                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+
+                glBindVertexArray(engine->mesh_square.vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+            }
+            {
+                float p = 0.5f * (engine->sound_debug_positions_read[i] + engine->sound_debug_positions_latency[i]);
+                float len = fabs(engine->sound_debug_positions_read[i] - engine->sound_debug_positions_latency[i]);
+                matrix4 model = matrix4_mul(
+                    matrix4_translate(
+                        p,
+                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
+                        0.f),
+                    matrix4_scale(0.5f * len, 1.f, 1.f));
+                matrix4 view = matrix4_identity();
+                vector4 color = vector4_create(1.f, 1.f, 0.f, 1.f);
+                glUseProgram(engine->shader_single_color.id);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+
+                // glActiveTexture(GL_TEXTURE0);
+                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+
+                glBindVertexArray(engine->mesh_square.vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+            }
+        }
     }
 }

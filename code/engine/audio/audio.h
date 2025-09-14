@@ -8,7 +8,7 @@ typedef struct
 {
     uint8 *data;
     uint32 size;
-    uint32 index_read;
+    volatile uint32 index_read;
     uint32 index_write;
 } audio_buffer;
 

@@ -64,11 +64,18 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
-    uint8 *audio_data;
-    uint32 audio_size;
-    uint32 audio_pointer;
-
+    
     audio_buffer master_audio;
+
+    audio_buffer sine_audio;
+    audio_buffer bird_audio;
+    double audio_latency;
+
+    uint32 sound_debug_position_count;
+    uint32 sound_debug_position_running_index;
+    float *sound_debug_positions_read;
+    float *sound_debug_positions_write;
+    float *sound_debug_positions_latency;
 
     bitmap test_bmp;
     gpu_texture test_tx;

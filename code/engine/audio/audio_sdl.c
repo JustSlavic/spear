@@ -42,8 +42,6 @@ void spear_audio_init(audio_buffer *buffer)
     sdl_spec.callback = my_audio_callback;
     sdl_spec.userdata = buffer;
 
-    printf("buffer->data = %p\n", buffer->data);
-
     if (SDL_OpenAudio(&sdl_spec, NULL) < 0)
     {
         printf("SOUND ERROR COULD NOT OPEN AUDIO\n");
