@@ -64,7 +64,6 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
-    
     audio_buffer master_audio;
 
     audio_buffer sine_audio;

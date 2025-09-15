@@ -92,14 +92,14 @@ void spear_engine_init(engine *engine)
         }
     }
     engine->audio_latency = 1.0 / 20.0;
-    engine->master_audio = engine->sine_audio;
-    // {
-    //     uint32 channel_count = 2;
-    //     engine->master_audio.size = 44100 * channel_count * sizeof(sound_sample_t);
-    //     engine->master_audio.data = ALLOCATE_BUFFER(engine->allocator, engine->master_audio.size);
-    //     engine->master_audio.index_read = 0;
-    //     engine->master_audio.index_write = 0;
-    // }
+    // engine->master_audio = engine->sine_audio;
+    {
+        uint32 channel_count = 2;
+        engine->master_audio.size = 44100 * channel_count * sizeof(sound_sample_t);
+        engine->master_audio.data = ALLOCATE_BUFFER(engine->allocator, engine->master_audio.size);
+        engine->master_audio.index_read = 0;
+        engine->master_audio.index_write = 0;
+    }
 
     spear_audio_init(&engine->master_audio);
 
@@ -114,7 +114,9 @@ void spear_engine_audio_mix(engine *engine)
     audio_buffer *audio = &engine->master_audio;
 
     uint32 channel_count = 2;
-    uint32 latency_frames = engine->audio_latency * 44100;
+    uint32 frame_size = channel_count * sizeof(sound_sample_t);
+    int samples_per_second = 44100; // Hz
+    uint32 latency_frames = engine->audio_latency * samples_per_second;
     uint32 latency_bytes = latency_frames * channel_count * sizeof(sound_sample_t);
 
     uint32 R = audio->index_read;
@@ -131,11 +133,16 @@ void spear_engine_audio_mix(engine *engine)
         {
             // |---W---R-------L-------|S
             // We're gonna wait
+            if (S - L > 2*latency_bytes)
+            {
+                W = L;
+                write_until_byte = (L + latency_bytes) % S;
+            }
         }
         else if (W < L)
         {
             // |-------R---W---L-------|S
-            write_until_byte = (audio->index_write + latency_bytes) % S;
+            write_until_byte = (L + latency_bytes) % S;
         }
         else
         {
@@ -149,59 +156,78 @@ void spear_engine_audio_mix(engine *engine)
         if (W < L)
         {
             // |---W---L-------R-------|S
-            write_until_byte = (audio->index_write + latency_bytes) % S;
+            write_until_byte = (L + latency_bytes) % S;
         }
         else if (W < R)
         {
-            // |-------L---W---R-------|S
+            // |-L----W--------------R-|S
             // We're gonna wait
         }
         else
         {
             // |-------L-------R---W---|S
-            write_until_byte = (audio->index_write + latency_bytes) % S;
+            write_until_byte = (L + latency_bytes) % S;
         }
     }
 
+    // Mix sine audio generated on the fly
+    {
+        uint32 chunk1_size = 0;
+        uint32 chunk2_size = 0;
 
+        if (write_until_byte < W)
+        {
+            chunk1_size = S - W;
+            chunk2_size = write_until_byte;
+        }
+        else
+        {
+            chunk1_size = write_until_byte - W;
+        }
+
+        ASSERT(chunk1_size % frame_size == 0);
+        ASSERT(chunk2_size % frame_size == 0);
+
+        uint32 chunk1_frame_count = chunk1_size / frame_size;
+        uint32 chunk2_frame_count = chunk2_size / frame_size;
+
+        static double sine_time = 0;
+        double tone_volume = 2000.0;
+        int tone_hz = 300; // Hz
+        int wave_period = samples_per_second / tone_hz;
+
+        int16 *samples = (int16 *) (audio->data + audio->index_write);
+
+        uint32 frame_index;
+        for (frame_index = 0; frame_index < chunk1_frame_count; frame_index++)
+        {
+            double sine_value = sin(sine_time);
+            int16 sample_value = (int16)(sine_value * tone_volume);
+
+            *samples++ = sample_value;
+            *samples++ = sample_value;
+
+            sine_time += TWO_PI / wave_period;
+            if (sine_time > TWO_PI)
+                sine_time = sine_time - TWO_PI;
+        }
+
+        samples = (int16 *) (audio->data);
+        for (frame_index = 0; frame_index < chunk2_frame_count; frame_index++)
+        {
+            double sine_value = sin(sine_time);
+            int16 sample_value = (int16)(sine_value * tone_volume);
+
+            *samples++ = sample_value;
+            *samples++ = sample_value;
+
+            sine_time += TWO_PI / wave_period;
+            if (sine_time > TWO_PI)
+                sine_time = sine_time - TWO_PI;
+        }
+    }
 
     audio->index_write = write_until_byte;
-
-
-    // }
-
-    // uint32 chunk1_sample_count = chunk1_size / sizeof(sound_sample_t);
-    // uint32 chunk2_sample_count = chunk2_size / sizeof(sound_sample_t);
-
-    // uint32 chunk1_frame_count = chunk1_sample_count / channel_count;
-    // uint32 chunk2_frame_count = chunk2_sample_count / channel_count;
-
-    // printf("Chunk1: size=%u; sample_count=%u; frame_count=%u;    Chunk2: size=%u; sample_count=%u; frame_count=%u;\n",
-    //     chunk1_size, chunk1_sample_count, chunk1_frame_count,
-    //     chunk2_size, chunk2_sample_count, chunk2_frame_count);
-
-    // // sound_sample_t *samples = (sound_sample_t *) (audio->data + audio->index_write);
-    // // uint32 frame_index;
-    // // for (frame_index = 0; frame_index < chunk1_frame_count; frame_index++)
-    // // {
-    // //     // Channel count times
-    // //     *samples++ = 0;
-    // //     *samples++ = 0;
-    // // }
-    // // samples = (sound_sample_t *) audio->data;
-    // // for (frame_index = 0; frame_index < chunk2_frame_count; frame_index++)
-    // // {
-    // //     // Channel count times
-    // //     *samples++ = 0;
-    // //     *samples++ = 0;
-    // // }
-
-    // // printf("Index: %u; Chunk1: %u; Chunk2: %u;\n", audio->index_write, chunk1_size, chunk2_size);
-
-    // audio->index_write = chunk2_size ? chunk2_size : audio->index_write + latency_bytes;
-
-    // // uint32 index_read;
-    // // uint32 index_write;
 }
 
 void spear_engine_init_graphics(engine *engine)
