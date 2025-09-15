@@ -11,7 +11,7 @@ memory_allocator memory_allocator_malloc_create(void);
 void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignment, code_location cl);
 void *memory_allocator_allocate(memory_allocator a, uint64 size, uint64 alignment, code_location cl);
 void memory_allocator_deallocate(memory_allocator a, void *memory, code_location cl);
-void memory_allocator_arena_reset(memory_allocator a, code_location cl);
+void memory_allocator_arena_reset(memory_allocator a);
 
 #define ALLOCATE_(A, T) memory_allocator_allocate_(A, sizeof(T), alignof(T), CL_HERE)
 #define ALLOCATE(A, T)  memory_allocator_allocate(A, sizeof(T), alignof(T), CL_HERE)

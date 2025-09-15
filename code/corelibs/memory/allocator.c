@@ -78,14 +78,18 @@ void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignme
             arena->used += (size + padding);
             result = base + padding;
         }
+#ifdef MEMORY_DEBUG_ENABLED
         printf("Allocator '%s': allocated %llu bytes from '%s()' (%s:%u)\n",
             arena->name, size, cl.function, cl.filename, cl.line);
+#endif
     }
     else if (tag == MemoryAllocator_Malloc)
     {
         result = malloc(size);
+#ifdef MEMORY_DEBUG_ENABLED
         printf("Allocator 'malloc': allocated %llu bytes from '%s()' (%s:%u)\n",
             size, cl.function, cl.filename, cl.line);
+#endif
     }
     else
     {
@@ -111,12 +115,12 @@ void memory_allocator_deallocate(memory_allocator a, void *memory, code_location
     }
 }
 
-void memory_allocator_arena_reset(memory_allocator a, code_location cl)
+void memory_allocator_arena_reset(memory_allocator a)
 {
     memory_allocator_tag tag = *(memory_allocator_tag *) a;
     ASSERT_IF(tag == MemoryAllocator_Arena)
     {
         memory_allocator_arena *arena = (memory_allocator_arena *) a;
-        arena->used = 0;
+        arena->used = sizeof(*arena);
     }
 }

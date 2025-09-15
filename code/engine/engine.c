@@ -29,8 +29,7 @@ void spear_engine_init(engine *engine)
     engine->game_memory.data = (byte *) memory + allocator_size + temporary_size;
     engine->game_memory.size = game_memory_size;
 
-    engine->game_dll = memory_allocator_allocate(engine->allocator, sizeof(struct dll), alignof(struct dll), (code_location) {});
-    // engine->game_dll = ALLOCATE(engine->allocator, struct dll);
+    engine->game_dll = ALLOCATE(engine->allocator, struct dll);
 
     engine->fov = degrees_to_radians(60);
     printf("fov = %f\n", engine->fov);
@@ -92,13 +91,23 @@ void spear_engine_init(engine *engine)
         }
     }
     engine->audio_latency = 1.0 / 20.0;
-    // engine->master_audio = engine->sine_audio;
+
     {
         uint32 channel_count = 2;
         engine->master_audio.size = 44100 * channel_count * sizeof(sound_sample_t);
         engine->master_audio.data = ALLOCATE_BUFFER(engine->allocator, engine->master_audio.size);
         engine->master_audio.index_read = 0;
         engine->master_audio.index_write = 0;
+    }
+    {
+        engine->sine_audio_262Hz.frequency = 262.0;
+        engine->sine_audio_262Hz.volume = 1000.0;
+        engine->sine_audio_262Hz.running_t = 0;
+    }
+    {
+        engine->sine_audio_500Hz.frequency = 500.0;
+        engine->sine_audio_500Hz.volume = 1000.0;
+        engine->sine_audio_500Hz.running_t = 0;
     }
 
     spear_audio_init(&engine->master_audio);
@@ -187,43 +196,51 @@ void spear_engine_audio_mix(engine *engine)
 
         ASSERT(chunk1_size % frame_size == 0);
         ASSERT(chunk2_size % frame_size == 0);
-
-        uint32 chunk1_frame_count = chunk1_size / frame_size;
-        uint32 chunk2_frame_count = chunk2_size / frame_size;
-
-        static double sine_time = 0;
-        double tone_volume = 2000.0;
-        int tone_hz = 300; // Hz
-        int wave_period = samples_per_second / tone_hz;
-
-        int16 *samples = (int16 *) (audio->data + audio->index_write);
-
-        uint32 frame_index;
-        for (frame_index = 0; frame_index < chunk1_frame_count; frame_index++)
+        if (chunk1_size)
         {
-            double sine_value = sin(sine_time);
-            int16 sample_value = (int16)(sine_value * tone_volume);
-
-            *samples++ = sample_value;
-            *samples++ = sample_value;
-
-            sine_time += TWO_PI / wave_period;
-            if (sine_time > TWO_PI)
-                sine_time = sine_time - TWO_PI;
+            int16 *chunk1_data = (int16 *) (audio->data + audio->index_write);
+            int16 *chunk1_buff = ALLOCATE_BUFFER_(engine->temporary, chunk1_size);
+            spear_audio_sine_wave_generate(
+                &engine->sine_audio_262Hz,
+                chunk1_buff,
+                chunk1_size,
+                samples_per_second,
+                channel_count);
+            memcpy(chunk1_data, chunk1_buff, chunk1_size);
+            spear_audio_sine_wave_generate(
+                &engine->sine_audio_500Hz,
+                chunk1_buff,
+                chunk1_size,
+                samples_per_second,
+                channel_count);
+            int sample_index;
+            for (sample_index = 0; sample_index < chunk1_size / sizeof(sound_sample_t); sample_index++)
+            {
+                chunk1_data[sample_index] = (chunk1_data[sample_index] + chunk1_buff[sample_index]) / 2;
+            }
         }
-
-        samples = (int16 *) (audio->data);
-        for (frame_index = 0; frame_index < chunk2_frame_count; frame_index++)
+        if (chunk2_size)
         {
-            double sine_value = sin(sine_time);
-            int16 sample_value = (int16)(sine_value * tone_volume);
-
-            *samples++ = sample_value;
-            *samples++ = sample_value;
-
-            sine_time += TWO_PI / wave_period;
-            if (sine_time > TWO_PI)
-                sine_time = sine_time - TWO_PI;
+            int16 *chunk2_data = (int16 *) audio->data;
+            int16 *chunk2_buff = ALLOCATE_BUFFER_(engine->temporary, chunk2_size);
+            spear_audio_sine_wave_generate(
+                &engine->sine_audio_262Hz,
+                chunk2_buff,
+                chunk2_size,
+                samples_per_second,
+                channel_count);
+            memcpy(chunk2_data, chunk2_buff, chunk2_size);
+            spear_audio_sine_wave_generate(
+                &engine->sine_audio_500Hz,
+                chunk2_buff,
+                chunk2_size,
+                samples_per_second,
+                channel_count);
+            int sample_index;
+            for (sample_index = 0; sample_index < chunk2_size / sizeof(sound_sample_t); sample_index++)
+            {
+                chunk2_data[sample_index] = (chunk2_data[sample_index] + chunk2_buff[sample_index]) / 2;
+            }
         }
     }
 

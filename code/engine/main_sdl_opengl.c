@@ -145,7 +145,7 @@ int main(void)
     g_engine.running = true;
     while (g_engine.running)
     {
-        memory_allocator_arena_reset(g_engine.temporary, CL_HERE);
+        memory_allocator_arena_reset(g_engine.temporary);
         spear_engine_load_game_dll(&g_engine, "spear_game.so");
 
         spear_engine_input_reset_transitions(&g_engine);
@@ -201,4 +201,5 @@ int main(void)
 #include <engine/primitive_meshes.c>
 #include <engine/graphics/render.c>
 #include <engine/graphics/opengl_mac.c>
+#include <engine/audio/audio.c>
 #include <engine/audio/audio_sdl.c>
