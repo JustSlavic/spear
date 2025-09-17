@@ -79,19 +79,19 @@ typedef struct
 
     bitmap test_bmp;
     gpu_texture test_tx;
-} engine;
+} spear_engine;
 
-void spear_engine_init(engine *engine);
-void spear_engine_init_graphics(engine *engine);
-void spear_engine_create_meshes(engine *engine);
-void spear_engine_compile_shaders(engine *engine);
-void spear_engine_load_game_dll(engine *engine, char const *filename);
-void spear_engine_input_reset_transitions(engine *engine);
-void spear_engine_input_mouse_pos_set(engine *engine, int mouse_x, int mouse_y);
-void spear_engine_update_viewport(engine *engine, int width, int height);
-void spear_engine_game_init(engine *engine);
-void spear_engine_game_update(engine *engine);
-void spear_engine_game_render(engine *engine);
+void spear_engine_init(spear_engine *engine);
+void spear_engine_init_graphics(spear_engine *engine);
+void spear_engine_create_meshes(spear_engine *engine);
+void spear_engine_compile_shaders(spear_engine *engine);
+void spear_engine_load_game_dll(spear_engine *engine, char const *filename);
+void spear_engine_input_reset_transitions(spear_engine *engine);
+void spear_engine_input_mouse_pos_set(spear_engine *engine, int mouse_x, int mouse_y);
+void spear_engine_update_viewport(spear_engine *engine, int width, int height);
+void spear_engine_game_init(spear_engine *engine);
+void spear_engine_game_update(spear_engine *engine);
+void spear_engine_game_render(spear_engine *engine);
 
 
 #endif // _SPEAR_ENGINE_H

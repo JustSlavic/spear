@@ -8,7 +8,7 @@
 #include <math.h>
 
 
-void spear_engine_init(engine *engine)
+void spear_engine_init(spear_engine *engine)
 {
     engine->running = false;
     engine->viewport_changed = false;
@@ -77,7 +77,7 @@ void spear_engine_init(engine *engine)
     engine->sound_debug_positions_latency = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
 }
 
-void spear_engine_audio_mix(engine *engine)
+void spear_engine_audio_mix(spear_engine *engine)
 {
     audio_buffer *audio = &engine->master_audio;
 
@@ -232,12 +232,12 @@ void spear_engine_audio_mix(engine *engine)
     audio->index_write = write_until_byte;
 }
 
-void spear_engine_init_graphics(engine *engine)
+void spear_engine_init_graphics(spear_engine *engine)
 {
     renderer_init_api(&engine->renderer);
 }
 
-void spear_engine_create_meshes(engine *engine)
+void spear_engine_create_meshes(spear_engine *engine)
 {
     engine->mesh_square = render_load_mesh_to_gpu(mesh_square_create());
     engine->mesh_square_uv = render_load_mesh_to_gpu(mesh_square_create_uv());
@@ -351,7 +351,7 @@ void spear_engine_create_meshes(engine *engine)
     }
 }
 
-void spear_engine_compile_shaders(engine *engine)
+void spear_engine_compile_shaders(spear_engine *engine)
 {
     engine->shader_single_color = render_compile_shaders(vs_single_color, fs_pass_color);
     engine->shader_textured = render_compile_shaders(vs_textured, fs_textured);
@@ -363,7 +363,7 @@ void spear_engine_compile_shaders(engine *engine)
     engine->shader_ui_frame = render_compile_shaders(vs_frame, fs_pass_color);
 }
 
-void spear_engine_load_game_dll(engine *engine, char const *filename)
+void spear_engine_load_game_dll(spear_engine *engine, char const *filename)
 {
 #if DLL_BUILD
     timestamp_t dll_last_modified_time = platform_file_get_last_modified_time(filename);
@@ -391,13 +391,13 @@ void spear_engine_load_game_dll(engine *engine, char const *filename)
 #endif
 }
 
-void spear_engine_input_reset_transitions(engine *engine)
+void spear_engine_input_reset_transitions(spear_engine *engine)
 {
     input_button_reset_transitions(engine->input.keyboard_and_mouse.buttons, Button_Count);
     engine->input.keyboard_and_mouse.mouse_scroll = 0;
 }
 
-void spear_engine_input_mouse_pos_set(engine *engine, int mouse_x, int mouse_y)
+void spear_engine_input_mouse_pos_set(spear_engine *engine, int mouse_x, int mouse_y)
 {
     engine->input.keyboard_and_mouse.window_mouse.x = mouse_x;
     engine->input.keyboard_and_mouse.window_mouse.y = mouse_y;
@@ -405,7 +405,7 @@ void spear_engine_input_mouse_pos_set(engine *engine, int mouse_x, int mouse_y)
     engine->input.keyboard_and_mouse.viewport_mouse.y = mouse_y - engine->viewport.offset_y;
 }
 
-void spear_engine_update_viewport(engine *engine, int width, int height)
+void spear_engine_update_viewport(spear_engine *engine, int width, int height)
 {
     if (engine->viewport_changed)
     {
@@ -429,7 +429,7 @@ void spear_engine_update_viewport(engine *engine, int width, int height)
     }
 }
 
-void spear_engine_game_init(engine *engine)
+void spear_engine_game_init(spear_engine *engine)
 {
     if (engine->initialize_memory)
     {
@@ -441,7 +441,7 @@ void spear_engine_game_init(engine *engine)
     }
 }
 
-void spear_engine_game_update(engine *engine)
+void spear_engine_game_update(spear_engine *engine)
 {
     if (engine->update_and_render)
     {
@@ -474,7 +474,7 @@ void spear_engine_game_update(engine *engine)
     spear_engine_audio_mix(engine);
 }
 
-static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
+static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)
 {
     matrix4 model =
         matrix4_mul(
@@ -492,7 +492,7 @@ static void spear_engine_draw_mesh_internal(engine *engine, render_command cmd)
     renderer_draw_mesh(&engine->renderer, model, m, s, cmd.mesh_color);
 }
 
-static void spear_engine_draw_ui(engine *engine, render_command cmd)
+static void spear_engine_draw_ui(spear_engine *engine, render_command cmd)
 {
     if (cmd.mesh_tag == RenderCommand_DrawMesh_UiFrame)
     {
@@ -526,7 +526,7 @@ static void spear_engine_draw_ui(engine *engine, render_command cmd)
     }
 }
 
-void spear_engine_game_render(engine *engine)
+void spear_engine_game_render(spear_engine *engine)
 {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

@@ -14,7 +14,7 @@
 #include <string.h>
 
 
-static engine g_engine;
+static spear_engine g_engine;
 
 uint32 scancode_to_button_id[] =
 {
