@@ -51,46 +51,7 @@ void spear_engine_init(engine *engine)
         engine->near_clip_distance,
         engine->far_clip_distance);
 
-    // Allocate sine sound buffer
-    {
-        // Frequency is 44100 samples per second
-        // I want sine wave 300Hz (cycles per second)
-        // That means 1 cycle will take 44100 samples
-        // I will allocate 44100 * channel_count * sizeof(uint16)
-        // for 1 second of sound
-        // in this one second, I will write 300 sine cycles
-        int channel_count = 2;
-        int samples_per_second = 44100; // Hz
-
-        int frame_size  = channel_count * sizeof(sound_sample_t);
-        int frame_count = samples_per_second;
-
-        int buffer_size = frame_count * frame_size;
-        sound_sample_t *buffer = ALLOCATE_BUFFER_(engine->allocator, buffer_size);
-
-        engine->sine_audio.size = buffer_size;
-        engine->sine_audio.data = (uint8 *) buffer;
-
-        int tone_hz = 300; // Hz
-        int wave_period = samples_per_second / tone_hz;
-        sound_sample_t *samples = (sound_sample_t *) engine->sine_audio.data;
-
-        double tone_volume = 2000.0;
-        double sine_time = 0;
-        uint32 frame_index;
-        for (frame_index = 0; frame_index < frame_count; frame_index++)
-        {
-            double t = sine_time;
-            double sine_value = sin(t);
-            int16 sample_value = (int16)(sine_value * tone_volume);
-            *samples++ = sample_value;
-            *samples++ = sample_value;
-            sine_time += TWO_PI / wave_period;
-            if (sine_time > TWO_PI)
-                sine_time = sine_time - TWO_PI;
-        }
-    }
-    engine->audio_latency = 1.0 / 20.0;
+    engine->audio_latency = 1.0 / 25.0;
 
     {
         uint32 channel_count = 2;
@@ -100,7 +61,7 @@ void spear_engine_init(engine *engine)
         engine->master_audio.index_write = 0;
     }
     {
-        engine->sine_audio_262Hz.frequency = 262.0;
+        engine->sine_audio_262Hz.frequency = 300.0;
         engine->sine_audio_262Hz.volume = 1000.0;
         engine->sine_audio_262Hz.running_t = 0;
     }
@@ -196,6 +157,7 @@ void spear_engine_audio_mix(engine *engine)
 
         ASSERT(chunk1_size % frame_size == 0);
         ASSERT(chunk2_size % frame_size == 0);
+
         if (chunk1_size)
         {
             int16 *chunk1_data = (int16 *) (audio->data + audio->index_write);
@@ -657,6 +619,7 @@ void spear_engine_game_render(engine *engine)
                 float W1 = engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count];
 
                 float p = 0.5f * (W0 + W1);
+                if (p < W0) continue;
                 float len = fabs(engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count] - engine->sound_debug_positions_write[i]);
 
                 matrix4 model = matrix4_mul(

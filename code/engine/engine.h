@@ -68,7 +68,6 @@ typedef struct
 
     audio_sine_wave sine_audio_262Hz;
     audio_sine_wave sine_audio_500Hz;
-    audio_buffer sine_audio;
     audio_buffer bird_audio;
     double audio_latency;
 
