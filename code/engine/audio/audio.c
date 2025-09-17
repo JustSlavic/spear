@@ -28,3 +28,25 @@ spear_audio_sine_wave_generate(audio_sine_wave *generator,
             generator->running_t = generator->running_t - TWO_PI;
     }
 }
+
+void
+spear_audio_buffer_read(audio_buffer *buffer,
+                        void *audio_data,
+                        uint32 audio_size)
+{
+    if (audio_size <= buffer->size - buffer->index_read)
+    {
+        memcpy(audio_data, buffer->data + buffer->index_read, audio_size);
+        buffer->index_read += audio_size;
+    }
+    else
+    {
+        uint32 chunk1_size = buffer->size - buffer->index_read;
+        uint32 chunk2_size = audio_size - chunk1_size;
+
+        memcpy(audio_data, buffer->data + buffer->index_read, chunk1_size);
+        memcpy(audio_data + chunk1_size, buffer->data, chunk2_size);
+
+        buffer->index_read = chunk2_size;
+    }
+}
