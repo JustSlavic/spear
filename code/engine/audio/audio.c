@@ -29,6 +29,19 @@ spear_audio_sine_wave_generate(audio_sine_wave *generator,
     }
 }
 
+void *spear_audio_buffer_get(audio_buffer *buffer,
+                             uint32 requested_size,
+                             uint32 *out_audio_size)
+{
+    if (buffer->index_read + requested_size > buffer->size)
+    {
+        requested_size = buffer->size - buffer->index_read;
+    }
+    *out_audio_size = requested_size;
+    void *result = buffer->data + buffer->index_read;
+    return result;
+}
+
 void
 spear_audio_buffer_read(audio_buffer *buffer,
                         void *audio_data,

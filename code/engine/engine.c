@@ -8,6 +8,131 @@
 #include <math.h>
 
 
+enum
+{
+    SpearLoadFile_Success,
+
+    SpearLoadFile_FileDoesNotExist,
+    SpearLoadFile_NotEnoughMemory,
+    SpearLoadFile_BufferUnderflow,
+};
+
+static int
+spear_engine_load_texture_file(spear_engine *engine,
+                               char const *file_name,
+                               bitmap *bitmap)
+{
+    usize file_size = platform_get_file_size(file_name);
+    if (file_size == 0)
+    {
+        return SpearLoadFile_FileDoesNotExist;
+    }
+    void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+    if (file_data == NULL)
+    {
+        return SpearLoadFile_NotEnoughMemory;
+    }
+    uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+    if (bytes_read < file_size)
+    {
+        return SpearLoadFile_BufferUnderflow;
+    }
+
+    void *image_data = NULL;
+    usize image_size = 0;
+    usize decode_result = bmp_extract_size(file_data, file_size, (uint32 *) &image_size);
+    if (decode_result == BmpDecode_Success && image_size > 0)
+    {
+        image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
+        if (image_data)
+        {
+            uint32 width, height, bits_per_pixel, color_mode, is_top_down;
+            decode_result = bmp_decode(file_data, file_size, image_data, image_size,
+                &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
+
+            if (decode_result == BmpDecode_Success)
+            {
+                printf("Loaded bmp file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
+                bitmap->data = image_data,
+                bitmap->size = image_size,
+                bitmap->width = width,
+                bitmap->height = height,
+                bitmap->bits_per_pixel = bits_per_pixel,
+                bitmap->color_mode = color_mode,
+
+                engine->test_tx = load_texture(engine->test_bmp);
+                printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+            }
+        }
+    }
+
+    return SpearLoadFile_Success;
+}
+
+static int
+spear_engine_load_audio_file(spear_engine *engine,
+                             char const *file_name,
+                             audio_buffer *audio)
+{
+    usize file_size = platform_get_file_size(file_name);
+    if (file_size > 0)
+    {
+        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+        uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+        ASSERT(bytes_read == file_size);
+
+        void *sound_data = NULL;
+        usize sound_size = 0;
+        usize decode_result = wav_extract_size(file_data, file_size, &sound_size);
+        if (decode_result == WavDecode_Success && sound_size > 0)
+        {
+            sound_data = ALLOCATE_BUFFER_(engine->allocator, sound_size);
+            if (sound_data)
+            {
+                uint32 channel_count, samples_per_second, bits_per_sample;
+                decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
+                    &channel_count, &samples_per_second, &bits_per_sample);
+
+                if (decode_result == WavDecode_Success)
+                {
+                    printf("Loaded wav file:\n");
+                    printf("    sound_size = %llu\n", sound_size);
+                    printf("    channel_count = %u\n", channel_count);
+                    printf("    samples_per_second = %u\n", samples_per_second);
+                    printf("    bits_per_sample = %u\n", bits_per_sample);
+
+                    engine->bird_audio.data = sound_data;
+                    engine->bird_audio.size = sound_size;
+                    engine->bird_audio.index_read = 0;
+                    engine->bird_audio.index_write = 0;
+                }
+                else
+                {
+                    printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
+                }
+            }
+        }
+        else
+        {
+            printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
+        }
+    }
+    else
+    {
+        printf("File '%s' does not exist\n", file_name);
+    }
+
+    return SpearLoadFile_Success;
+}
+
+static void
+spear_engine_load_game_data(spear_engine *engine)
+{
+    spear_engine_load_texture_file(engine, "../misc/test8x8.bmp", &engine->test_bmp);
+    spear_engine_load_audio_file(engine, "../data/birds.wav", &engine->bird_audio);
+}
+
+
 void spear_engine_init(spear_engine *engine)
 {
     engine->running = false;
@@ -259,96 +384,7 @@ void spear_engine_create_meshes(spear_engine *engine)
     // UNUSED(utah_teapot);
     // printf("Utah data = %p\n", utah_data);
 
-    // Load texture file
-    {
-        char const *file_name = "../misc/test8x8.bmp";
-        usize file_size = platform_get_file_size(file_name);
-        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
-        uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
-        ASSERT(bytes_read == file_size);
-
-        void *image_data = NULL;
-        usize image_size = 0;
-        usize decode_result = bmp_extract_size(file_data, file_size, (uint32 *) &image_size);
-        if (decode_result == BmpDecode_Success && image_size > 0)
-        {
-            image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
-            if (image_data)
-            {
-                uint32 width, height, bits_per_pixel, color_mode, is_top_down;
-                decode_result = bmp_decode(file_data, file_size, image_data, image_size,
-                    &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
-
-                if (decode_result == BmpDecode_Success)
-                {
-                    printf("Loaded bmp file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
-                    engine->test_bmp = (bitmap)
-                    {
-                        .data = image_data,
-                        .size = image_size,
-                        .width = width,
-                        .height = height,
-                        .bits_per_pixel = bits_per_pixel,
-                        .color_mode = color_mode,
-                    };
-
-                    engine->test_tx = load_texture(engine->test_bmp);
-                    printf("Loaded texture (id=%d)\n", engine->test_tx.id);
-                }
-            }
-        }
-    }
-    // Load sound file
-    {
-        char const *file_name = "../data/birds.wav";
-        usize file_size = platform_get_file_size(file_name);
-        if (file_size > 0)
-        {
-            void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
-            uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
-            ASSERT(bytes_read == file_size);
-
-            void *sound_data = NULL;
-            usize sound_size = 0;
-            usize decode_result = wav_extract_size(file_data, file_size, &sound_size);
-            if (decode_result == WavDecode_Success && sound_size > 0)
-            {
-                sound_data = ALLOCATE_BUFFER_(engine->allocator, sound_size);
-                if (sound_data)
-                {
-                    uint32 channel_count, samples_per_second, bits_per_sample;
-                    decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
-                        &channel_count, &samples_per_second, &bits_per_sample);
-
-                    if (decode_result == WavDecode_Success)
-                    {
-                        printf("Loaded wav file:\n");
-                        printf("    sound_size = %llu\n", sound_size);
-                        printf("    channel_count = %u\n", channel_count);
-                        printf("    samples_per_second = %u\n", samples_per_second);
-                        printf("    bits_per_sample = %u\n", bits_per_sample);
-
-                        engine->bird_audio.data = sound_data;
-                        engine->bird_audio.size = sound_size;
-                        engine->bird_audio.index_read = 0;
-                        engine->bird_audio.index_write = 0;
-                    }
-                    else
-                    {
-                        printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
-                    }
-                }
-            }
-            else
-            {
-                printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
-            }
-        }
-        else
-        {
-            printf("File '%s' does not exist\n", file_name);
-        }
-    }
+    spear_engine_load_game_data(engine);
 }
 
 void spear_engine_compile_shaders(spear_engine *engine)

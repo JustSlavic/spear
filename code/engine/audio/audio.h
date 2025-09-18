@@ -25,6 +25,9 @@ void spear_audio_sine_wave_generate(audio_sine_wave *generator,
                                     uint32 audio_size,
                                     uint32 samples_per_second,
                                     uint32 channel_count);
+void *spear_audio_buffer_get(audio_buffer *buffer,
+                             uint32 requested_size,
+                             uint32 *out_audio_size);
 void spear_audio_buffer_read(audio_buffer *buffer,
                              void *audio_data,
                              uint32 audio_size);
