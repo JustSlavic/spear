@@ -5,33 +5,33 @@ void my_audio_callback(void *userdata, uint8 *buffer_to_write_to, int requested_
 {
     if (userdata)
     {
-        audio_buffer *audio = (audio_buffer *) userdata;
-        if (audio->data == NULL)
+        spear_audio *audio = (spear_audio *) userdata;
+        if (audio->playback_buffer == NULL)
         {
             memset(buffer_to_write_to, 0, requested_length);
             return;
         }
 
-        if (audio->index_read + requested_length < audio->size)
+        if (audio->R + requested_length < audio->playback_buffer_size)
         {
-            memcpy(buffer_to_write_to, audio->data + audio->index_read, requested_length);
-            audio->index_read += requested_length;
+            memcpy(buffer_to_write_to, audio->playback_buffer + audio->R, requested_length);
+            audio->R += requested_length;
         }
         else
         {
-            uint32 chunk1_size = audio->size - audio->index_read;
+            uint32 chunk1_size = audio->playback_buffer_size - audio->R;
             uint32 chunk2_size = requested_length - chunk1_size;
 
-            memcpy(buffer_to_write_to, audio->data + audio->index_read, chunk1_size);
-            memcpy(buffer_to_write_to + chunk1_size, audio->data, chunk2_size);
+            memcpy(buffer_to_write_to, audio->playback_buffer + audio->R, chunk1_size);
+            memcpy(buffer_to_write_to + chunk1_size, audio->playback_buffer, chunk2_size);
 
-            audio->index_read = chunk2_size;
+            audio->R = chunk2_size;
         }
     }
 }
 
 
-void spear_audio_init(audio_buffer *buffer)
+void spear_audio_init_backend(spear_audio *audio)
 {
     SDL_AudioSpec sdl_spec = {};
     sdl_spec.format = AUDIO_S16LSB;
@@ -40,7 +40,7 @@ void spear_audio_init(audio_buffer *buffer)
     sdl_spec.samples = 0;
     sdl_spec.size = 0;
     sdl_spec.callback = my_audio_callback;
-    sdl_spec.userdata = buffer;
+    sdl_spec.userdata = audio;
 
     if (SDL_OpenAudio(&sdl_spec, NULL) < 0)
     {

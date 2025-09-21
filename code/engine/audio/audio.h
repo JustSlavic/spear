@@ -14,12 +14,38 @@ typedef struct
 
 typedef struct
 {
+    // Settings of master audio buffer
+    uint32 frames_per_second; // 44100
+    uint32 channel_count;     // 2
+    uint32 bits_per_sample;   // 16
+    double latency; // in seconds
+    // Master buffer
+    void  *playback_buffer;
+    uint32 playback_buffer_size; // in bytes
+    uint32 W, R; // Write and Read indices
+    // Audio sources
+    // spear_audio_source sources[16];
+    // uint32 source_count;
+} spear_audio;
+
+
+void spear_audio_init(spear_audio *audio,
+                      void  *playback_buffer,
+                      uint32 playback_buffer_size,
+                      uint32 frames_per_second,
+                      uint32 channel_count,
+                      uint32 bits_per_sample);
+
+void spear_audio_init_backend(spear_audio *audio);
+
+
+typedef struct
+{
     double frequency;
     double volume;
     double running_t;
 } audio_sine_wave;
 
-void spear_audio_init(audio_buffer *buffer);
 void spear_audio_sine_wave_generate(audio_sine_wave *generator,
                                     void *audio_data,
                                     uint32 audio_size,

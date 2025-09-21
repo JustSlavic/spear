@@ -64,12 +64,11 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
-    audio_buffer master_audio;
+    spear_audio audio;
 
     audio_sine_wave sine_audio_262Hz;
     audio_sine_wave sine_audio_500Hz;
     audio_buffer bird_audio;
-    double audio_latency;
 
     uint32 sound_debug_position_count;
     uint32 sound_debug_position_running_index;

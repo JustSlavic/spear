@@ -1,5 +1,25 @@
 #include "audio.h"
 
+void
+spear_audio_init(spear_audio *audio,
+                     void  *playback_buffer,
+                     uint32 playback_buffer_size,
+                     uint32 frames_per_second,
+                     uint32 channel_count,
+                     uint32 bits_per_sample)
+{
+    audio->frames_per_second = frames_per_second;
+    audio->channel_count = channel_count;
+    audio->bits_per_sample = bits_per_sample;
+    audio->latency = 1.0 / 30.0;
+    audio->playback_buffer = playback_buffer;
+    audio->playback_buffer_size = playback_buffer_size;
+    audio->W = 0;
+    audio->R = 0;
+    // audio->source_count = 0;
+
+    spear_audio_init_backend(audio);
+}
 
 void
 spear_audio_sine_wave_generate(audio_sine_wave *generator,
