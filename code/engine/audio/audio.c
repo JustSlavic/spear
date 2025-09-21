@@ -40,6 +40,7 @@ int spear_audio_add_source_sine_wave_generator(spear_audio *audio,
     audio->sources[index].tag = SpearAudioSource_Generator;
     audio->sources[index].data = NULL;
     audio->sources[index].size = 0;
+    audio->sources[index].R = 0;
     audio->sources[index].frequency = frequency;
     audio->sources[index].volume = volume;
     audio->sources[index].running_t = 0;
@@ -56,6 +57,7 @@ int spear_audio_add_source_buffer(spear_audio *audio,
     audio->sources[index].tag = SpearAudioSource_Generator;
     audio->sources[index].data = data;
     audio->sources[index].size = size;
+    audio->sources[index].R = 0;
     audio->sources[index].frequency = 0;
     audio->sources[index].volume = 0;
     audio->sources[index].running_t = 0;
@@ -63,19 +65,21 @@ int spear_audio_add_source_buffer(spear_audio *audio,
     return index;
 }
 
-void
-spear_audio_sine_wave_generate(audio_sine_wave *generator,
-                               void *audio_data,
-                               uint32 audio_size,
-                               uint32 samples_per_second,
-                               uint32 channel_count)
+static void
+spear_audio_source_generate(spear_audio *audio,
+                            spear_audio_source *generator,
+                            void *audio_data,
+                            uint32 audio_size)
 {
+    if (generator->tag != SpearAudioSource_Generator)
+        return;
+
     uint32 frame_index;
-    uint32 frame_size = channel_count * sizeof(sound_sample_t);
+    uint32 frame_size = audio->channel_count * sizeof(sound_sample_t);
     uint32 frame_count = audio_size / frame_size;
 
     int16 *samples = (int16 *) audio_data;
-    uint32 samples_per_period = samples_per_second / generator->frequency;
+    uint32 samples_per_period = audio->frames_per_second / generator->frequency;
 
     for (frame_index = 0; frame_index < frame_count; frame_index++)
     {
@@ -205,33 +209,15 @@ void spear_audio_update(void *e)
 
         if (chunk1_size)
         {
-            int sample_index;
-
             int16 *chunk1_data = (int16 *) (engine->audio.playback_buffer + engine->audio.W);
             int16 *chunk1_buff = engine->audio.mix_buffer;
             memset(chunk1_data, 0, chunk1_size);
 
-            spear_audio_sine_wave_generate(
-                &engine->sine_audio_262Hz,
+            spear_audio_source_generate(&engine->audio,
+                engine->audio.sources,
                 chunk1_buff,
-                chunk1_size,
-                engine->audio.frames_per_second,
-                channel_count);
-            for (sample_index = 0; sample_index < chunk1_size / sizeof(sound_sample_t); sample_index++)
-            {
-                chunk1_data[sample_index] += chunk1_buff[sample_index];
-            }
-
-            // spear_audio_sine_wave_generate(
-            //     &engine->sine_audio_500Hz,
-            //     chunk1_buff,
-            //     chunk1_size,
-            //     samples_per_second,
-            //     channel_count);
-            // for (sample_index = 0; sample_index < chunk1_size / sizeof(sound_sample_t); sample_index++)
-            // {
-            //     chunk1_data[sample_index] += chunk1_buff[sample_index];
-            // }
+                chunk1_size);
+            memcpy(chunk1_data, chunk1_buff, chunk1_size);
 
             // spear_audio_buffer_read(&engine->bird_audio, chunk1_buff, chunk1_size);
             // for (sample_index = 0; sample_index < chunk1_size / sizeof(sound_sample_t); sample_index++)
@@ -241,33 +227,15 @@ void spear_audio_update(void *e)
         }
         if (chunk2_size)
         {
-            int sample_index;
-
             int16 *chunk2_data = (int16 *) engine->audio.playback_buffer;
             int16 *chunk2_buff = engine->audio.mix_buffer;
             memset(chunk2_data, 0, chunk2_size);
 
-            spear_audio_sine_wave_generate(
-                &engine->sine_audio_262Hz,
+            spear_audio_source_generate(&engine->audio,
+                engine->audio.sources,
                 chunk2_buff,
-                chunk2_size,
-                engine->audio.frames_per_second,
-                channel_count);
-            for (sample_index = 0; sample_index < chunk2_size / sizeof(sound_sample_t); sample_index++)
-            {
-                chunk2_data[sample_index] += chunk2_buff[sample_index];
-            }
-
-            // spear_audio_sine_wave_generate(
-            //     &engine->sine_audio_500Hz,
-            //     chunk2_buff,
-            //     chunk2_size,
-            //     samples_per_second,
-            //     channel_count);
-            // for (sample_index = 0; sample_index < chunk2_size / sizeof(sound_sample_t); sample_index++)
-            // {
-            //     chunk2_data[sample_index] += chunk2_buff[sample_index];
-            // }
+                chunk2_size);
+            memcpy(chunk2_data, chunk2_buff, chunk2_size);
 
             // spear_audio_buffer_read(&engine->bird_audio, chunk2_buff, chunk2_size);
             // for (sample_index = 0; sample_index < chunk2_size / sizeof(sound_sample_t); sample_index++)

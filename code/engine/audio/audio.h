@@ -68,18 +68,7 @@ int spear_audio_add_source_sine_wave_generator(spear_audio *audio,
                                                double frequency,
                                                double volume);
 
-typedef struct
-{
-    double frequency;
-    double volume;
-    double running_t;
-} audio_sine_wave;
 
-void spear_audio_sine_wave_generate(audio_sine_wave *generator,
-                                    void *audio_data,
-                                    uint32 audio_size,
-                                    uint32 samples_per_second,
-                                    uint32 channel_count);
 void *spear_audio_buffer_get(audio_buffer *buffer,
                              uint32 requested_size,
                              uint32 *out_audio_size);

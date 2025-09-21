@@ -198,11 +198,6 @@ void spear_engine_init(spear_engine *engine)
     {
         double frequency = 300.0;
         double volume = 1000.0;
-
-        engine->sine_audio_262Hz.frequency = 300.0;
-        engine->sine_audio_262Hz.volume = 1000.0;
-        engine->sine_audio_262Hz.running_t = 0;
-
         engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
             &engine->audio,
             frequency,
