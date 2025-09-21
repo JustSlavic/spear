@@ -65,9 +65,9 @@ typedef struct
     gpu_shader shader_ui_frame;
 
     spear_audio audio;
+    int audio_262Hz;
 
     audio_sine_wave sine_audio_262Hz;
-    audio_sine_wave sine_audio_500Hz;
     audio_buffer bird_audio;
 
     uint32 sound_debug_position_count;
