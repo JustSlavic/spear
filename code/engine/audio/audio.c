@@ -52,17 +52,19 @@ spear_audio_add_source_sine_wave_generator(spear_audio *audio,
 int
 spear_audio_add_source_buffer(spear_audio *audio,
                               void *data,
-                              uint32 size)
+                              uint32 size,
+                              bool32 repeat)
 {
     int index = -1;
     if (audio->source_count < ARRAY_COUNT(audio->sources))
     {
         index = audio->source_count++;
 
-        audio->sources[index].tag = SpearAudioSource_Generator;
+        audio->sources[index].tag = SpearAudioSource_Buffer;
         audio->sources[index].data = data;
         audio->sources[index].size = size;
         audio->sources[index].R = 0;
+        audio->sources[index].repeat = repeat;
         audio->sources[index].frequency = 0;
         audio->sources[index].volume = 0;
         audio->sources[index].running_t = 0;
@@ -102,39 +104,48 @@ spear_audio_source_generate_and_mix(spear_audio *audio,
     }
 }
 
-void *
-spear_audio_buffer_get(audio_buffer *buffer,
-                       uint32 requested_size,
-                       uint32 *out_audio_size)
+static void
+spear_audio_buffer_read_and_mix(spear_audio *audio,
+                                spear_audio_source *source,
+                                void *buffer,
+                                uint32 buffer_size)
 {
-    if (buffer->index_read + requested_size > buffer->size)
+    if (buffer_size <= source->size - source->R)
     {
-        requested_size = buffer->size - buffer->index_read;
-    }
-    *out_audio_size = requested_size;
-    void *result = buffer->data + buffer->index_read;
-    return result;
-}
-
-void
-spear_audio_buffer_read(audio_buffer *buffer,
-                        void *audio_data,
-                        uint32 audio_size)
-{
-    if (audio_size <= buffer->size - buffer->index_read)
-    {
-        memcpy(audio_data, buffer->data + buffer->index_read, audio_size);
-        buffer->index_read += audio_size;
+        int16 *source_samples = (int16 *) (source->data + source->R);
+        int16 *samples = (int16 *) buffer;
+        int sample_index;
+        for (sample_index = 0; sample_index < (buffer_size / sizeof(sound_sample_t)); sample_index++)
+        {
+            *samples++ = source_samples[sample_index];
+        }
+        source->R += buffer_size;
     }
     else
     {
-        uint32 chunk1_size = buffer->size - buffer->index_read;
-        uint32 chunk2_size = audio_size - chunk1_size;
+        uint32 chunk1_size = source->size - source->R;
+        uint32 chunk2_size = buffer_size - chunk1_size;
 
-        memcpy(audio_data, buffer->data + buffer->index_read, chunk1_size);
-        memcpy(audio_data + chunk1_size, buffer->data, chunk2_size);
-
-        buffer->index_read = chunk2_size;
+        int16 *source_samples = (int16 *) (source->data + source->R);
+        int16 *samples = (int16 *) buffer;
+        int sample_index;
+        for (sample_index = 0; sample_index < (chunk1_size / sizeof(sound_sample_t)); sample_index++)
+        {
+            *samples++ = source_samples[sample_index];
+        }
+        if (source->repeat)
+        {
+            source_samples = (int16 *) source->data;
+            for (sample_index = 0; sample_index < (chunk2_size / sizeof(sound_sample_t)); sample_index++)
+            {
+                *samples++ = source_samples[sample_index];
+            }
+            source->R = chunk2_size;
+        }
+        else
+        {
+            source->enabled = false;
+        }
     }
 }
 
@@ -197,57 +208,70 @@ void spear_audio_update(spear_audio *audio)
         }
     }
 
-    int source_index;
-    for (source_index = 0; source_index < audio->source_count; source_index++)
+    uint32 chunk1_size = 0;
+    uint32 chunk2_size = 0;
+
+    if (write_until_byte < W)
     {
-        if (audio->sources[source_index].tag != SpearAudioSource_Generator)
-            continue;
+        chunk1_size = S - W;
+        chunk2_size = write_until_byte;
+    }
+    else
+    {
+        chunk1_size = write_until_byte - W;
+    }
 
-        uint32 chunk1_size = 0;
-        uint32 chunk2_size = 0;
+    ASSERT(chunk1_size % frame_size == 0);
+    ASSERT(chunk2_size % frame_size == 0);
 
-        if (write_until_byte < W)
+    if (chunk1_size)
+    {
+        int16 *chunk1_data = (int16 *) (audio->playback_buffer + audio->W);
+        memset(chunk1_data, 0, chunk1_size);
+
+        int source_index;
+        for (source_index = 0; source_index < audio->source_count; source_index++)
         {
-            chunk1_size = S - W;
-            chunk2_size = write_until_byte;
+            spear_audio_source *source = &audio->sources[source_index];
+            if (source->tag == SpearAudioSource_Generator)
+            {
+                spear_audio_source_generate_and_mix(audio,
+                    &audio->sources[source_index],
+                    chunk1_data,
+                    chunk1_size);
+            }
+            if (source->tag == SpearAudioSource_Buffer)
+            {
+                spear_audio_buffer_read_and_mix(audio,
+                    &audio->sources[source_index],
+                    chunk1_data,
+                    chunk1_size);
+            }
         }
-        else
+    }
+    if (chunk2_size)
+    {
+        int16 *chunk2_data = (int16 *) (audio->playback_buffer);
+        memset(chunk2_data, 0, chunk2_size);
+
+        int source_index;
+        for (source_index = 0; source_index < audio->source_count; source_index++)
         {
-            chunk1_size = write_until_byte - W;
-        }
-
-        ASSERT(chunk1_size % frame_size == 0);
-        ASSERT(chunk2_size % frame_size == 0);
-
-        if (chunk1_size)
-        {
-            int16 *chunk1_data = (int16 *) (audio->playback_buffer + audio->W);
-            memset(chunk1_data, 0, chunk1_size);
-            spear_audio_source_generate_and_mix(audio,
-                &audio->sources[source_index],
-                chunk1_data,
-                chunk1_size);
-
-            // spear_audio_buffer_read(&engine->bird_audio, chunk1_buff, chunk1_size);
-            // for (sample_index = 0; sample_index < chunk1_size / sizeof(sound_sample_t); sample_index++)
-            // {
-            //     chunk1_data[sample_index] += chunk1_buff[sample_index];
-            // }
-        }
-        if (chunk2_size)
-        {
-            int16 *chunk2_data = (int16 *) audio->playback_buffer;
-            memset(chunk2_data, 0, chunk2_size);
-            spear_audio_source_generate_and_mix(audio,
-                &audio->sources[source_index],
-                chunk2_data,
-                chunk2_size);
-
-            // spear_audio_buffer_read(&engine->bird_audio, chunk2_buff, chunk2_size);
-            // for (sample_index = 0; sample_index < chunk2_size / sizeof(sound_sample_t); sample_index++)
-            // {
-            //     chunk2_data[sample_index] += chunk2_buff[sample_index];
-            // }
+            spear_audio_source *source = &audio->sources[source_index];
+            if (source->tag == SpearAudioSource_Generator)
+            {
+                spear_audio_source_generate_and_mix(audio,
+                    &audio->sources[source_index],
+                    chunk2_data,
+                    chunk2_size);
+            }
+            if (source->tag == SpearAudioSource_Buffer)
+            {
+                spear_audio_buffer_read_and_mix(audio,
+                    &audio->sources[source_index],
+                    chunk2_data,
+                    chunk2_size);
+            }
         }
     }
 

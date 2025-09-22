@@ -28,18 +28,13 @@ typedef struct
     uint32 size;
     uint32 R;
 
+    bool32 enabled;
+    bool32 repeat;
+
     double frequency;
     double volume;
     double running_t;
 } spear_audio_source;
-
-typedef struct
-{
-    uint8 *data;
-    uint32 size;
-    uint32 index_read;
-    uint32 index_write;
-} audio_buffer;
 
 typedef struct
 {
@@ -73,14 +68,8 @@ int spear_audio_add_source_sine_wave_generator(spear_audio *audio,
                                                double volume);
 int spear_audio_add_source_buffer(spear_audio *audio,
                                   void *data,
-                                  uint32 size);
-
-void *spear_audio_buffer_get(audio_buffer *buffer,
-                             uint32 requested_size,
-                             uint32 *out_audio_size);
-void spear_audio_buffer_read(audio_buffer *buffer,
-                             void *audio_data,
-                             uint32 audio_size);
+                                  uint32 size,
+                                  bool32 repeat);
 
 
 #endif // SPEAR_ENGINE_AUDIO_AUDIO_H

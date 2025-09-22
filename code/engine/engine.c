@@ -96,6 +96,7 @@ spear_engine_load_audio_file(spear_engine *engine,
                 if (decode_result == WavDecode_Success)
                 {
                     printf("Loaded wav file:\n");
+                    printf("    sound_data = %p\n", sound_data);
                     printf("    sound_size = %llu\n", sound_size);
                     printf("    channel_count = %u\n", channel_count);
                     printf("    samples_per_second = %u\n", samples_per_second);
@@ -135,7 +136,8 @@ spear_engine_load_game_data(spear_engine *engine)
     engine->audio_bird = spear_audio_add_source_buffer(
         &engine->audio,
         engine->audio_buffer_birds.data,
-        engine->audio_buffer_birds.size);
+        engine->audio_buffer_birds.size,
+        false);
 }
 
 
