@@ -72,7 +72,7 @@ spear_engine_load_texture_file(spear_engine *engine,
 static int
 spear_engine_load_audio_file(spear_engine *engine,
                              char const *file_name,
-                             audio_buffer *audio)
+                             spear_audio_buffer *audio)
 {
     usize file_size = platform_get_file_size(file_name);
     if (file_size > 0)
@@ -101,10 +101,11 @@ spear_engine_load_audio_file(spear_engine *engine,
                     printf("    samples_per_second = %u\n", samples_per_second);
                     printf("    bits_per_sample = %u\n", bits_per_sample);
 
-                    engine->bird_audio.data = sound_data;
-                    engine->bird_audio.size = sound_size;
-                    engine->bird_audio.index_read = 0;
-                    engine->bird_audio.index_write = 0;
+                    audio->data = sound_data;
+                    audio->size = sound_size;
+                    audio->frames_per_second = samples_per_second;
+                    audio->channel_count = channel_count;
+                    audio->bits_per_sample = bits_per_sample;
                 }
                 else
                 {
@@ -129,7 +130,12 @@ static void
 spear_engine_load_game_data(spear_engine *engine)
 {
     spear_engine_load_texture_file(engine, "../misc/test8x8.bmp", &engine->test_bmp);
-    spear_engine_load_audio_file(engine, "../data/birds.wav", &engine->bird_audio);
+    spear_engine_load_audio_file(engine, "../data/birds.wav", &engine->audio_buffer_birds);
+
+    engine->audio_bird = spear_audio_add_source_buffer(
+        &engine->audio,
+        engine->audio_buffer_birds.data,
+        engine->audio_buffer_birds.size);
 }
 
 
@@ -175,33 +181,20 @@ void spear_engine_init(spear_engine *engine)
         engine->far_clip_distance);
 
     {
+        double latency = 1.0 / 20.0;
         uint32 frames_per_second = 44100;
         uint32 channel_count = 2;
         uint32 bits_per_sample = sizeof(sound_sample_t) * 8;
         uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
         void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
 
-        double latency = 1.0 / 20.0;
-        uint32 latency_buffer_size = 2 * frames_per_second * channel_count * sizeof(sound_sample_t) * latency;
-        void *latency_buffer = ALLOCATE_BUFFER(engine->allocator, latency_buffer_size);
-
         spear_audio_init(&engine->audio,
             frames_per_second,
             channel_count,
             bits_per_sample,
-            playback_buffer,
-            playback_buffer_size,
             latency,
-            latency_buffer,
-            latency_buffer_size);
-    }
-    {
-        double frequency = 300.0;
-        double volume = 1000.0;
-        engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
-            &engine->audio,
-            frequency,
-            volume);
+            playback_buffer,
+            playback_buffer_size);
     }
 
     engine->sound_debug_position_count = 100;
@@ -238,6 +231,14 @@ void spear_engine_create_meshes(spear_engine *engine)
     // printf("Utah data = %p\n", utah_data);
 
     spear_engine_load_game_data(engine);
+    {
+        double frequency = 300.0;
+        double volume = 1000.0;
+        engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
+            &engine->audio,
+            frequency,
+            volume);
+    }
 }
 
 void spear_engine_compile_shaders(spear_engine *engine)
@@ -360,7 +361,7 @@ void spear_engine_game_update(spear_engine *engine)
     }
     engine->game_context.engine_commands_count = 0;
 
-    spear_audio_update(engine);
+    spear_audio_update(&engine->audio);
 }
 
 static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)
