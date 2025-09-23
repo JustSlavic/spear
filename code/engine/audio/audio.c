@@ -40,6 +40,8 @@ spear_audio_add_source_sine_wave_generator(spear_audio *audio,
         audio->sources[index].data = NULL;
         audio->sources[index].size = 0;
         audio->sources[index].R = 0;
+        audio->sources[index].enabled = true;
+        audio->sources[index].repeat = true;
         audio->sources[index].frequency = frequency;
         audio->sources[index].volume = volume;
         audio->sources[index].running_t = 0;
@@ -64,6 +66,7 @@ spear_audio_add_source_buffer(spear_audio *audio,
         audio->sources[index].data = data;
         audio->sources[index].size = size;
         audio->sources[index].R = 0;
+        audio->sources[index].enabled = true;
         audio->sources[index].repeat = repeat;
         audio->sources[index].frequency = 0;
         audio->sources[index].volume = 0;
@@ -117,7 +120,7 @@ spear_audio_buffer_read_and_mix(spear_audio *audio,
         int sample_index;
         for (sample_index = 0; sample_index < (buffer_size / sizeof(sound_sample_t)); sample_index++)
         {
-            *samples++ = source_samples[sample_index];
+            *samples++ += source_samples[sample_index];
         }
         source->R += buffer_size;
     }
@@ -131,14 +134,14 @@ spear_audio_buffer_read_and_mix(spear_audio *audio,
         int sample_index;
         for (sample_index = 0; sample_index < (chunk1_size / sizeof(sound_sample_t)); sample_index++)
         {
-            *samples++ = source_samples[sample_index];
+            *samples++ += source_samples[sample_index];
         }
         if (source->repeat)
         {
             source_samples = (int16 *) source->data;
             for (sample_index = 0; sample_index < (chunk2_size / sizeof(sound_sample_t)); sample_index++)
             {
-                *samples++ = source_samples[sample_index];
+                *samples++ += source_samples[sample_index];
             }
             source->R = chunk2_size;
         }
@@ -233,6 +236,8 @@ void spear_audio_update(spear_audio *audio)
         for (source_index = 0; source_index < audio->source_count; source_index++)
         {
             spear_audio_source *source = &audio->sources[source_index];
+            if (!source->enabled)
+                continue;
             if (source->tag == SpearAudioSource_Generator)
             {
                 spear_audio_source_generate_and_mix(audio,
@@ -258,6 +263,8 @@ void spear_audio_update(spear_audio *audio)
         for (source_index = 0; source_index < audio->source_count; source_index++)
         {
             spear_audio_source *source = &audio->sources[source_index];
+            if (!source->enabled)
+                continue;
             if (source->tag == SpearAudioSource_Generator)
             {
                 spear_audio_source_generate_and_mix(audio,

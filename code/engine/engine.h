@@ -64,7 +64,8 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
-    spear_audio_buffer audio_buffer_birds;
+    spear_audio_buffer audio_buffer_rain;
+    spear_audio_buffer audio_buffer_thunder;
 
     spear_audio audio;
     int audio_262Hz;

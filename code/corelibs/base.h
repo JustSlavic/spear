@@ -89,7 +89,7 @@ typedef int16                sound_sample_t;
 #define static_assert(expression, message) _Static_assert((expression), (message))
 #define alignof(T) _Alignof(T)
 
-#define REPORT_ERROR(...) do { fprintf(stderr, "Error: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); fflush(stderr); } while(false)
+#define REPORT_ERROR(...) do { fprintf(stderr, "[%s:%d] Error: ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); fflush(stderr); } while(false)
 
 #if DEBUG
 #define ASSERT(COND)             do {if (!(COND)) { DEBUG_BREAK(); }} while(false)

@@ -8,16 +8,17 @@
 #include <math.h>
 
 
-enum
+typedef enum
 {
     SpearLoadFile_Success,
 
     SpearLoadFile_FileDoesNotExist,
     SpearLoadFile_NotEnoughMemory,
     SpearLoadFile_BufferUnderflow,
-};
+    SpearLoadFile_DecodeFailed,
+} spear_load_file_result;
 
-static int
+static spear_load_file_result
 spear_engine_load_texture_file(spear_engine *engine,
                                char const *file_name,
                                bitmap *bitmap)
@@ -25,16 +26,19 @@ spear_engine_load_texture_file(spear_engine *engine,
     usize file_size = platform_get_file_size(file_name);
     if (file_size == 0)
     {
+        REPORT_ERROR("Could not get size of the file '%s', probably because file does not exist.", file_name);
         return SpearLoadFile_FileDoesNotExist;
     }
     void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
     if (file_data == NULL)
     {
+        REPORT_ERROR("Failed to allocate %llu bytes needed for file '%s'", file_size, file_name);
         return SpearLoadFile_NotEnoughMemory;
     }
     uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
     if (bytes_read < file_size)
     {
+        REPORT_ERROR("Reading file (%s) from the disk resulted in less bytes (%u) than file size (%llu)", file_name, bytes_read, file_size);
         return SpearLoadFile_BufferUnderflow;
     }
 
@@ -69,60 +73,72 @@ spear_engine_load_texture_file(spear_engine *engine,
     return SpearLoadFile_Success;
 }
 
-static int
+static spear_load_file_result
 spear_engine_load_audio_file(spear_engine *engine,
                              char const *file_name,
                              spear_audio_buffer *audio)
 {
+    wav_decode_result decode_result;
+
     usize file_size = platform_get_file_size(file_name);
-    if (file_size > 0)
+    if (file_size == 0)
     {
-        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
-        uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
-        ASSERT(bytes_read == file_size);
-
-        void *sound_data = NULL;
-        usize sound_size = 0;
-        usize decode_result = wav_extract_size(file_data, file_size, &sound_size);
-        if (decode_result == WavDecode_Success && sound_size > 0)
-        {
-            sound_data = ALLOCATE_BUFFER_(engine->allocator, sound_size);
-            if (sound_data)
-            {
-                uint32 channel_count, samples_per_second, bits_per_sample;
-                decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
-                    &channel_count, &samples_per_second, &bits_per_sample);
-
-                if (decode_result == WavDecode_Success)
-                {
-                    printf("Loaded wav file:\n");
-                    printf("    sound_data = %p\n", sound_data);
-                    printf("    sound_size = %llu\n", sound_size);
-                    printf("    channel_count = %u\n", channel_count);
-                    printf("    samples_per_second = %u\n", samples_per_second);
-                    printf("    bits_per_sample = %u\n", bits_per_sample);
-
-                    audio->data = sound_data;
-                    audio->size = sound_size;
-                    audio->frames_per_second = samples_per_second;
-                    audio->channel_count = channel_count;
-                    audio->bits_per_sample = bits_per_sample;
-                }
-                else
-                {
-                    printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
-                }
-            }
-        }
-        else
-        {
-            printf("WAV decode failed: %s\n", wav_decode_result_to_cstring(decode_result));
-        }
+        REPORT_ERROR("Could not get size of the file '%s', probably because file does not exist.", file_name);
+        return SpearLoadFile_FileDoesNotExist;
     }
-    else
+
+    void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+    if (file_data == NULL)
     {
-        printf("File '%s' does not exist\n", file_name);
+        REPORT_ERROR("Failed to allocate %llu bytes needed for file '%s'", file_size, file_name);
+        return SpearLoadFile_NotEnoughMemory;
     }
+
+    uint32 bytes_read = platform_read_file_into_memory(file_name, file_data, file_size);
+    if (bytes_read < file_size)
+    {
+        REPORT_ERROR("Reading file (%s) from the disk resulted in less bytes (%u) than file size (%llu)", file_name, bytes_read, file_size);
+        return SpearLoadFile_BufferUnderflow;
+    }
+
+    usize sound_size = 0;
+    decode_result = wav_extract_size(file_data, file_size, &sound_size);
+    if (decode_result < WavDecode_Success)
+    {
+        REPORT_ERROR("Decoding audio data size is failed (%s)", wav_decode_result_to_cstring(decode_result));
+        return SpearLoadFile_DecodeFailed;
+    }
+
+    void *sound_data = ALLOCATE_BUFFER_(engine->allocator, sound_size);
+    if (sound_data == NULL)
+    {
+        REPORT_ERROR("Failed to allocate %llu bytes needed for audio data of audio file '%s'", file_size, file_name);
+        return SpearLoadFile_NotEnoughMemory;
+    }
+
+    uint32 channel_count, samples_per_second, bits_per_sample;
+    decode_result = wav_decode(file_data, file_size, sound_data, sound_size,
+        &channel_count, &samples_per_second, &bits_per_sample);
+
+    if (decode_result < WavDecode_Success)
+    {
+        REPORT_ERROR("Failed to decode audio file '%s'", file_name);
+        DEALLOCATE(engine->allocator, sound_data);
+        return SpearLoadFile_DecodeFailed;
+    }
+
+    printf("Loaded wav file:\n");
+    printf("    sound_data = %p\n", sound_data);
+    printf("    sound_size = %llu\n", sound_size);
+    printf("    channel_count = %u\n", channel_count);
+    printf("    samples_per_second = %u\n", samples_per_second);
+    printf("    bits_per_sample = %u\n", bits_per_sample);
+
+    audio->data = sound_data;
+    audio->size = sound_size;
+    audio->frames_per_second = samples_per_second;
+    audio->channel_count = channel_count;
+    audio->bits_per_sample = bits_per_sample;
 
     return SpearLoadFile_Success;
 }
@@ -130,14 +146,27 @@ spear_engine_load_audio_file(spear_engine *engine,
 static void
 spear_engine_load_game_data(spear_engine *engine)
 {
-    spear_engine_load_texture_file(engine, "../misc/test8x8.bmp", &engine->test_bmp);
-    spear_engine_load_audio_file(engine, "../data/birds.wav", &engine->audio_buffer_birds);
+    spear_load_file_result load_result;
 
-    engine->audio_bird = spear_audio_add_source_buffer(
-        &engine->audio,
-        engine->audio_buffer_birds.data,
-        engine->audio_buffer_birds.size,
-        false);
+    load_result = spear_engine_load_texture_file(engine, "../misc/test8x8.bmp", &engine->test_bmp);
+    load_result = spear_engine_load_audio_file(engine, "../data/rain_loop.wav", &engine->audio_buffer_rain);
+    if (load_result == SpearLoadFile_Success)
+    {
+        engine->audio_bird = spear_audio_add_source_buffer(
+            &engine->audio,
+            engine->audio_buffer_rain.data,
+            engine->audio_buffer_rain.size,
+            true);
+    }
+    load_result = spear_engine_load_audio_file(engine, "../data/thunder.wav", &engine->audio_buffer_thunder);
+    if (load_result == SpearLoadFile_Success)
+    {
+        engine->audio_bird = spear_audio_add_source_buffer(
+            &engine->audio,
+            engine->audio_buffer_thunder.data,
+            engine->audio_buffer_thunder.size,
+            false);
+    }
 }
 
 
@@ -148,8 +177,8 @@ void spear_engine_init(spear_engine *engine)
     engine->current_client_width = 1200;
     engine->current_client_height = 800;
 
-    usize allocator_size = MEGABYTES(5);
-    usize temporary_size = MEGABYTES(5);
+    usize allocator_size = MEGABYTES(20);
+    usize temporary_size = MEGABYTES(20);
     usize game_memory_size = MEGABYTES(2);
     usize memory_size = allocator_size + temporary_size + game_memory_size;
 
@@ -233,14 +262,14 @@ void spear_engine_create_meshes(spear_engine *engine)
     // printf("Utah data = %p\n", utah_data);
 
     spear_engine_load_game_data(engine);
-    {
-        double frequency = 300.0;
-        double volume = 1000.0;
-        engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
-            &engine->audio,
-            frequency,
-            volume);
-    }
+    // {
+    //     double frequency = 300.0;
+    //     double volume = 1000.0;
+    //     engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
+    //         &engine->audio,
+    //         frequency,
+    //         volume);
+    // }
 }
 
 void spear_engine_compile_shaders(spear_engine *engine)
