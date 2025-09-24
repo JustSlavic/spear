@@ -354,7 +354,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     game_entity_create_hero(gs, 3, 3);
 }
 
-#include "es/systems.c"
+#include "gameplay/systems.c"
 
 UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_view game_memory, input *input)
 {
