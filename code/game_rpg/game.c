@@ -363,7 +363,6 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_view game_memory, input *input)
 }
 
 #if DLL_BUILD
-#include <corelibs/base.c>
 #include <corelibs/math.c>
 #include <corelibs/memory/allocator.c>
 #include <corelibs/collision.c>

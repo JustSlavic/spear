@@ -23,6 +23,17 @@
     // Nothing yet
 #endif
 
+#if __STDC_VERSION__ == 199901L
+    #define C_VERSION 99
+    #define C99 99
+#elif __STDC_VERSION__ == 201112L
+    #define C_VERSION 11
+    #define C11 11
+#else
+    #define C_VERSION 89
+    #define C89 89
+#endif
+
 #if COMPILER_MSVC
     typedef          __int8  int8;
     typedef          __int16 int16;
@@ -86,6 +97,10 @@ typedef int16                sound_sample_t;
     typedef int64 timestamp_t;
 #endif
 
+#if C_VERSION == C89
+#define inline
+#endif
+
 #define static_assert(expression, message) _Static_assert((expression), (message))
 #define alignof(T) _Alignof(T)
 
@@ -121,69 +136,52 @@ typedef int16                sound_sample_t;
 #define HALF_PI  (1.5707963267948966192313216916397514420985846996875529104874722961539082031)
 #define TWO_PI   (6.2831853071795864769252867665590057683943387987502116419498891846156328125)
 
-typedef struct
-{
-    char const *function;
-    char const *filename;
-    uint line;
-} code_location;
-
+typedef struct { char const *function; char const *filename; uint line; } code_location;
 #define CL_HERE ((code_location){ .function=__FUNCTION__, .filename=__FILE__, .line=__LINE__ })
 
-float degrees_to_radians(float degrees);
-float radians_to_degrees(float radians);
+FORCE_INLINE bool is_near_zero_eps(float x, float eps) { return (-eps < x && x < eps); }
+FORCE_INLINE bool is_near_zero(float x) { return is_near_zero_eps(x, EPSILON); }
 
-bool is_near_zero(float x);
-bool is_near_zero_eps(float x, float eps);
+FORCE_INLINE float degrees_to_radians(float degrees) { return degrees * PI / 180.0f; }
+FORCE_INLINE float radians_to_degrees(float radians) { return radians * 180.0f / PI; }
 
-float square(float x);
-float lerp(float a, float b, float t);
-float clamp(float x, float a, float b);
-float cvt(float x, float a, float b, float c, float d);
+FORCE_INLINE float square(float x) { return x * x; }
+FORCE_INLINE float lerp(float a, float b, float t) { return a - t * (b - a); }
+FORCE_INLINE float clamp(float x, float a, float b) { return (x < a) ? a : (x > b) ? b : x; }
+FORCE_INLINE float cvt(float x, float a, float b, float c, float d) { return (clamp(x, a, b) - a) * (d - c) / (b - a) + c; }
 
-int get_alignment(void *pointer);
-uint64 get_padding(void *pointer, uint64 alignment);
-void *align_pointer(void *pointer, uint64 alignment);
+FORCE_INLINE int get_alignment(void *pointer) { uint64 p = (uint64) pointer; return (p & 0x7) == 0 ? 8 : (p & 0x3) == 0 ? 4 : (p & 0x1) == 0 ? 2 : 1; }
+FORCE_INLINE uint64 get_padding(void *pointer, uint64 alignment) { return (alignment - ((uint64) pointer & (alignment - 1))) & (alignment - 1); }
+FORCE_INLINE void *align_pointer(void *pointer, uint64 alignment) { return (byte *) pointer + get_padding(pointer, alignment); }
 
-usize cstring_size_no0(char const *cstr);
-usize cstring_size_with0(char const *cstr);
+FORCE_INLINE usize cstring_size_no0(char const *cstr) { usize result = 0; if (cstr) while (*cstr++) result += 1; return result; }
+FORCE_INLINE usize cstring_size_with0(char const *cstr) { return cstring_size_no0(cstr) + 1; }
 
-typedef struct
-{
-    void *data;
-    usize size;
-} memory_view;
+typedef struct { void *data; usize size; } memory_view;
 
-memory_view memory_view_create(void *data, usize size);
-bool32 memory_view_is_valid(memory_view view);
+FORCE_INLINE memory_view memory_view_create(void *data, usize size) { memory_view result; result.data = data; result.size = size; return result; }
+FORCE_INLINE bool32 memory_view_is_valid(memory_view view) { return view.data && view.size > 0; }
 
-typedef struct
-{
-    uint64 microseconds;
-} timepoint;
+typedef struct { uint64 microseconds; } timepoint;
+typedef struct { uint64 microseconds; } duration;
 
-typedef struct
-{
-    uint64 microseconds;
-} duration;
+FORCE_INLINE timepoint timepoint_create_seconds(uint64 s) { timepoint result; result.microseconds = s * 1000000; return result; }
+FORCE_INLINE timepoint timepoint_create_milliseconds(uint64 ms) { timepoint result; result.microseconds = ms * 1000; return result; }
+FORCE_INLINE timepoint timepoint_create_microseconds(uint64 us) { timepoint result; result.microseconds = us; return result; }
 
-timepoint timepoint_create_seconds(uint64 s);
-timepoint timepoint_create_milliseconds(uint64 s);
-timepoint timepoint_create_microseconds(uint64 s);
+FORCE_INLINE duration duration_create_seconds(uint64 s) { duration result; result.microseconds = s * 1000000; return result; }
+FORCE_INLINE duration duration_create_milliseconds(uint64 ms) { duration result; result.microseconds = ms * 1000; return result; }
+FORCE_INLINE duration duration_create_microseconds(uint64 us) { duration result; result.microseconds = us; return result; }
 
-duration duration_create_seconds(uint64 s);
-duration duration_create_milliseconds(uint64 s);
-duration duration_create_microseconds(uint64 s);
+FORCE_INLINE float64 timepoint_get_seconds(timepoint t) { return t.microseconds / 1000000.0; }
+FORCE_INLINE float64 timepoint_get_milliseconds(timepoint t) { return t.microseconds / 1000.0; }
+FORCE_INLINE float64 timepoint_get_microseconds(timepoint t) { return t.microseconds; }
 
-float64 timepoint_get_seconds(timepoint t);
-float64 timepoint_get_milliseconds(timepoint t);
-float64 timepoint_get_microseconds(timepoint t);
+FORCE_INLINE float64 duration_get_seconds(duration t) { return t.microseconds / 1000000.0; }
+FORCE_INLINE float64 duration_get_milliseconds(duration t) { return t.microseconds / 1000.0; }
+FORCE_INLINE float64 duration_get_microseconds(duration t) { return t.microseconds; }
 
-float64 duration_get_seconds(duration t);
-float64 duration_get_milliseconds(duration t);
-float64 duration_get_microseconds(duration t);
-
-duration get_duration_between_timepoints(timepoint t1, timepoint t2);
+FORCE_INLINE duration get_duration_between_timepoints(timepoint t1, timepoint t2) { duration result; result.microseconds = t2.microseconds - t1.microseconds; return result; }
 
 
 #endif // _SPEAR_BASE_H

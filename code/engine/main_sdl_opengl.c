@@ -184,14 +184,13 @@ int main(void)
 }
 
 
-#include <corelibs/base.c>
 #include <corelibs/math.c>
 #include <corelibs/collision.c>
 #include <corelibs/platform_posix.c>
 #include <corelibs/memory/allocator.c>
-#include <corelibs/file_formats/wavefront_obj.c>
 #include <corelibs/file_formats/bmp.c>
 #include <corelibs/file_formats/wav.c>
+#include <corelibs/file_formats/obj.c>
 #include <gamelibs/input.c>
 #include <gamelibs/camera.c>
 #include <gamelibs/entity_manager.c>
