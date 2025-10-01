@@ -188,6 +188,7 @@ int main(void)
 #include <corelibs/collision.c>
 #include <corelibs/platform_posix.c>
 #include <corelibs/memory/allocator.c>
+#include <corelibs/parse_primitives.c>
 #include <corelibs/file_formats/bmp.c>
 #include <corelibs/file_formats/wav.c>
 #include <corelibs/file_formats/obj.c>

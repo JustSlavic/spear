@@ -22,7 +22,7 @@ linux_release_build() {
     g++ $CXX_FLAGS $WARNINGS $INCLUDES $DEFINES ../code/main_linux.cpp -o spear $LIBS
 }
 
-macos_debug_build_engine() {
+macos_build_engine() {
     compiler_options=$1
     compiler_output="spear_engine"
 
@@ -31,7 +31,7 @@ macos_debug_build_engine() {
     exec $($compiler_command)
 }
 
-macos_debug_build_game() {
+macos_build_game() {
     compiler_options=$1
     compiler_output="spear_game.so"
 
@@ -76,8 +76,8 @@ macos_debug_build() {
     INCLUDES="-Icode -I/opt/homebrew/Cellar/sdl2/2.30.3/include"
     LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.30.3/lib -framework OpenGL"
 
-    macos_debug_build_engine "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
-    macos_debug_build_game   "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
+    macos_build_engine "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
+    macos_build_game   "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
 
     # macos_vulkan_build
 

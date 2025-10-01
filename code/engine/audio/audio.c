@@ -120,7 +120,7 @@ spear_audio_buffer_read_and_mix(spear_audio *audio,
         int sample_index;
         for (sample_index = 0; sample_index < (buffer_size / sizeof(sound_sample_t)); sample_index++)
         {
-            *samples++ += source_samples[sample_index];
+            *samples++ += source_samples[sample_index] / 24;
         }
         source->R += buffer_size;
     }
@@ -134,14 +134,14 @@ spear_audio_buffer_read_and_mix(spear_audio *audio,
         int sample_index;
         for (sample_index = 0; sample_index < (chunk1_size / sizeof(sound_sample_t)); sample_index++)
         {
-            *samples++ += source_samples[sample_index];
+            *samples++ += source_samples[sample_index] / 24;
         }
         if (source->repeat)
         {
             source_samples = (int16 *) source->data;
             for (sample_index = 0; sample_index < (chunk2_size / sizeof(sound_sample_t)); sample_index++)
             {
-                *samples++ += source_samples[sample_index];
+                *samples++ += source_samples[sample_index] / 24;
             }
             source->R = chunk2_size;
         }

@@ -169,15 +169,49 @@ spear_engine_load_game_data(spear_engine *engine)
     }
 
     {
-        char const *utah_filename = "../data/suzanne.obj";
-        usize utah_size = platform_get_file_size(utah_filename);
-        printf("Utah size = %llu\n", utah_size);
-        void *utah_data = ALLOCATE_BUFFER_(engine->temporary, utah_size);
-        uint32 bytes_read = platform_read_file_into_memory(utah_filename, utah_data, utah_size);
-        ASSERT(bytes_read == utah_size);
-        obj_decode_result decode_result = obj_decode(utah_data, utah_size);
+        char const *obj_filename = "../data/suzanne.obj";
+        usize file_size = platform_get_file_size(obj_filename);
+        printf("Obj size = %llu\n", file_size);
+        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+        uint32 bytes_read = platform_read_file_into_memory(obj_filename, file_data, file_size);
+        ASSERT(bytes_read == file_size);
+
+        obj_decode_result decode_result;
+
+        uint32 vertex_buffer_size = 0;
+        uint32 index_buffer_size = 0;
+
+        obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
+        printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
+
+        float *vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
+        float *indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
+
+        decode_result = obj_decode(file_data, file_size,
+           vertices, vertex_buffer_size,
+           indices, index_buffer_size);
+
         UNUSED(decode_result);
-        // printf("Utah data = %p\n", utah_data);
+        printf("DECODE RESULT = %s\n", obj_decode_result_to_cstring(decode_result));
+
+        vertex_buffer_layout vbl = {};
+        render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
+        render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
+
+        cpu_mesh suzanne =
+        {
+            .vbo = {
+                .data = vertices,
+                .size = vertex_buffer_size,
+            },
+            .ibo = {
+                .data = indices,
+                .size = index_buffer_size,
+            },
+            .vbl = vbl,
+        };
+
+        engine->mesh_suzanne = render_load_mesh_to_gpu(suzanne);
     }
 }
 
@@ -272,6 +306,11 @@ void spear_engine_create_meshes(spear_engine *engine)
     //         frequency,
     //         volume);
     // }
+
+    char s[] = "-123.4567;";
+    float32 number = 0;
+    int n = spear_parse_float32(s, 6, &number);
+    printf("PARSED '%f' consumed %d bytes\n", number, n);
 }
 
 void spear_engine_compile_shaders(spear_engine *engine)
@@ -513,6 +552,7 @@ void spear_engine_game_render(spear_engine *engine)
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
     }
 #endif
+#if 0
     // Draw audio debug
     {
         uint32 channel_count = 2;
@@ -613,5 +653,12 @@ void spear_engine_game_render(spear_engine *engine)
                 glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
             }
         }
+    }
+#endif
+    {
+        matrix4 model = matrix4_translate(2.f, 2.f, 2.f);
+        gpu_mesh m = engine->mesh_suzanne;
+        gpu_shader s = engine->shader_phong;
+        renderer_draw_mesh(&engine->renderer, model, m, s, vector4_create(0.5, 0.5, 0.5, 1.f));
     }
 }

@@ -112,8 +112,8 @@ typedef int16                sound_sample_t;
 #define ASSERT_IF(COND)          if (!(COND)) { DEBUG_BREAK(); } else
 #define ASSERT_MSG_IF(COND, ...) if (!(COND)) { REPORT_ERROR(__VA_ARGS__); DEBUG_BREAK(); } else
 #else
-#define ASSERT(COND)             (void)(0)
-#define ASSERT_MSG(COND, ...)    (void)(0)
+#define ASSERT(COND)             UNUSED(COND)
+#define ASSERT_MSG(COND, ...)    UNUSED(COND)
 #define ASSERT_IF(COND)          if (COND)
 #define ASSERT_MSG_IF(COND, ...) if (COND)
 #endif // DEBUG
@@ -146,7 +146,7 @@ FORCE_INLINE float degrees_to_radians(float degrees) { return degrees * PI / 180
 FORCE_INLINE float radians_to_degrees(float radians) { return radians * 180.0f / PI; }
 
 FORCE_INLINE float square(float x) { return x * x; }
-FORCE_INLINE float lerp(float a, float b, float t) { return a - t * (b - a); }
+FORCE_INLINE float lerp(float a, float b, float t) { return a + t * (b - a); }
 FORCE_INLINE float clamp(float x, float a, float b) { return (x < a) ? a : (x > b) ? b : x; }
 FORCE_INLINE float cvt(float x, float a, float b, float c, float d) { return (clamp(x, a, b) - a) * (d - c) / (b - a) + c; }
 
@@ -156,6 +156,14 @@ FORCE_INLINE void *align_pointer(void *pointer, uint64 alignment) { return (byte
 
 FORCE_INLINE usize cstring_size_no0(char const *cstr) { usize result = 0; if (cstr) while (*cstr++) result += 1; return result; }
 FORCE_INLINE usize cstring_size_with0(char const *cstr) { return cstring_size_no0(cstr) + 1; }
+
+FORCE_INLINE int is_ascii_newline(char c) { return (c == '\n'); }
+FORCE_INLINE int is_ascii_crlf(char c) { return (c == '\n') || (c == '\r'); }
+FORCE_INLINE int is_ascii_space(char c) { return (c == ' '); }
+FORCE_INLINE int is_ascii_whitespace(char c) { return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r'); }
+FORCE_INLINE int is_ascii_alpha(char c) { return (('A' <= c) && (c <= 'Z')) || (('a' <= c) && (c <= 'z')); }
+FORCE_INLINE int is_ascii_digit(char c) { return ('0' <= c) && (c <= '9'); }
+FORCE_INLINE int is_ascii_hex(char c) { return is_ascii_digit(c) || (('A' <= c) && (c <= 'F')) || (('a' <= c) && (c <= 'f')); }
 
 typedef struct { void *data; usize size; } memory_view;
 
