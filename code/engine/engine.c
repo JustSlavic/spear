@@ -179,17 +179,21 @@ spear_engine_load_game_data(spear_engine *engine)
         obj_decode_result decode_result;
 
         uint32 vertex_buffer_size = 0;
-        uint32 index_buffer_size = 0;
+        // uint32 index_buffer_size = 0;
 
-        obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
-        printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
+        // obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
+        // printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
 
-        float *vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
-        float *indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
+        // float *vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
+        // float *indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
 
-        decode_result = obj_decode(file_data, file_size,
-           vertices, vertex_buffer_size,
-           indices, index_buffer_size);
+        // decode_result = obj_decode(file_data, file_size,
+        //    vertices, vertex_buffer_size,
+        //    indices, index_buffer_size);
+
+        float *vertices = NULL;
+        decode_result = obj_decode_no_index(file_data, file_size,
+            (void **) &vertices, &vertex_buffer_size);
 
         UNUSED(decode_result);
         printf("DECODE RESULT = %s\n", obj_decode_result_to_cstring(decode_result));
@@ -205,8 +209,8 @@ spear_engine_load_game_data(spear_engine *engine)
                 .size = vertex_buffer_size,
             },
             .ibo = {
-                .data = indices,
-                .size = index_buffer_size,
+                .data = NULL,
+                .size = 0,
             },
             .vbl = vbl,
         };

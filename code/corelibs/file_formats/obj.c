@@ -1,5 +1,6 @@
 #include "obj.h"
 #include "../parse_primitives.h"
+#include "../collision.h"
 
 
 char const *obj_decode_result_to_cstring(obj_decode_result result)
@@ -475,6 +476,93 @@ obj_decode(void *file_data,
                 *entry, i_write_index - 1, *entry);
         }
     }
+
+    return ObjDecode_Success;
+}
+
+
+obj_decode_result
+obj_decode_no_index(void *file_data,
+                    usize file_size,
+                    void **vertex_data,
+                    uint32 *vertex_size)
+{
+    uint32 result_count = 0;
+    uint32 result_capacity = 12;
+    float *result_data = malloc(result_capacity * sizeof(float));
+
+    float *v, *vt, *vn;
+    int32 *vi, *vti, *vni;
+    uint32 v_count, vi_count, vt_count, vti_count, vn_count, vni_count;
+
+    obj_decode_internal(
+        file_data, file_size,
+        &v,   &v_count,
+        &vi,  &vi_count,
+        &vt,  &vt_count,
+        &vti, &vti_count,
+        &vn,  &vn_count,
+        &vni, &vni_count);
+
+    printf("obj_decode:\n");
+    printf("v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
+        v, v_count, vi, vi_count,
+        vt, vt_count, vti, vti_count,
+        vn, vn_count, vni, vni_count);
+
+    int i;
+    for (i = 0; i < vi_count; i+=3)
+    {
+        uint32 vertex_index_0 = vi[i + 0];
+        uint32 vertex_index_1 = vi[i + 1];
+        uint32 vertex_index_2 = vi[i + 2];
+
+        if (result_capacity < result_count + 3 * 6)
+        {
+            result_capacity *= 2;
+            result_data = realloc(result_data, result_capacity * sizeof(float));
+            printf("Resize: from %u to %u\n", result_capacity / 2, result_capacity);
+        }
+
+        float ax = v[3 * (vertex_index_0 - 1) + 0];
+        float ay = v[3 * (vertex_index_0 - 1) + 1];
+        float az = v[3 * (vertex_index_0 - 1) + 2];
+
+        float bx = v[3 * (vertex_index_1 - 1) + 0];
+        float by = v[3 * (vertex_index_1 - 1) + 1];
+        float bz = v[3 * (vertex_index_1 - 1) + 2];
+
+        float cx = v[3 * (vertex_index_2 - 1) + 0];
+        float cy = v[3 * (vertex_index_2 - 1) + 1];
+        float cz = v[3 * (vertex_index_2 - 1) + 2];
+
+        float nx, ny, nz;
+        triangle_get_normal(ax, ay, az, bx, by, bz, cx, cy, cz, &nx, &ny, &nz);
+
+        result_data[result_count++] = ax;
+        result_data[result_count++] = ay;
+        result_data[result_count++] = az;
+        result_data[result_count++] = nx;
+        result_data[result_count++] = ny;
+        result_data[result_count++] = nz;
+
+        result_data[result_count++] = bx;
+        result_data[result_count++] = by;
+        result_data[result_count++] = bz;
+        result_data[result_count++] = nx;
+        result_data[result_count++] = ny;
+        result_data[result_count++] = nz;
+
+        result_data[result_count++] = cx;
+        result_data[result_count++] = cy;
+        result_data[result_count++] = cz;
+        result_data[result_count++] = nx;
+        result_data[result_count++] = ny;
+        result_data[result_count++] = nz;
+    }
+
+    *vertex_data = result_data;
+    *vertex_size = result_count * sizeof(float);
 
     return ObjDecode_Success;
 }

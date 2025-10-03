@@ -26,5 +26,10 @@ obj_decode(void *file_data,
            void *index_data,
            uint32 index_size);
 
+obj_decode_result
+obj_decode_no_index(void *file_data,
+                    usize file_size,
+                    void **vertex_data,
+                    uint32 *vertex_size);
 
 #endif /* SPEAR_CORELIBS_OBJ_H */

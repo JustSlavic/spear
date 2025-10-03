@@ -40,3 +40,14 @@ float intersect_ray_aabb(vector3 p, vector3 d, vector3 aabb_min, vector3 aabb_ma
 
     return tmin;
 }
+
+
+void triangle_get_normal(float ax, float ay, float az,
+                         float bx, float by, float bz,
+                         float cx, float cy, float cz,
+                         float *x, float *y, float *z)
+{
+    *x = ay * bz - az * by;
+    *y = az * bx - ax * bz;
+    *z = ax * by - ay * bx;
+}
