@@ -60,7 +60,9 @@ typedef struct window
 #define MAIN_WINDOW_CALLBACK(NAME) LRESULT CALLBACK NAME(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
-static engine g_engine;
+static spear_engine g_engine;
+static uint32 g_client_width;
+static uint32 g_client_height;
 
 window create_window(HINSTANCE Instance, int ClientWidth, int ClientHeight, MainWindowCallbackType *WindowCallback)
 {
@@ -185,8 +187,9 @@ MAIN_WINDOW_CALLBACK(window_callback)
     switch (message)
     {
         case WM_SIZE:
-            g_engine.current_client_width = LOWORD(lParam);
-            g_engine.current_client_height = HIWORD(lParam);
+            g_client_width = LOWORD(lParam);
+            g_client_height = HIWORD(lParam);
+            g_engine.viewport_changed = true;
         break;
 
         case WM_CLOSE:
@@ -201,14 +204,40 @@ MAIN_WINDOW_CALLBACK(window_callback)
     return result;
 }
 
-void process_pending_messages()
+uint32 vk_to_button_id[] =
+{
+#include "win32_vk_to_button.inl"
+};
+
+void process_pending_messages(input *input)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
     {
         if (message.message == WM_QUIT) g_engine.running = false;
         TranslateMessage(&message);
-        DispatchMessageA(&message);
+
+        switch (message.message)
+        {
+            case WM_SYSKEYDOWN:
+            case WM_SYSKEYUP:
+            case WM_KEYDOWN:
+            case WM_KEYUP:
+            {
+                uint32 virtual_key_code  = (uint32) message.wParam;
+                bool32 was_down = (message.lParam & (1 << 30)) != 0;
+                bool32 is_down  = (message.lParam & (1 << 31)) == 0;
+
+                input_button_update(&input->keyboard_and_mouse.buttons[vk_to_button_id[virtual_key_code]], is_down);
+            }
+            break;
+
+            default:
+            {
+                DispatchMessageA(&message);
+            }
+        }
+
     }
 }
 
@@ -221,7 +250,7 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
     spear_engine_init_graphics(&g_engine);
     spear_engine_create_meshes(&g_engine);
     spear_engine_compile_shaders(&g_engine);
-    spear_engine_load_game_dll(&g_engine, "bin/spear_game.dll");
+    spear_engine_load_game_dll(&g_engine, "spear_game.dll");
     spear_engine_game_init(&g_engine);
 
     duration last_frame_dt = duration_create_milliseconds(16);
@@ -230,13 +259,26 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
     g_engine.running = true;
     while (g_engine.running)
     {
-        memory_allocator_arena_reset(g_engine.temporary, CL_HERE);
-        spear_engine_load_game_dll(&g_engine, "bin/spear_game.dll");
+        memory_allocator_arena_reset(g_engine.temporary);
+        spear_engine_load_game_dll(&g_engine, "spear_game.dll");
 
-        process_pending_messages();
+        spear_engine_input_reset_transitions(&g_engine);
+        process_pending_messages(&g_engine.input);
+        // Set mouse pos
+        {
+            POINT pos;
+            GetCursorPos(&pos);
+            ScreenToClient(w.Handle, &pos);
+            spear_engine_input_mouse_pos_set(&g_engine, pos.x, pos.y);
+        }
 
         g_engine.input.dt = duration_get_seconds(last_frame_dt);
         g_engine.input.time = timepoint_get_seconds(last_timepoint);
+
+        if (g_engine.viewport_changed)
+        {
+            spear_engine_update_viewport(&g_engine, g_client_width, g_client_height);
+        }
 
         spear_engine_game_update(&g_engine);
         spear_engine_game_render(&g_engine);
@@ -251,10 +293,14 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
     return 0;
 }
 
-#include <corelibs/base.c>
 #include <corelibs/math.c>
+#include <corelibs/collision.c>
 #include <corelibs/platform_win32.c>
 #include <corelibs/memory/allocator.c>
+#include <corelibs/parse_primitives.c>
+#include <corelibs/file_formats/bmp.c>
+#include <corelibs/file_formats/wav.c>
+#include <corelibs/file_formats/obj.c>
 
 #include <gamelibs/input.c>
 
@@ -262,3 +308,5 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
 #include <engine/graphics/render.c>
 #include <engine/graphics/opengl_win32.c>
 #include <engine/primitive_meshes.c>
+#include <engine/audio/audio.c>
+#include <engine/audio/audio_dsound.c>

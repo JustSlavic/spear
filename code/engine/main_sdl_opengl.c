@@ -192,10 +192,12 @@ int main(void)
 #include <corelibs/file_formats/bmp.c>
 #include <corelibs/file_formats/wav.c>
 #include <corelibs/file_formats/obj.c>
+
 #include <gamelibs/input.c>
 #include <gamelibs/camera.c>
 #include <gamelibs/entity_manager.c>
 #include <gamelibs/ui.c>
+
 #include <engine/engine.c>
 #include <engine/game_interface.c>
 #include <engine/primitive_meshes.c>

@@ -283,8 +283,9 @@ wav_decode_result wav_decode(void *file_data, usize file_size,
                     return WavDecode_BufferOverflow;
                 }
                 memcpy(sound_data, samples_pointer, samples_size);
-                sound_data += samples_size;
-                sound_size -= samples_size;
+                // @todo: it's ok for now because we do only one RIFF chunk
+                // sound_data += samples_size;
+                // sound_size -= samples_size;
 
                 if (out_channel_count) *out_channel_count = channel_count;
                 if (out_samples_per_second) *out_samples_per_second = sample_rate_hz;

@@ -366,9 +366,12 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_view game_memory, input *input)
 #include <corelibs/math.c>
 #include <corelibs/memory/allocator.c>
 #include <corelibs/collision.c>
+
+#include <gamelibs/input.c>
+
+#include <engine/game_interface.c>
+#endif
+
 #include <gamelibs/camera.c>
 #include <gamelibs/entity_manager.c>
 #include <gamelibs/ui.c>
-#include <gamelibs/input.c>
-#include <engine/game_interface.c>
-#endif

@@ -22,6 +22,9 @@
 #define GL_SAMPLES                                      0x80A9
 #define GL_SAMPLES_ARB                                  0x80A9
 #define GL_SAMPLES_EXT                                  0x80A9
+#define GL_BGR                                          0x80E0
+#define GL_BGRA                                         0x80E1
+#define GL_CLAMP_TO_BORDER                              0x812D
 #define GL_CLAMP_TO_EDGE                                0x812F
 #define GL_FRAMEBUFFER_UNDEFINED                        0x8219
 #define GL_MAJOR_VERSION                                0x821B

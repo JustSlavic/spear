@@ -432,7 +432,7 @@ obj_decode(void *file_data,
     uint32 v_write_index = 0;
     uint32 i_write_index = 0;
 
-    printf("vertex_size = %u; v_size = %lu\n", vertex_size, v_count * sizeof(float));
+    printf("vertex_size = %u; v_size = %zu\n", vertex_size, v_count * sizeof(float));
 
     memcpy(vertex_data, v, v_count * sizeof(float));
 

@@ -4,9 +4,9 @@
 
 enum
 {
-    BI_RGB  = 0, // No compression
-    BI_RLE8 = 1, // 8bit RLE encoding
-    BI_RLE4 = 2, // 4bit RLE encoding
+    BMP_BI_RGB  = 0, // No compression
+    BMP_BI_RLE8 = 1, // 8bit RLE encoding
+    BMP_BI_RLE4 = 2, // 4bit RLE encoding
 };
 
 char const *bmp_decode_result_to_cstring(bmp_decode_result result)
@@ -19,7 +19,9 @@ char const *bmp_decode_result_to_cstring(bmp_decode_result result)
         case BmpDecode_HeaderReservedBytesNotZero: return "BmpDecode_HeaderReservedBytesNotZero";
         case BmpDecode_InfoHeaderSizeNotForty: return "BmpDecode_InfoHeaderSizeNotForty";
         case BmpDecode_InfoHeaderPlanesNotOne: return "BmpDecode_InfoHeaderPlanesNotOne";
+        default: return NULL;
     }
+    return NULL;
 }
 
 #define BMP_READ(Type, Variable)                \

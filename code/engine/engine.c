@@ -4,8 +4,14 @@
 #include <corelibs/file_formats/bmp.h>
 #include <corelibs/file_formats/wav.h>
 #include <corelibs/file_formats/obj.h>
+#include <corelibs/parse_primitives.h>
 
 #include <math.h>
+
+#if !DLL_BUILD
+#include <engine/game_interface.c>
+#include <game_rpg/game.c>
+#endif
 
 
 typedef enum
@@ -178,22 +184,25 @@ spear_engine_load_game_data(spear_engine *engine)
 
         obj_decode_result decode_result;
 
-        uint32 vertex_buffer_size = 0;
-        // uint32 index_buffer_size = 0;
-
-        // obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
-        // printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
-
-        // float *vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
-        // float *indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
-
-        // decode_result = obj_decode(file_data, file_size,
-        //    vertices, vertex_buffer_size,
-        //    indices, index_buffer_size);
-
         float *vertices = NULL;
+        uint32 vertex_buffer_size = 0;
+
+        int32 *indices = NULL;
+        uint32 index_buffer_size = 0;
+#if 1
+        obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
+        printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
+
+        vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
+        indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
+
+        decode_result = obj_decode(file_data, file_size,
+           vertices, vertex_buffer_size,
+           indices, index_buffer_size);
+#else
         decode_result = obj_decode_no_index(file_data, file_size,
             (void **) &vertices, &vertex_buffer_size);
+#endif
 
         UNUSED(decode_result);
         printf("DECODE RESULT = %s\n", obj_decode_result_to_cstring(decode_result));
@@ -209,8 +218,8 @@ spear_engine_load_game_data(spear_engine *engine)
                 .size = vertex_buffer_size,
             },
             .ibo = {
-                .data = NULL,
-                .size = 0,
+                .data = indices,
+                .size = index_buffer_size,
             },
             .vbl = vbl,
         };
@@ -353,7 +362,9 @@ void spear_engine_load_game_dll(spear_engine *engine, char const *filename)
         }
     }
 #else
-    #error "Not supported"
+    // #error "Not supported"
+    engine->initialize_memory = initialize_memory;
+    engine->update_and_render = update_and_render;
 #endif
 }
 
@@ -510,13 +521,15 @@ void spear_engine_game_render(spear_engine *engine)
             {
                 renderer_setup_camera(&engine->renderer,
                     cmd.camera_position, cmd.camera_forward, cmd.camera_up);
-                // glDisable(GL_DEPTH_TEST);
-                // renderer_draw_mesh_ui(&engine->renderer,
-                //     matrix4_scale(10000.f, 10000.f, 1.f),
-                //     engine->mesh_square,
-                //     engine->shader_single_color,
-                //     v4f(0.1f, 0.1f, 0.1f, 1.f));
-                // glEnable(GL_DEPTH_TEST);
+#if 0
+                glDisable(GL_DEPTH_TEST);
+                renderer_draw_mesh_ui(&engine->renderer,
+                    matrix4_scale(10000.f, 10000.f, 1.f),
+                    engine->mesh_square,
+                    engine->shader_single_color,
+                    vector4_create(0.1f, 0.1f, 0.1f, 1.f));
+                glEnable(GL_DEPTH_TEST);
+#endif
             }
             break;
 

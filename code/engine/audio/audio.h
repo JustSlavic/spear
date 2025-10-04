@@ -6,7 +6,7 @@
 
 typedef struct
 {
-    void *data;
+    byte *data;
     uint32 size;
     uint32 frames_per_second;
     uint32 channel_count;
@@ -24,7 +24,7 @@ typedef struct
 {
     spear_audio_source_tag tag;
 
-    void  *data;
+    byte  *data;
     uint32 size;
     uint32 R;
 
@@ -44,7 +44,7 @@ typedef struct
     uint32 bits_per_sample;   // 16
     double latency; // in seconds
     // Master buffer
-    void *playback_buffer;
+    byte *playback_buffer;
     uint32 playback_buffer_size;
     uint32 W, R; // Write and Read indices
     // Audio sources
