@@ -72,12 +72,12 @@ macos_vulkan_build() {
 macos_debug_build() {
     C_FLAGS="-std=c89 -g"
     WARNINGS="-Wall -Werror -Wno-comment -Wno-unused-function"
-    DEFINES="-DDEBUG=1 -DDLL_BUILD=1"
+    DEFINES="-DDEBUG=1 -DDLL_BUILD=0"
     INCLUDES="-Icode -I/opt/homebrew/Cellar/sdl2/2.30.3/include"
     LIBS="-lSDL2 -L/opt/homebrew/Cellar/sdl2/2.30.3/lib -framework OpenGL"
 
     macos_build_engine "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
-    macos_build_game   "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
+    # macos_build_game   "$C_FLAGS $WARNINGS $DEFINES $INCLUDES $LIBS"
 
     # macos_vulkan_build
 

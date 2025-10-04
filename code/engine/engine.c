@@ -569,7 +569,7 @@ void spear_engine_game_render(spear_engine *engine)
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
     }
 #endif
-#if 0
+#if 1
     // Draw audio debug
     {
         uint32 channel_count = 2;

@@ -69,7 +69,7 @@ bmp_decode_result bmp_extract_size(void *file_data, usize file_size, uint32 *out
     BMP_READ(uint32, info_header_image_size); // Can be 0 if compression is BI_RGB
 
     uint32 compited_image_size = info_header_image_size;
-    if (info_header_image_size == 0 && info_header_compression == BI_RGB)
+    if (info_header_image_size == 0 && info_header_compression == BMP_BI_RGB)
     {
         compited_image_size = info_header_width * info_header_height * info_header_bits_per_pixel / 8;
     }
