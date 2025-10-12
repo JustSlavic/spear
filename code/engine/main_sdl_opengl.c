@@ -16,6 +16,7 @@
 
 static spear_engine g_engine;
 static spear_input g_input;
+static bool32 g_window_size_changed;
 
 uint32 scancode_to_button_id[] =
 {
@@ -38,7 +39,7 @@ void process_pending_messages(spear_input *input)
                     e.window.event == SDL_WINDOWEVENT_SHOWN ||
                     e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
-                    g_engine.viewport_changed = true;
+                    g_window_size_changed = true;
                 }
             break;
 
@@ -164,8 +165,9 @@ int main(void)
         g_input.dt = dt;
         g_input.time = timepoint_get_seconds(last_timepoint);
 
-        if (g_engine.viewport_changed)
+        if (g_window_size_changed)
         {
+            g_window_size_changed = false;
             int width, height;
             SDL_GetWindowSize(window, &width, &height);
             spear_engine_update_viewport(&g_engine, width, height);

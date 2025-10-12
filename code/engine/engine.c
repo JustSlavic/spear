@@ -232,7 +232,6 @@ spear_engine_load_game_data(spear_engine *engine)
 void spear_engine_init(spear_engine *engine)
 {
     engine->running = false;
-    engine->viewport_changed = false;
     engine->current_client_width = 1200;
     engine->current_client_height = 800;
 
@@ -269,6 +268,23 @@ void spear_engine_init(spear_engine *engine)
         engine->aspect_ratio,
         engine->near_clip_distance,
         engine->far_clip_distance);
+
+    {
+        double latency = 1.0 / 20.0;
+        uint32 frames_per_second = 44100;
+        uint32 channel_count = 2;
+        uint32 bits_per_sample = sizeof(sound_sample_t) * 8;
+        uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
+        void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
+
+        spear_audio_init(&engine->audio,
+            frames_per_second,
+            channel_count,
+            bits_per_sample,
+            latency,
+            playback_buffer,
+            playback_buffer_size);
+    }
 
     engine->sound_debug_position_count = 100;
     engine->sound_debug_positions_read = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
@@ -361,26 +377,22 @@ void spear_engine_input_mouse_pos_set(spear_engine *engine, spear_input *input, 
 
 void spear_engine_update_viewport(spear_engine *engine, int width, int height)
 {
-    if (engine->viewport_changed)
-    {
-        viewport viewport = render_viewport_create(width, height, engine->aspect_ratio);
-        glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
+    viewport viewport = render_viewport_create(width, height, engine->aspect_ratio);
+    glViewport(viewport.offset_x, viewport.offset_y, viewport.width, viewport.height);
 
-        engine->viewport = viewport;
-        engine->viewport_changed = false;
-        engine->current_client_width = width;
-        engine->current_client_height = height;
+    engine->viewport = viewport;
+    engine->current_client_width = width;
+    engine->current_client_height = height;
 
-        engine->game_context.viewport_offset_x = viewport.offset_x;
-        engine->game_context.viewport_offset_y = viewport.offset_y;
-        engine->game_context.viewport_width = viewport.width;
-        engine->game_context.viewport_height = viewport.height;
+    engine->game_context.viewport_offset_x = viewport.offset_x;
+    engine->game_context.viewport_offset_y = viewport.offset_y;
+    engine->game_context.viewport_width = viewport.width;
+    engine->game_context.viewport_height = viewport.height;
 
-        engine->renderer.proj_matrix_ui =
-            matrix4_mul(
-                matrix4_translate(-1, 1, 0),
-                matrix4_scale(2.f / viewport.width, -2.f/viewport.height, 1));
-    }
+    engine->renderer.proj_matrix_ui =
+        matrix4_mul(
+            matrix4_translate(-1, 1, 0),
+            matrix4_scale(2.f / viewport.width, -2.f/viewport.height, 1));
 }
 
 void spear_engine_game_init(spear_engine *engine)
@@ -425,7 +437,7 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input, float64 
     }
     engine->game_context.engine_commands_count = 0;
 
-    // spear_audio_update(&engine->audio);
+    spear_audio_update(&engine->audio);
 }
 
 static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)

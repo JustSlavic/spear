@@ -64,6 +64,7 @@ static spear_engine g_engine;
 static spear_input g_input;
 static uint32 g_client_width;
 static uint32 g_client_height;
+static bool32 g_window_size_changed;
 
 window create_window(HINSTANCE Instance, int ClientWidth, int ClientHeight, MainWindowCallbackType *WindowCallback)
 {
@@ -190,7 +191,7 @@ MAIN_WINDOW_CALLBACK(window_callback)
         case WM_SIZE:
             g_client_width = LOWORD(lParam);
             g_client_height = HIWORD(lParam);
-            g_engine.viewport_changed = true;
+            g_window_size_changed = true;
         break;
 
         case WM_CLOSE:
@@ -279,7 +280,7 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
         g_input.dt = dt;
         g_input.time = timepoint_get_seconds(last_timepoint);
 
-        if (g_engine.viewport_changed)
+        if (g_window_size_changed)
         {
             spear_engine_update_viewport(&g_engine, g_client_width, g_client_height);
         }

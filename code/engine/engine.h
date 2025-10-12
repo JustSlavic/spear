@@ -35,7 +35,6 @@ typedef struct
     int32 current_client_width;
     int32 current_client_height;
 
-    bool32 viewport_changed;
     viewport viewport;
 
     float fov;
