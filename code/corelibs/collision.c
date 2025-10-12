@@ -47,7 +47,7 @@ void triangle_get_normal(float ax, float ay, float az,
                          float cx, float cy, float cz,
                          float *x, float *y, float *z)
 {
-    *x = ay * bz - az * by;
-    *y = az * bx - ax * bz;
-    *z = ax * by - ay * bx;
+    *x = (by - ay) * (cz - az) - (bz - az) * (cy - ay);
+    *y = (bz - az) * (cx - ax) - (bx - ax) * (cz - az);
+    *z = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
 }
