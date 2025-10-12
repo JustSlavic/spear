@@ -15,6 +15,7 @@
 
 
 static spear_engine g_engine;
+static spear_input g_input;
 
 uint32 scancode_to_button_id[] =
 {
@@ -22,7 +23,7 @@ uint32 scancode_to_button_id[] =
 };
 
 
-void process_pending_messages(input *input)
+void process_pending_messages(spear_input *input)
 {
     SDL_Event e;
     while (SDL_PollEvent(&e) != 0) {
@@ -148,17 +149,20 @@ int main(void)
         memory_allocator_arena_reset(g_engine.temporary);
         spear_engine_load_game_dll(&g_engine, "spear_game.so");
 
-        spear_engine_input_reset_transitions(&g_engine);
-        process_pending_messages(&g_engine.input);
+        input_button_reset_transitions(g_input.keyboard_and_mouse.buttons, Keyboard_Button_Count);
+        g_input.keyboard_and_mouse.mouse_scroll = 0;
+
+        process_pending_messages(&g_input);
         // Set mouse pos
         {
             int mouse_x, mouse_y;
             SDL_GetMouseState(&mouse_x, &mouse_y);
-            spear_engine_input_mouse_pos_set(&g_engine, mouse_x, mouse_y);
+            spear_engine_input_mouse_pos_set(&g_engine, &g_input, mouse_x, mouse_y);
         }
 
-        g_engine.input.dt = duration_get_seconds(last_frame_dt);
-        g_engine.input.time = timepoint_get_seconds(last_timepoint);
+        float64 dt = duration_get_seconds(last_frame_dt);
+        g_input.dt = dt;
+        g_input.time = timepoint_get_seconds(last_timepoint);
 
         if (g_engine.viewport_changed)
         {
@@ -166,7 +170,7 @@ int main(void)
             SDL_GetWindowSize(window, &width, &height);
             spear_engine_update_viewport(&g_engine, width, height);
         }
-        spear_engine_game_update(&g_engine);
+        spear_engine_game_update(&g_engine, &g_input, dt);
         spear_engine_game_render(&g_engine);
 
         SDL_GL_SwapWindow(window);

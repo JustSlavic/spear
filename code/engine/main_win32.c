@@ -61,6 +61,7 @@ typedef struct window
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
 static spear_engine g_engine;
+static spear_input g_input;
 static uint32 g_client_width;
 static uint32 g_client_height;
 
@@ -209,7 +210,7 @@ uint32 vk_to_button_id[] =
 #include "win32_vk_to_button.inl"
 };
 
-void process_pending_messages(input *input)
+void process_pending_messages(spear_input *input)
 {
     MSG message;
     while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -262,25 +263,28 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
         memory_allocator_arena_reset(g_engine.temporary);
         spear_engine_load_game_dll(&g_engine, "spear_game.dll");
 
-        spear_engine_input_reset_transitions(&g_engine);
-        process_pending_messages(&g_engine.input);
+        input_button_reset_transitions(g_input.keyboard_and_mouse.buttons, Keyboard_Button_Count);
+        g_input.keyboard_and_mouse.mouse_scroll = 0;
+
+        process_pending_messages(&g_input);
         // Set mouse pos
         {
             POINT pos;
             GetCursorPos(&pos);
             ScreenToClient(w.Handle, &pos);
-            spear_engine_input_mouse_pos_set(&g_engine, pos.x, pos.y);
+            spear_engine_input_mouse_pos_set(&g_engine, &g_input, pos.x, pos.y);
         }
 
-        g_engine.input.dt = duration_get_seconds(last_frame_dt);
-        g_engine.input.time = timepoint_get_seconds(last_timepoint);
+        float64 dt = duration_get_seconds(last_frame_dt);
+        g_input.dt = dt;
+        g_input.time = timepoint_get_seconds(last_timepoint);
 
         if (g_engine.viewport_changed)
         {
             spear_engine_update_viewport(&g_engine, g_client_width, g_client_height);
         }
 
-        spear_engine_game_update(&g_engine);
+        spear_engine_game_update(&g_engine, &g_input, dt);
         spear_engine_game_render(&g_engine);
 
         SwapBuffers(w.DeviceContext);

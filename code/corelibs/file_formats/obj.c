@@ -120,7 +120,7 @@ obj_decode_internal(void *file_data,
                     {
                         vt = realloc(vt, sizeof(float) * vt_capacity * 2);
                         vt_capacity *= 2;
-                        printf("Grow vt to capacity=%u\n", vt_capacity);
+                        // printf("Grow vt to capacity=%u\n", vt_capacity);
                     }
                     vt[vt_count++] = x;
                     vt[vt_count++] = y;
@@ -149,7 +149,7 @@ obj_decode_internal(void *file_data,
                     {
                         vn = realloc(vn, sizeof(float) * vn_capacity * 2);
                         vn_capacity *= 2;
-                        printf("Grow vn to capacity=%u\n", vn_capacity);
+                        // printf("Grow vn to capacity=%u\n", vn_capacity);
                     }
                     vn[vn_count++] = x;
                     vn[vn_count++] = y;
@@ -177,7 +177,7 @@ obj_decode_internal(void *file_data,
                     {
                         v = realloc(v, sizeof(float) * v_capacity * 2);
                         v_capacity *= 2;
-                        printf("Grow v to capacity=%u\n", v_capacity);
+                        // printf("Grow v to capacity=%u\n", v_capacity);
                     }
                     v[v_count++] = x;
                     v[v_count++] = y;
@@ -240,7 +240,7 @@ obj_decode_internal(void *file_data,
                     {
                         vi_capacity *= 2;
                         vi = realloc(vi, sizeof(int32) * vi_capacity);
-                        printf("Grow vi to capacity=%u\n", vi_capacity);
+                        // printf("Grow vi to capacity=%u\n", vi_capacity);
                     }
                     vi[vi_count++] = v0;
                     vi[vi_count++] = v1;
@@ -260,7 +260,7 @@ obj_decode_internal(void *file_data,
                     {
                         vti_capacity *= 2;
                         vti = realloc(vti, sizeof(int32) * vti_capacity);
-                        printf("Grow vti to capacity=%u\n", vti_capacity);
+                        // printf("Grow vti to capacity=%u\n", vti_capacity);
                     }
                     vti[vti_count++] = vt0;
                     vti[vti_count++] = vt1;
@@ -280,7 +280,7 @@ obj_decode_internal(void *file_data,
                     {
                         vni_capacity *= 2;
                         vni = realloc(vni, sizeof(int32) * vni_capacity);
-                        printf("Grow vni to capacity=%u\n", vni_capacity);
+                        // printf("Grow vni to capacity=%u\n", vni_capacity);
                     }
                     vni[vni_count++] = vn0;
                     vni[vni_count++] = vn1;
@@ -302,7 +302,7 @@ obj_decode_internal(void *file_data,
                     {
                         vi_capacity *= 2;
                         vi = realloc(vi, sizeof(int32) * vi_capacity);
-                        printf("Grow vi to capacity=%u\n", vi_capacity);
+                        // printf("Grow vi to capacity=%u\n", vi_capacity);
                     }
                     vi[vi_count++] = v0;
                     vi[vi_count++] = v1;
@@ -319,7 +319,7 @@ obj_decode_internal(void *file_data,
                     {
                         vti_capacity *= 2;
                         vti = realloc(vti, sizeof(int32) * vti_capacity);
-                        printf("Grow vti to capacity=%u\n", vti_capacity);
+                        // printf("Grow vti to capacity=%u\n", vti_capacity);
                     }
                     vti[vti_count++] = vt0;
                     vti[vti_count++] = vt1;
@@ -336,7 +336,7 @@ obj_decode_internal(void *file_data,
                     {
                         vni_capacity *= 2;
                         vni = realloc(vni, sizeof(int32) * vni_capacity);
-                        printf("Grow vni to capacity=%u\n", vni_capacity);
+                        // printf("Grow vni to capacity=%u\n", vni_capacity);
                     }
                     vni[vni_count++] = vn0;
                     vni[vni_count++] = vn1;
@@ -387,11 +387,11 @@ obj_extract_size(void *file_data,
         NULL, &vn_count,
         NULL, &vni_count);
 
-    printf("obj_extract_size:\n");
-    printf("    v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
-        NULL, v_count, NULL, vi_count,
-        NULL, vt_count, NULL, vti_count,
-        NULL, vn_count, NULL, vni_count);
+    // printf("obj_extract_size:\n");
+    // printf("    v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
+    //     NULL, v_count, NULL, vi_count,
+    //     NULL, vt_count, NULL, vti_count,
+    //     NULL, vn_count, NULL, vni_count);
 
     *out_vertex_buffer_size = sizeof(float) * (v_count + vt_count + vn_count);
     *out_index_buffer_size = sizeof(int32) * vi_count;
@@ -420,11 +420,11 @@ obj_decode(void *file_data,
         &vn,  &vn_count,
         &vni, &vni_count);
 
-    printf("obj_decode:\n");
-    printf("v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
-        v, v_count, vi, vi_count,
-        vt, vt_count, vti, vti_count,
-        vn, vn_count, vni, vni_count);
+    // printf("obj_decode:\n");
+    // printf("v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
+    //     v, v_count, vi, vi_count,
+    //     vt, vt_count, vti, vti_count,
+    //     vn, vn_count, vni, vni_count);
 
     float *v_data = (float *) vertex_data;
     int32 *i_data = (int32 *) index_data;
@@ -432,7 +432,7 @@ obj_decode(void *file_data,
     uint32 v_write_index = 0;
     uint32 i_write_index = 0;
 
-    printf("vertex_size = %u; v_size = %zu\n", vertex_size, v_count * sizeof(float));
+    // printf("vertex_size = %u; v_size = %zu\n", vertex_size, v_count * sizeof(float));
 
     memcpy(vertex_data, v, v_count * sizeof(float));
 
@@ -446,15 +446,15 @@ obj_decode(void *file_data,
     {
         uint32 vertex_index = vi[i];
         uint32 normal_index = vni[i];
-        printf("i=%u; vertex_index = %u\n", i, vertex_index);
+        // printf("i=%u; vertex_index = %u\n", i, vertex_index);
         uint32 *entry = table + vertex_index; // This is possibly new enumeration index
-        printf("  *entry = %u\n", *entry);
+        // printf("  *entry = %u\n", *entry);
         if (*entry == 0) // If no index is present
         {
             *entry = ii + 1; // Make new index (starts from 1)
             ii += 1;
 
-            printf("    because *entry == 0, make new index for this vertex (%u)\n", *entry);
+            // printf("    because *entry == 0, make new index for this vertex (%u)\n", *entry);
 
             // Write vertex data
             v_data[v_write_index++] = v[3 * (vertex_index - 1)]; // x
@@ -464,10 +464,10 @@ obj_decode(void *file_data,
             v_data[v_write_index++] = vn[3 * (normal_index - 1) + 1];
             v_data[v_write_index++] = vn[3 * (normal_index - 1) + 2];
 
-            printf("    write vertex data: %f %f %f %f %f %f\n", v[3 * (vertex_index - 1)], v[3 * (vertex_index - 1) + 1], v[3 * (vertex_index - 1) + 2], 0.f, 0.f, 0.f);
+            // printf("    write vertex data: %f %f %f %f %f %f\n", v[3 * (vertex_index - 1)], v[3 * (vertex_index - 1) + 1], v[3 * (vertex_index - 1) + 2], 0.f, 0.f, 0.f);
             i_data[i_write_index++] = *entry - 1;
-            printf("    write index data i_data[%u] := %u\n",
-                i_write_index - 1, *entry);
+            // printf("    write index data i_data[%u] := %u\n",
+            //     i_write_index - 1, *entry);
         }
         else
         {
@@ -504,11 +504,11 @@ obj_decode_no_index(void *file_data,
         &vn,  &vn_count,
         &vni, &vni_count);
 
-    printf("obj_decode:\n");
-    printf("v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
-        v, v_count, vi, vi_count,
-        vt, vt_count, vti, vti_count,
-        vn, vn_count, vni, vni_count);
+    // printf("obj_decode:\n");
+    // printf("v={ %p, %u, %p, %u }; vt={ %p, %u, %p, %u }; vn={ %p, %u, %p, %u };\n",
+    //     v, v_count, vi, vi_count,
+    //     vt, vt_count, vti, vti_count,
+    //     vn, vn_count, vni, vni_count);
 
     int i;
     for (i = 0; i < vi_count; i+=3)
@@ -521,7 +521,7 @@ obj_decode_no_index(void *file_data,
         {
             result_capacity *= 2;
             result_data = realloc(result_data, result_capacity * sizeof(float));
-            printf("Resize: from %u to %u\n", result_capacity / 2, result_capacity);
+            // printf("Resize: from %u to %u\n", result_capacity / 2, result_capacity);
         }
 
         float ax = v[3 * (vertex_index_0 - 1) + 0];

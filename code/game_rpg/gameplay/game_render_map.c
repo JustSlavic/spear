@@ -10,7 +10,7 @@ void game_render_entity(context *ctx, game_state *gs, entity_id eid)
         color);
 }
 
-void game_render_draw_map(context *ctx, game_state *gs, input *input)
+void game_render_draw_map(context *ctx, game_state *gs, spear_input *input)
 {
     entity *hero = get_hero(gs);
 
@@ -59,7 +59,7 @@ void game_render_draw_map(context *ctx, game_state *gs, input *input)
     }
 }
 
-void game_render_projectiles(context *ctx, game_state *gs, input *input)
+void game_render_projectiles(context *ctx, game_state *gs, spear_input *input)
 {
     uint i;
     for (i = 0; i < gs->projectiles.count; i++)

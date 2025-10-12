@@ -40,7 +40,7 @@ void game_update_ui_transforms(game_state *gs, entity_id_array *ui_elements)
     }
 }
 
-void game_update_ui(context *ctx, game_state *gs, input *input)
+void game_update_ui(context *ctx, game_state *gs, spear_input *input)
 {
     // update_animations(s, inp->dt);
     game_update_ui_transforms(gs, &gs->ui_elements);

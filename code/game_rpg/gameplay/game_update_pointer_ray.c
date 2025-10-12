@@ -2,7 +2,7 @@
 #include <corelibs/collision.h>
 
 
-vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
+vector3 compute_pointer_ray(context *ctx, game_state *gs, spear_input *input)
 {
     float mouse_pos_x = cvt((float) input->keyboard_and_mouse.window_mouse.x,
         (float) ctx->viewport_offset_x, (float) (ctx->viewport_offset_x + ctx->viewport_width),
@@ -29,7 +29,7 @@ vector3 compute_pointer_ray(context *ctx, game_state *gs, input *input)
     return result;
 }
 
-void find_intersection_with_ground(context *ctx, game_state *gs, input *input)
+void find_intersection_with_ground(context *ctx, game_state *gs, spear_input *input)
 {
     gs->intersected = false;
     gs->intersect_t = INFINITY;

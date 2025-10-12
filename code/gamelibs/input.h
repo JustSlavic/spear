@@ -102,7 +102,7 @@ enum
     Keyboard_Left,
     Keyboard_Right,
 
-    Button_Count
+    Keyboard_Button_Count
 };
 
 typedef struct
@@ -112,7 +112,7 @@ typedef struct
 
 typedef struct
 {
-    input_button buttons[Button_Count];
+    input_button buttons[Keyboard_Button_Count];
     input_mouse_position window_mouse;
     input_mouse_position viewport_mouse;
     int32 mouse_scroll;
@@ -168,7 +168,7 @@ typedef struct
     input_gamepad gamepads[4];
     float64 time;
     float64 dt;
-} input;
+} spear_input;
 
 
 #endif // _SPEAR_GAMELIBS_INPUT_H

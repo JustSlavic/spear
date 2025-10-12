@@ -1,4 +1,4 @@
-void game_render_pointer_intersection(context *ctx, game_state *gs, input *input)
+void game_render_pointer_intersection(context *ctx, game_state *gs, spear_input *input)
 {
     if (gs->intersected)
     {

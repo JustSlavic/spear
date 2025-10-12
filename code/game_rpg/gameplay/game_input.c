@@ -1,4 +1,4 @@
-void game_input_exit(context *ctx, game_state *gs, input *input)
+void game_input_exit(context *ctx, game_state *gs, spear_input *input)
 {
     if (input_button_get_release_count(input->keyboard_and_mouse.buttons[Keyboard_Esc]))
     {
@@ -13,7 +13,7 @@ void game_input_exit(context *ctx, game_state *gs, input *input)
     }
 }
 
-void game_input_camera_move(context *ctx, game_state *gs, input *input)
+void game_input_camera_move(context *ctx, game_state *gs, spear_input *input)
 {
     if (!gs->is_free_camera) return;
 
@@ -51,7 +51,7 @@ void game_input_camera_move(context *ctx, game_state *gs, input *input)
     gs->camera.up = quaternion_apply_unit(dq, gs->camera.up);
 }
 
-void game_input_hero_move(context *ctx, game_state *gs, input *input)
+void game_input_hero_move(context *ctx, game_state *gs, spear_input *input)
 {
     int move_x = 0;
     int move_y = 0;
@@ -76,7 +76,7 @@ void game_input_hero_move(context *ctx, game_state *gs, input *input)
     }
 }
 
-void game_input_hero_spell(context *ctx, game_state *gs, input *input)
+void game_input_hero_spell(context *ctx, game_state *gs, spear_input *input)
 {
     if (gs->spell_id && gs->intersected &&
         input_button_get_press_count(input->keyboard_and_mouse.buttons[Mouse_Left]))

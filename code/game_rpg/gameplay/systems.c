@@ -14,7 +14,7 @@
 #include "game_render_debug_pointer_ray.c"
 
 
-void game_input_stage(context *ctx, game_state *gs, input *input)
+void game_input_stage(context *ctx, game_state *gs, spear_input *input)
 {
     game_input_exit(ctx, gs, input);
     game_input_camera_move(ctx, gs, input);
@@ -22,7 +22,7 @@ void game_input_stage(context *ctx, game_state *gs, input *input)
     game_input_hero_spell(ctx, gs, input);
 }
 
-void game_update_stage(context *ctx, game_state *gs, input *input)
+void game_update_stage(context *ctx, game_state *gs, spear_input *input)
 {
     find_intersection_with_ground(ctx, gs, input);
     game_update_hero_move(ctx, gs, input);
@@ -30,7 +30,7 @@ void game_update_stage(context *ctx, game_state *gs, input *input)
     game_update_ui(ctx, gs, input);
 }
 
-void game_render_stage(context *ctx, game_state *gs, input *input)
+void game_render_stage(context *ctx, game_state *gs, spear_input *input)
 {
     game_camera_setup(ctx, gs, input);
     game_render_draw_map(ctx, gs, input);
@@ -89,7 +89,7 @@ void game_process_events(game_state *gs)
     gs->event_count = 0;
 }
 
-void game_on_every_frame(context *ctx, game_state *gs, input *input)
+void game_on_every_frame(context *ctx, game_state *gs, spear_input *input)
 {
     game_input_stage(ctx, gs, input);
     game_update_stage(ctx, gs, input);

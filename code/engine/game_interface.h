@@ -113,7 +113,7 @@ void context_render_command_push_ui(context *ctx, transform tm, float width, flo
 typedef INITIALIZE_MEMORY_FUNCTION_T(initialize_memory_t);
 #define INITIALIZE_MEMORY_FUNCTION(...) INITIALIZE_MEMORY_FUNCTION_T(initialize_memory)
 
-#define UPDATE_AND_RENDER_FUNCTION_T(NAME) void NAME(context *ctx, memory_view game_memory, input *input)
+#define UPDATE_AND_RENDER_FUNCTION_T(NAME) void NAME(context *ctx, memory_view game_memory, spear_input *input)
 typedef UPDATE_AND_RENDER_FUNCTION_T(update_and_render_t);
 #define UPDATE_AND_RENDER_FUNCTION(...) UPDATE_AND_RENDER_FUNCTION_T(update_and_render)
 

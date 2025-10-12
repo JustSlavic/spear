@@ -1,7 +1,7 @@
 #include <gamelibs/ui.h>
 
 
-void game_render_ui(context *ctx, game_state *gs, input *input)
+void game_render_ui(context *ctx, game_state *gs, spear_input *input)
 {
     uint i;
     for (i = 0; i < gs->ui_visibles.count; i++)

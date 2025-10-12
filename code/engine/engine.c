@@ -189,7 +189,7 @@ spear_engine_load_game_data(spear_engine *engine)
 
         int32 *indices = NULL;
         uint32 index_buffer_size = 0;
-#if 1
+#if 0
         obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
         printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
 
@@ -269,23 +269,6 @@ void spear_engine_init(spear_engine *engine)
         engine->aspect_ratio,
         engine->near_clip_distance,
         engine->far_clip_distance);
-
-    {
-        double latency = 1.0 / 20.0;
-        uint32 frames_per_second = 44100;
-        uint32 channel_count = 2;
-        uint32 bits_per_sample = sizeof(sound_sample_t) * 8;
-        uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
-        void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
-
-        spear_audio_init(&engine->audio,
-            frames_per_second,
-            channel_count,
-            bits_per_sample,
-            latency,
-            playback_buffer,
-            playback_buffer_size);
-    }
 
     engine->sound_debug_position_count = 100;
     engine->sound_debug_positions_read = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
@@ -368,18 +351,12 @@ void spear_engine_load_game_dll(spear_engine *engine, char const *filename)
 #endif
 }
 
-void spear_engine_input_reset_transitions(spear_engine *engine)
+void spear_engine_input_mouse_pos_set(spear_engine *engine, spear_input *input, int mouse_x, int mouse_y)
 {
-    input_button_reset_transitions(engine->input.keyboard_and_mouse.buttons, Button_Count);
-    engine->input.keyboard_and_mouse.mouse_scroll = 0;
-}
-
-void spear_engine_input_mouse_pos_set(spear_engine *engine, int mouse_x, int mouse_y)
-{
-    engine->input.keyboard_and_mouse.window_mouse.x = mouse_x;
-    engine->input.keyboard_and_mouse.window_mouse.y = mouse_y;
-    engine->input.keyboard_and_mouse.viewport_mouse.x = mouse_x - engine->viewport.offset_x;
-    engine->input.keyboard_and_mouse.viewport_mouse.y = mouse_y - engine->viewport.offset_y;
+    input->keyboard_and_mouse.window_mouse.x = mouse_x;
+    input->keyboard_and_mouse.window_mouse.y = mouse_y;
+    input->keyboard_and_mouse.viewport_mouse.x = mouse_x - engine->viewport.offset_x;
+    input->keyboard_and_mouse.viewport_mouse.y = mouse_y - engine->viewport.offset_y;
 }
 
 void spear_engine_update_viewport(spear_engine *engine, int width, int height)
@@ -418,11 +395,11 @@ void spear_engine_game_init(spear_engine *engine)
     }
 }
 
-void spear_engine_game_update(spear_engine *engine)
+void spear_engine_game_update(spear_engine *engine, spear_input *input, float64 dt)
 {
     if (engine->update_and_render)
     {
-        engine->update_and_render(&engine->game_context, engine->game_memory, &engine->input);
+        engine->update_and_render(&engine->game_context, engine->game_memory, input);
     }
     else
     {
@@ -448,7 +425,7 @@ void spear_engine_game_update(spear_engine *engine)
     }
     engine->game_context.engine_commands_count = 0;
 
-    spear_audio_update(&engine->audio);
+    // spear_audio_update(&engine->audio);
 }
 
 static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)

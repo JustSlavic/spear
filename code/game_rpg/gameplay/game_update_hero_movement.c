@@ -1,4 +1,4 @@
-void game_update_hero_move(context *ctx, game_state *gs, input *input)
+void game_update_hero_move(context *ctx, game_state *gs, spear_input *input)
 {
     entity *e = get_hero(gs);
     if (input->time < e->move_animation_end_time)
@@ -12,7 +12,7 @@ void game_update_hero_move(context *ctx, game_state *gs, input *input)
     }
 }
 
-void game_update_projectile_movement(context *ctx, game_state *gs, input *input)
+void game_update_projectile_movement(context *ctx, game_state *gs, spear_input *input)
 {
     uint i;
     for (i = 0; i < gs->projectiles.count; i++)
