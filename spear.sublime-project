@@ -33,8 +33,8 @@
             "name": "Run",
 
             "windows": {
-                "shell_cmd": "call $folder\\build\\spear.exe",
-                "working_dir": "$folder\\data"
+                "shell_cmd": "call $folder\\bin\\spear_engine.exe",
+                "working_dir": "$folder\\bin"
             },
             "linux": {
                 "shell_cmd": "$folder/build/spear",

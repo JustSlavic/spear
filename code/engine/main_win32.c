@@ -4,9 +4,10 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <dsound.h>
 #include <GL/gl.h>
 
 #define WGL_DRAW_TO_WINDOW_ARB            0x2001
@@ -57,6 +58,21 @@ typedef struct window
     HDC DeviceContext;
 } window;
 
+typedef struct
+{
+    int16 *Samples;
+    uint32 SoundBufferSize;
+
+    uint32 RunningSoundCursor;
+    uint32 SamplesPerSecond;
+    uint32 ChannelCount;
+    uint32 BytesPerSoundFrame;
+    uint32 SafetyBytes;
+} SoundOutput;
+
+#define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID lpGuid, LPDIRECTSOUND* ppDS, LPUNKNOWN pUnkOuter)
+typedef DIRECT_SOUND_CREATE(Win32_DirectSoundCreateT);
+
 #define MAIN_WINDOW_CALLBACK(NAME) LRESULT CALLBACK NAME(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 typedef MAIN_WINDOW_CALLBACK(MainWindowCallbackType);
 
@@ -65,6 +81,8 @@ static spear_input g_input;
 static uint32 g_client_width;
 static uint32 g_client_height;
 static bool32 g_window_size_changed;
+
+static LPDIRECTSOUNDBUFFER GlobalDirectSoundBuffer;
 
 window create_window(HINSTANCE Instance, int ClientWidth, int ClientHeight, MainWindowCallbackType *WindowCallback)
 {
@@ -239,7 +257,153 @@ void process_pending_messages(spear_input *input)
                 DispatchMessageA(&message);
             }
         }
+    }
+}
 
+void DirectSound_Init(HWND WindowHandle, uint32 SamplesPerSecond, uint32 ChannelCount, uint32 BufferSize)
+{
+    HMODULE DirectSoundLibrary = LoadLibraryA("dsound.dll");
+    if (DirectSoundLibrary)
+    {
+        Win32_DirectSoundCreateT* DirectSoundCreate = (Win32_DirectSoundCreateT*)GetProcAddress(DirectSoundLibrary, "DirectSoundCreate");
+
+        DWORD BitsPerSample = 16;
+
+        WAVEFORMATEX WaveFormat = {};
+        WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
+        WaveFormat.nChannels = ChannelCount;
+        WaveFormat.wBitsPerSample = BitsPerSample;
+        WaveFormat.nSamplesPerSec = SamplesPerSecond;
+        WaveFormat.nBlockAlign = (WaveFormat.nChannels * WaveFormat.wBitsPerSample) / 8;
+        WaveFormat.nAvgBytesPerSec = WaveFormat.nSamplesPerSec * WaveFormat.nBlockAlign;
+        WaveFormat.cbSize = 0;
+
+        LPDIRECTSOUND DirectSound;
+        if (DirectSoundCreate && SUCCEEDED(DirectSoundCreate(0, &DirectSound, 0)))
+        {
+            if (SUCCEEDED(IDirectSound_SetCooperativeLevel(DirectSound, WindowHandle, DSSCL_PRIORITY)))
+            {
+                DSBUFFERDESC PrimaryBufferDescription = {};
+                PrimaryBufferDescription.dwSize = sizeof(PrimaryBufferDescription);
+                PrimaryBufferDescription.dwFlags = DSBCAPS_PRIMARYBUFFER;
+
+                LPDIRECTSOUNDBUFFER PrimaryBuffer;
+                if (SUCCEEDED(IDirectSound_CreateSoundBuffer(DirectSound, &PrimaryBufferDescription, &PrimaryBuffer, 0)))
+                {
+                    OutputDebugStringA("We successfully created primary buffer!\n");
+                    if (SUCCEEDED(IDirectSoundBuffer_SetFormat(PrimaryBuffer, &WaveFormat)))
+                    {
+                        // Now we finally set the format!
+                        OutputDebugStringA("We successfully set format!\n");
+                    }
+                    else
+                    {
+                        // Diagnostics
+                        exit(1);
+                    }
+                }
+                else
+                {
+                    // Diagnostics
+                    exit(1);
+                }
+
+                // "Create" a secondary buffer
+                // Start it playing
+
+                DSBUFFERDESC SecondaryBufferDescription = {};
+                SecondaryBufferDescription.dwSize = sizeof(SecondaryBufferDescription);
+                SecondaryBufferDescription.dwFlags = 0;
+                SecondaryBufferDescription.dwBufferBytes = BufferSize;
+                SecondaryBufferDescription.lpwfxFormat = &WaveFormat;
+
+                if (SUCCEEDED(IDirectSound_CreateSoundBuffer(DirectSound, &SecondaryBufferDescription, &GlobalDirectSoundBuffer, 0)))
+                {
+                    OutputDebugStringA("We successfully created secondary buffer!\n");
+                }
+                else
+                {
+                    // Diagnostics
+                    exit(1);
+                }
+            }
+            else
+            {
+                // Diagnostics
+                exit(1);
+            }
+        }
+        else
+        {
+            // Diagnostic
+            exit(1);
+        }
+    }
+}
+
+static void DirectSound_ClearBuffer(SoundOutput* sound_output) {
+    void *Region1;
+    DWORD Region1Size;
+    void *Region2;
+    DWORD Region2Size;
+    if (SUCCEEDED(IDirectSoundBuffer_Lock(
+        GlobalDirectSoundBuffer,
+        0, sound_output->SoundBufferSize,
+        &Region1, &Region1Size,
+        &Region2, &Region2Size,
+        0)))
+    {
+        uint8 *DestMemory = (uint8 *) Region1;
+        for (DWORD ByteIndex = 0; ByteIndex < Region1Size; ByteIndex++) {
+            *DestMemory++ = 0;
+        }
+        DestMemory = (uint8 *) Region2;
+        for (DWORD ByteIndex = 0; ByteIndex < Region2Size; ByteIndex++) {
+            *DestMemory++ = 0;
+        }
+        IDirectSoundBuffer_Unlock(GlobalDirectSoundBuffer, Region1, Region1Size, Region2, Region2Size);
+    }
+}
+
+static void DirectSound_FillBuffer(SoundOutput *sound_output, spear_sound_output_buffer *sound_buffer, DWORD ByteToLock, DWORD BytesToWrite)
+{
+    VOID* Region1;
+    DWORD Region1Size;
+    VOID* Region2;
+    DWORD Region2Size;
+
+    // DirectSound output test
+    if (SUCCEEDED(IDirectSoundBuffer_Lock(
+        GlobalDirectSoundBuffer,
+        ByteToLock, BytesToWrite,
+        &Region1, &Region1Size,
+        &Region2, &Region2Size,
+        0)))
+    {
+        int16 *SourceSamples = sound_buffer->samples;
+        {
+            DWORD SampleCount = Region1Size / sound_output->BytesPerSoundFrame;
+            sound_sample_t* DestSamples = (sound_sample_t*) Region1;
+
+            for (DWORD SampleIndex = 0; SampleIndex < SampleCount; SampleIndex++) {
+                *DestSamples++ = *SourceSamples++;
+                *DestSamples++ = *SourceSamples++;
+                sound_output->RunningSoundCursor += 2*sizeof(int16);
+            }
+        }
+
+        {
+            DWORD SampleCount = Region2Size / sound_output->BytesPerSoundFrame;
+            sound_sample_t* DestSamples = (sound_sample_t*) Region2;
+
+            for (DWORD SampleIndex = 0; SampleIndex < SampleCount; SampleIndex++) {
+                *DestSamples++ = *SourceSamples++;
+                *DestSamples++ = *SourceSamples++;
+                sound_output->RunningSoundCursor += 2*sizeof(int16);
+            }
+        }
+
+        IDirectSoundBuffer_Unlock(GlobalDirectSoundBuffer, Region1, Region1Size, Region2, Region2Size);
     }
 }
 
@@ -251,9 +415,36 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
     window w = create_window(Instance, g_engine.current_client_width, g_engine.current_client_height, window_callback);
     spear_engine_init_graphics(&g_engine);
     spear_engine_create_meshes(&g_engine);
+    spear_engine_load_game_data(&g_engine);
     spear_engine_compile_shaders(&g_engine);
     spear_engine_load_game_dll(&g_engine, "spear_game.dll");
     spear_engine_game_init(&g_engine);
+
+    int GameUpdateHz = 60;
+
+    SoundOutput sound_output = {};
+    sound_output.SamplesPerSecond = 44100;
+    sound_output.ChannelCount = 2;
+    uint32 BytesPerSoundFrame = sound_output.ChannelCount * sizeof(int16);
+    sound_output.SoundBufferSize = sound_output.SamplesPerSecond * BytesPerSoundFrame;
+    sound_output.Samples = ALLOCATE_BUFFER_(g_engine.allocator, sound_output.SoundBufferSize);
+    sound_output.BytesPerSoundFrame = BytesPerSoundFrame;
+    sound_output.RunningSoundCursor = 0;
+
+    DWORD SoundBytesPerGameFrame = sound_output.BytesPerSoundFrame * sound_output.SamplesPerSecond / GameUpdateHz;
+    sound_output.SafetyBytes = SoundBytesPerGameFrame;
+
+    double ToneHz = 261.625565;
+    int16 ToneVolume = 2000;
+    int SquareWaveCounter = 0;
+    int SquareWavePeriod = sound_output.SamplesPerSecond / ToneHz;
+
+    double SineTime = 0;
+    double SamplesPerPeriod = sound_output.SamplesPerSecond / ToneHz;
+
+    DirectSound_Init(w.Handle, sound_output.SamplesPerSecond, sound_output.ChannelCount, sound_output.SoundBufferSize);
+    DirectSound_ClearBuffer(&sound_output);
+    IDirectSoundBuffer_Play(GlobalDirectSoundBuffer, 0, 0, DSBPLAY_LOOPING);
 
     duration last_frame_dt = duration_create_milliseconds(16);
     timepoint last_timepoint = platform_clock_now();
@@ -276,8 +467,7 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
             spear_engine_input_mouse_pos_set(&g_engine, &g_input, pos.x, pos.y);
         }
 
-        float64 dt = duration_get_seconds(last_frame_dt);
-        g_input.dt = dt;
+        g_input.dt = duration_get_seconds(last_frame_dt);
         g_input.time = timepoint_get_seconds(last_timepoint);
 
         if (g_window_size_changed)
@@ -285,8 +475,31 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
             spear_engine_update_viewport(&g_engine, g_client_width, g_client_height);
         }
 
-        spear_engine_game_update(&g_engine, &g_input, dt);
+        spear_engine_game_update(&g_engine, &g_input);
         spear_engine_game_render(&g_engine);
+
+        {
+            DWORD PlayCursor, WriteCursor;
+            if (SUCCEEDED(IDirectSoundBuffer_GetCurrentPosition(GlobalDirectSoundBuffer, &PlayCursor, &WriteCursor)))
+            {
+                if (sound_output.RunningSoundCursor < WriteCursor)
+                {
+                    sound_output.RunningSoundCursor = WriteCursor;
+                }
+
+                DWORD TargetCursor = WriteCursor + SoundBytesPerGameFrame + sound_output.SafetyBytes;
+                DWORD ByteToLock = sound_output.RunningSoundCursor % sound_output.SoundBufferSize;
+                DWORD BytesToWrite = TargetCursor - ByteToLock;
+
+                spear_sound_output_buffer sound_from_game = {};
+                sound_from_game.samples = sound_output.Samples;
+                sound_from_game.sample_count = BytesToWrite;
+                sound_from_game.samples_per_second = sound_output.SamplesPerSecond;
+                spear_engine_game_sound(&g_engine, &sound_from_game);
+                DirectSound_FillBuffer(&sound_output, &sound_from_game, ByteToLock, BytesToWrite);
+                sound_output.RunningSoundCursor = sound_output.RunningSoundCursor % sound_output.SoundBufferSize;
+            }
+        }
 
         SwapBuffers(w.DeviceContext);
 
@@ -314,4 +527,3 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
 #include <engine/graphics/opengl_win32.c>
 #include <engine/primitive_meshes.c>
 #include <engine/audio/audio.c>
-#include <engine/audio/audio_dsound.c>

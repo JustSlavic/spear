@@ -64,12 +64,9 @@ typedef struct
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 
+    spear_audio audio;
     spear_audio_buffer audio_buffer_rain;
     spear_audio_buffer audio_buffer_thunder;
-
-    spear_audio audio;
-    int audio_262Hz;
-    int audio_bird;
 
     uint32 sound_debug_position_count;
     uint32 sound_debug_position_running_index;
@@ -84,13 +81,15 @@ typedef struct
 void spear_engine_init(spear_engine *engine);
 void spear_engine_init_graphics(spear_engine *engine);
 void spear_engine_create_meshes(spear_engine *engine);
+void spear_engine_load_game_data(spear_engine *engine);
 void spear_engine_compile_shaders(spear_engine *engine);
 void spear_engine_load_game_dll(spear_engine *engine, char const *filename);
 void spear_engine_input_mouse_pos_set(spear_engine *engine, spear_input *input, int mouse_x, int mouse_y);
 void spear_engine_update_viewport(spear_engine *engine, int width, int height);
 void spear_engine_game_init(spear_engine *engine);
-void spear_engine_game_update(spear_engine *engine, spear_input *input, float64 dt);
+void spear_engine_game_update(spear_engine *engine, spear_input *input);
 void spear_engine_game_render(spear_engine *engine);
+void spear_engine_game_sound(spear_engine *engine, spear_sound_output_buffer *output);
 
 
 #endif // _SPEAR_ENGINE_H

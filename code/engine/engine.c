@@ -13,6 +13,9 @@
 #include <game_rpg/game.c>
 #endif
 
+#include "graphics/render.h"
+#include "graphics/opengl_win32.h"
+
 
 typedef enum
 {
@@ -142,14 +145,14 @@ spear_engine_load_audio_file(spear_engine *engine,
 
     audio->data = sound_data;
     audio->size = sound_size;
-    audio->frames_per_second = samples_per_second;
+    audio->samples_per_second = samples_per_second;
     audio->channel_count = channel_count;
     audio->bits_per_sample = bits_per_sample;
 
     return SpearLoadFile_Success;
 }
 
-static void
+void
 spear_engine_load_game_data(spear_engine *engine)
 {
     spear_load_file_result load_result;
@@ -158,20 +161,18 @@ spear_engine_load_game_data(spear_engine *engine)
     load_result = spear_engine_load_audio_file(engine, "../data/rain_loop.wav", &engine->audio_buffer_rain);
     if (load_result == SpearLoadFile_Success)
     {
-        engine->audio_bird = spear_audio_add_source_buffer(
-            &engine->audio,
-            engine->audio_buffer_rain.data,
-            engine->audio_buffer_rain.size,
-            true);
+        uint32 sample_count_in_file = engine->audio_buffer_rain.size / sizeof(int16);
+        spear_audio_add(&engine->audio, spear_audio_source_buffer_create(
+            (int16 *) engine->audio_buffer_rain.data,
+            sample_count_in_file));
     }
     load_result = spear_engine_load_audio_file(engine, "../data/thunder.wav", &engine->audio_buffer_thunder);
     if (load_result == SpearLoadFile_Success)
     {
-        engine->audio_bird = spear_audio_add_source_buffer(
-            &engine->audio,
-            engine->audio_buffer_thunder.data,
-            engine->audio_buffer_thunder.size,
-            false);
+        uint32 sample_count_in_file = engine->audio_buffer_thunder.size / sizeof(int16);
+        spear_audio_add(&engine->audio, spear_audio_source_buffer_create(
+            (int16 *) engine->audio_buffer_thunder.data,
+            sample_count_in_file));
     }
 
     {
@@ -276,14 +277,6 @@ void spear_engine_init(spear_engine *engine)
         uint32 bits_per_sample = sizeof(sound_sample_t) * 8;
         uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
         void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
-
-        spear_audio_init(&engine->audio,
-            frames_per_second,
-            channel_count,
-            bits_per_sample,
-            latency,
-            playback_buffer,
-            playback_buffer_size);
     }
 
     engine->sound_debug_position_count = 100;
@@ -308,21 +301,6 @@ void spear_engine_create_meshes(spear_engine *engine)
     engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
     engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
     engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
-
-    spear_engine_load_game_data(engine);
-    // {
-    //     double frequency = 300.0;
-    //     double volume = 1000.0;
-    //     engine->audio_262Hz = spear_audio_add_source_sine_wave_generator(
-    //         &engine->audio,
-    //         frequency,
-    //         volume);
-    // }
-
-    char s[] = "-123.4567;";
-    float32 number = 0;
-    int n = spear_parse_float32(s, 6, &number);
-    printf("PARSED '%f' consumed %d bytes\n", number, n);
 }
 
 void spear_engine_compile_shaders(spear_engine *engine)
@@ -407,7 +385,7 @@ void spear_engine_game_init(spear_engine *engine)
     }
 }
 
-void spear_engine_game_update(spear_engine *engine, spear_input *input, float64 dt)
+void spear_engine_game_update(spear_engine *engine, spear_input *input)
 {
     if (engine->update_and_render)
     {
@@ -436,8 +414,11 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input, float64 
         }
     }
     engine->game_context.engine_commands_count = 0;
+}
 
-    spear_audio_update(&engine->audio);
+void spear_engine_game_sound(spear_engine *engine, spear_sound_output_buffer *output)
+{
+    spaer_audio_mix(&engine->audio, output);
 }
 
 static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)
@@ -560,106 +541,107 @@ void spear_engine_game_render(spear_engine *engine)
 #endif
 #if 1
     // Draw audio debug
-    {
-        uint32 channel_count = 2;
-        uint32 latency_frames = engine->audio.latency * engine->audio.frames_per_second;
-        uint32 latency_bytes = latency_frames * channel_count * sizeof(sound_sample_t);
+    // if (false)
+    // {
+    //     uint32 channel_count = 2;
+    //     uint32 latency_frames = engine->audio.latency * engine->audio.frames_per_second;
+    //     uint32 latency_bytes = latency_frames * channel_count * sizeof(sound_sample_t);
 
-        uint32 index_read = engine->audio.R;
-        uint32 index_write = engine->audio.W;
+    //     uint32 index_read = engine->audio.R;
+    //     uint32 index_write = engine->audio.W;
 
-        float screen_position_read = (float) index_read / engine->audio.playback_buffer_size * engine->current_client_width;
-        float screen_position_write = (float) index_write / engine->audio.playback_buffer_size * engine->current_client_width;
-        float screen_position_latency = (float) (index_read + latency_bytes) / engine->audio.playback_buffer_size * engine->current_client_width;
+    //     float screen_position_read = (float) index_read / engine->audio.playback_buffer_size * engine->current_client_width;
+    //     float screen_position_write = (float) index_write / engine->audio.playback_buffer_size * engine->current_client_width;
+    //     float screen_position_latency = (float) (index_read + latency_bytes) / engine->audio.playback_buffer_size * engine->current_client_width;
 
-        uint32 index = engine->sound_debug_position_running_index++;
-        if (engine->sound_debug_position_running_index >= engine->sound_debug_position_count)
-            engine->sound_debug_position_running_index = 0;
+    //     uint32 index = engine->sound_debug_position_running_index++;
+    //     if (engine->sound_debug_position_running_index >= engine->sound_debug_position_count)
+    //         engine->sound_debug_position_running_index = 0;
 
-        engine->sound_debug_positions_read[index] = screen_position_read;
-        engine->sound_debug_positions_write[index] = screen_position_write;
-        engine->sound_debug_positions_latency[index] = screen_position_latency;
+    //     engine->sound_debug_positions_read[index] = screen_position_read;
+    //     engine->sound_debug_positions_write[index] = screen_position_write;
+    //     engine->sound_debug_positions_latency[index] = screen_position_latency;
 
-        uint32 i;
-        for (i = 0; i < engine->sound_debug_position_count; i++)
-        {
-            {
-                matrix4 model = matrix4_mul(
-                    matrix4_translate(
-                        engine->sound_debug_positions_read[i],
-                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
-                        0.f),
-                    matrix4_scale(1.f, 50.f, 1.f));
-                matrix4 view = matrix4_identity();
-                vector4 color = vector4_create(1.f, 0.f, 0.f, 1.f);
-                glUseProgram(engine->shader_single_color.id);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
-                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+    //     uint32 i;
+    //     for (i = 0; i < engine->sound_debug_position_count; i++)
+    //     {
+    //         {
+    //             matrix4 model = matrix4_mul(
+    //                 matrix4_translate(
+    //                     engine->sound_debug_positions_read[i],
+    //                     (float) i * engine->viewport.height / engine->sound_debug_position_count,
+    //                     0.f),
+    //                 matrix4_scale(1.f, 50.f, 1.f));
+    //             matrix4 view = matrix4_identity();
+    //             vector4 color = vector4_create(1.f, 0.f, 0.f, 1.f);
+    //             glUseProgram(engine->shader_single_color.id);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+    //             render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
 
-                // glActiveTexture(GL_TEXTURE0);
-                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+    //             // glActiveTexture(GL_TEXTURE0);
+    //             // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
 
-                glBindVertexArray(engine->mesh_square.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
-                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
-            }
-            {
-                vector4 color = vector4_create(0.f, 1.f, 0.f, 1.f);
-                float W0 = engine->sound_debug_positions_write[i];
-                float W1 = engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count];
+    //             glBindVertexArray(engine->mesh_square.vao);
+    //             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+    //             glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+    //         }
+    //         {
+    //             vector4 color = vector4_create(0.f, 1.f, 0.f, 1.f);
+    //             float W0 = engine->sound_debug_positions_write[i];
+    //             float W1 = engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count];
 
-                float p = 0.5f * (W0 + W1);
-                if (p < W0) continue;
-                float len = fabs(engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count] - engine->sound_debug_positions_write[i]);
+    //             float p = 0.5f * (W0 + W1);
+    //             if (p < W0) continue;
+    //             float len = fabs(engine->sound_debug_positions_write[(i + 1) % engine->sound_debug_position_count] - engine->sound_debug_positions_write[i]);
 
-                matrix4 model = matrix4_mul(
-                    matrix4_translate(
-                        p,
-                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
-                        0.f),
-                    matrix4_scale(len*0.5f, 1.f, 1.f));
-                matrix4 view = matrix4_identity();
-                glUseProgram(engine->shader_single_color.id);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
-                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+    //             matrix4 model = matrix4_mul(
+    //                 matrix4_translate(
+    //                     p,
+    //                     (float) i * engine->viewport.height / engine->sound_debug_position_count,
+    //                     0.f),
+    //                 matrix4_scale(len*0.5f, 1.f, 1.f));
+    //             matrix4 view = matrix4_identity();
+    //             glUseProgram(engine->shader_single_color.id);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+    //             render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
 
-                // glActiveTexture(GL_TEXTURE0);
-                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+    //             // glActiveTexture(GL_TEXTURE0);
+    //             // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
 
-                glBindVertexArray(engine->mesh_square.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
-                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
-            }
-            {
-                float p = 0.5f * (engine->sound_debug_positions_read[i] + engine->sound_debug_positions_latency[i]);
-                float len = fabs(engine->sound_debug_positions_read[i] - engine->sound_debug_positions_latency[i]);
-                matrix4 model = matrix4_mul(
-                    matrix4_translate(
-                        p,
-                        (float) i * engine->viewport.height / engine->sound_debug_position_count,
-                        0.f),
-                    matrix4_scale(0.5f * len, 1.f, 1.f));
-                matrix4 view = matrix4_identity();
-                vector4 color = vector4_create(1.f, 1.f, 0.f, 1.f);
-                glUseProgram(engine->shader_single_color.id);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
-                render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
-                render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+    //             glBindVertexArray(engine->mesh_square.vao);
+    //             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+    //             glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+    //         }
+    //         {
+    //             float p = 0.5f * (engine->sound_debug_positions_read[i] + engine->sound_debug_positions_latency[i]);
+    //             float len = fabs(engine->sound_debug_positions_read[i] - engine->sound_debug_positions_latency[i]);
+    //             matrix4 model = matrix4_mul(
+    //                 matrix4_translate(
+    //                     p,
+    //                     (float) i * engine->viewport.height / engine->sound_debug_position_count,
+    //                     0.f),
+    //                 matrix4_scale(0.5f * len, 1.f, 1.f));
+    //             matrix4 view = matrix4_identity();
+    //             vector4 color = vector4_create(1.f, 1.f, 0.f, 1.f);
+    //             glUseProgram(engine->shader_single_color.id);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+    //             render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+    //             render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
 
-                // glActiveTexture(GL_TEXTURE0);
-                // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+    //             // glActiveTexture(GL_TEXTURE0);
+    //             // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
 
-                glBindVertexArray(engine->mesh_square.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
-                glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
-            }
-        }
-    }
+    //             glBindVertexArray(engine->mesh_square.vao);
+    //             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+    //             glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+    //         }
+    //     }
+    // }
 #endif
     {
         matrix4 model = matrix4_translate(2.f, 2.f, 2.f);
