@@ -65,8 +65,11 @@ typedef struct
     gpu_shader shader_ui_frame;
 
     spear_audio audio;
-    spear_audio_buffer audio_buffer_rain;
-    spear_audio_buffer audio_buffer_thunder;
+    spear_audio_track audio_buffer_rain;
+    spear_audio_track audio_buffer_thunder;
+
+    spear_audio_handle audio_rain;
+    spear_audio_handle audio_thunder;
 
     uint32 sound_debug_position_count;
     uint32 sound_debug_position_running_index;

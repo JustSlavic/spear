@@ -85,7 +85,7 @@ spear_engine_load_texture_file(spear_engine *engine,
 static spear_load_file_result
 spear_engine_load_audio_file(spear_engine *engine,
                              char const *file_name,
-                             spear_audio_buffer *audio)
+                             spear_audio_track *audio)
 {
     wav_decode_result decode_result;
 
@@ -162,17 +162,15 @@ spear_engine_load_game_data(spear_engine *engine)
     if (load_result == SpearLoadFile_Success)
     {
         uint32 sample_count_in_file = engine->audio_buffer_rain.size / sizeof(int16);
-        spear_audio_add(&engine->audio, spear_audio_source_buffer_create(
-            (int16 *) engine->audio_buffer_rain.data,
-            sample_count_in_file));
+        engine->audio_rain = spear_audio_add_track(&engine->audio, (int16 *) engine->audio_buffer_rain.data, sample_count_in_file);
+        spear_audio_play_once(&engine->audio, engine->audio_rain);
     }
     load_result = spear_engine_load_audio_file(engine, "../data/thunder.wav", &engine->audio_buffer_thunder);
     if (load_result == SpearLoadFile_Success)
     {
         uint32 sample_count_in_file = engine->audio_buffer_thunder.size / sizeof(int16);
-        spear_audio_add(&engine->audio, spear_audio_source_buffer_create(
-            (int16 *) engine->audio_buffer_thunder.data,
-            sample_count_in_file));
+        engine->audio_thunder = spear_audio_add_track(&engine->audio, (int16 *) engine->audio_buffer_thunder.data, sample_count_in_file);
+        spear_audio_play_once(&engine->audio, engine->audio_thunder);
     }
 
     {
@@ -278,6 +276,8 @@ void spear_engine_init(spear_engine *engine)
         uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
         void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
     }
+
+    spear_audio_init(&engine->audio);
 
     engine->sound_debug_position_count = 100;
     engine->sound_debug_positions_read = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
@@ -418,7 +418,7 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input)
 
 void spear_engine_game_sound(spear_engine *engine, spear_sound_output_buffer *output)
 {
-    spaer_audio_mix(&engine->audio, output);
+    spear_audio_mix(&engine->audio, output);
 }
 
 static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)

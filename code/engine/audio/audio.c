@@ -1,48 +1,107 @@
 #include "audio.h"
 
 
-spear_audio_source spear_audio_source_generator_create(double frequency)
+void spear_audio_init(spear_audio *audio)
 {
-    spear_audio_source result = {};
-    result.tag = SpearAudioSource_Generator;
-    result.enabled = true;
-    result.repeat = true;
-    result.volume = 600.0;
-    result.frequency = frequency;
-    result.running_t = 0.0;
-
-    return result;
+    audio->source_count = 1;
 }
 
-spear_audio_source spear_audio_source_buffer_create(int16 *samples, uint32 sample_count)
+spear_audio_handle spear_audio_add_tone(spear_audio *audio, double frequency)
 {
-    spear_audio_source result = {};
-    result.tag = SpearAudioSource_Buffer;
-    result.enabled = true;
-    result.repeat = true;
-    result.volume = 1.0;
-    result.samples = samples;
-    result.sample_count = sample_count;
-    result.sample_index = 0;
+    spear_audio_handle handle = 0;
+    if (audio->source_count < ARRAY_COUNT(audio->sources))
+    {
+        spear_audio_source source = {};
+        source.tag = SpearAudioSource_Generator;
+        // source.enabled = false;
+        // source.repeat = true;
+        // source.volume = 600.0;
+        source.frequency = frequency;
 
-    return result;
+        handle = audio->source_count++;
+        audio->sources[handle] = source;
+    }
+    return handle;
 }
 
-void spear_audio_add(spear_audio *audio, spear_audio_source source)
+spear_audio_handle spear_audio_add_track(spear_audio *audio, int16 *samples, uint32 sample_count)
 {
+    spear_audio_handle handle = 0;
+    if (audio->source_count < ARRAY_COUNT(audio->sources))
+    {
+        spear_audio_source source = {};
+        source.tag = SpearAudioSource_Buffer;
+        // source.enabled = false;
+        // source.repeat = true;
+        // source.volume = 1.0;
+        source.samples = samples;
+        source.sample_count = sample_count;
+
+        handle = audio->source_count++;
+        audio->sources[handle] = source;
+    }
+    return handle;
+}
+
+spear_audio_instance_handle spear_audio_play_once(spear_audio *audio, spear_audio_handle handle)
+{
+    int instance_index;
+    for (instance_index = 0; instance_index < ARRAY_COUNT(audio->instances); instance_index++)
+    {
+        spear_audio_instance *instance = audio->instances + instance_index;
+        if (instance->source_handle == 0)
+        {
+            instance->source_handle = handle;
+            instance->enabled = true;
+            instance->repeat = false;
+            instance->volume = 1.0;
+            instance->sample_index = 0;
+            instance->running_t = 0;
+            return instance_index;
+        }
+    }
+    return 0;
+}
+
+spear_audio_instance_handle spear_audio_play_loop(spear_audio *audio, spear_audio_handle handle)
+{
+    int instance_index;
+    for (instance_index = 0; instance_index < ARRAY_COUNT(audio->instances); instance_index++)
+    {
+        spear_audio_instance *instance = audio->instances + instance_index;
+        if (instance->source_handle == 0)
+        {
+            instance->source_handle = handle;
+            instance->enabled = true;
+            instance->repeat = true;
+            instance->volume = 1.0;
+            instance->sample_index = 0;
+            instance->running_t = 0;
+            return instance_index;
+        }
+    }
+    return 0;
+}
+
+spear_audio_instance_handle spear_audio_add(spear_audio *audio, spear_audio_source source)
+{
+    if (audio->source_count == 0) audio->source_count++;
+
+    spear_audio_instance_handle result = 0;
     int index = audio->source_count;
     if (index < ARRAY_COUNT(audio->sources))
     {
         audio->sources[index] = source;
         audio->source_count += 1;
+        result = index;
     }
+    return result;
 }
 
-void spaer_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
+void spear_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
 {
-    uint32 source_index, frame_index;
+    uint32 instance_index, frame_index;
     {
-        // Clear
         int16 *samples = (int16 *) output->samples;
         for (frame_index = 0; frame_index < output->sample_count; frame_index++)
         {
@@ -51,9 +110,13 @@ void spaer_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
         }
     }
 
-    for (source_index = 0; source_index < audio->source_count; source_index++)
+    for (instance_index = 0; instance_index < ARRAY_COUNT(audio->instances); instance_index++)
     {
-        spear_audio_source *source = audio->sources + source_index;
+        spear_audio_instance *instance = audio->instances + instance_index;
+        if (!instance->enabled)
+            continue;
+
+        spear_audio_source *source = audio->sources + instance->source_handle;
         if (source->tag == SpearAudioSource_Generator)
         {
             int16 *samples = (int16 *) output->samples;
@@ -61,7 +124,7 @@ void spaer_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
             for (frame_index = 0; frame_index < output->sample_count; frame_index++)
             {
                 double sine_value = sin(source->running_t);
-                int16 sample_value = (int16)(sine_value * source->volume);
+                int16 sample_value = (int16)(sine_value * instance->volume);
 
                 *samples++ += sample_value;
                 *samples++ += sample_value;
@@ -76,10 +139,11 @@ void spaer_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
             int16 *samples_out = (int16 *) output->samples;
             for (frame_index = 0; frame_index < output->sample_count; frame_index++)
             {
-                *samples_out++ += source->samples[source->sample_index];
-                source->sample_index = (source->sample_index + 1) % source->sample_count;
-                *samples_out++ += source->samples[source->sample_index];
-                source->sample_index = (source->sample_index + 1) % source->sample_count;
+                // @todo: stop if instance is play_once
+                *samples_out++ += source->samples[instance->sample_index];
+                instance->sample_index = (instance->sample_index + 1) % source->sample_count;
+                *samples_out++ += source->samples[instance->sample_index];
+                instance->sample_index = (instance->sample_index + 1) % source->sample_count;
             }
         }
     }
