@@ -252,6 +252,13 @@ void process_pending_messages(spear_input *input)
             }
             break;
 
+            case WM_LBUTTONDOWN: input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Left], true); break;
+            case WM_LBUTTONUP:   input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Left], false); break;
+            case WM_MBUTTONDOWN: input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Middle], true); break;
+            case WM_MBUTTONUP:   input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Middle], false); break;
+            case WM_RBUTTONDOWN: input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Right], true); break;
+            case WM_RBUTTONUP:   input_button_update(&input->keyboard_and_mouse.buttons[Mouse_Right], false); break;
+
             default:
             {
                 DispatchMessageA(&message);
