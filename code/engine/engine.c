@@ -2,6 +2,7 @@
 #include "static_shaders.c"
 #include "primitive_meshes.h"
 #include <corelibs/file_formats/bmp.h>
+#include <corelibs/file_formats/png.h>
 #include <corelibs/file_formats/wav.h>
 #include <corelibs/file_formats/obj.h>
 #include <corelibs/parse_primitives.h>
@@ -53,35 +54,101 @@ spear_engine_load_texture_file(spear_engine *engine,
         return SpearLoadFile_BufferUnderflow;
     }
 
+    uint32 width, height, bits_per_pixel, color_mode, is_top_down;
+    int decode_result;
     void *image_data = NULL;
     usize image_size = 0;
-    usize decode_result = bmp_extract_size(file_data, file_size, (uint32 *) &image_size);
-    if (decode_result == BmpDecode_Success && image_size > 0)
+
+    decode_result = bmp_check_signature(file_data, file_size);
+    if (decode_result == BmpDecode_Success)
     {
-        image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
-        if (image_data)
+        decode_result = bmp_extract_size(file_data, file_size, (uint32 *) &image_size);
+        if (decode_result == BmpDecode_Success && image_size > 0)
         {
-            uint32 width, height, bits_per_pixel, color_mode, is_top_down;
-            decode_result = bmp_decode(file_data, file_size, image_data, image_size,
-                &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
-
-            if (decode_result == BmpDecode_Success)
+            image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
+            if (image_data)
             {
-                printf("Loaded bmp file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
-                bitmap->data = image_data,
-                bitmap->size = image_size,
-                bitmap->width = width,
-                bitmap->height = height,
-                bitmap->bits_per_pixel = bits_per_pixel,
-                bitmap->color_mode = color_mode,
+                decode_result = bmp_decode(file_data, file_size, image_data, image_size,
+                    &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
 
-                engine->test_tx = load_texture(engine->test_bmp);
-                printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+                if (decode_result == BmpDecode_Success)
+                {
+                    printf("Loaded bmp file:\n    image_size = %llu;\n    width = %u;\n    height = %u;\n", image_size, width, height);
+                    bitmap->data = image_data;
+                    bitmap->size = image_size;
+                    bitmap->width = width;
+                    bitmap->height = height;
+                    bitmap->bits_per_pixel = bits_per_pixel;
+                    bitmap->color_mode = color_mode;
+
+                    return SpearLoadFile_Success;
+                }
+                else
+                {
+                    REPORT_ERROR("Failed to decode bmp file '%s'", file_name);
+                    DEALLOCATE(engine->allocator, image_data);
+                    return SpearLoadFile_DecodeFailed;
+                }
             }
+            else
+            {
+                REPORT_ERROR("Failed to allocate %llu bytes for file '%s'", image_size, file_name);
+                return SpearLoadFile_NotEnoughMemory;
+            }
+        }
+        else
+        {
+            REPORT_ERROR("Failed to decode size from bmp file '%s'", file_name);
+            return SpearLoadFile_DecodeFailed;
         }
     }
 
-    return SpearLoadFile_Success;
+    decode_result = png_check_signature(file_data, file_size);
+    if (decode_result == PngDecode_Success)
+    {
+        decode_result = png_extract_size(file_data, file_size, (uint32 *) &image_size);
+        if (decode_result == PngDecode_Success && image_size > 0)
+        {
+            image_data = ALLOCATE_BUFFER_(engine->allocator, image_size);
+            if (image_data)
+            {
+                decode_result = png_decode(file_data, file_size, image_data, image_size,
+                    &width, &height, &bits_per_pixel, &color_mode, &is_top_down);
+
+                if (decode_result == PngDecode_Success)
+                {
+                    printf("Loaded png file: image_size = %llu; width = %u; height = %u;\n", image_size, width, height);
+                    bitmap->data = image_data;
+                    bitmap->size = image_size;
+                    bitmap->width = width;
+                    bitmap->height = height;
+                    bitmap->bits_per_pixel = bits_per_pixel;
+                    bitmap->color_mode = color_mode;
+
+                    return SpearLoadFile_Success;
+                }
+                else
+                {
+                    REPORT_ERROR("Failed to decode png file '%s'", file_name);
+                    DEALLOCATE(engine->allocator, image_data);
+                    return SpearLoadFile_DecodeFailed;
+                }
+            }
+            else
+            {
+                REPORT_ERROR("Failed to allocate %llu bytes for file '%s'", image_size, file_name);
+                return SpearLoadFile_NotEnoughMemory;
+            }
+        }
+        else
+        {
+            REPORT_ERROR("Failed to decode size from png file '%s'", file_name);
+            return SpearLoadFile_DecodeFailed;
+        }
+    }
+
+    REPORT_ERROR("Failed to recognized file '%s', signatures for bmp and png files does not match", file_name);
+    return SpearLoadFile_DecodeFailed;
 }
 
 static spear_load_file_result
@@ -159,7 +226,33 @@ spear_engine_load_game_data(spear_engine *engine)
 {
     spear_load_file_result load_result;
 
-    load_result = spear_engine_load_texture_file(engine, "../misc/test8x8.bmp", &engine->test_bmp);
+    {
+        char const *filename = "../misc/test8x8.bmp";
+        load_result = spear_engine_load_texture_file(engine, filename, &engine->test_bmp);
+        if (load_result == SpearLoadFile_Success)
+        {
+            engine->test_tx = load_texture(engine->test_bmp);
+            printf("Loaded texture (id=%d)\n", engine->test_tx.id);
+        }
+        else
+        {
+            REPORT_ERROR("Failed to load a texture from disk: filename='%s'", filename);
+        }
+    }
+    {
+        char const *filename = "../data/font_14x26.png";
+        load_result = spear_engine_load_texture_file(engine, filename, &engine->font_bmp);
+        if (load_result == SpearLoadFile_Success)
+        {
+            engine->font_atlas = load_texture(engine->font_bmp);
+            printf("Loaded texture (id=%d)\n", engine->font_atlas.id);
+        }
+        else
+        {
+            REPORT_ERROR("Failed to load a texture from disk: filename='%s'", filename);
+        }
+    }
+
     load_result = spear_engine_load_audio_file(engine, "../data/rain_loop.wav", &engine->audio_buffer_rain);
     if (load_result == SpearLoadFile_Success)
     {
@@ -514,6 +607,8 @@ void spear_engine_game_render(spear_engine *engine)
         }
     }
     engine->game_context.render_commands_count = 0;
+
+
 
 #if 0
     // Draw texture debug

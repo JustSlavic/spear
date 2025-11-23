@@ -282,8 +282,10 @@ int main(void)
 #include <corelibs/memory/allocator.c>
 #include <corelibs/parse_primitives.c>
 #include <corelibs/file_formats/bmp.c>
+#include <corelibs/file_formats/png.c>
 #include <corelibs/file_formats/wav.c>
 #include <corelibs/file_formats/obj.c>
+#include <corelibs/crc.c>
 
 #include <gamelibs/input.c>
 

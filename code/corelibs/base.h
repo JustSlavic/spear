@@ -139,6 +139,8 @@ typedef int16                sound_sample_t;
 typedef struct { char const *function; char const *filename; uint line; } code_location;
 #define CL_HERE ((code_location){ .function=__FUNCTION__, .filename=__FILE__, .line=__LINE__ })
 
+FORCE_INLINE uint32 uint32_change_endianness(uint32 n) { return ((n & 0xFF000000) >> 24) | ((n & 0x00FF0000) >>  8) | ((n & 0x0000FF00) <<  8) | ((n & 0x000000FF) << 24); }
+
 FORCE_INLINE bool is_near_zero_eps(float x, float eps) { return (-eps < x && x < eps); }
 FORCE_INLINE bool is_near_zero(float x) { return is_near_zero_eps(x, EPSILON); }
 

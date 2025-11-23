@@ -33,6 +33,21 @@ char const *bmp_decode_result_to_cstring(bmp_decode_result result)
         return BmpDecode_UnexpectedEof;         \
     }                                           \
 
+bmp_decode_result bmp_check_signature(void *file_data, usize file_size)
+{
+    uint8 *data = (uint8 *) file_data;
+    uint32 index = 0;
+    BMP_READ(uint16, header_signature);
+    if (header_signature != 0x4d42) // Signature should be "BM"
+    {
+        return BmpDecode_HeaderSignatureMismatch;
+    }
+    else
+    {
+        return BmpDecode_Success;
+    }
+}
+
 bmp_decode_result bmp_extract_size(void *file_data, usize file_size, uint32 *out_image_size)
 {
     uint8 *data = (uint8 *) file_data;

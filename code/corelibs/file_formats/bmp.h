@@ -1,5 +1,5 @@
-#ifndef SPEAR_CORELIBS_FILE_FORMATS_H
-#define SPEAR_CORELIBS_FILE_FORMATS_H
+#ifndef SPEAR_CORELIBS_FILE_FORMATS_BMP_H
+#define SPEAR_CORELIBS_FILE_FORMATS_BMP_H
 
 #include <corelibs/base.h>
 
@@ -15,6 +15,7 @@ typedef enum
 } bmp_decode_result;
 
 char const *bmp_decode_result_to_cstring(bmp_decode_result result);
+bmp_decode_result bmp_check_signature(void *file_data, usize file_size);
 bmp_decode_result bmp_extract_size(void *file_data, usize file_size, uint32 *out_image_size);
 bmp_decode_result bmp_decode(void *file_data, usize file_size,
                              void *image_data, usize image_size,
@@ -25,4 +26,4 @@ bmp_decode_result bmp_decode(void *file_data, usize file_size,
                              bool32 *out_is_top_down);
 
 
-#endif // SPEAR_CORELIBS_FILE_FORMATS_H
+#endif // SPEAR_CORELIBS_FILE_FORMATS_BMP_H

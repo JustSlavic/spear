@@ -79,6 +79,9 @@ typedef struct
 
     bitmap test_bmp;
     gpu_texture test_tx;
+
+    bitmap font_bmp;
+    gpu_texture font_atlas;
 } spear_engine;
 
 void spear_engine_init(spear_engine *engine);
