@@ -14,7 +14,9 @@
 #endif
 
 #include "graphics/render.h"
+#if OS_WINDOWS
 #include "graphics/opengl_win32.h"
+#endif
 
 
 typedef enum
@@ -267,15 +269,6 @@ void spear_engine_init(spear_engine *engine)
         engine->aspect_ratio,
         engine->near_clip_distance,
         engine->far_clip_distance);
-
-    {
-        double latency = 1.0 / 20.0;
-        uint32 frames_per_second = 44100;
-        uint32 channel_count = 2;
-        uint32 bits_per_sample = sizeof(sound_sample_t) * 8;
-        uint32 playback_buffer_size = frames_per_second * channel_count * sizeof(sound_sample_t);
-        void *playback_buffer = ALLOCATE_BUFFER(engine->allocator, playback_buffer_size);
-    }
 
     spear_audio_init(&engine->audio);
 
