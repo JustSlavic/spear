@@ -69,6 +69,7 @@ gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh);
 gpu_shader render_compile_shaders(char const *vs_code, char const *fs_code);
 gpu_texture load_texture(bitmap bitmap);
 
+void render_shader_uniform_int(gpu_shader shader, char const *name, int32 n);
 void render_shader_uniform_float(gpu_shader shader, char const *name, float);
 void render_shader_uniform_vector4f(gpu_shader shader, char const *name, float *);
 void render_shader_uniform_matrix4f(gpu_shader shader, char const *name, float *);

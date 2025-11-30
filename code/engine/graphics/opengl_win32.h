@@ -72,7 +72,7 @@
 // typedef uint32 GLbitfield;
 // typedef float32 GLclampf;
 
-// typedef void glActiveTextureType(GLenum texture);
+typedef void glActiveTextureType(GLenum texture);
 // typedef void glGenFramebuffersType(isize n, uint32 *ids);
 // typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
 // typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
@@ -112,7 +112,7 @@ typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose
 // typedef void glFramebufferRenderbufferType(GLenum target, GLenum attachment, GLenum renderbuffertarget, uint32 renderbuffer);
 // typedef GLenum glCheckFramebufferStatusType(GLenum target);
 
-// extern glActiveTextureType *glActiveTexture;
+extern glActiveTextureType *glActiveTexture;
 // extern glGenFramebuffersType *glGenFramebuffers;
 // extern glBindFramebufferType *glBindFramebuffer;
 // extern glFramebufferTexture2DType *glFramebufferTexture2D;

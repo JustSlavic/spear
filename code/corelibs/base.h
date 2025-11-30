@@ -109,11 +109,13 @@ typedef int16                sound_sample_t;
 #if DEBUG
 #define ASSERT(COND)             do {if (!(COND)) { DEBUG_BREAK(); }} while(false)
 #define ASSERT_MSG(COND, ...)    do {if (!(COND)) { REPORT_ERROR(__VA_ARGS__); DEBUG_BREAK(); }} while(false)
+#define ASSERT_FAIL(...)         do { REPORT_ERROR(__VA_ARGS__); DEBUG_BREAK(); } while(false)
 #define ASSERT_IF(COND)          if (!(COND)) { DEBUG_BREAK(); } else
 #define ASSERT_MSG_IF(COND, ...) if (!(COND)) { REPORT_ERROR(__VA_ARGS__); DEBUG_BREAK(); } else
 #else
 #define ASSERT(COND)             UNUSED(COND)
 #define ASSERT_MSG(COND, ...)    UNUSED(COND)
+#define ASSERT_FAIL(...)
 #define ASSERT_IF(COND)          if (COND)
 #define ASSERT_MSG_IF(COND, ...) if (COND)
 #endif // DEBUG

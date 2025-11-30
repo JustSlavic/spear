@@ -1,7 +1,7 @@
 #include "opengl_win32.h"
 
 
-// glActiveTextureType *glActiveTexture;
+glActiveTextureType *glActiveTexture;
 // glGenFramebuffersType *glGenFramebuffers;
 // glBindFramebufferType *glBindFramebuffer;
 // glFramebufferTexture2DType *glFramebufferTexture2D;
@@ -70,6 +70,7 @@ bool opengl_init(void)
     WGL_GET_PROC_ADDRESS(glUniform3f);
     WGL_GET_PROC_ADDRESS(glUniform4f);
     WGL_GET_PROC_ADDRESS(glUniformMatrix4fv);
+    WGL_GET_PROC_ADDRESS(glActiveTexture);
 
 #undef WGL_GET_PROC_ADDRESS
     return true;

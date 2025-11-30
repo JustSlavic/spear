@@ -9,11 +9,15 @@ typedef enum
     PngDecode_Success = 0,
     PngDecode_UnexpectedEof = -1,
     PngDecode_HeaderSignatureMismatch = -2,
-    PngDecode_UnsupportedCompressionMethod = -3,
-    PngDecode_UnsupportedInterlacedMethod = -4,
-    PngDecode_UnsupportedColorType = -5,
-    PngDecode_UnrecognizedChunk = -6,
-    PngDecode_CrcNotEqual = -7,
+    PngDecode_IHDR_HeaderIsNotFirst = -3,
+    PngDecode_UnsupportedCompressionMethod = -4,
+    PngDecode_UnsupportedInterlacedMethod = -5,
+    PngDecode_UnsupportedColorType = -6,
+    PngDecode_UnrecognizedChunk = -7,
+    PngDecode_CrcDoesNotMatch = -8,
+    PngDecode_ImageSizeMismatch = -9,
+    PngDecode_ZlibFailed = -10,
+    PngDecode_UnknownFilterMethod = -11,
 } png_decode_result;
 
 char const *png_decode_result_to_cstring(png_decode_result result);

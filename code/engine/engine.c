@@ -227,7 +227,7 @@ spear_engine_load_game_data(spear_engine *engine)
     spear_load_file_result load_result;
 
     {
-        char const *filename = "../misc/test8x8.bmp";
+        char const *filename = "../misc/test2.png";
         load_result = spear_engine_load_texture_file(engine, filename, &engine->test_bmp);
         if (load_result == SpearLoadFile_Success)
         {
@@ -610,7 +610,7 @@ void spear_engine_game_render(spear_engine *engine)
 
 
 
-#if 0
+#if 1
     // Draw texture debug
     {
         matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
@@ -618,9 +618,10 @@ void spear_engine_game_render(spear_engine *engine)
         render_shader_uniform_matrix4f(engine->shader_textured, "u_model", (float *) &model);
         render_shader_uniform_matrix4f(engine->shader_textured, "u_view", (float *) &engine->renderer.view_matrix);
         render_shader_uniform_matrix4f(engine->shader_textured, "u_projection", (float *) &engine->renderer.proj_matrix);
+        render_shader_uniform_int(engine->shader_textured, "is_upside_down", true);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+        glBindTexture(GL_TEXTURE_2D, engine->font_atlas.id);
 
         glBindVertexArray(engine->mesh_square_uv.vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square_uv.ibo);

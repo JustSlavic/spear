@@ -37,6 +37,7 @@ GLSL(
 
     out vec2 uv;
 
+    uniform bool is_upside_down;
     uniform mat4 u_model;
     uniform mat4 u_view;
     uniform mat4 u_projection;
@@ -44,6 +45,8 @@ GLSL(
     void main()
     {
         uv = uv_coordinates;
+        if (is_upside_down)
+            uv.y = 1.0 - uv.y;
         gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
     }
 );

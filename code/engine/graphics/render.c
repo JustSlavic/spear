@@ -337,7 +337,7 @@ gpu_texture load_texture(bitmap bitmap)
 
     if (bitmap.color_mode == Bitmap_RGBA)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap.data);
-    if (bitmap.color_mode == Bitmap_BGR)
+    else if (bitmap.color_mode == Bitmap_BGR)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, bitmap.width, bitmap.height, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmap.data);
     else
         ASSERT_MSG(false, "Unsupported color type!");
