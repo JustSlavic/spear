@@ -129,6 +129,7 @@ typedef struct
 } zlib_huffman_table;
 
 uint32 zlib_get_bits(zlib_decoder *z, uint32 bit_count);
+bool32 zlib_write_byte(zlib_decoder *z, uint8 byte);
 bool32 zlib_decode(zlib_decoder *z);
 zlib_huffman_table zlib_huffman_compute(uint32 const *code_lengths, uint32 code_length_count);
 uint32 zlib_huffman_decode(zlib_decoder *z, zlib_huffman_table huffman);
@@ -764,6 +765,17 @@ uint32 zlib_get_bits(zlib_decoder *z, uint32 bit_count)
     return result;
 }
 
+bool32 zlib_write_byte(zlib_decoder *z, uint8 byte)
+{
+    if (z->stream_out_cursor < z->stream_out_size)
+    {
+        *(z->stream_out + z->stream_out_cursor) = byte;
+        z->stream_out_cursor += 1;
+        return true;
+    }
+    return false;
+}
+
 void zlib_skip_byte(zlib_decoder *z)
 {
     uint32 n = z->bits_available % 8;
@@ -851,8 +863,9 @@ bool32 zlib_decode(zlib_decoder *z)
             for (int i = 0; i < LEN; i++)
             {
                 uint8 bits = zlib_get_bits(z, 8);
-                *(z->stream_out + z->stream_out_cursor) = bits;
-                z->stream_out_cursor += 1;
+                bool32 ok = zlib_write_byte(z, bits);
+                ASSERT_MSG(ok, "PNG: Buffer overrun while writing uncompressed data.");
+                if (!ok) return false;
             }
         }
         else if ((BTYPE == 1) || (BTYPE == 2))
@@ -935,8 +948,9 @@ bool32 zlib_decode(zlib_decoder *z)
                 {
                     // Copy value (literal byte) to output stream
                     uint8 bits = LITLEN;
-                    *(z->stream_out + z->stream_out_cursor) = bits;
-                    z->stream_out_cursor += 1;
+                    bool32 ok = zlib_write_byte(z, bits);
+                    ASSERT_MSG(ok, "PNG: Buffer overrun while writing literal byte in LZ77 decompression.");
+                    if (!ok) return false;
                 }
                 else if (LITLEN == 256) // End of block
                 {
@@ -963,8 +977,9 @@ bool32 zlib_decode(zlib_decoder *z)
                     for (repeat = 0; repeat < LEN; repeat++)
                     {
                         uint8 bits = *repeat_pointer++;
-                        *(z->stream_out + z->stream_out_cursor) = bits;
-                        z->stream_out_cursor += 1;
+                        bool32 ok = zlib_write_byte(z, bits);
+                        ASSERT_MSG(ok, "PNG: Buffer overrun while writing repeat bytes in LZ77 decompression.");
+                        if (!ok) return false;
                     }
                 }
                 else
