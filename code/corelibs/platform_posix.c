@@ -36,11 +36,6 @@ uint32 platform_read_file_into_memory(char const *filename, void *memory, usize 
     return 0;
 }
 
-struct dll
-{
-    void *handle;
-};
-
 void platform_dll_open(dll *dll, char const *path)
 {
     int flags = 0;

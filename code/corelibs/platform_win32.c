@@ -4,11 +4,6 @@
 #include <windows.h>
 
 
-struct dll
-{
-    HMODULE handle;
-};
-
 void *platform_allocate_pages(void *base, usize size)
 {
     void *result = VirtualAlloc(base, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);

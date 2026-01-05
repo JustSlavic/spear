@@ -401,9 +401,9 @@ png_decode_result png_decode(void *file_data, usize file_size,
     // uint8  filter_method;
     uint8  interlace_method;
     // sRGB
-    uint8 rendering_intent;
+    // uint8 rendering_intent;
     // gAMA
-    float64 gamma = 0;
+    // float64 gamma = 0;
 
     bool32 is_end = false;
     while (!is_end && index < file_size)
@@ -523,7 +523,7 @@ png_decode_result png_decode(void *file_data, usize file_size,
                 return PngDecode_IHDR_HeaderIsNotFirst;
             if (index + 1 <= file_size)
             {
-                rendering_intent = *(uint8 *) (data + (index));
+                // rendering_intent = *(uint8 *) (data + (index));
                 index += 1;
             }
             else
@@ -537,16 +537,16 @@ png_decode_result png_decode(void *file_data, usize file_size,
                 return PngDecode_IHDR_HeaderIsNotFirst;
             if (index + 4 <= file_size)
             {
-                uint32 gamma_ = *(uint32 *) (data + (index));
-                gamma_ = uint32_change_endianness(gamma_);
-                gamma = ((float64) gamma_) / 100000.0;
+                // uint32 gamma_ = *(uint32 *) (data + (index));
+                // gamma_ = uint32_change_endianness(gamma_);
+                // gamma = ((float64) gamma_) / 100000.0;
                 // Gamma should have no effect on the alpha channel, which is always linear
                 // fraction of full opacity.
                 index += 4;
             }
             else
             {
-                PngDecode_UnexpectedEof;
+                return PngDecode_UnexpectedEof;
             }
         }
         else if (chunk_type == PNG_IDAT_ID)
@@ -809,11 +809,11 @@ bool32 zlib_decode(zlib_decoder *z)
             // CINFO is not defined if CM != 8
             return false;
         }
-        uint32 LZ77_window_size = 1 << (CINFO + 8);
+        // uint32 LZ77_window_size = 1 << (CINFO + 8);
         uint32 FLG = zlib_get_bits(z, 8);
-        uint8 FCHECK = (0x1F & FLG);
+        // uint8 FCHECK = (0x1F & FLG);
         uint8 FDICT  = (0x20 & FLG) >> 5;
-        uint8 FLEVEL = (0xC0 & FLG) >> 6;
+        // uint8 FLEVEL = (0xC0 & FLG) >> 6;
         if (((CMF * 256 + FLG) % 31) != 0)
         {
             // The FCHECK value must be such that CMF and FLG, when viewed as
@@ -860,7 +860,8 @@ bool32 zlib_decode(zlib_decoder *z)
                 ASSERT_FAIL("Something wrong");
                 return false;
             }
-            for (int i = 0; i < LEN; i++)
+            int i;
+            for (i = 0; i < LEN; i++)
             {
                 uint8 bits = zlib_get_bits(z, 8);
                 bool32 ok = zlib_write_byte(z, bits);
@@ -893,7 +894,8 @@ bool32 zlib_decode(zlib_decoder *z)
                 };
 
                 uint32 CLEN_code_lengths[19] = {};
-                for (uint32 i = 0; i < HCLEN; i++)
+                int i;
+                for (i = 0; i < HCLEN; i++)
                 {
                     CLEN_code_lengths[code_lengths_swizzle[i]] = zlib_get_bits(z, 3);
                 }

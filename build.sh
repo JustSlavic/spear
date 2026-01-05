@@ -26,7 +26,7 @@ macos_build_engine() {
     compiler_options=$1
     compiler_output="spear_engine"
 
-    compiler_command="clang $compiler_options -o bin/$compiler_output code/engine/main_sdl_opengl.c"
+    compiler_command="clang $compiler_options -o bin/$compiler_output code/engine/macos.c"
     echo "$compiler_command"
     exec $($compiler_command)
 }

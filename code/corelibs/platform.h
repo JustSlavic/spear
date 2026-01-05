@@ -4,7 +4,9 @@
 #include <corelibs/base.h>
 
 
-typedef struct dll dll;
+typedef struct dll {
+    void *handle;
+} dll;
 
 void *platform_allocate_pages(void *base, usize size);
 usize platform_get_file_size(char const *filename);
