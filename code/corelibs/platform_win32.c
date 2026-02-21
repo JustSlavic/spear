@@ -93,3 +93,9 @@ timepoint platform_clock_now(void)
     timepoint result = { (uint64) PerformanceCounter.QuadPart * 1000000 / platform_clock_frequency_get() };
     return result;
 }
+
+usize platform_get_process_path(char *buffer, usize size)
+{
+    usize bytes_written = GetModuleFileNameA(NULL, buffer, size);
+    return bytes_written;
+}

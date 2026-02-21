@@ -20,5 +20,7 @@ timestamp_t platform_file_get_last_modified_time(char const *filename);
 
 timepoint platform_clock_now(void);
 
+usize platform_get_process_path(char *buffer, usize size);
+
 
 #endif // _SPEAR_PLATFORM_H

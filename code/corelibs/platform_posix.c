@@ -106,3 +106,9 @@ timepoint platform_clock_now(void)
 
     return result;
 }
+
+usize platform_get_process_path(char *buffer, usize size)
+{
+    usize bytes_written = readlink("/proc/self/exe", buffer, size);
+    return bytes_written;
+}
