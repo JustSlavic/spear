@@ -13,6 +13,14 @@ void game_input_exit(context *ctx, game_state *gs, spear_input *input)
     }
 }
 
+void game_input_free_camera(context *ctx, game_state *gs, spear_input *input)
+{
+    if (input_button_get_press_count(input->keyboard_and_mouse.buttons[Keyboard_I]))
+    {
+        TOGGLE(gs->is_free_camera);
+    }
+}
+
 void game_input_wireframe(context *ctx, game_state *gs, spear_input *input)
 {
     if (input_button_get_press_count(input->keyboard_and_mouse.buttons[Keyboard_F3]))
@@ -61,6 +69,8 @@ void game_input_camera_move(context *ctx, game_state *gs, spear_input *input)
 
 void game_input_hero_move(context *ctx, game_state *gs, spear_input *input)
 {
+    if (gs->is_free_camera) return;
+
     int move_x = 0;
     int move_y = 0;
     if (input_button_get_press_count(input->keyboard_and_mouse.buttons[Keyboard_A]))
