@@ -563,7 +563,7 @@ void spear_engine_game_render(spear_engine *engine)
 {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     uint render_command_index;
     for (render_command_index = 0;
@@ -586,6 +586,12 @@ void spear_engine_game_render(spear_engine *engine)
                     vector4_create(0.1f, 0.1f, 0.1f, 1.f));
                 glEnable(GL_DEPTH_TEST);
 #endif
+            }
+            break;
+
+            case RenderCommand_Wireframe:
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             }
             break;
 

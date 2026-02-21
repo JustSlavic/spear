@@ -17,6 +17,7 @@
 void game_input_stage(context *ctx, game_state *gs, spear_input *input)
 {
     game_input_exit(ctx, gs, input);
+    game_input_wireframe(ctx, gs, input);
     game_input_camera_move(ctx, gs, input);
     game_input_hero_move(ctx, gs, input);
     game_input_hero_spell(ctx, gs, input);

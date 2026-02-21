@@ -13,6 +13,14 @@ void game_input_exit(context *ctx, game_state *gs, spear_input *input)
     }
 }
 
+void game_input_wireframe(context *ctx, game_state *gs, spear_input *input)
+{
+    if (input_button_get_press_count(input->keyboard_and_mouse.buttons[Keyboard_F3]))
+    {
+        TOGGLE(gs->is_wireframe);
+    }
+}
+
 void game_input_camera_move(context *ctx, game_state *gs, spear_input *input)
 {
     if (!gs->is_free_camera) return;

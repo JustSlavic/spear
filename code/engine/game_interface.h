@@ -23,6 +23,7 @@ typedef enum render_command_tag
     RenderCommand_Invalid = 0,
 
     RenderCommand_SetupCamera,
+    RenderCommand_Wireframe,
     RenderCommand_DrawMesh,
     RenderCommand_DrawUi,
 } render_command_tag;
