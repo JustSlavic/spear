@@ -5,12 +5,13 @@
 
 typedef uint32 archetype_id;
 #define INVALID_ARCHETYPE_ID (-1u)
+#define INVALID_ARCHETYPE_SLOT_ID (-1u)
 #define ECS_MAX_ARCHETYPES (32)
-#define ECS_MAX_ENTITIES_PER_ARCHETYPE (2)
+#define ECS_MAX_ENTITIES_PER_ARCHETYPE (32)
 
 typedef uint32 entity_id;
 #define INVALID_ENTITY_ID (0)
-#define ECS_ENTITY_ID_INDEX_BITS (2)
+#define ECS_ENTITY_ID_INDEX_BITS (8)
 #define ECS_ENTITY_ID_INDEX_MASK ((1 << ECS_ENTITY_ID_INDEX_BITS) - 1)
 #define ECS_ENTITY_ID_GENERATION_BITS (sizeof(entity_id)*8 - ECS_ENTITY_ID_INDEX_BITS)
 #define ECS_ENTITY_ID_GENERATION_MASK ((1 << ECS_ENTITY_ID_GENERATION_BITS) - 1)
@@ -60,6 +61,8 @@ archetype_id ecs_archetype_create(ecs *ecs, char const *name, uint32 entity_size
 entity_id ecs_entity_create(ecs *ecs, archetype_id arch);
 void ecs_entity_destroy(ecs *ecs, entity_id eid);
 bool32 ecs_entity_exists(ecs *ecs, entity_id eid);
+
+void *ecs_entity_get(ecs *ecs, entity_id eid);
 
 
 #endif // _SPEAR_ECS_H

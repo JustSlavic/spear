@@ -43,6 +43,10 @@ void ecs_init(ecs *ecs)
     {
         ecs->empty_slots[ecs->write_index++] = i;
     }
+    // Fill in the entity_info on the invalid entity slot.
+    ecs->entity_info[0].generation = 0xFFFF;
+    ecs->entity_info[0].archetype = INVALID_ARCHETYPE_ID;
+    ecs->entity_info[0].index_in_archetype = INVALID_ARCHETYPE_SLOT_ID;
 }
 
 void ecs_deinit(ecs *ecs)
@@ -146,7 +150,15 @@ void ecs_entity_destroy(ecs *ecs, entity_id eid)
     if (eid)
     {
         uint32 index = ecs_entity_id_get_index(eid);
-        ecs->entity_info[index].generation += 1;
+        ecs_entity_info *info = ecs->entity_info + index;
+
+        ecs_archetype *archetype = ecs->archetypes + info->archetype;
+        archetype->entity_ids[info->index_in_archetype] = INVALID_ENTITY_ID;
+
+        info->generation += 1;
+        info->archetype = INVALID_ARCHETYPE_ID;
+        info->index_in_archetype = INVALID_ARCHETYPE_SLOT_ID;
+
         ecs->empty_slots[(ecs->write_index++) % ECS_MAX_ENTITIES] = index;
 
         printf("Ecs: Destroyed entity (eid=%d (%d:%d))\n", eid,
@@ -168,5 +180,21 @@ void *ecs_entity_get(ecs *ecs, entity_id eid)
 {
     void *result = NULL;
     ecs_entity_info *info = ecs_entity_info_get(ecs, eid);
+    if (info->archetype < ecs->archetype_count)
+    {
+        ecs_archetype *archetype = ecs->archetypes + info->archetype;
+        if (eid == archetype->entity_ids[info->index_in_archetype])
+        {
+            result = archetype->data + info->index_in_archetype * archetype->entity_size;
+        }
+        else
+        {
+            printf("Ecs Error: Archetype eid and entity info index mismatch.\n");
+        }
+    }
+    else
+    {
+        printf("Ecs Error: Archetype ID is not valid! (aid=%d)\n", info->archetype);
+    }
     return result;
 }
