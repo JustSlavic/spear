@@ -26,6 +26,7 @@ typedef enum render_command_tag
     RenderCommand_Wireframe,
     RenderCommand_DrawMesh,
     RenderCommand_DrawUi,
+    RenderCommand_UiText,
 } render_command_tag;
 
 typedef enum render_command_draw_mesh_tag
@@ -77,6 +78,11 @@ typedef struct render_command
             // Optional parameters
             float ui_frame_width;
             vector2 ui_offset;
+        };
+        struct // RenderCommand_UiText
+        {
+            char text[100];
+            vector2 ui_position;
         };
     };
 } render_command;

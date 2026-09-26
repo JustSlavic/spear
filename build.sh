@@ -86,7 +86,8 @@ macos_debug_build() {
 
     # macos_vulkan_build
 
-    # clang -std=c89 -g -Wall -Werror -Wno-comment -Icode -o ./bin/run_ecs code/main_ecs.c
+    clang -std=c89 -g -Wall -Werror -Wno-unused-variable -Wno-comment -Icode -o ./bin/run_ecs code/dev_ecs/main_ecs.c
+    ./bin/run_ecs
 }
 
 macos_release_build() {

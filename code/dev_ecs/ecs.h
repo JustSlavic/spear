@@ -3,69 +3,63 @@
 
 #include <corelibs/base.h>
 
+typedef uint32 archetype_id;
+#define INVALID_ARCHETYPE_ID (-1u)
+#define ECS_MAX_ARCHETYPES (32)
+#define ECS_MAX_ENTITIES_PER_ARCHETYPE (2)
 
 typedef uint32 entity_id;
 #define INVALID_ENTITY_ID (0)
-#define INVALID_ARCHETYPE_ID (-1u)
+#define ECS_ENTITY_ID_INDEX_BITS (2)
+#define ECS_ENTITY_ID_INDEX_MASK ((1 << ECS_ENTITY_ID_INDEX_BITS) - 1)
+#define ECS_ENTITY_ID_GENERATION_BITS (sizeof(entity_id)*8 - ECS_ENTITY_ID_INDEX_BITS)
+#define ECS_ENTITY_ID_GENERATION_MASK ((1 << ECS_ENTITY_ID_GENERATION_BITS) - 1)
+#define ECS_MAX_ENTITIES (1 << ECS_ENTITY_ID_INDEX_BITS)
 
-typedef struct
-{
-    char const *name;
-    uint32 size;
-} ecs_component;
-
-typedef struct
-{
-    ecs_component *data;
-    uint32 count;
-} ecs_components;
-
-ecs_components ecs_components_create(ecs_component *comps, uint32 count);
-
-typedef struct
-{
-    void *memory;
-    uint32 size;
-
-    uint32 entity_count;
-    uint32 entity_size;
-} ecs_archetype;
-
-typedef struct
-{
-    void *ptr;
-    uint32 entity_count;
-    uint32 entity_size;
-} ecs_entity_iterator;
 
 typedef struct
 {
     uint32 generation;
-    uint32 archetype_id;
+    archetype_id archetype;
     uint32 index_in_archetype;
 } ecs_entity_info;
 
 typedef struct
 {
-    ecs_archetype *archetypes;
-    uint64 archetype_capacity;
-    uint64 archetype_count;
+    char const *name;
+} ecs_component;
 
-    ecs_entity_info *entities;
-    uint64 *empty_slots;
+typedef struct
+{
+    char const *name;
+
+    uint8 *data;
+    entity_id *entity_ids;
+    uint32 entity_size;
+    uint32 count;
+    uint32 capacity;
+} ecs_archetype;
+
+typedef struct
+{
+    ecs_entity_info *entity_info;
+    uint32 *empty_slots;
     uint64 read_index;
     uint64 write_index;
+
+    ecs_archetype *archetypes;
+    uint32 archetype_count;
+    uint32 archetype_capacity;
 } ecs;
 
 void ecs_init(ecs *ecs);
 void ecs_deinit(ecs *ecs);
-uint32 ecs_archetype_create(ecs *ecs, uint32 entity_size);
-entity_id ecs_entity_create(ecs *ecs, uint32 archetype_id);
+
+archetype_id ecs_archetype_create(ecs *ecs, char const *name, uint32 entity_size);
+
+entity_id ecs_entity_create(ecs *ecs, archetype_id arch);
 void ecs_entity_destroy(ecs *ecs, entity_id eid);
 bool32 ecs_entity_exists(ecs *ecs, entity_id eid);
-void *ecs_entity_get(ecs *ecs, entity_id eid);
-ecs_entity_iterator ecs_entity_iterator_create(ecs *ecs, uint32 archetype_id);
-void *ecs_entity_iterator_get(ecs_entity_iterator *it);
 
 
 #endif // _SPEAR_ECS_H

@@ -21,10 +21,15 @@ void game_render_ui(context *ctx, game_state *gs, spear_input *input)
     }
     for (i = 0; i < gs->ui_hoverables.count; i++)
     {
-        entity *e = get_entity(gs, gs->ui_visibles.data[i]);
+        entity_id eid = gs->ui_hoverables.data[i];
+        entity *e = get_entity(gs, eid);
 
         vector2 min = e->ui.hover_area_min;
         vector2 max = e->ui.hover_area_max;
+
+        vector4 color = vector4_create(0.2f, 0.2f, 0.2f, 1.f);
+        if (gs->ui.hot == eid)
+            color = vector4_create(0.9f, 0.9f, 0.9f, 1.f);
 
         // printf("%d: min = %5.2f, %5.2f; max = %5.2f, %5.2f\n",
         //     gs->ui_visibles.data[i],
@@ -40,7 +45,7 @@ void game_render_ui(context *ctx, game_state *gs, spear_input *input)
             .ui_tm = e->ui.tm_to_root,
             .ui_width = size.x,
             .ui_height = size.y,
-            .ui_color = vector4_create(0.9f, 0.9f, 0.9f, 1.f),
+            .ui_color = color,
             .ui_frame_width = 2,
             .ui_offset = center,
         };

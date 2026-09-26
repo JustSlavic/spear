@@ -71,17 +71,18 @@ typedef struct
     spear_audio_handle audio_rain;
     spear_audio_handle audio_thunder;
 
-    uint32 sound_debug_position_count;
-    uint32 sound_debug_position_running_index;
-    float *sound_debug_positions_read;
-    float *sound_debug_positions_write;
-    float *sound_debug_positions_latency;
-
     bitmap test_bmp;
     gpu_texture test_tx;
 
     bitmap font_bmp;
     gpu_texture font_atlas;
+
+    /* Debug */
+    uint32 sound_debug_position_count;
+    uint32 sound_debug_position_running_index;
+    float *sound_debug_positions_read;
+    float *sound_debug_positions_write;
+    float *sound_debug_positions_latency;
 } spear_engine;
 
 void spear_engine_init(spear_engine *engine);

@@ -16,4 +16,5 @@
 #include <corelibs/file_formats/png.c>
 #include <corelibs/file_formats/wav.c>
 #include <corelibs/file_formats/obj.c>
+#include <corelibs/string_view.c>
 #include <corelibs/crc.c>

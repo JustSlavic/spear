@@ -53,6 +53,7 @@ typedef struct
     spear_audio_source sources[16];
     uint32 source_count;
     spear_audio_instance instances[16];
+    double master_volume;
 } spear_audio;
 
 typedef struct

@@ -1,5 +1,5 @@
 static char const *vs_single_color =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
 
@@ -18,7 +18,7 @@ GLSL(
 );
 
 static char const *fs_pass_color =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec4 fragment_color;
     out vec4 result_color;
@@ -30,7 +30,7 @@ GLSL(
 );
 
 static char const *vs_textured =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
     layout (location = 1) in vec2 uv_coordinates;
@@ -52,7 +52,7 @@ GLSL(
 );
 
 static char const *fs_textured =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec2 uv;
     out vec4 result_color;
@@ -67,7 +67,7 @@ GLSL(
 );
 
 static char const *vs_ground =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
 
@@ -88,7 +88,7 @@ GLSL(
 );
 
 static char const *vs_framebuffer =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
 
@@ -105,7 +105,7 @@ GLSL(
 );
 
 static char const *fs_framebuffer =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec2 uv_coordinates;
     out vec4 result_color;
@@ -119,7 +119,7 @@ GLSL(
 );
 
 static char const *vs_text =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec2 ui_coordinates;
     layout (location = 1) in vec2 uv_coordinates;
@@ -137,7 +137,7 @@ GLSL(
 );
 
 static char const *fs_text =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec2 uv;
     out vec4 result_color;
@@ -153,7 +153,7 @@ GLSL(
 );
 
 static char const *vs_phong =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
     layout (location = 1) in vec3 vertex_normal;
@@ -177,7 +177,7 @@ GLSL(
 );
 
 static char const *fs_phong =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec4 fragment_color;
     in vec3 fragment_position;
@@ -201,7 +201,7 @@ GLSL(
 );
 
 static char const *vs_sun =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
     layout (location = 1) in vec3 vertex_normal;
@@ -222,7 +222,7 @@ GLSL(
 );
 
 static char const *fs_sun =
-"#version 410\n"
+GLSL_VERSION
 GLSL(
     in vec3 fragment_position;
     in vec3 fragment_normal;
@@ -237,7 +237,7 @@ GLSL(
 );
 
 static char const *vs_frame =
-"#version 400\n"
+GLSL_VERSION
 GLSL(
     layout (location = 0) in vec2 vertex_position;
     layout (location = 1) in vec2 vertex_displacement_weight;

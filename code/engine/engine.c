@@ -364,6 +364,7 @@ void spear_engine_init(spear_engine *engine)
         engine->far_clip_distance);
 
     spear_audio_init(&engine->audio);
+    engine->audio.master_volume = 0.1;
 
     engine->sound_debug_position_count = 100;
     engine->sound_debug_positions_read = ALLOCATE_ARRAY(engine->allocator, float, engine->sound_debug_position_count);
@@ -559,6 +560,86 @@ static void spear_engine_draw_ui(spear_engine *engine, render_command cmd)
     }
 }
 
+void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
+{
+    matrix4 model = matrix4_identity();
+    matrix4 view = matrix4_identity();
+    vector4 color = vector4_create(1.f, 1.f, 1.f, 1.f);
+
+    // printf("cmd.text = %s\n", cmd.text);
+    glUseProgram(0);
+
+    glUseProgram(engine->shader_single_color.id);
+    render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
+    render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
+    render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
+    render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
+
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
+
+    glBindVertexArray(engine->mesh_square.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
+    glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
+/*
+    {
+        glUseProgram(shader_text.id);
+        shader_text.uniform("u_model", cmd.model);
+        shader_text.uniform("u_projection", proj_matrix_ui);
+        shader_text.uniform("u_color", cmd.color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, font_texture.id);
+
+        float32 posx = 0.f;
+        float32 posy = 0.f;
+        uint32 count = 0;
+
+        string_view strview = string_view::from(cmd.cstr);
+        auto temp_memory = ALLOCATE_ALIGNED_BUFFER(temporary_allocator, strview.size * 24 * sizeof(float32), alignof(float32));
+        auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
+
+        char c = 0;
+        for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+        {
+            glyph g = get_glyph(c);
+
+            float32 px = (float32) posx - g.origin_x;
+            float32 py = (float32) posy - g.origin_y;
+            float32 w  = (float32) g.width;
+            float32 h  = (float32) g.height;
+
+            float32 uv_x = (float32) g.x / font_14x26.width;
+            float32 uv_y = (float32) g.y / font_14x26.height;
+            float32 uv_x1 = (float32) (g.x + g.width) / font_14x26.width;
+            float32 uv_y1 = (float32) (g.y + g.height) / font_14x26.height;
+
+            float32 vbo_data[] = {
+                 px,     py,       uv_x,  uv_y,
+                 px + w, py,       uv_x1, uv_y,
+                 px    , py + h,   uv_x,  uv_y1,
+
+                 px + w, py,       uv_x1, uv_y,
+                 px + w, py + h,   uv_x1, uv_y1,
+                 px,     py + h,   uv_x,  uv_y1,
+            };
+
+            seri_buffer.push(vbo_data, sizeof(vbo_data));
+            posx += g.width; // 2 pixels between characters
+            count += 6;
+        }
+
+        glBindVertexArray(gpu_square_uv.vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
+        glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, count);
+    }
+*/
+}
+
 void spear_engine_game_render(spear_engine *engine)
 {
     glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -604,6 +685,12 @@ void spear_engine_game_render(spear_engine *engine)
             case RenderCommand_DrawUi:
             {
                 spear_engine_draw_ui(engine, cmd);
+            }
+            break;
+
+            case RenderCommand_UiText:
+            {
+                spear_engine_draw_ui_text(engine, cmd);
             }
             break;
 

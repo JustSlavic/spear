@@ -4,6 +4,7 @@
 void spear_audio_init(spear_audio *audio)
 {
     audio->source_count = 1;
+    audio->master_volume = 1.0;
 }
 
 spear_audio_handle spear_audio_add_tone(spear_audio *audio, double frequency)
@@ -13,9 +14,6 @@ spear_audio_handle spear_audio_add_tone(spear_audio *audio, double frequency)
     {
         spear_audio_source source = {};
         source.tag = SpearAudioSource_Generator;
-        // source.enabled = false;
-        // source.repeat = true;
-        // source.volume = 600.0;
         source.frequency = frequency;
 
         handle = audio->source_count++;
@@ -31,9 +29,6 @@ spear_audio_handle spear_audio_add_track(spear_audio *audio, int16 *samples, uin
     {
         spear_audio_source source = {};
         source.tag = SpearAudioSource_Buffer;
-        // source.enabled = false;
-        // source.repeat = true;
-        // source.volume = 1.0;
         source.samples = samples;
         source.sample_count = sample_count;
 
@@ -124,7 +119,7 @@ void spear_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
             for (frame_index = 0; frame_index < output->sample_count; frame_index++)
             {
                 double sine_value = sin(source->running_t);
-                int16 sample_value = (int16)(sine_value * instance->volume);
+                int16 sample_value = (int16) (sine_value * (instance->volume * audio->master_volume));
 
                 *samples++ += sample_value;
                 *samples++ += sample_value;
@@ -139,11 +134,17 @@ void spear_audio_mix(spear_audio *audio, spear_sound_output_buffer *output)
             int16 *samples_out = (int16 *) output->samples;
             for (frame_index = 0; frame_index < output->sample_count; frame_index++)
             {
-                // @todo: stop if instance is play_once
-                *samples_out++ += source->samples[instance->sample_index];
-                instance->sample_index = (instance->sample_index + 1) % source->sample_count;
-                *samples_out++ += source->samples[instance->sample_index];
-                instance->sample_index = (instance->sample_index + 1) % source->sample_count;
+                uint32 sample_index = instance->sample_index;
+
+                *samples_out++ += (int16) (source->samples[sample_index] * (instance->volume * audio->master_volume));
+                *samples_out++ += (int16) (source->samples[sample_index + 1] * (instance->volume * audio->master_volume));
+
+                instance->sample_index = (instance->sample_index + 2) % source->sample_count;
+                if (!instance->repeat && ((sample_index + 2) >= source->sample_count))
+                {
+                    instance->enabled = false;
+                    instance->source_handle = 0;
+                }
             }
         }
     }

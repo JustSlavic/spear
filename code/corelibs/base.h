@@ -2,36 +2,36 @@
 #define _SPEAR_BASE_H
 
 #if defined(_MSC_VER)
-    #define COMPILER_MSVC 1
+#define COMPILER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
-    #define COMPILER_GNU 1
+#define COMPILER_GNU 1
 #elif defined(__clang__)
-    #define COMPILER_CLANG 1
+#define COMPILER_CLANG 1
 #elif defined(__MINGW32__)
-    #define COMPILER_MINGW 1
+#define COMPILER_MINGW 1
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
-    #define OS_WINDOWS 1
+#define OS_WINDOWS 1
 #elif defined(__linux__) || defined(__linux) || defined(linux)
-    #define OS_LINUX 1
+#define OS_LINUX 1
 #elif defined(__APPLE__) || defined(__MACH__)
-    #define OS_MAC 1
+#define OS_MAC 1
 #elif defined(__FreeBSD__)
-    #define OS_FREEBSD 1
+#error "Not supported"
 #elif defined(__unix__) || defined(__unix) || defined(unix)
-    // Nothing yet
+#error "Not supported"
 #endif
 
 #if __STDC_VERSION__ == 199901L
-    #define C_VERSION 99
-    #define C99 99
+#define C_VERSION 99
+#define C99 99
 #elif __STDC_VERSION__ == 201112L
-    #define C_VERSION 11
-    #define C11 11
+#define C_VERSION 11
+#define C11 11
 #else
-    #define C_VERSION 89
-    #define C89 89
+#define C_VERSION 89
+#define C89 89
 #endif
 
 #if COMPILER_MSVC
@@ -121,7 +121,6 @@ typedef int16                sound_sample_t;
 #endif // DEBUG
 
 #define ARRAY_COUNT(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
-#define GLSL(...) #__VA_ARGS__
 #define STRINGIFY_(X) #X
 #define STRINGIFY(X) STRINGIFY_(X)
 #define UNUSED(X) (void) (X)
@@ -130,6 +129,9 @@ typedef int16                sound_sample_t;
 #define GIGABYTES(N) (1024ull * MEGABYTES(N))
 #define TERABYTES(N) (1024ull * GIGABYTES(N))
 #define TOGGLE(X) (X) = !(X)
+
+#define GLSL(...) #__VA_ARGS__
+#define GLSL_VERSION "#version 410\n"
 
 #define PRINT_BOOL(X) ((X) ? "true" : "false")
 
