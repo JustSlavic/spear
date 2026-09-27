@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include <gen/font_14x26.h>
+
 #if !DLL_BUILD
 #include <engine/game_interface.c>
 #include <game_rpg/game.c>
@@ -375,6 +377,40 @@ void spear_engine_init(spear_engine *engine)
 void spear_engine_init_graphics(spear_engine *engine)
 {
     renderer_init_api(&engine->renderer);
+
+    {
+        // Prepare buffer for text
+        uint32 vbo_id = 0;
+        uint32 vao_id = 0;
+        glGenBuffers(1, &vbo_id);
+        glGenVertexArrays(1, &vao_id);
+        glBindVertexArray(vao_id);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(
+            0,        // Index
+            2,        // Count
+            GL_FLOAT, // Type
+            GL_FALSE, // Normalized?
+            4 * sizeof(float), // Stride
+            (void *) (0));       // Offset
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(
+            1,        // Index
+            2,        // Count
+            GL_FLOAT, // Type
+            GL_FALSE, // Normalized?
+            4 * sizeof(float), // Stride
+            (void *) (2 * sizeof(float))); // Offset
+
+        engine->text_buffer.vbo = vbo_id;
+        engine->text_buffer.ibo = 0;
+        engine->text_buffer.vao = vao_id;
+        engine->text_buffer.vertex_count = 0;
+        engine->text_buffer.element_count = 0;
+    }
 }
 
 void spear_engine_create_meshes(spear_engine *engine)
@@ -562,48 +598,19 @@ static void spear_engine_draw_ui(spear_engine *engine, render_command cmd)
 
 void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
 {
-    matrix4 model = matrix4_identity();
-    matrix4 view = matrix4_identity();
-    vector4 color = vector4_create(1.f, 1.f, 1.f, 1.f);
-
-    // printf("cmd.text = %s\n", cmd.text);
-    glUseProgram(0);
-
-    glUseProgram(engine->shader_single_color.id);
-    render_shader_uniform_matrix4f(engine->shader_single_color, "u_model", (float *) &model);
-    render_shader_uniform_matrix4f(engine->shader_single_color, "u_view", (float *) &view);
-    render_shader_uniform_matrix4f(engine->shader_single_color, "u_projection", (float *) &engine->renderer.proj_matrix_ui);
-    render_shader_uniform_vector4f(engine->shader_single_color, "u_color", (float *) &color);
-
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, engine->test_tx.id);
-
-    glBindVertexArray(engine->mesh_square.vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, engine->mesh_square.ibo);
-    glDrawElements(GL_TRIANGLES, engine->mesh_square.element_count, GL_UNSIGNED_INT, NULL);
-/*
+    int vertex_count = 0;
     {
-        glUseProgram(shader_text.id);
-        shader_text.uniform("u_model", cmd.model);
-        shader_text.uniform("u_projection", proj_matrix_ui);
-        shader_text.uniform("u_color", cmd.color);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, font_texture.id);
+        // Prepare buffer
+        uint32 buffer_index = 0;
+        uint32 buffer_size = cmd.text.size * 24 * sizeof(float32);
+        float32 *buffer = ALLOCATE_BUFFER(engine->temporary, buffer_size);
 
         float32 posx = 0.f;
         float32 posy = 0.f;
-        uint32 count = 0;
-
-        string_view strview = string_view::from(cmd.cstr);
-        auto temp_memory = ALLOCATE_ALIGNED_BUFFER(temporary_allocator, strview.size * 24 * sizeof(float32), alignof(float32));
-        auto seri_buffer = serializer::from(temp_memory.data, temp_memory.size);
-
-        char c = 0;
-        for (char const *str = cmd.cstr; (c = *str) != 0; str++)
+        int i;
+        for (i = 0; i < cmd.text.size; i++)
         {
-            glyph g = get_glyph(c);
-
+            glyph g = get_glyph(cmd.text.data[i]);
             float32 px = (float32) posx - g.origin_x;
             float32 py = (float32) posy - g.origin_y;
             float32 w  = (float32) g.width;
@@ -615,29 +622,49 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
             float32 uv_y1 = (float32) (g.y + g.height) / font_14x26.height;
 
             float32 vbo_data[] = {
-                 px,     py,       uv_x,  uv_y,
-                 px + w, py,       uv_x1, uv_y,
-                 px    , py + h,   uv_x,  uv_y1,
+                px,     py,       uv_x,  uv_y,
+                px + w, py,       uv_x1, uv_y,
+                px    , py + h,   uv_x,  uv_y1,
 
-                 px + w, py,       uv_x1, uv_y,
-                 px + w, py + h,   uv_x1, uv_y1,
-                 px,     py + h,   uv_x,  uv_y1,
+                px + w, py,       uv_x1, uv_y,
+                px + w, py + h,   uv_x1, uv_y1,
+                px,     py + h,   uv_x,  uv_y1,
             };
 
-            seri_buffer.push(vbo_data, sizeof(vbo_data));
-            posx += g.width; // 2 pixels between characters
-            count += 6;
+            memcpy(buffer + buffer_index, vbo_data, 24 * sizeof(float32));
+            buffer_index += 24;
+
+            posx += g.width;
+            vertex_count += 6;
         }
 
-        glBindVertexArray(gpu_square_uv.vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, gpu_square_uv.vbo);
-        glBufferData(GL_ARRAY_BUFFER, seri_buffer.size, seri_buffer.data, GL_STATIC_DRAW);
+        glBindVertexArray(engine->text_buffer.vao);
+        glBindBuffer(GL_ARRAY_BUFFER, engine->text_buffer.vbo);
+        glBufferData(GL_ARRAY_BUFFER, buffer_size, buffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glDrawArrays(GL_TRIANGLES, 0, count);
     }
-*/
+
+    {
+        // Draw triangles
+        matrix4 model_translate = matrix4_translate(cmd.ui_position.x, cmd.ui_position.y, 0.f);
+        matrix4 model_scale = matrix4_scale(1.f, 1.f, 1.f);
+        matrix4 model = matrix4_mul(model_translate, model_scale);
+        matrix4 view = matrix4_identity();
+        matrix4 projection = engine->renderer.proj_matrix_ui;
+        vector4 color = vector4_create(1.f, 1.f, 1.f, 1.f);
+
+        gpu_shader *shader = &engine->shader_text;
+        glUseProgram(shader->id);
+        render_shader_uniform_matrix4f(*shader, "u_model", (float *) &model);
+        render_shader_uniform_matrix4f(*shader, "u_projection", (float *) &projection);
+        render_shader_uniform_vector4f(*shader, "u_color", (float *) &color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, engine->font_atlas.id);
+
+        glBindVertexArray(engine->text_buffer.vao);
+        glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    }
 }
 
 void spear_engine_game_render(spear_engine *engine)
@@ -658,7 +685,8 @@ void spear_engine_game_render(spear_engine *engine)
             {
                 renderer_setup_camera(&engine->renderer,
                     cmd.camera_position, cmd.camera_forward, cmd.camera_up);
-#if 0
+#if 1
+                // Draw background color, so it's easier to see the viewport inside a bigger window.
                 glDisable(GL_DEPTH_TEST);
                 renderer_draw_mesh_ui(&engine->renderer,
                     matrix4_scale(10000.f, 10000.f, 1.f),

@@ -2,6 +2,7 @@
 #define _SPEAR_ENGINE_GAME_INTERFACE_H
 
 #include <corelibs/base.h>
+#include <corelibs/string_view.h>
 #include <gamelibs/input.h>
 #include <gamelibs/camera.h>
 
@@ -81,7 +82,7 @@ typedef struct render_command
         };
         struct // RenderCommand_UiText
         {
-            char text[100];
+            string_view text;
             vector2 ui_position;
         };
     };

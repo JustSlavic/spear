@@ -99,11 +99,8 @@ void game_on_every_frame(context *ctx, game_state *gs, spear_input *input)
 
     {
         render_command cmd = { .tag = RenderCommand_UiText };
-        cmd.text[0] = 'a';
-        cmd.text[1] = 'b';
-        cmd.text[2] = 'c';
-        cmd.text[3] = 0;
-        cmd.ui_position = vector2_create(10, 10);
+        cmd.text = string_view_create_from_cstring("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+        cmd.ui_position = vector2_create(100, 100);
         context_render_command_push(ctx, cmd);
     }
 

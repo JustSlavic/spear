@@ -71,7 +71,7 @@ macos_vulkan_build() {
 
 macos_debug_build() {
     C_FLAGS="-std=c89 -g"
-    WARNINGS="-Wall -Werror -Wno-comment -Wno-unused-function"
+    WARNINGS="-Wall -Werror -Wno-comment -Wno-unused-function -Wno-unused-variable"
     DEFINES="-DDEBUG=1"
     if [[ $is_dll_build == 1 ]]; then
         DEFINES="$DEFINES -DDLL_BUILD=1"
