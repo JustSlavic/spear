@@ -86,11 +86,10 @@ void game_input_hero_move(context *ctx, game_state *gs, spear_input *input)
     {
         float duration = 0.5f;
         entity *e = get_hero(gs);
-        game_move_animation_start(e,
-            (float) e->tile.x, (float) e->tile.y, (float) input->time,
-            (float) e->tile.x + move_x, (float) e->tile.y + move_y, (float) input->time + duration);
         e->tile.x += move_x;
         e->tile.y += move_y;
+        e->position.x = (float32) e->tile.x;
+        e->position.y = (float32) e->tile.y;
     }
 }
 
