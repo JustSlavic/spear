@@ -553,6 +553,7 @@ static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command
         );
     gpu_mesh m = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
                  cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
+                 cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
                  engine->mesh_cube;
     gpu_shader s = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
                    cmd.mesh_shader_tag == RenderCommand_DrawShader_Ground ? engine->shader_ground :
@@ -853,10 +854,4 @@ void spear_engine_game_render(spear_engine *engine)
     //     }
     // }
 #endif
-    {
-        matrix4 model = matrix4_translate(2.f, 2.f, 2.f);
-        gpu_mesh m = engine->mesh_suzanne;
-        gpu_shader s = engine->shader_phong;
-        renderer_draw_mesh(&engine->renderer, model, m, s, vector4_create(0.5, 0.5, 0.5, 1.f));
-    }
 }

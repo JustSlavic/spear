@@ -37,6 +37,7 @@ typedef enum render_command_draw_mesh_tag
     RenderCommand_DrawMesh_Square,
     RenderCommand_DrawMesh_Cube,
     RenderCommand_DrawMesh_UiFrame,
+    RenderCommand_DrawMesh_Suzanne,
 } render_command_draw_mesh_tag;
 
 typedef enum render_command_draw_shader_tag

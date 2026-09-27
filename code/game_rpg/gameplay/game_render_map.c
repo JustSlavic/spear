@@ -69,7 +69,7 @@ void game_render_projectiles(context *ctx, game_state *gs, spear_input *input)
         render_command cmd =
         {
             .tag = RenderCommand_DrawMesh,
-            .mesh_tag = RenderCommand_DrawMesh_Cube,
+            .mesh_tag = RenderCommand_DrawMesh_Suzanne,
             .mesh_shader_tag = RenderCommand_DrawShader_Phong,
             .mesh_position = e->position,
             .mesh_scale = vector3_create(0.2f, 0.2f, 0.2f),
