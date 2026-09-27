@@ -8,6 +8,20 @@ void game_render_entity(context *ctx, game_state *gs, entity_id eid)
         e->position,
         vector3_create(0.45f, 0.45f, 0.45f),
         color);
+
+    if (e->tag == Entity_Hero)
+    {
+        void *buffer = ALLOCATE_BUFFER_(ctx->temporary_allocator, 64);
+        snprintf((char *) buffer, 63,
+            "Hero P=(%5.2f, %5.2f, %5.2f)",
+            e->position.x,
+            e->position.y,
+            e->position.z);
+        render_command cmd = { .tag = RenderCommand_UiText };
+        cmd.text = string_view_create_from_cstring(buffer);
+        cmd.ui_position = vector2_create(0, 28);
+        context_render_command_push(ctx, cmd);
+    }
 }
 
 void game_render_draw_map(context *ctx, game_state *gs, spear_input *input)
@@ -66,15 +80,29 @@ void game_render_projectiles(context *ctx, game_state *gs, spear_input *input)
     {
         entity_id eid = entity_id_array_get(&gs->projectiles, i);
         entity *e = get_entity(gs, eid);
-        render_command cmd =
         {
-            .tag = RenderCommand_DrawMesh,
-            .mesh_tag = RenderCommand_DrawMesh_Suzanne,
-            .mesh_shader_tag = RenderCommand_DrawShader_Phong,
-            .mesh_position = e->position,
-            .mesh_scale = vector3_create(0.2f, 0.2f, 0.2f),
-            .mesh_color = vector4_create(1.f, 0.f, 0.f, 1.f),
-        };
-        context_render_command_push(ctx, cmd);
+            render_command cmd =
+            {
+                .tag = RenderCommand_DrawMesh,
+                .mesh_tag = RenderCommand_DrawMesh_Suzanne,
+                .mesh_shader_tag = RenderCommand_DrawShader_Phong,
+                .mesh_position = e->position,
+                .mesh_scale = vector3_create(0.2f, 0.2f, 0.2f),
+                .mesh_color = vector4_create(1.f, 0.f, 0.f, 1.f),
+            };
+            context_render_command_push(ctx, cmd);
+        }
+        {
+            void *buffer = ALLOCATE_BUFFER_(ctx->temporary_allocator, 64);
+            snprintf((char *) buffer, 63,
+                "Projectile P=(%5.2f, %5.2f, %5.2f)",
+                e->position.x,
+                e->position.y,
+                e->position.z);
+            render_command cmd = { .tag = RenderCommand_UiText };
+            cmd.text = string_view_create_from_cstring(buffer);
+            cmd.ui_position = vector2_create(0, 28 * 2 + i * 28);
+            context_render_command_push(ctx, cmd);
+        }
     }
 }

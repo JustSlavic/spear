@@ -97,12 +97,5 @@ void game_on_every_frame(context *ctx, game_state *gs, spear_input *input)
     game_update_stage(ctx, gs, input);
     game_render_stage(ctx, gs, input);
 
-    {
-        render_command cmd = { .tag = RenderCommand_UiText };
-        cmd.text = string_view_create_from_cstring("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-        cmd.ui_position = vector2_create(100, 100);
-        context_render_command_push(ctx, cmd);
-    }
-
     game_process_events(gs);
 }

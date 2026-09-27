@@ -149,7 +149,9 @@ void renderer_draw_mesh_ui(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s,
 {
     matrix4 view = matrix4_identity();
     matrix4 proj = r->proj_matrix_ui;
+    glDisable(GL_DEPTH_TEST);
     renderer_draw_mesh_internal(r, model, view, proj, m, s, color);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void renderer_draw_ui_frame(renderer *r, matrix4 model, gpu_mesh m, gpu_shader s, vector4 color, float width, float height)

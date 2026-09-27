@@ -2,6 +2,7 @@
 #define _SPEAR_ENGINE_GAME_INTERFACE_H
 
 #include <corelibs/base.h>
+#include <corelibs/memory/allocator.h>
 #include <corelibs/string_view.h>
 #include <gamelibs/input.h>
 #include <gamelibs/camera.h>
@@ -91,6 +92,8 @@ typedef struct render_command
 
 typedef struct context
 {
+    memory_allocator temporary_allocator;
+
     engine_command engine_commands[16];
     uint32 engine_commands_count;
 

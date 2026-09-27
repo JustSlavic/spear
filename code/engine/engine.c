@@ -354,6 +354,7 @@ void spear_engine_init(spear_engine *engine)
     engine->near_clip_height = engine->near_clip_width / engine->aspect_ratio;
     engine->far_clip_distance = 10000.f;
 
+    engine->game_context.temporary_allocator = engine->temporary;
     engine->game_context.near_clip_distance = engine->near_clip_distance;
     engine->game_context.near_clip_width = engine->near_clip_width;
     engine->game_context.near_clip_height = engine->near_clip_height;
@@ -612,8 +613,8 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
         for (i = 0; i < cmd.text.size; i++)
         {
             glyph g = get_glyph(cmd.text.data[i]);
-            float32 px = (float32) posx - g.origin_x;
-            float32 py = (float32) posy - g.origin_y;
+            float32 px = (float32) posx;
+            float32 py = (float32) posy;
             float32 w  = (float32) g.width;
             float32 h  = (float32) g.height;
 
@@ -635,7 +636,7 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
             memcpy(buffer + buffer_index, vbo_data, 24 * sizeof(float32));
             buffer_index += 24;
 
-            posx += g.width;
+            posx += g.width + 1;
             vertex_count += 6;
         }
 
@@ -650,7 +651,6 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
         matrix4 model_translate = matrix4_translate(cmd.ui_position.x, cmd.ui_position.y, 0.f);
         matrix4 model_scale = matrix4_scale(1.f, 1.f, 1.f);
         matrix4 model = matrix4_mul(model_translate, model_scale);
-        matrix4 view = matrix4_identity();
         matrix4 projection = engine->renderer.proj_matrix_ui;
         vector4 color = vector4_create(1.f, 1.f, 1.f, 1.f);
 
@@ -663,8 +663,10 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, engine->font_atlas.id);
 
+        glDisable(GL_DEPTH_TEST);
         glBindVertexArray(engine->text_buffer.vao);
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+        glEnable(GL_DEPTH_TEST);
     }
 }
 
