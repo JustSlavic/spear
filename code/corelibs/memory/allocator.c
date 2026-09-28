@@ -4,6 +4,8 @@
 #include <string.h>
 
 
+#define MEMORY_ALLOCATOR_BLOCK_SIZE 0x1000
+
 typedef enum
 {
     MemoryAllocator_Invalid = 0,
@@ -36,15 +38,19 @@ static memory_allocator_os global_memory_allocator_os;
 
 memory_allocator memory_allocator_arena_create(void *memory, uint64 size, char const *allocator_name)
 {
-    ASSERT_MSG(size >= 4096,
-        "Cannot create memory arena, because given buffer size is less than 4k memory page. Given buffer is %llu bytes.", size);
+    ASSERT_MSG(size >= MEMORY_ALLOCATOR_BLOCK_SIZE,
+        "Cannot create memory arena, because given buffer size is less than %d memory page. Given buffer is %llu bytes.", MEMORY_ALLOCATOR_BLOCK_SIZE, size);
     ASSERT_MSG(((uint64) memory) % alignof(memory_allocator_arena) == 0,
         "Cannot create memory arena, because alignment of given buffer is not %llu bytes.", (uint64) alignof(memory_allocator_arena));
-    memory_allocator_arena *arena = (memory_allocator_arena *) memory;
-    arena->tag = MemoryAllocator_Arena;
-    arena->size = size - sizeof(memory_allocator_arena);
-    arena->used = sizeof(memory_allocator_arena);
-    arena->name = allocator_name;
+    memory_allocator_arena *arena = NULL;
+    if (size >= MEMORY_ALLOCATOR_BLOCK_SIZE)
+    {
+        arena = (memory_allocator_arena *) memory;
+        arena->tag = MemoryAllocator_Arena;
+        arena->size = size;
+        arena->used = sizeof(memory_allocator_arena);
+        arena->name = allocator_name;
+    }
     return arena;
 }
 
@@ -62,38 +68,56 @@ memory_allocator memory_allocator_os_create(void)
     return result;
 }
 
-void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignment, code_location cl)
+void *memory_allocator_allocate_(memory_allocator a, uint64 requested_size, uint64 alignment, code_location cl)
 {
+    ASSERT_MSG(alignment && alignment <= 8 && (alignment & (alignment - 1)) == 0,
+        "Requested alignment (%llu) should only be 1, 2, 4, or 8.", alignment);
+
     void *result = NULL;
 
     memory_allocator_tag tag = *(memory_allocator_tag *) a;
-    if (tag == MemoryAllocator_Arena)
+    switch (tag)
     {
-        memory_allocator_arena *arena = (memory_allocator_arena *) a;
-        byte *base = ((byte *) arena) + arena->used;
-        uint64 padding = get_padding(base, alignment);
-
-        if (arena->used + size + padding <= arena->size)
+        case MemoryAllocator_Arena:
         {
-            arena->used += (size + padding);
-            result = base + padding;
+            memory_allocator_arena *arena = (memory_allocator_arena *) a;
+            byte *base = ((byte *) arena) + arena->used;
+            uint64 padding = get_padding(base, alignment);
+
+            // @note: avoid overflow.
+            uint64 remaining = arena->size - arena->used;
+            if (padding <= remaining && requested_size <= remaining - padding)
+            {
+                arena->used += (requested_size + padding);
+                result = base + padding;
+#ifdef MEMORY_DEBUG_ENABLED
+            printf("Allocator '%s': allocated %llu bytes from '%s()' (%s:%u)\n",
+                arena->name, requested_size, cl.function, cl.filename, cl.line);
+#endif
+            }
         }
+        break;
+
+        case MemoryAllocator_Malloc:
+        {
+            result = malloc(requested_size);
 #ifdef MEMORY_DEBUG_ENABLED
-        printf("Allocator '%s': allocated %llu bytes from '%s()' (%s:%u)\n",
-            arena->name, size, cl.function, cl.filename, cl.line);
+            if (result)
+            {
+                printf("Allocator 'malloc': allocated %llu bytes from '%s()' (%s:%u)\n",
+                    requested_size, cl.function, cl.filename, cl.line);
+            }
 #endif
-    }
-    else if (tag == MemoryAllocator_Malloc)
-    {
-        result = malloc(size);
-#ifdef MEMORY_DEBUG_ENABLED
-        printf("Allocator 'malloc': allocated %llu bytes from '%s()' (%s:%u)\n",
-            size, cl.function, cl.filename, cl.line);
-#endif
-    }
-    else
-    {
-        ASSERT_MSG(false, "Failed memory_allocator_allocate_ for MemoryAllocator_Invalid");
+        }
+        break;
+
+        case MemoryAllocator_OS:
+            // @todo: mmap / VirtualAlloc
+            ASSERT_MSG(false, "Failed memory_allocator_allocate_ for MemoryAllocator_OS");
+        break;
+
+        default:
+            ASSERT_MSG(false, "Allocate is called for unknown memory allocator type.");
     }
 
     return result;
@@ -102,16 +126,28 @@ void *memory_allocator_allocate_(memory_allocator a, uint64 size, uint64 alignme
 void *memory_allocator_allocate(memory_allocator a, uint64 size, uint64 alignment, code_location cl)
 {
     void *result = memory_allocator_allocate_(a, size, alignment, cl);
-    memset(result, 0, size);
+    if (result) memset(result, 0, size);
     return result;
 }
 
 void memory_allocator_deallocate(memory_allocator a, void *memory, code_location cl)
 {
     memory_allocator_tag tag = *(memory_allocator_tag *) a;
-    if (tag == MemoryAllocator_Malloc)
+    switch (tag)
     {
-        free(memory);
+        case MemoryAllocator_Arena: // Do nothing
+        break;
+
+        case MemoryAllocator_Malloc:
+            free(memory);
+        break;
+
+        case MemoryAllocator_OS:
+            // @todo: munmap
+        break;
+
+        default:
+            ASSERT_MSG(false, "Deallocate called for unknown memory allocator type.");
     }
 }
 
