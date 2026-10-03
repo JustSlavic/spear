@@ -412,6 +412,11 @@ void spear_engine_init_graphics(spear_engine *engine)
         engine->text_buffer.vertex_count = 0;
         engine->text_buffer.element_count = 0;
     }
+
+    {
+        // Prepare framebuffer to draw from light source perspective
+        engine->light_source_view_framebuffer = renderer_framebuffer_create(1600, 900);
+    }
 }
 
 void spear_engine_create_meshes(spear_engine *engine)

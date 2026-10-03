@@ -49,6 +49,13 @@ typedef struct
     uint32 id;
 } gpu_texture;
 
+typedef struct
+{
+    uint32 framebuffer_id;
+    uint32 color_texture_id;
+    uint32 depth_stencil_id;
+} gpu_framebuffer;
+
 typedef struct renderer
 {
     matrix4 view_matrix;
@@ -68,6 +75,8 @@ void render_vertex_buffer_layout_push(vertex_buffer_layout *layout, uint32 eleme
 gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh);
 gpu_shader render_compile_shaders(char const *vs_code, char const *fs_code);
 gpu_texture load_texture(bitmap bitmap);
+
+gpu_framebuffer renderer_framebuffer_create(int width, int height);
 
 void render_shader_uniform_int(gpu_shader shader, char const *name, int32 n);
 void render_shader_uniform_float(gpu_shader shader, char const *name, float);
