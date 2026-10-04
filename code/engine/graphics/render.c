@@ -239,6 +239,7 @@ gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)
         glGenVertexArrays(1, &vao_id);
         glBindVertexArray(vao_id);
         glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 
         uint32 attrib_index;
         usize offset = 0;
