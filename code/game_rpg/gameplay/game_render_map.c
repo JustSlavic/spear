@@ -61,7 +61,7 @@ void game_render_draw_map(context *ctx, game_state *gs, spear_input *input)
                 color.rgb = vector3_create(0.1f, 0.2f, 0.6f);
             }
 
-            context_render_command_push_cube(ctx, RenderCommand_DrawShader_Ground,
+            context_render_command_push_cube(ctx, RenderCommand_DrawShader_Phong,
                 vector3_create((float) i, (float) j, (float) k),
                 vector3_create(0.45f, 0.45f, 0.45f),
                 color);

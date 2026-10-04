@@ -436,7 +436,6 @@ void spear_engine_compile_shaders(spear_engine *engine)
 {
     engine->shader_single_color = render_compile_shaders(vs_single_color, fs_pass_color);
     engine->shader_textured = render_compile_shaders(vs_textured, fs_textured);
-    engine->shader_ground = render_compile_shaders(vs_ground, fs_pass_color);
     engine->shader_framebuffer = render_compile_shaders(vs_framebuffer, fs_framebuffer);
     engine->shader_text = render_compile_shaders(vs_text, fs_text);
     engine->shader_phong = render_compile_shaders(vs_phong, fs_phong);
@@ -562,7 +561,6 @@ static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command
                  cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
                  engine->mesh_cube;
     gpu_shader s = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
-                   cmd.mesh_shader_tag == RenderCommand_DrawShader_Ground ? engine->shader_ground :
                    cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
                    engine->shader_single_color;
 

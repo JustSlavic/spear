@@ -60,7 +60,6 @@ typedef struct
 
     gpu_shader shader_single_color;
     gpu_shader shader_textured;
-    gpu_shader shader_ground;
     gpu_shader shader_framebuffer;
     gpu_shader shader_text;
     gpu_shader shader_phong;

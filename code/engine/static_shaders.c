@@ -66,27 +66,6 @@ GLSL(
     }
 );
 
-static char const *vs_ground =
-GLSL_VERSION
-GLSL(
-    layout (location = 0) in vec3 vertex_position;
-
-    out vec4 fragment_color;
-
-    uniform mat4 u_model;
-    uniform mat4 u_view;
-    uniform mat4 u_projection;
-    uniform vec4 u_color;
-
-    void main()
-    {
-        float z = clamp(vertex_position.z + 0.5, 0.0, 1.0);
-
-        fragment_color = u_color * z;
-        gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
-    }
-);
-
 static char const *vs_framebuffer =
 GLSL_VERSION
 GLSL(
@@ -186,17 +165,19 @@ GLSL(
 
     void main()
     {
-        float light_strength = 0.5f;
+        float light_strength = 1.0f;
         vec3 light_position = vec3(10.f, 10.f, 10.f);
         vec3 light_direction = normalize(light_position - fragment_position);
 
-        float ambient_light = 0.05f;
+        float ambient_light = 0.25f;
         vec3 ambient_color = ambient_light * fragment_color.rgb;
 
         float diffuse_light = light_strength * max(dot(normalize(fragment_normal), light_direction), 0.0);
         vec3 diffuse_color = diffuse_light * fragment_color.rgb;
 
-        result_color = vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
+        // Temporarily disable the gamma correction, because colors look washed out because of that.
+        // @todo: research more about it, why it is needed, when it is needed, how to do it correctly.
+        result_color = vec4(ambient_color + diffuse_color, fragment_color.a); // vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
     }
 );
 
