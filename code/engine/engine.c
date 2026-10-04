@@ -415,7 +415,38 @@ void spear_engine_init_graphics(spear_engine *engine)
 
     {
         // Prepare framebuffer to draw from light source perspective
-        engine->light_framebuffer = renderer_framebuffer_create(1600, 900);
+        int32 width = 1600;
+        int32 height = 900;
+        engine->light_framebuffer = renderer_framebuffer_create(width, height);
+        engine->light_viewport = render_viewport_create(width, height, 16.f / 9.f);
+    }
+
+    {
+        int32 width = 1024;
+        int32 height = 1024;
+        float32 aspect_ratio = (float32) width / (float32) height;
+        engine->depth_buffer_viewport = render_viewport_create(width, height, aspect_ratio);
+
+        uint32 framebuffer_id = 0;
+        glGenFramebuffers(1, &framebuffer_id);
+
+        uint32 texture_id = 0;
+        glGenTextures(1, &texture_id);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture_id, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        engine->depth_buffer.framebuffer_id = framebuffer_id;
+        engine->depth_buffer.color_texture_id = texture_id;
     }
 }
 
@@ -439,6 +470,7 @@ void spear_engine_compile_shaders(spear_engine *engine)
     engine->shader_framebuffer = render_compile_shaders(vs_framebuffer, fs_framebuffer);
     engine->shader_text = render_compile_shaders(vs_text, fs_text);
     engine->shader_phong = render_compile_shaders(vs_phong, fs_phong);
+    engine->shader_depth_map = render_compile_shaders(vs_depth_map, fs_depth_map);
     engine->shader_sun = render_compile_shaders(vs_sun, fs_sun);
     engine->shader_ui_frame = render_compile_shaders(vs_frame, fs_pass_color);
 }
@@ -733,23 +765,34 @@ void spear_engine_draw_scene(spear_engine *engine)
 
 void spear_engine_game_render(spear_engine *engine)
 {
-#if 1
-    gpu_framebuffer fb = engine->light_framebuffer;
-    glBindFramebuffer(GL_FRAMEBUFFER, fb.framebuffer_id);
-    glViewport(fb.viewport.offset_x, fb.viewport.offset_y,
-        fb.viewport.width, fb.viewport.height);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+    if (1)
     {
+        // Render to depth buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, engine->depth_buffer.framebuffer_id);
+        glViewport(
+            engine->depth_buffer_viewport.offset_x,
+            engine->depth_buffer_viewport.offset_y,
+            engine->depth_buffer_viewport.width,
+            engine->depth_buffer_viewport.height);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // Setup projection and view matrices
         light_source_info *light_info = &engine->game_context.light_source;
-        renderer_setup_camera(&engine->renderer,
+        matrix4 projection_matrix = make_orthographic_matrix(10.f, 10.f,
+            10.f, 20.f);
+        matrix4 view_matrix = make_lookat_matrix_from_camera(
             light_info->position,
             vector3_sub(vector3_create(0.f, 0.f, 0.f), light_info->position),
             vector3_create(0.f, 0.f, 1.f));
 
-        // Draw only meshes
+        // Setup shader
+        gpu_shader shader = engine->shader_depth_map;
+        glUseProgram(shader.id);
+        render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
+        render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
+
+        // Draw scene
         uint render_command_index;
         for (render_command_index = 0;
              render_command_index < engine->game_context.render_commands_count;
@@ -760,7 +803,27 @@ void spear_engine_game_render(spear_engine *engine)
             {
                 case RenderCommand_DrawMesh:
                 {
-                    spear_engine_draw_mesh(engine, cmd);
+                    matrix4 model_translate = matrix4_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z);
+                    matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
+                    matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
+
+                    gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
+                                    cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
+                                    cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
+                                    engine->mesh_cube;
+
+                    render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+
+                    glBindVertexArray(mesh.vao);
+                    if (mesh.element_count > 0)
+                    {
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+                        glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
+                    }
+                    else
+                    {
+                        glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                    }
                 }
                 break;
 
@@ -777,17 +840,99 @@ void spear_engine_game_render(spear_engine *engine)
         }
     }
 
-#endif
+    if (1)
+    {
+        // Draw the scene to the framebuffer
+        gpu_framebuffer fb = engine->light_framebuffer;
+        glBindFramebuffer(GL_FRAMEBUFFER, fb.framebuffer_id);
+        glViewport(engine->light_viewport.offset_x, engine->light_viewport.offset_y,
+            engine->light_viewport.width, engine->light_viewport.height);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-#if 1
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
-        engine->viewport.width, engine->viewport.height);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    spear_engine_draw_scene(engine);
-#endif
+        {
+            // Draw meshes for casting shadows
+            matrix4 projection_matrix = make_projection_matrix_fov(
+                engine->fov,
+                engine->aspect_ratio,
+                engine->near_clip_distance,
+                engine->far_clip_distance);
+
+            light_source_info *light_info = &engine->game_context.light_source;
+            matrix4 view_matrix = make_lookat_matrix_from_camera(
+                light_info->position,
+                vector3_sub(vector3_create(0.f, 0.f, 0.f), light_info->position),
+                vector3_create(0.f, 0.f, 1.f));
+
+            // Draw only meshes
+            uint render_command_index;
+            for (render_command_index = 0;
+                 render_command_index < engine->game_context.render_commands_count;
+                 render_command_index++)
+            {
+                render_command cmd = engine->game_context.render_commands[render_command_index];
+                switch (cmd.tag)
+                {
+                    case RenderCommand_DrawMesh:
+                    {
+                        matrix4 model_translate = matrix4_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z);
+                        matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
+                        matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
+
+                        gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
+                                        cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
+                                        cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
+                                        engine->mesh_cube;
+                        gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
+                                            cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
+                                            engine->shader_single_color;
+
+                        glUseProgram(shader.id);
+
+                        render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+                        render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
+                        render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
+                        render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+
+                        glBindVertexArray(mesh.vao);
+                        if (mesh.element_count > 0)
+                        {
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+                            glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
+                        }
+                        else
+                        {
+                            glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                        }
+                    }
+                    break;
+
+                    case RenderCommand_SetupCamera:
+                    case RenderCommand_Wireframe:
+                    case RenderCommand_DrawUi:
+                    case RenderCommand_UiText:
+                    break;
+
+                    case RenderCommand_Invalid:
+                        ASSERT_MSG(0, "Engine: RenderCommand_Invalid (= 0) in the command queue.\n");
+                    break;
+                }
+            }
+        }
+    }
+
+    if (1)
+    {
+        // Draw the regular scene
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
+            engine->viewport.width, engine->viewport.height);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        spear_engine_draw_scene(engine);
+    }
 
     // Draw framebuffer contents on top of everything
     if (1)
@@ -805,9 +950,37 @@ void spear_engine_game_render(spear_engine *engine)
 
         glUseProgram(engine->shader_framebuffer.id);
         render_shader_uniform_int(engine->shader_framebuffer, "u_framebuffer", 0);
+        render_shader_uniform_int(engine->shader_framebuffer, "u_is_depth", 0);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, engine->light_framebuffer.color_texture_id);
+
+        glBindVertexArray(engine->mesh_square_uv.vao);
+        glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
+
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    // Draw depth map contents on top of everything
+    if (1)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(
+            engine->viewport.offset_x + engine->viewport.width * 0.5f,
+            engine->viewport.offset_y,
+            engine->viewport.width * 0.5f,
+            engine->viewport.height * 0.5f);
+
+        // glClearColor(0.f, 0.f, 0.f, 0.f);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+
+        glUseProgram(engine->shader_framebuffer.id);
+        render_shader_uniform_int(engine->shader_framebuffer, "u_framebuffer", 0);
+        render_shader_uniform_int(engine->shader_framebuffer, "u_is_depth", 1);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
 
         glBindVertexArray(engine->mesh_square_uv.vao);
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);

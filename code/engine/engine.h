@@ -46,6 +46,9 @@ typedef struct
 
     gpu_mesh text_buffer;
     gpu_framebuffer light_framebuffer;
+    viewport light_viewport;
+    gpu_framebuffer depth_buffer;
+    viewport depth_buffer_viewport;
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;
@@ -63,6 +66,7 @@ typedef struct
     gpu_shader shader_framebuffer;
     gpu_shader shader_text;
     gpu_shader shader_phong;
+    gpu_shader shader_depth_map;
     gpu_shader shader_sun;
     gpu_shader shader_ui_frame;
 

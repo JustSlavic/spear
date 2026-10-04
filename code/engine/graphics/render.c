@@ -9,20 +9,20 @@
 #endif
 
 
-// static matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
-// {
-//     matrix4 result = {};
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f)
+{
+    matrix4 result = {};
 
-//     result._11 = 2.0f * n / w;
-//     result._22 = 2.0f * n / h;
-//     result._33 = -(f + n) / (f - n);
-//     result._34 = -2.0f * f * n / (f - n);
-//     result._43 = -1.0f;
+    result._11 = 2.0f * n / w;
+    result._22 = 2.0f * n / h;
+    result._33 = -(f + n) / (f - n);
+    result._34 = -2.0f * f * n / (f - n);
+    result._43 = -1.0f;
 
-//     return result;
-// }
+    return result;
+}
 
-static matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f)
 {
     //     w/2
     //   +-----+
@@ -46,33 +46,33 @@ static matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, flo
     return result;
 }
 
-// static matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
-// {
-//     matrix4 result = {};
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f)
+{
+    matrix4 result = {};
 
-//     result._11 = 2.0f / w;
-//     result._22 = 2.0f / h;
-//     result._33 = -2.0f / (f - n);
-//     result._34 = -(f + n) / (f - n);
-//     result._44 = 1.0f;
+    result._11 = 2.0f / w;
+    result._22 = 2.0f / h;
+    result._33 = -2.0f / (f - n);
+    result._34 = -(f + n) / (f - n);
+    result._44 = 1.0f;
 
-//     return result;
-// }
+    return result;
+}
 
-// static matrix4 make_orthographic_matrix_ratio(float32 aspect_ratio, float32 n, float32 f)
-// {
-//     matrix4 result = {};
+matrix4 make_orthographic_matrix_ratio(float32 aspect_ratio, float32 n, float32 f)
+{
+    matrix4 result = {};
 
-//     result._11 = 1.0f;
-//     result._22 = 1.0f * aspect_ratio;
-//     result._33 = -2.0f / (f - n);
-//     result._34 = -(f + n) / (f - n);
-//     result._44 = 1.0f;
+    result._11 = 1.0f;
+    result._22 = 1.0f * aspect_ratio;
+    result._33 = -2.0f / (f - n);
+    result._34 = -(f + n) / (f - n);
+    result._44 = 1.0f;
 
-//     return result;
-// }
+    return result;
+}
 
-static matrix4 make_lookat_matrix_from_camera(vector3 p, vector3 forward, vector3 up)
+matrix4 make_lookat_matrix_from_camera(vector3 p, vector3 forward, vector3 up)
 {
     vector3 f = vector3_normalize(forward);
     vector3 s = vector3_normalize(vector3_cross(f, up));
@@ -87,20 +87,20 @@ static matrix4 make_lookat_matrix_from_camera(vector3 p, vector3 forward, vector
     return result;
 }
 
-// static matrix4 make_lookat_matrix_at(vector3 eye, vector3 at, vector3 up)
-// {
-//     vector3 f = vector3_normalize(sub3f(at, eye));
-//     vector3 s = vector3_normalize(vector3_cross(f, up));
-//     vector3 u = vector3_cross(s, f);
+matrix4 make_lookat_matrix_at(vector3 eye, vector3 at, vector3 up)
+{
+    vector3 f = vector3_normalize(vector3_sub(at, eye));
+    vector3 s = vector3_normalize(vector3_cross(f, up));
+    vector3 u = vector3_cross(s, f);
 
-//     matrix4 result = {};
-//     result._1 = v4f( s.x,  s.y,  s.z, -vector3_dot(s, eye));
-//     result._2 = v4f( u.x,  u.y,  u.z, -vector3_dot(u, eye));
-//     result._3 = v4f(-f.x, -f.y, -f.z,  vector3_dot(f, eye));
-//     result._4 = v4f(   0,    0,    0,            1.f);
+    matrix4 result = {};
+    result._1 = vector4_create( s.x,  s.y,  s.z, -vector3_dot(s, eye));
+    result._2 = vector4_create( u.x,  u.y,  u.z, -vector3_dot(u, eye));
+    result._3 = vector4_create(-f.x, -f.y, -f.z,  vector3_dot(f, eye));
+    result._4 = vector4_create(   0,    0,    0,            1.f);
 
-//     return result;
-// }
+    return result;
+}
 
 void renderer_init_api(renderer *r)
 {
@@ -433,7 +433,6 @@ gpu_framebuffer renderer_framebuffer_create(int width, int height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    result.viewport = render_viewport_create(width, height, (float) width / (float) height);
     result.framebuffer_id = framebuffer_id;
     result.color_texture_id = color_texture_id;
     result.depth_stencil_id = render_buffer_id;

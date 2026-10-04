@@ -88,10 +88,19 @@ GLSL(
     out vec4 result_color;
 
     uniform sampler2D u_framebuffer;
+    uniform bool u_is_depth;
 
     void main()
     {
-        result_color = texture(u_framebuffer, uv_coordinates);
+        if (u_is_depth)
+        {
+            float depth = texture(u_framebuffer, uv_coordinates).r;
+            result_color = vec4(vec3(depth), 1.f);
+        }
+        else
+        {
+            result_color = texture(u_framebuffer, uv_coordinates);
+        }
     }
 );
 
@@ -244,5 +253,29 @@ GLSL(
         // We should subtract the displacement to follow the rule written above
         p -= displacement;
         gl_Position = p;
+    }
+);
+
+static char const *vs_depth_map =
+GLSL_VERSION
+GLSL(
+    layout (location = 0) in vec3 vertex_position;
+
+    uniform mat4 u_model;
+    uniform mat4 u_view;
+    uniform mat4 u_projection;
+
+    void main()
+    {
+        gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.f);
+    }
+);
+
+static char const *fs_depth_map =
+GLSL_VERSION
+GLSL(
+    void main()
+    {
+        // gl_FragDepth = gl_FragCoord.z;
     }
 );

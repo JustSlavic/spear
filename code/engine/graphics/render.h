@@ -5,6 +5,13 @@
 #include <corelibs/math.h>
 
 
+matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
+matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);
+matrix4 make_orthographic_matrix(float32 w, float32 h, float32 n, float32 f);
+matrix4 make_orthographic_matrix_ratio(float32 aspect_ratio, float32 n, float32 f);
+matrix4 make_lookat_matrix_from_camera(vector3 p, vector3 forward, vector3 up);
+matrix4 make_lookat_matrix_at(vector3 eye, vector3 at, vector3 up);
+
 typedef struct
 {
     int32 offset_x;
@@ -51,7 +58,6 @@ typedef struct
 
 typedef struct
 {
-    viewport viewport;
     uint32 framebuffer_id;
     uint32 color_texture_id;
     uint32 depth_stencil_id;
