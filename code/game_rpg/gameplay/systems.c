@@ -35,6 +35,7 @@ void game_update_stage(context *ctx, game_state *gs, spear_input *input)
 void game_render_stage(context *ctx, game_state *gs, spear_input *input)
 {
     game_camera_setup(ctx, gs, input);
+    game_light_source_setup(ctx, gs, input);
     game_render_draw_map(ctx, gs, input);
     game_render_projectiles(ctx, gs, input);
     game_render_pointer_intersection(ctx, gs, input);

@@ -89,7 +89,12 @@ typedef struct render_command
     };
 } render_command;
 
-typedef struct context
+typedef struct
+{
+    vector3 position;
+} light_source_info;
+
+typedef struct
 {
     memory_allocator temporary_allocator;
 
@@ -98,6 +103,8 @@ typedef struct context
 
     render_command render_commands[256];
     uint32 render_commands_count;
+
+    light_source_info light_source;
 
     float32 near_clip_distance;
     float32 near_clip_width;

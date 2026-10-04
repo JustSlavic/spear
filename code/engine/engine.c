@@ -549,7 +549,7 @@ void spear_engine_game_sound(spear_engine *engine, spear_sound_output_buffer *ou
     spear_audio_mix(&engine->audio, output);
 }
 
-static void spear_engine_draw_mesh_internal(spear_engine *engine, render_command cmd)
+static void spear_engine_draw_mesh(spear_engine *engine, render_command cmd)
 {
     matrix4 model =
         matrix4_mul(
@@ -708,7 +708,7 @@ void spear_engine_draw_scene(spear_engine *engine)
 
             case RenderCommand_DrawMesh:
             {
-                spear_engine_draw_mesh_internal(engine, cmd);
+                spear_engine_draw_mesh(engine, cmd);
             }
             break;
 
@@ -737,11 +737,46 @@ void spear_engine_game_render(spear_engine *engine)
     gpu_framebuffer fb = engine->light_framebuffer;
     glBindFramebuffer(GL_FRAMEBUFFER, fb.framebuffer_id);
     glViewport(fb.viewport.offset_x, fb.viewport.offset_y,
-        fb.viewport.width * 0.5f, fb.viewport.height * 0.5f);
+        fb.viewport.width, fb.viewport.height);
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    spear_engine_draw_scene(engine);
+
+    {
+        light_source_info *light_info = &engine->game_context.light_source;
+        renderer_setup_camera(&engine->renderer,
+            light_info->position,
+            vector3_sub(vector3_create(0.f, 0.f, 0.f), light_info->position),
+            vector3_create(0.f, 0.f, 1.f));
+
+        // Draw only meshes
+        uint render_command_index;
+        for (render_command_index = 0;
+             render_command_index < engine->game_context.render_commands_count;
+             render_command_index++)
+        {
+            render_command cmd = engine->game_context.render_commands[render_command_index];
+            switch (cmd.tag)
+            {
+                case RenderCommand_DrawMesh:
+                {
+                    spear_engine_draw_mesh(engine, cmd);
+                }
+                break;
+
+                case RenderCommand_SetupCamera:
+                case RenderCommand_Wireframe:
+                case RenderCommand_DrawUi:
+                case RenderCommand_UiText:
+                break;
+
+                case RenderCommand_Invalid:
+                    ASSERT_MSG(0, "Engine: RenderCommand_Invalid (= 0) in the command queue.\n");
+                break;
+            }
+        }
+    }
+
 #endif
 
 #if 1
@@ -758,8 +793,11 @@ void spear_engine_game_render(spear_engine *engine)
     if (1)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
-            engine->viewport.width, engine->viewport.height);
+        glViewport(
+            engine->viewport.offset_x + engine->viewport.width * 0.5f,
+            engine->viewport.offset_y + engine->viewport.height * 0.5f,
+            engine->viewport.width * 0.5f,
+            engine->viewport.height * 0.5f);
 
         // glClearColor(0.f, 0.f, 0.f, 0.f);
         // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
