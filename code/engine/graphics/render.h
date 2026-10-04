@@ -51,10 +51,17 @@ typedef struct
 
 typedef struct
 {
+    viewport viewport;
     uint32 framebuffer_id;
     uint32 color_texture_id;
     uint32 depth_stencil_id;
 } gpu_framebuffer;
+
+typedef struct
+{
+    viewport viewport;
+    gpu_framebuffer framebuffer;
+} render_target;
 
 typedef struct renderer
 {
@@ -77,6 +84,8 @@ gpu_shader render_compile_shaders(char const *vs_code, char const *fs_code);
 gpu_texture load_texture(bitmap bitmap);
 
 gpu_framebuffer renderer_framebuffer_create(int width, int height);
+
+void renderer_render_target_apply(renderer *r, render_target *target);
 
 void render_shader_uniform_int(gpu_shader shader, char const *name, int32 n);
 void render_shader_uniform_float(gpu_shader shader, char const *name, float);

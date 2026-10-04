@@ -415,7 +415,7 @@ void spear_engine_init_graphics(spear_engine *engine)
 
     {
         // Prepare framebuffer to draw from light source perspective
-        engine->light_source_view_framebuffer = renderer_framebuffer_create(1600, 900);
+        engine->light_framebuffer = renderer_framebuffer_create(1600, 900);
     }
 }
 
@@ -673,12 +673,8 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
     }
 }
 
-void spear_engine_game_render(spear_engine *engine)
+void spear_engine_draw_scene(spear_engine *engine)
 {
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     uint render_command_index;
     for (render_command_index = 0;
          render_command_index < engine->game_context.render_commands_count;
@@ -691,7 +687,7 @@ void spear_engine_game_render(spear_engine *engine)
             {
                 renderer_setup_camera(&engine->renderer,
                     cmd.camera_position, cmd.camera_forward, cmd.camera_up);
-#if 1
+#if 0
                 // Draw background color, so it's easier to see the viewport inside a bigger window.
                 glDisable(GL_DEPTH_TEST);
                 renderer_draw_mesh_ui(&engine->renderer,
@@ -733,11 +729,57 @@ void spear_engine_game_render(spear_engine *engine)
             break;
         }
     }
-    engine->game_context.render_commands_count = 0;
+}
 
-
+void spear_engine_game_render(spear_engine *engine)
+{
+#if 1
+    gpu_framebuffer fb = engine->light_framebuffer;
+    glBindFramebuffer(GL_FRAMEBUFFER, fb.framebuffer_id);
+    glViewport(fb.viewport.offset_x, fb.viewport.offset_y,
+        fb.viewport.width * 0.5f, fb.viewport.height * 0.5f);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    spear_engine_draw_scene(engine);
+#endif
 
 #if 1
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
+        engine->viewport.width, engine->viewport.height);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    spear_engine_draw_scene(engine);
+#endif
+
+    // Draw framebuffer contents on top of everything
+    if (1)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
+            engine->viewport.width, engine->viewport.height);
+
+        // glClearColor(0.f, 0.f, 0.f, 0.f);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+
+        glUseProgram(engine->shader_framebuffer.id);
+        render_shader_uniform_int(engine->shader_framebuffer, "u_framebuffer", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, engine->light_framebuffer.color_texture_id);
+
+        glBindVertexArray(engine->mesh_square_uv.vao);
+        glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
+
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    engine->game_context.render_commands_count = 0;
+
+#if 0
     // Draw texture debug
     {
         matrix4 model = matrix4_translate(0.f, 0.f, 2.f);
@@ -755,7 +797,7 @@ void spear_engine_game_render(spear_engine *engine)
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
     }
 #endif
-#if 1
+#if 0
     // Draw audio debug
     // if (false)
     // {

@@ -433,9 +433,16 @@ gpu_framebuffer renderer_framebuffer_create(int width, int height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    result.viewport = render_viewport_create(width, height, (float) width / (float) height);
     result.framebuffer_id = framebuffer_id;
     result.color_texture_id = color_texture_id;
     result.depth_stencil_id = render_buffer_id;
     return result;
 }
 
+void renderer_render_target_apply(renderer *r, render_target *target)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, target->framebuffer.framebuffer_id);
+    glViewport(target->viewport.offset_x, target->viewport.offset_y,
+        target->viewport.width, target->viewport.height);
+}

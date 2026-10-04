@@ -45,7 +45,7 @@ typedef struct
     float far_clip_distance;
 
     gpu_mesh text_buffer;
-    gpu_framebuffer light_source_view_framebuffer;
+    gpu_framebuffer light_framebuffer;
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;

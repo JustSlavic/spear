@@ -70,15 +70,13 @@ static char const *vs_framebuffer =
 GLSL_VERSION
 GLSL(
     layout (location = 0) in vec3 vertex_position;
+    layout (location = 1) in vec2 vertex_uv;
 
     out vec2 uv_coordinates;
 
     void main()
     {
-        // NDC -> UV
-        // (-1,  1) -> (0, 1);    (1,  1) -> (0, 1);
-        // (-1, -1) -> (0, 0);    (1, -1) -> (1, 0);
-        uv_coordinates = vertex_position.xy * 0.5f + vec2(0.5f);
+        uv_coordinates = vertex_uv;
         gl_Position = vec4(vertex_position, 1.0);
     }
 );
