@@ -95,6 +95,7 @@ void renderer_render_target_apply(renderer *r, render_target *target);
 
 void render_shader_uniform_int(gpu_shader shader, char const *name, int32 n);
 void render_shader_uniform_float(gpu_shader shader, char const *name, float);
+void render_shader_uniform_vector3f(gpu_shader shader, char const *name, float *);
 void render_shader_uniform_vector4f(gpu_shader shader, char const *name, float *);
 void render_shader_uniform_matrix4f(gpu_shader shader, char const *name, float *);
 

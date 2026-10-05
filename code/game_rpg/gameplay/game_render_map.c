@@ -6,7 +6,7 @@ void game_render_entity(context *ctx, game_state *gs, entity_id eid)
                   : vector4_create(0.5f, 0.4f, 0.2f, 1.f);
     context_render_command_push_cube(ctx, RenderCommand_DrawShader_Phong,
         e->position,
-        vector3_create(0.45f, 0.45f, 0.45f),
+        vector3_create(0.5f, 0.5f, 0.5f),
         color);
 
     if (e->tag == Entity_Hero)
@@ -63,7 +63,7 @@ void game_render_draw_map(context *ctx, game_state *gs, spear_input *input)
 
             context_render_command_push_cube(ctx, RenderCommand_DrawShader_Phong,
                 vector3_create((float) i, (float) j, (float) k),
-                vector3_create(0.45f, 0.45f, 0.45f),
+                vector3_create(0.5f, 0.5f, 0.5f),
                 color);
         }
         if (cell->tag == GameMap_Entity)

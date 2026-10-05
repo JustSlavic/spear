@@ -705,64 +705,6 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
     }
 }
 
-void spear_engine_draw_scene(spear_engine *engine)
-{
-    uint render_command_index;
-    for (render_command_index = 0;
-         render_command_index < engine->game_context.render_commands_count;
-         render_command_index++)
-    {
-        render_command cmd = engine->game_context.render_commands[render_command_index];
-        switch (cmd.tag)
-        {
-            case RenderCommand_SetupCamera:
-            {
-                renderer_setup_camera(&engine->renderer,
-                    cmd.camera_position, cmd.camera_forward, cmd.camera_up);
-#if 0
-                // Draw background color, so it's easier to see the viewport inside a bigger window.
-                glDisable(GL_DEPTH_TEST);
-                renderer_draw_mesh_ui(&engine->renderer,
-                    matrix4_scale(10000.f, 10000.f, 1.f),
-                    engine->mesh_square,
-                    engine->shader_single_color,
-                    vector4_create(0.1f, 0.1f, 0.1f, 1.f));
-                glEnable(GL_DEPTH_TEST);
-#endif
-            }
-            break;
-
-            case RenderCommand_Wireframe:
-            {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            }
-            break;
-
-            case RenderCommand_DrawMesh:
-            {
-                spear_engine_draw_mesh(engine, cmd);
-            }
-            break;
-
-            case RenderCommand_DrawUi:
-            {
-                spear_engine_draw_ui(engine, cmd);
-            }
-            break;
-
-            case RenderCommand_UiText:
-            {
-                spear_engine_draw_ui_text(engine, cmd);
-            }
-            break;
-
-            case RenderCommand_Invalid:
-                ASSERT_MSG(0, "Engine: RenderCommand_Invalid (= 0) in the command queue.\n");
-            break;
-        }
-    }
-}
-
 void spear_engine_game_render(spear_engine *engine)
 {
     if (1)
@@ -776,14 +718,16 @@ void spear_engine_game_render(spear_engine *engine)
             engine->depth_buffer_viewport.height);
         glClear(GL_DEPTH_BUFFER_BIT);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
 
         // Setup projection and view matrices
         light_source_info *light_info = &engine->game_context.light_source;
         matrix4 projection_matrix = make_orthographic_matrix(10.f, 10.f,
-            10.f, 20.f);
+            1.f, 40.f);
         matrix4 view_matrix = make_lookat_matrix_from_camera(
             light_info->position,
-            vector3_sub(vector3_create(0.f, 0.f, 0.f), light_info->position),
+            vector3_sub(vector3_create(2.f, 2.f, 0.f), light_info->position),
             vector3_create(0.f, 0.f, 1.f));
 
         // Setup shader
@@ -838,6 +782,8 @@ void spear_engine_game_render(spear_engine *engine)
                 break;
             }
         }
+
+        glCullFace(GL_BACK);
     }
 
     if (1)
@@ -853,16 +799,18 @@ void spear_engine_game_render(spear_engine *engine)
 
         {
             // Draw meshes for casting shadows
-            matrix4 projection_matrix = make_projection_matrix_fov(
-                engine->fov,
-                engine->aspect_ratio,
-                engine->near_clip_distance,
-                engine->far_clip_distance);
+            // matrix4 projection_matrix = make_projection_matrix_fov(
+            //     engine->fov,
+            //     engine->aspect_ratio,
+            //     engine->near_clip_distance,
+            //     engine->far_clip_distance);
+            matrix4 projection_matrix = make_orthographic_matrix(10.f, 10.f,
+                1.f, 40.f);
 
             light_source_info *light_info = &engine->game_context.light_source;
             matrix4 view_matrix = make_lookat_matrix_from_camera(
                 light_info->position,
-                vector3_sub(vector3_create(0.f, 0.f, 0.f), light_info->position),
+                vector3_sub(vector3_create(2.f, 2.f, 0.f), light_info->position),
                 vector3_create(0.f, 0.f, 1.f));
 
             // Draw only meshes
@@ -894,6 +842,7 @@ void spear_engine_game_render(spear_engine *engine)
                         render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
                         render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
                         render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+                        render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
 
                         glBindVertexArray(mesh.vao);
                         if (mesh.element_count > 0)
@@ -931,7 +880,116 @@ void spear_engine_game_render(spear_engine *engine)
         glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        spear_engine_draw_scene(engine);
+
+        {
+            // Draw regular geometry with phong lighting and shadows
+            matrix4 projection_matrix = make_projection_matrix_fov(
+                engine->fov,
+                engine->aspect_ratio,
+                engine->near_clip_distance,
+                engine->far_clip_distance);
+
+            matrix4 view_matrix;
+
+            light_source_info *light_info = &engine->game_context.light_source;
+            matrix4 light_projection_matrix = make_orthographic_matrix(10.f, 10.f,
+                1.f, 40.f);
+            matrix4 light_view_matrix = make_lookat_matrix_from_camera(
+                light_info->position,
+                vector3_sub(vector3_create(2.f, 2.f, 0.f), light_info->position),
+                vector3_create(0.f, 0.f, 1.f));
+            matrix4 light_matrix = matrix4_mul(light_projection_matrix, light_view_matrix);
+
+            uint render_command_index;
+            for (render_command_index = 0;
+                 render_command_index < engine->game_context.render_commands_count;
+                 render_command_index++)
+            {
+                render_command cmd = engine->game_context.render_commands[render_command_index];
+                switch (cmd.tag)
+                {
+                    case RenderCommand_SetupCamera:
+                    {
+                        view_matrix = make_lookat_matrix_from_camera(
+                            cmd.camera_position, cmd.camera_forward, cmd.camera_up);
+#if 1
+                        // Draw background color, so it's easier to see the viewport inside a bigger window.
+                        glDisable(GL_DEPTH_TEST);
+                        renderer_draw_mesh_ui(&engine->renderer,
+                            matrix4_scale(10000.f, 10000.f, 1.f),
+                            engine->mesh_square,
+                            engine->shader_single_color,
+                            vector4_create(0.1f, 0.1f, 0.1f, 1.f));
+                        glEnable(GL_DEPTH_TEST);
+#endif
+                    }
+                    break;
+
+                    case RenderCommand_Wireframe:
+                    {
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    }
+                    break;
+
+                    case RenderCommand_DrawMesh:
+                    {
+                        matrix4 model_translate = matrix4_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z);
+                        matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
+                        matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
+
+                        gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
+                                        cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
+                                        cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
+                                        engine->mesh_cube;
+                        gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
+                                            cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
+                                            engine->shader_single_color;
+
+                        glUseProgram(shader.id);
+
+                        render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+                        render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
+                        render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
+                        render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+
+                        render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
+                        render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
+                        render_shader_uniform_int(shader, "u_depth_map", 0);
+
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
+
+                        glBindVertexArray(mesh.vao);
+                        if (mesh.element_count > 0)
+                        {
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+                            glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
+                        }
+                        else
+                        {
+                            glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                        }
+                    }
+                    break;
+
+                    case RenderCommand_DrawUi:
+                    {
+                        // spear_engine_draw_ui(engine, cmd);
+                    }
+                    break;
+
+                    case RenderCommand_UiText:
+                    {
+                        // spear_engine_draw_ui_text(engine, cmd);
+                    }
+                    break;
+
+                    case RenderCommand_Invalid:
+                        ASSERT_MSG(0, "Engine: RenderCommand_Invalid (= 0) in the command queue.\n");
+                    break;
+                }
+            }
+        }
     }
 
     // Draw framebuffer contents on top of everything

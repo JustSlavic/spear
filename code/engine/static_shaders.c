@@ -147,17 +147,21 @@ GLSL(
     out vec4 fragment_color;
     out vec3 fragment_position;
     out vec3 fragment_normal;
+    out vec4 fragment_position_in_light_space;
 
     uniform mat4 u_model;
     uniform mat4 u_view;
     uniform mat4 u_projection;
     uniform vec4 u_color;
 
+    uniform mat4 u_light_matrix;
+
     void main()
     {
         fragment_color = u_color;
         fragment_position = (u_model * vec4(vertex_position, 1.0)).xyz;
         fragment_normal = mat3(transpose(inverse(u_model))) * vertex_normal;
+        fragment_position_in_light_space = u_light_matrix * u_model * vec4(vertex_position, 1.0);
         gl_Position = u_projection * u_view * u_model * vec4(vertex_position, 1.0);
     }
 );
@@ -168,13 +172,24 @@ GLSL(
     in vec4 fragment_color;
     in vec3 fragment_position;
     in vec3 fragment_normal;
+    in vec4 fragment_position_in_light_space;
     out vec4 result_color;
+
+    uniform sampler2D u_depth_map;
+    uniform vec3 u_light_position;
+
+    float shadow_factor()
+    {
+        vec3 ndc_position = fragment_position_in_light_space.xyz / fragment_position_in_light_space.w;
+        vec3 uv_position = ndc_position * 0.5f + 0.5f;
+        float closest_distance = texture(u_depth_map, uv_position.xy).r;
+        return (uv_position.z > closest_distance) ? 0.0 : 1.0;
+    }
 
     void main()
     {
         float light_strength = 1.0f;
-        vec3 light_position = vec3(10.f, 10.f, 10.f);
-        vec3 light_direction = normalize(light_position - fragment_position);
+        vec3 light_direction = normalize(u_light_position - fragment_position);
 
         float ambient_light = 0.25f;
         vec3 ambient_color = ambient_light * fragment_color.rgb;
@@ -184,7 +199,7 @@ GLSL(
 
         // Temporarily disable the gamma correction, because colors look washed out because of that.
         // @todo: research more about it, why it is needed, when it is needed, how to do it correctly.
-        result_color = vec4(ambient_color + diffuse_color, fragment_color.a); // vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
+        result_color = vec4(ambient_color + shadow_factor() * diffuse_color, fragment_color.a); // vec4(pow(ambient_color + diffuse_color, vec3(1/2.2)), fragment_color.a);
     }
 );
 
