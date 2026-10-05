@@ -107,12 +107,12 @@ cpu_mesh mesh_cube_create(void)
     int i = 0;
 #define V(value) vbo_data[i++] = (value);
     V(-a) V( a) V(-a)  V( 0) V( 0) V(-1)
-    V(-a) V(-a) V(-a)  V( 0) V( 0) V(-1)
     V( a) V(-a) V(-a)  V( 0) V( 0) V(-1)
+    V(-a) V(-a) V(-a)  V( 0) V( 0) V(-1)
 
     V( a) V(-a) V(-a)  V( 0) V( 0) V(-1)
-    V( a) V( a) V(-a)  V( 0) V( 0) V(-1)
     V(-a) V( a) V(-a)  V( 0) V( 0) V(-1)
+    V( a) V( a) V(-a)  V( 0) V( 0) V(-1)
 
     V(-a) V(-a) V( a)  V( 0) V(-1) V( 0)
     V(-a) V(-a) V(-a)  V( 0) V(-1) V( 0)
@@ -123,12 +123,12 @@ cpu_mesh mesh_cube_create(void)
     V(-a) V(-a) V( a)  V( 0) V(-1) V( 0)
 
     V(-a) V(-a) V( a)  V(-1) V( 0) V( 0)
-    V(-a) V(-a) V(-a)  V(-1) V( 0) V( 0)
     V(-a) V( a) V(-a)  V(-1) V( 0) V( 0)
+    V(-a) V(-a) V(-a)  V(-1) V( 0) V( 0)
 
     V(-a) V( a) V(-a)  V(-1) V( 0) V( 0)
-    V(-a) V( a) V( a)  V(-1) V( 0) V( 0)
     V(-a) V(-a) V( a)  V(-1) V( 0) V( 0)
+    V(-a) V( a) V( a)  V(-1) V( 0) V( 0)
 
     V(-a) V( a) V( a)  V( 0) V( 0) V( 1)
     V(-a) V(-a) V( a)  V( 0) V( 0) V( 1)
@@ -139,12 +139,12 @@ cpu_mesh mesh_cube_create(void)
     V(-a) V( a) V( a)  V( 0) V( 0) V( 1)
 
     V(-a) V( a) V( a)  V( 0) V( 1) V( 0)
-    V(-a) V( a) V(-a)  V( 0) V( 1) V( 0)
     V( a) V( a) V(-a)  V( 0) V( 1) V( 0)
+    V(-a) V( a) V(-a)  V( 0) V( 1) V( 0)
 
     V( a) V( a) V(-a)  V( 0) V( 1) V( 0)
-    V( a) V( a) V( a)  V( 0) V( 1) V( 0)
     V(-a) V( a) V( a)  V( 0) V( 1) V( 0)
+    V( a) V( a) V( a)  V( 0) V( 1) V( 0)
 
     V( a) V(-a) V( a)  V( 1) V( 0) V( 0)
     V( a) V(-a) V(-a)  V( 1) V( 0) V( 0)
