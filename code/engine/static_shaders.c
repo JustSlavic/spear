@@ -169,6 +169,8 @@ GLSL(
 static char const *fs_phong =
 GLSL_VERSION
 GLSL(
+    #define SHADOWS_USE_PCF true
+
     in vec4 fragment_color;
     in vec3 fragment_position;
     in vec3 fragment_normal;
@@ -182,8 +184,24 @@ GLSL(
     {
         vec3 ndc_position = fragment_position_in_light_space.xyz / fragment_position_in_light_space.w;
         vec3 uv_position = ndc_position * 0.5f + 0.5f;
+
+#if SHADOWS_USE_PCF
+        vec2 texel_size = 1.f / textureSize(u_depth_map, 0);
+        float average_shadow = 0.f;
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                float closest_distance = texture(u_depth_map, uv_position.xy + vec2(x, y) * texel_size).r;
+                average_shadow += uv_position.z > closest_distance ? 0.f : 1.f;
+            }
+        }
+        average_shadow /= 9.f;
+        return average_shadow;
+#else
         float closest_distance = texture(u_depth_map, uv_position.xy).r;
         return (uv_position.z > closest_distance) ? 0.0 : 1.0;
+#endif
     }
 
     void main()

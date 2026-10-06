@@ -695,6 +695,8 @@ void spear_engine_draw_ui_text(spear_engine *engine, render_command cmd)
         render_shader_uniform_matrix4f(*shader, "u_projection", (float *) &projection);
         render_shader_uniform_vector4f(*shader, "u_color", (float *) &color);
 
+        render_shader_uniform_int(*shader, "u_texture0", 0);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, engine->font_atlas.id);
 
@@ -719,7 +721,7 @@ void spear_engine_game_render(spear_engine *engine)
         glClear(GL_DEPTH_BUFFER_BIT);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glCullFace(GL_FRONT);
 
         // Setup projection and view matrices
         light_source_info *light_info = &engine->game_context.light_source;
@@ -812,6 +814,7 @@ void spear_engine_game_render(spear_engine *engine)
                 light_info->position,
                 vector3_sub(vector3_create(2.f, 2.f, 0.f), light_info->position),
                 vector3_create(0.f, 0.f, 1.f));
+            matrix4 light_matrix = matrix4_mul(projection_matrix, view_matrix);
 
             // Draw only meshes
             uint render_command_index;
@@ -842,7 +845,14 @@ void spear_engine_game_render(spear_engine *engine)
                         render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
                         render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
                         render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+
+                        render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
                         render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
+                        render_shader_uniform_int(shader, "u_depth_map", 0);
+
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
+
 
                         glBindVertexArray(mesh.vao);
                         if (mesh.element_count > 0)
@@ -1044,6 +1054,56 @@ void spear_engine_game_render(spear_engine *engine)
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
 
         glEnable(GL_DEPTH_TEST);
+    }
+
+    if (1)
+    {
+        // Draw UI on top of everything
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(engine->viewport.offset_x, engine->viewport.offset_y,
+            engine->viewport.width, engine->viewport.height);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_CULL_FACE);
+
+        {
+            uint render_command_index;
+            for (render_command_index = 0;
+                 render_command_index < engine->game_context.render_commands_count;
+                 render_command_index++)
+            {
+                render_command cmd = engine->game_context.render_commands[render_command_index];
+                switch (cmd.tag)
+                {
+                    case RenderCommand_SetupCamera:
+                    break;
+
+                    case RenderCommand_Wireframe:
+                    {
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    }
+                    break;
+
+                    case RenderCommand_DrawMesh:
+                    break;
+
+                    case RenderCommand_DrawUi:
+                    {
+                        spear_engine_draw_ui(engine, cmd);
+                    }
+                    break;
+
+                    case RenderCommand_UiText:
+                    {
+                        spear_engine_draw_ui_text(engine, cmd);
+                    }
+                    break;
+
+                    case RenderCommand_Invalid:
+                        ASSERT_MSG(0, "Engine: RenderCommand_Invalid (= 0) in the command queue.\n");
+                    break;
+                }
+            }
+        }
     }
 
     engine->game_context.render_commands_count = 0;

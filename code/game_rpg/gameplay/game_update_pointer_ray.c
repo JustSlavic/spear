@@ -52,7 +52,7 @@ void find_intersection_with_ground(context *ctx, game_state *gs, spear_input *in
         if (cell->tag == GameMap_Ground)
         {
             vector3 center = vector3_create((float) i, (float) j, (float) k);
-            float32 factor = 0.45f; // @todo: pull this from game state
+            float32 factor = 0.5f; // @todo: pull this from game state
             vector3 aabb_min = vector3_sub(center, vector3_create(factor, factor, factor));
             vector3 aabb_max = vector3_add(center, vector3_create(factor, factor, factor));
 
