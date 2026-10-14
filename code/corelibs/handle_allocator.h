@@ -11,6 +11,7 @@ typedef struct {
     uint32 mask;
     uint32 shift;
 
+    bool32 *alive;
     uint32 *generation;
     uint32 *free_ring;
     uint64 head;
