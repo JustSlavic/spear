@@ -568,6 +568,19 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input)
                 engine->running = false;
             break;
 
+            case EngineCommand_LoadMesh:
+                printf("    EngineCommand_LoadMesh;\n");
+            break;
+            case EngineCommand_LoadSound:
+                printf("    EngineCommand_LoadSound;\n");
+            break;
+            case EngineCommand_LoadShader:
+                printf("    EngineCommand_LoadShader;\n");
+            break;
+            case EngineCommand_LoadTexture:
+                printf("    EngineCommand_LoadTexture;\n");
+            break;
+
             case EngineCommand_Invalid:
             ASSERT_MSG(false, "Engine: EngineCommand_Invalid (= 0) in the command queue.\n");
             break;

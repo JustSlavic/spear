@@ -30,6 +30,17 @@ void game_update_stage(context *ctx, game_state *gs, spear_input *input)
     game_update_hero_move(ctx, gs, input);
     game_update_projectile_movement(ctx, gs, input);
     game_update_ui(ctx, gs, input);
+
+    entity *hero = get_hero(gs);
+    if (!handle_allocator_is_valid(&gs->mesh_pool, hero->mesh.handle))
+    {
+        hero->mesh = (mesh_handle){ .handle = handle_allocator_allocate(&gs->mesh_pool) };
+        engine_command cmd =
+        {
+            .tag = EngineCommand_LoadMesh,
+        };
+        context_engine_command_push(ctx, cmd);
+    }
 }
 
 void game_render_stage(context *ctx, game_state *gs, spear_input *input)

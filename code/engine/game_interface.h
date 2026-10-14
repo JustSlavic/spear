@@ -13,6 +13,10 @@ typedef enum engine_command_tag
     EngineCommand_Invalid = 0,
 
     EngineCommand_Exit,
+    EngineCommand_LoadMesh,
+    EngineCommand_LoadSound,
+    EngineCommand_LoadShader,
+    EngineCommand_LoadTexture,
 } engine_command_tag;
 
 typedef struct engine_command

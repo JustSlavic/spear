@@ -4,9 +4,11 @@
 #include <corelibs/base.h>
 #include <corelibs/math.h>
 #include <corelibs/memory/allocator.h>
+#include <corelibs/handle_allocator.h>
 #include <gamelibs/camera.h>
 #include <gamelibs/entity_manager.h>
 #include <gamelibs/ui.h>
+#include <gamelibs/resources.h>
 
 typedef enum
 {
@@ -45,6 +47,8 @@ typedef struct entity
     float32 move_animation_from_y;
     float32 move_animation_to_x;
     float32 move_animation_to_y;
+
+    mesh_handle mesh;
 
     ui_element ui;
     uint32 ui_id;
@@ -104,6 +108,11 @@ typedef struct
 typedef struct game_state
 {
     memory_allocator game_allocator;
+
+    handle_allocator mesh_pool;
+    handle_allocator sound_pool;
+    handle_allocator shader_pool;
+    handle_allocator texture_pool;
 
     event *events;
     uint32 event_count;

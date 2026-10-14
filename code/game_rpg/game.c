@@ -266,6 +266,35 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ctx->game_state = gs;
     gs->game_allocator = game_arena;
 
+    {
+        uint32 handle_allocator_buffer_size = 0;
+        void *handle_allocator_buffer = NULL;
+
+        // Mesh pool
+        handle_allocator_init(&gs->mesh_pool, 10, NULL, &handle_allocator_buffer_size);
+        handle_allocator_buffer = ALLOCATE_BUFFER(gs->game_allocator, handle_allocator_buffer_size);
+        printf("Mesh pool asked for %u bytes;\n", handle_allocator_buffer_size);
+        handle_allocator_init(&gs->mesh_pool, 10, handle_allocator_buffer, &handle_allocator_buffer_size);
+
+        // Sound pool
+        handle_allocator_init(&gs->sound_pool, 10, NULL, &handle_allocator_buffer_size);
+        handle_allocator_buffer = ALLOCATE_BUFFER(gs->game_allocator, handle_allocator_buffer_size);
+        printf("Sound pool asked for %u bytes;\n", handle_allocator_buffer_size);
+        handle_allocator_init(&gs->sound_pool, 10, handle_allocator_buffer, &handle_allocator_buffer_size);
+
+        // Shader pool
+        handle_allocator_init(&gs->shader_pool, 20, NULL, &handle_allocator_buffer_size);
+        handle_allocator_buffer = ALLOCATE_BUFFER(gs->game_allocator, handle_allocator_buffer_size);
+        printf("Shader pool asked for %u bytes;\n", handle_allocator_buffer_size);
+        handle_allocator_init(&gs->shader_pool, 20, handle_allocator_buffer, &handle_allocator_buffer_size);
+
+        // Texture pool
+        handle_allocator_init(&gs->texture_pool, 10, NULL, &handle_allocator_buffer_size);
+        handle_allocator_buffer = ALLOCATE_BUFFER(gs->game_allocator, handle_allocator_buffer_size);
+        printf("Texture pool asked for %u bytes;\n", handle_allocator_buffer_size);
+        handle_allocator_init(&gs->texture_pool, 10, handle_allocator_buffer, &handle_allocator_buffer_size);
+    }
+
     gs->event_count = 0;
     gs->event_capacity = 10;
     gs->events = ALLOCATE_ARRAY(game_arena, event, gs->event_capacity);
@@ -366,6 +395,7 @@ UPDATE_AND_RENDER_FUNCTION(context *ctx, memory_view game_memory, input *input)
 #include <corelibs/math.c>
 #include <corelibs/memory/allocator.c>
 #include <corelibs/collision.c>
+#include <corelibs/handle_allocator.c>
 
 #include <gamelibs/input.c>
 

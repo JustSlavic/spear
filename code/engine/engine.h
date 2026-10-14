@@ -5,11 +5,39 @@
 #include <corelibs/memory/allocator.h>
 #include <corelibs/platform.h>
 #include <corelibs/bitmap.h>
+
 #include <gamelibs/input.h>
+#include <gamelibs/resources.h>
+
 #include "graphics/render.h"
 #include "audio/audio.h"
 #include "game_interface.h"
 
+
+typedef struct
+{
+    mesh_handle handle;
+    gpu_mesh gpu;
+} mesh_resource;
+
+typedef struct
+{
+    sound_handle handle;
+    spear_audio_track track;
+} sound_resource;
+
+typedef struct
+{
+    shader_handle handle;
+    gpu_shader gpu;
+} shader_resource;
+
+typedef struct
+{
+    texture_handle handle;
+    bitmap image;
+    gpu_texture gpu;
+} texture_resource;
 
 typedef struct
 {
@@ -49,6 +77,11 @@ typedef struct
     viewport light_viewport;
     gpu_framebuffer depth_buffer;
     viewport depth_buffer_viewport;
+
+    mesh_resource *mesh_pool;
+    sound_resource *sound_pool;
+    shader_resource *shader_pool;
+    texture_resource *texture_pool;
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;
