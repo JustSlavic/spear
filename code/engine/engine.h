@@ -14,30 +14,56 @@
 #include "game_interface.h"
 
 
-typedef struct
-{
+typedef struct {
+    asset_status status;
     mesh_handle handle;
     gpu_mesh gpu;
-} mesh_resource;
+} asset_mesh;
 
-typedef struct
-{
+typedef struct {
+    asset_status status;
     sound_handle handle;
     spear_audio_track track;
-} sound_resource;
+} asset_sound;
 
-typedef struct
-{
+typedef struct {
+    asset_status status;
     shader_handle handle;
     gpu_shader gpu;
-} shader_resource;
+} asset_shader;
 
-typedef struct
-{
+typedef struct {
+    asset_status status;
     texture_handle handle;
     bitmap image;
     gpu_texture gpu;
-} texture_resource;
+} asset_texture;
+
+
+typedef struct {
+    asset_mesh *pool;
+    uint32 count;
+    uint32 capacity;
+} asset_pool_mesh;
+
+typedef struct {
+    asset_sound *pool;
+    uint32 count;
+    uint32 capacity;
+} asset_pool_sound;
+
+typedef struct {
+    asset_shader *pool;
+    uint32 count;
+    uint32 capacity;
+} asset_pool_shader;
+
+typedef struct {
+    asset_texture *pool;
+    uint32 count;
+    uint32 capacity;
+} asset_pool_texture;
+
 
 typedef struct
 {
@@ -78,15 +104,14 @@ typedef struct
     gpu_framebuffer depth_buffer;
     viewport depth_buffer_viewport;
 
-    mesh_resource *mesh_pool;
-    sound_resource *sound_pool;
-    shader_resource *shader_pool;
-    texture_resource *texture_pool;
+    asset_pool_mesh mesh_pool;
+    asset_pool_sound sound_pool;
+    asset_pool_shader shader_pool;
+    asset_pool_texture texture_pool;
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;
     gpu_mesh mesh_tetrahedron;
-    gpu_mesh mesh_cube;
     gpu_mesh mesh_octahedron;
     gpu_mesh mesh_icosahedron;
     gpu_mesh mesh_sphere;

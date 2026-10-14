@@ -4,7 +4,9 @@ void game_render_entity(context *ctx, game_state *gs, entity_id eid)
 
     vector4 color = (e->tag == Entity_Hero) ? vector4_create(0.7f, 0.7f, 0.7f, 1.f)
                   : vector4_create(0.5f, 0.4f, 0.2f, 1.f);
-    context_render_command_push_cube(ctx, RenderCommand_DrawShader_Phong,
+    context_command_render_mesh(ctx,
+        gs->mesh_cube,
+        (shader_handle){ .handle = 0 },
         e->position,
         vector3_create(0.5f, 0.5f, 0.5f),
         color);
@@ -61,7 +63,9 @@ void game_render_draw_map(context *ctx, game_state *gs, spear_input *input)
                 color.rgb = vector3_create(0.1f, 0.2f, 0.6f);
             }
 
-            context_render_command_push_cube(ctx, RenderCommand_DrawShader_Phong,
+            context_command_render_mesh(ctx,
+                gs->mesh_cube,
+                (shader_handle){ .handle = 0 },
                 vector3_create((float) i, (float) j, (float) k),
                 vector3_create(0.5f, 0.5f, 0.5f),
                 color);

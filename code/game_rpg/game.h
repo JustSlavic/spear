@@ -130,6 +130,8 @@ typedef struct game_state
     entity_id_array ui_hoverables;
     entity_id_array ui_clickables;
 
+    mesh_handle mesh_cube;
+
     bool is_wireframe;
     bool is_free_camera;
     vector3 camera_default_position;

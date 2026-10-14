@@ -32,6 +32,44 @@ typedef enum
     SpearLoadFile_DecodeFailed,
 } spear_load_file_result;
 
+
+static void
+spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view path)
+{
+    printf("    EngineCommand_LoadMesh(handle=%u; name=%s);\n", handle.handle, path.data);
+    if (string_view_equals_cstring(path, "generated/mesh_cube"))
+    {
+        if (engine->mesh_pool.count < engine->mesh_pool.capacity)
+        {
+            uint32 index = engine->mesh_pool.count;
+            asset_mesh *asset = engine->mesh_pool.pool + index;
+            asset->status = AssetStatus_Ready;
+            asset->handle = handle;
+            asset->gpu = render_load_mesh_to_gpu(mesh_cube_create());
+            printf("    Mesh loaded successfully\n");
+
+            engine->mesh_pool.count += 1;
+        }
+        return;
+    }
+}
+
+static asset_mesh *
+spear_engine_get_mesh(spear_engine *engine, mesh_handle handle)
+{
+    asset_mesh *result = NULL;
+    int index;
+    for (index = 0; index < engine->mesh_pool.count; index++)
+    {
+        asset_mesh *asset = engine->mesh_pool.pool + index;
+        if (asset->status == AssetStatus_Ready && asset->handle.handle == handle.handle)
+        {
+            result = asset;
+        }
+    }
+    return result;
+}
+
 static spear_load_file_result
 spear_engine_load_texture_file(spear_engine *engine,
                                char const *file_name,
@@ -359,6 +397,38 @@ void spear_engine_init(spear_engine *engine)
     engine->game_context.near_clip_width = engine->near_clip_width;
     engine->game_context.near_clip_height = engine->near_clip_height;
 
+    {
+        // Allocate mesh asset pool
+        uint32 capacity = 10;
+        engine->mesh_pool.pool = ALLOCATE_ARRAY(engine->allocator, asset_mesh, capacity);
+        engine->mesh_pool.count = 0;
+        engine->mesh_pool.capacity = capacity;
+    }
+
+    {
+        // Allocate sound asset pool
+        uint32 capacity = 10;
+        engine->sound_pool.pool = ALLOCATE_ARRAY(engine->allocator, asset_sound, capacity);
+        engine->sound_pool.count = 0;
+        engine->sound_pool.capacity = capacity;
+    }
+
+    {
+        // Allocate shader asset pool
+        uint32 capacity = 20;
+        engine->shader_pool.pool = ALLOCATE_ARRAY(engine->allocator, asset_shader, capacity);
+        engine->shader_pool.count = 0;
+        engine->shader_pool.capacity = capacity;
+    }
+
+    {
+        // Allocate texture asset pool
+        uint32 capacity = 10;
+        engine->texture_pool.pool = ALLOCATE_ARRAY(engine->allocator, asset_texture, capacity);
+        engine->texture_pool.count = 0;
+        engine->texture_pool.capacity = capacity;
+    }
+
     engine->renderer.view_matrix = matrix4_identity();
     renderer_setup_projection(&engine->renderer,
         engine->fov,
@@ -455,7 +525,6 @@ void spear_engine_create_meshes(spear_engine *engine)
     engine->mesh_square = render_load_mesh_to_gpu(mesh_square_create());
     engine->mesh_square_uv = render_load_mesh_to_gpu(mesh_square_create_uv());
     engine->mesh_tetrahedron = render_load_mesh_to_gpu(mesh_tetrahedron_create());
-    engine->mesh_cube = render_load_mesh_to_gpu(mesh_cube_create());
     engine->mesh_octahedron = render_load_mesh_to_gpu(mesh_octahedron_create());
     engine->mesh_icosahedron = render_load_mesh_to_gpu(mesh_icosahedron_create());
     engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
@@ -569,7 +638,7 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input)
             break;
 
             case EngineCommand_LoadMesh:
-                printf("    EngineCommand_LoadMesh;\n");
+                spear_engine_load_mesh(engine, cmd.load_mesh.handle, cmd.load_mesh.path);
             break;
             case EngineCommand_LoadSound:
                 printf("    EngineCommand_LoadSound;\n");
@@ -592,24 +661,6 @@ void spear_engine_game_update(spear_engine *engine, spear_input *input)
 void spear_engine_game_sound(spear_engine *engine, spear_sound_output_buffer *output)
 {
     spear_audio_mix(&engine->audio, output);
-}
-
-static void spear_engine_draw_mesh(spear_engine *engine, render_command cmd)
-{
-    matrix4 model =
-        matrix4_mul(
-            matrix4_translate(cmd.mesh_position.x, cmd.mesh_position.y, cmd.mesh_position.z),
-            matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z)
-        );
-    gpu_mesh m = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
-                 cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
-                 cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
-                 engine->mesh_cube;
-    gpu_shader s = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
-                   cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
-                   engine->shader_single_color;
-
-    renderer_draw_mesh(&engine->renderer, model, m, s, cmd.mesh_color);
 }
 
 static void spear_engine_draw_ui(spear_engine *engine, render_command cmd)
@@ -766,22 +817,21 @@ void spear_engine_game_render(spear_engine *engine)
                     matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
                     matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
 
-                    gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
-                                    cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
-                                    cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
-                                    engine->mesh_cube;
-
-                    render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
-
-                    glBindVertexArray(mesh.vao);
-                    if (mesh.element_count > 0)
+                    asset_mesh *mesh = spear_engine_get_mesh(engine, cmd.mesh);
+                    if (mesh)
                     {
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-                        glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
-                    }
-                    else
-                    {
-                        glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                        render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+
+                        glBindVertexArray(mesh->gpu.vao);
+                        if (mesh->gpu.element_count > 0)
+                        {
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->gpu.ibo);
+                            glDrawElements(GL_TRIANGLES, mesh->gpu.element_count, GL_UNSIGNED_INT, NULL);
+                        }
+                        else
+                        {
+                            glDrawArrays(GL_TRIANGLES, 0, mesh->gpu.vertex_count);
+                        }
                     }
                 }
                 break;
@@ -844,38 +894,38 @@ void spear_engine_game_render(spear_engine *engine)
                         matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
                         matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
 
-                        gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
-                                        cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
-                                        cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
-                                        engine->mesh_cube;
-                        gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
-                                            cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
-                                            engine->shader_single_color;
-
-                        glUseProgram(shader.id);
-
-                        render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
-                        render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
-                        render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
-                        render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
-
-                        render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
-                        render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
-                        render_shader_uniform_int(shader, "u_depth_map", 0);
-
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
-
-
-                        glBindVertexArray(mesh.vao);
-                        if (mesh.element_count > 0)
+                        asset_mesh *mesh = spear_engine_get_mesh(engine, cmd.mesh);
+                        if (mesh)
                         {
-                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-                            glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
-                        }
-                        else
-                        {
-                            glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                            gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
+                                                cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
+                                                engine->shader_single_color;
+
+                            glUseProgram(shader.id);
+
+                            render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+                            render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
+                            render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
+                            render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+
+                            render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
+                            render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
+                            render_shader_uniform_int(shader, "u_depth_map", 0);
+
+                            glActiveTexture(GL_TEXTURE0);
+                            glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
+
+
+                            glBindVertexArray(mesh->gpu.vao);
+                            if (mesh->gpu.element_count > 0)
+                            {
+                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->gpu.ibo);
+                                glDrawElements(GL_TRIANGLES, mesh->gpu.element_count, GL_UNSIGNED_INT, NULL);
+                            }
+                            else
+                            {
+                                glDrawArrays(GL_TRIANGLES, 0, mesh->gpu.vertex_count);
+                            }
                         }
                     }
                     break;
@@ -960,37 +1010,37 @@ void spear_engine_game_render(spear_engine *engine)
                         matrix4 model_scale = matrix4_scale(cmd.mesh_scale.x, cmd.mesh_scale.y, cmd.mesh_scale.z);
                         matrix4 model_matrix = matrix4_mul(model_translate, model_scale);
 
-                        gpu_mesh mesh = cmd.mesh_tag == RenderCommand_DrawMesh_Square ? engine->mesh_square :
-                                        cmd.mesh_tag == RenderCommand_DrawMesh_Cube ? engine->mesh_cube :
-                                        cmd.mesh_tag == RenderCommand_DrawMesh_Suzanne ? engine->mesh_suzanne :
-                                        engine->mesh_cube;
-                        gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
-                                            cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
-                                            engine->shader_single_color;
-
-                        glUseProgram(shader.id);
-
-                        render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
-                        render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
-                        render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
-                        render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
-
-                        render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
-                        render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
-                        render_shader_uniform_int(shader, "u_depth_map", 0);
-
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
-
-                        glBindVertexArray(mesh.vao);
-                        if (mesh.element_count > 0)
+                        asset_mesh *mesh = spear_engine_get_mesh(engine, cmd.mesh);
+                        if (mesh)
                         {
-                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-                            glDrawElements(GL_TRIANGLES, mesh.element_count, GL_UNSIGNED_INT, NULL);
-                        }
-                        else
-                        {
-                            glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+                            gpu_shader shader = cmd.mesh_shader_tag == RenderCommand_DrawShader_SingleColor ? engine->shader_single_color :
+                                                cmd.mesh_shader_tag == RenderCommand_DrawShader_Phong ? engine->shader_phong :
+                                                engine->shader_single_color;
+
+                            glUseProgram(shader.id);
+
+                            render_shader_uniform_matrix4f(shader, "u_model", (float32 *) &model_matrix);
+                            render_shader_uniform_matrix4f(shader, "u_view", (float32 *) &view_matrix);
+                            render_shader_uniform_matrix4f(shader, "u_projection", (float32 *) &projection_matrix);
+                            render_shader_uniform_vector4f(shader, "u_color", (float32 *) &cmd.mesh_color);
+
+                            render_shader_uniform_matrix4f(shader, "u_light_matrix", (float32 *) &light_matrix);
+                            render_shader_uniform_vector3f(shader, "u_light_position", (float32 *) &light_info->position);
+                            render_shader_uniform_int(shader, "u_depth_map", 0);
+
+                            glActiveTexture(GL_TEXTURE0);
+                            glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
+
+                            glBindVertexArray(mesh->gpu.vao);
+                            if (mesh->gpu.element_count > 0)
+                            {
+                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->gpu.ibo);
+                                glDrawElements(GL_TRIANGLES, mesh->gpu.element_count, GL_UNSIGNED_INT, NULL);
+                            }
+                            else
+                            {
+                                glDrawArrays(GL_TRIANGLES, 0, mesh->gpu.vertex_count);
+                            }
                         }
                     }
                     break;

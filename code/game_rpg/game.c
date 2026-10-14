@@ -5,6 +5,94 @@
 #include <stdio.h>
 
 
+mesh_handle asset_handle_create_mesh(game_state *gs)
+{
+    uint32 h = handle_allocator_allocate(&gs->mesh_pool);
+    mesh_handle result = { .handle = h };
+    return result;
+}
+
+mesh_handle load_mesh(context *ctx, game_state *gs, char const *path)
+{
+    mesh_handle handle = asset_handle_create_mesh(gs);
+    engine_command cmd =
+    {
+        .tag = EngineCommand_LoadMesh,
+        .load_mesh = {
+            .handle = handle,
+            .path = string_view_create_from_cstring(path),
+        },
+    };
+    context_engine_command_push(ctx, cmd);
+    return handle;
+}
+
+sound_handle asset_handle_create_sound(game_state *gs)
+{
+    uint32 h = handle_allocator_allocate(&gs->sound_pool);
+    sound_handle result = { .handle = h };
+    return result;
+}
+
+sound_handle load_sound(context *ctx, game_state *gs, char const *path)
+{
+    sound_handle handle = asset_handle_create_sound(gs);
+    engine_command cmd =
+    {
+        .tag = EngineCommand_LoadSound,
+        .load_sound = {
+            .handle = handle,
+            .path = string_view_create_from_cstring(path),
+        },
+    };
+    context_engine_command_push(ctx, cmd);
+    return handle;
+}
+
+shader_handle asset_handle_create_shader(game_state *gs)
+{
+    uint32 h = handle_allocator_allocate(&gs->shader_pool);
+    shader_handle result = { .handle = h };
+    return result;
+}
+
+shader_handle load_shader(context *ctx, game_state *gs, char const *path)
+{
+    shader_handle handle = asset_handle_create_shader(gs);
+    engine_command cmd =
+    {
+        .tag = EngineCommand_LoadShader,
+        .load_shader = {
+            .handle = handle,
+            .path = string_view_create_from_cstring(path),
+        },
+    };
+    context_engine_command_push(ctx, cmd);
+    return handle;
+}
+
+texture_handle asset_handle_create_texture(game_state *gs)
+{
+    uint32 h = handle_allocator_allocate(&gs->texture_pool);
+    texture_handle result = { .handle = h };
+    return result;
+}
+
+texture_handle load_texture(context *ctx, game_state *gs, char const *path)
+{
+    texture_handle handle = asset_handle_create_texture(gs);
+    engine_command cmd =
+    {
+        .tag = EngineCommand_LoadSound,
+        .load_texture = {
+            .handle = handle,
+            .path = string_view_create_from_cstring(path),
+        },
+    };
+    context_engine_command_push(ctx, cmd);
+    return handle;
+}
+
 void push_event(game_state *gs, event event)
 {
     ASSERT(gs->event_count < gs->event_capacity);
@@ -379,6 +467,8 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ui_clickable_push(gs, ui_C);
     ui_hoverable_push(gs, ui_D, -50, -50, 50, 50);
     ui_clickable_push(gs, ui_D);
+
+    gs->mesh_cube = load_mesh(ctx, gs, "generated/mesh_cube");
 
     game_entity_create_hero(gs, 3, 3);
 }

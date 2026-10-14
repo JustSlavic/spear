@@ -17,6 +17,19 @@ string_view string_view_create_from_cstring(char const *data)
     return result;
 }
 
+bool32 string_view_equals_cstring(string_view sv, const char *cstr)
+{
+    uint32 i;
+    for (i = 0; i < sv.size; ++i)
+    {
+        if (cstr[i] == '\0' || sv.data[i] != cstr[i])
+        {
+            return false;
+        }
+    }
+    return cstr[sv.size] == '\0';
+}
+
 string_view string_view_split_left(string_view *sv, char sep)
 {
     string_view result = {};

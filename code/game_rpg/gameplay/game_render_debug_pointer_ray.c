@@ -2,11 +2,12 @@ void game_render_pointer_intersection(context *ctx, game_state *gs, spear_input 
 {
     if (gs->intersected)
     {
-        context_render_command_push_cube(ctx,
-            RenderCommand_DrawShader_SingleColor,
-            gs->intersection,
-            vector3_create(0.1f, 0.1f, 0.1f),
-            vector4_create(0.8f, 0.2f, 0.8f, 1.f));
+        context_command_render_mesh(ctx,
+                gs->mesh_cube,
+                (shader_handle){ .handle = 0 },
+                gs->intersection,
+                vector3_create(0.1f, 0.1f, 0.1f),
+                vector4_create(0.8f, 0.2f, 0.8f, 1.f));
     }
 
     {

@@ -11,6 +11,7 @@ typedef struct {
 
 string_view string_view_create(char const *data, uint32 size);
 string_view string_view_create_from_cstring(char const *data);
+bool32 string_view_equals_cstring(string_view sv, const char *cstr);
 string_view string_view_split_left(string_view *sv, char sep);
 string_view string_view_split_right(string_view *sv, char sep);
 
