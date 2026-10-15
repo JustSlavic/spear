@@ -37,7 +37,41 @@ static void
 spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view path)
 {
     printf("    EngineCommand_LoadMesh(handle=%u; name=%s);\n", handle.handle, path.data);
+
+    bool use_generated_mesh = false;
+    cpu_mesh generated_mesh;
     if (string_view_equals_cstring(path, "generated/mesh_cube"))
+    {
+        generated_mesh = mesh_cube_create();
+        use_generated_mesh = true;
+    }
+    else if (string_view_equals_cstring(path, "generated/mesh_tetrahedron"))
+    {
+        generated_mesh = mesh_tetrahedron_create();
+        use_generated_mesh = true;
+    }
+    else if (string_view_equals_cstring(path, "generated/mesh_octahedron"))
+    {
+        generated_mesh = mesh_octahedron_create();
+        use_generated_mesh = true;
+    }
+    else if (string_view_equals_cstring(path, "generated/mesh_icosahedron"))
+    {
+        generated_mesh = mesh_icosahedron_create();
+        use_generated_mesh = true;
+    }
+    else if (string_view_equals_cstring(path, "generated/mesh_sphere"))
+    {
+        generated_mesh = mesh_sphere_create(10, 10);
+        use_generated_mesh = true;
+    }
+    else if (string_view_equals_cstring(path, "generated/mesh_ico_sphere"))
+    {
+        generated_mesh = mesh_ico_sphere_create(engine->allocator, engine->temporary);
+        use_generated_mesh = true;
+    }
+
+    if (use_generated_mesh)
     {
         if (engine->mesh_pool.count < engine->mesh_pool.capacity)
         {
@@ -45,8 +79,7 @@ spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view pat
             asset_mesh *asset = engine->mesh_pool.pool + index;
             asset->status = AssetStatus_Ready;
             asset->handle = handle;
-            asset->gpu = render_load_mesh_to_gpu(mesh_cube_create());
-            printf("    Mesh loaded successfully\n");
+            asset->gpu = render_load_mesh_to_gpu(generated_mesh);
 
             engine->mesh_pool.count += 1;
         }
@@ -524,10 +557,7 @@ void spear_engine_create_meshes(spear_engine *engine)
 {
     engine->mesh_square = render_load_mesh_to_gpu(mesh_square_create());
     engine->mesh_square_uv = render_load_mesh_to_gpu(mesh_square_create_uv());
-    engine->mesh_tetrahedron = render_load_mesh_to_gpu(mesh_tetrahedron_create());
-    engine->mesh_octahedron = render_load_mesh_to_gpu(mesh_octahedron_create());
-    engine->mesh_icosahedron = render_load_mesh_to_gpu(mesh_icosahedron_create());
-    engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
+    // engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
     engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
     engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
 }
@@ -1113,8 +1143,12 @@ void spear_engine_game_render(spear_engine *engine)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
 
+        GL_CHECK_ERRORS();
+
         glBindVertexArray(engine->mesh_square_uv.vao);
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
+
+        GL_CHECK_ERRORS();
 
         glEnable(GL_DEPTH_TEST);
     }

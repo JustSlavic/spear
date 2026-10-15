@@ -131,6 +131,11 @@ typedef struct game_state
     entity_id_array ui_clickables;
 
     mesh_handle mesh_cube;
+    mesh_handle mesh_tetrahedron;
+    mesh_handle mesh_octahedron;
+    mesh_handle mesh_icosahedron;
+    mesh_handle mesh_sphere;
+    mesh_handle mesh_ico_sphere;
 
     bool is_wireframe;
     bool is_free_camera;

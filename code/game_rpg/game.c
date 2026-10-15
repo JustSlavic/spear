@@ -469,6 +469,11 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ui_clickable_push(gs, ui_D);
 
     gs->mesh_cube = load_mesh(ctx, gs, "generated/mesh_cube");
+    gs->mesh_tetrahedron = load_mesh(ctx, gs, "generated/mesh_tetrahedron");
+    gs->mesh_octahedron = load_mesh(ctx, gs, "generated/mesh_octahedron");
+    gs->mesh_icosahedron = load_mesh(ctx, gs, "generated/mesh_icosahedron");
+    gs->mesh_sphere = load_mesh(ctx, gs, "generated/mesh_sphere");
+    gs->mesh_ico_sphere = load_mesh(ctx, gs, "generated/mesh_ico_sphere");
 
     game_entity_create_hero(gs, 3, 3);
 }

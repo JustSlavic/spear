@@ -111,9 +111,6 @@ typedef struct
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;
-    gpu_mesh mesh_tetrahedron;
-    gpu_mesh mesh_octahedron;
-    gpu_mesh mesh_icosahedron;
     gpu_mesh mesh_sphere;
     gpu_mesh mesh_ico_sphere;
     gpu_mesh mesh_ui_frame;
