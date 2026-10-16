@@ -146,6 +146,16 @@ typedef struct { char const *function; char const *filename; uint line; } code_l
 FORCE_INLINE uint32 uint32_change_endianness(uint32 n) { return ((n & 0xFF000000) >> 24) | ((n & 0x00FF0000) >>  8) | ((n & 0x0000FF00) <<  8) | ((n & 0x000000FF) << 24); }
 FORCE_INLINE uint32 uint32_next_power_of_two(uint32 n) { n |= (n >> 16); n |= (n >> 8); n |= (n >> 4); n |= (n >> 2); n |= (n >> 1); n += 1; return n; }
 
+FORCE_INLINE uint32 hash_murmur3_uint32(uint32 n)
+{
+    /* Finalization of the Murmur3 hash, should be enough to hash 32-bit value. */
+    n ^= n >> 16; n *= 0x85ebca6b;
+    n ^= n >> 13; n *= 0xc2b2ae35;
+    n ^= n >> 16; return n;
+}
+
+uint32 hash_uint32(uint32 n) { return hash_murmur3_uint32(n); }
+
 FORCE_INLINE bool is_near_zero_eps(float x, float eps) { return (-eps < x && x < eps); }
 FORCE_INLINE bool is_near_zero(float x) { return is_near_zero_eps(x, EPSILON); }
 

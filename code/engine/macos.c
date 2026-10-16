@@ -6,6 +6,7 @@
 #include <engine/audio/audio.c>
 
 #include <gamelibs/input.c>
+#include <gamelibs/asset.c>
 
 #include <corelibs/math.c>
 #include <corelibs/collision.c>

@@ -75,6 +75,7 @@ spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view pat
     {
         if (engine->mesh_pool.count < engine->mesh_pool.capacity)
         {
+            // First, create asset in the array.
             uint32 index = engine->mesh_pool.count;
             asset_mesh *asset = engine->mesh_pool.pool + index;
             asset->status = AssetStatus_Ready;
@@ -82,7 +83,11 @@ spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view pat
             asset->gpu = render_load_mesh_to_gpu(generated_mesh);
 
             engine->mesh_pool.count += 1;
+
+            // Second, insert the index value to the hash table
+            asset_hash_table_insert(&engine->mesh_pool.ht, handle.handle, index);
         }
+
         return;
     }
 }
@@ -91,14 +96,12 @@ static asset_mesh *
 spear_engine_get_mesh(spear_engine *engine, mesh_handle handle)
 {
     asset_mesh *result = NULL;
-    int index;
-    for (index = 0; index < engine->mesh_pool.count; index++)
+
+    uint32 index = -1;
+    asset_hash_table_result ht_result = asset_hash_table_get(&engine->mesh_pool.ht, handle.handle, &index);
+    if (ht_result == AssetHashTableResult_Success)
     {
-        asset_mesh *asset = engine->mesh_pool.pool + index;
-        if (asset->status == AssetStatus_Ready && asset->handle.handle == handle.handle)
-        {
-            result = asset;
-        }
+        result = engine->mesh_pool.pool + index;
     }
     return result;
 }
@@ -432,10 +435,12 @@ void spear_engine_init(spear_engine *engine)
 
     {
         // Allocate mesh asset pool
-        uint32 capacity = 10;
+        uint32 capacity = 32;
         engine->mesh_pool.pool = ALLOCATE_ARRAY(engine->allocator, asset_mesh, capacity);
         engine->mesh_pool.count = 0;
         engine->mesh_pool.capacity = capacity;
+
+        asset_hash_table_init(&engine->mesh_pool.ht, engine->allocator, 1 << 5);
     }
 
     {
@@ -1143,12 +1148,8 @@ void spear_engine_game_render(spear_engine *engine)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, engine->depth_buffer.color_texture_id);
 
-        GL_CHECK_ERRORS();
-
         glBindVertexArray(engine->mesh_square_uv.vao);
         glDrawElements(GL_TRIANGLES, engine->mesh_square_uv.element_count, GL_UNSIGNED_INT, NULL);
-
-        GL_CHECK_ERRORS();
 
         glEnable(GL_DEPTH_TEST);
     }

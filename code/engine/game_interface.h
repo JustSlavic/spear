@@ -6,7 +6,7 @@
 #include <corelibs/string_view.h>
 #include <gamelibs/input.h>
 #include <gamelibs/camera.h>
-#include <gamelibs/resources.h>
+#include <gamelibs/asset.h>
 
 
 typedef enum engine_command_tag

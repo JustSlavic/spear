@@ -7,7 +7,7 @@
 #include <corelibs/bitmap.h>
 
 #include <gamelibs/input.h>
-#include <gamelibs/resources.h>
+#include <gamelibs/asset.h>
 
 #include "graphics/render.h"
 #include "audio/audio.h"
@@ -39,11 +39,15 @@ typedef struct {
     gpu_texture gpu;
 } asset_texture;
 
-
 typedef struct {
+    // @todo: replace custom pool with pool allocator,
+    // or maybe even heap allocator, because the size
+    // of actual asset data is variable length.
     asset_mesh *pool;
     uint32 count;
     uint32 capacity;
+
+    asset_hash_table ht;
 } asset_pool_mesh;
 
 typedef struct {

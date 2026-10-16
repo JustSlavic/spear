@@ -8,7 +8,7 @@
 #include <gamelibs/camera.h>
 #include <gamelibs/entity_manager.h>
 #include <gamelibs/ui.h>
-#include <gamelibs/resources.h>
+#include <gamelibs/asset.h>
 
 typedef enum
 {
