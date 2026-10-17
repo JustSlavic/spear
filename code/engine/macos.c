@@ -1,7 +1,6 @@
 #include <engine/main_sdl_opengl.c>
 #include <engine/engine.c>
 #include <engine/graphics/render.c>
-#include <engine/graphics/opengl_mac.c>
 #include <engine/primitive_meshes.c>
 #include <engine/audio/audio.c>
 

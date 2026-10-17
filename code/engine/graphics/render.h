@@ -4,6 +4,14 @@
 #include <corelibs/base.h>
 #include <corelibs/math.h>
 
+#if OS_WINDOWS
+#include "opengl_win32.h"
+#endif
+
+#if OS_MAC
+#include "opengl_mac.h"
+#endif
+
 
 matrix4 make_projection_matrix(float32 w, float32 h, float32 n, float32 f);
 matrix4 make_projection_matrix_fov(float32 fov, float32 aspect_ratio, float32 n, float32 f);

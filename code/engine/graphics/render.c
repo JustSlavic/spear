@@ -1,11 +1,11 @@
 #include "render.h"
 
 #if OS_WINDOWS
-#include "opengl_win32.h"
+#include "opengl_win32.c"
 #endif
 
 #if OS_MAC
-#include "opengl.h"
+#include "opengl_mac.c"
 #endif
 
 
