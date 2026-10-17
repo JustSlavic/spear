@@ -12,7 +12,7 @@ mesh_handle asset_handle_create_mesh(game_state *gs)
     return result;
 }
 
-mesh_handle load_mesh(context *ctx, game_state *gs, char const *path)
+mesh_handle send_command_load_mesh(context *ctx, game_state *gs, char const *path)
 {
     mesh_handle handle = asset_handle_create_mesh(gs);
     engine_command cmd =
@@ -34,7 +34,7 @@ sound_handle asset_handle_create_sound(game_state *gs)
     return result;
 }
 
-sound_handle load_sound(context *ctx, game_state *gs, char const *path)
+sound_handle send_command_load_sound(context *ctx, game_state *gs, char const *path)
 {
     sound_handle handle = asset_handle_create_sound(gs);
     engine_command cmd =
@@ -56,7 +56,7 @@ shader_handle asset_handle_create_shader(game_state *gs)
     return result;
 }
 
-shader_handle load_shader(context *ctx, game_state *gs, char const *path)
+shader_handle send_command_load_shader(context *ctx, game_state *gs, char const *path)
 {
     shader_handle handle = asset_handle_create_shader(gs);
     engine_command cmd =
@@ -78,7 +78,7 @@ texture_handle asset_handle_create_texture(game_state *gs)
     return result;
 }
 
-texture_handle load_texture(context *ctx, game_state *gs, char const *path)
+texture_handle send_command_load_texture(context *ctx, game_state *gs, char const *path)
 {
     texture_handle handle = asset_handle_create_texture(gs);
     engine_command cmd =
@@ -468,12 +468,12 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     ui_hoverable_push(gs, ui_D, -50, -50, 50, 50);
     ui_clickable_push(gs, ui_D);
 
-    gs->mesh_cube = load_mesh(ctx, gs, "generated/mesh_cube");
-    gs->mesh_tetrahedron = load_mesh(ctx, gs, "generated/mesh_tetrahedron");
-    gs->mesh_octahedron = load_mesh(ctx, gs, "generated/mesh_octahedron");
-    gs->mesh_icosahedron = load_mesh(ctx, gs, "generated/mesh_icosahedron");
-    gs->mesh_sphere = load_mesh(ctx, gs, "generated/mesh_sphere");
-    gs->mesh_ico_sphere = load_mesh(ctx, gs, "generated/mesh_ico_sphere");
+    gs->mesh_cube = send_command_load_mesh(ctx, gs, "generated/mesh_cube");
+    gs->mesh_tetrahedron = send_command_load_mesh(ctx, gs, "generated/mesh_tetrahedron");
+    gs->mesh_octahedron = send_command_load_mesh(ctx, gs, "generated/mesh_octahedron");
+    gs->mesh_icosahedron = send_command_load_mesh(ctx, gs, "generated/mesh_icosahedron");
+    gs->mesh_sphere = send_command_load_mesh(ctx, gs, "generated/mesh_sphere");
+    gs->mesh_ico_sphere = send_command_load_mesh(ctx, gs, "generated/mesh_ico_sphere");
 
     game_entity_create_hero(gs, 3, 3);
 }
