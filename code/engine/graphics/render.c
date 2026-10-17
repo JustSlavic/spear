@@ -219,6 +219,14 @@ void render_vertex_buffer_layout_push(vertex_buffer_layout *layout, uint32 eleme
 
 gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)
 {
+    bool32 mesh_with_indexes = memory_view_is_valid(mesh.ibo);
+
+    uint32 vao_id = 0;
+    {
+        glGenVertexArrays(1, &vao_id);
+        glBindVertexArray(vao_id);
+    }
+
     uint32 vbo_id = 0;
     {
         glGenBuffers(1, &vbo_id);
@@ -227,20 +235,15 @@ gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)
     }
 
     uint32 ibo_id = 0;
-    if (memory_view_is_valid(mesh.ibo))
+    if (mesh_with_indexes)
     {
         glGenBuffers(1, &ibo_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo.size, mesh.ibo.data, GL_STATIC_DRAW);
     }
 
-    uint32 vao_id = 0;
+    // Vertex Attrib Array
     {
-        glGenVertexArrays(1, &vao_id);
-        glBindVertexArray(vao_id);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
-
         uint32 attrib_index;
         usize offset = 0;
         for (attrib_index = 0; attrib_index < mesh.vbl.count; attrib_index++)
@@ -266,7 +269,7 @@ gpu_mesh render_load_mesh_to_gpu(cpu_mesh mesh)
     result.ibo = ibo_id;
     result.vao = vao_id;
     result.vertex_count = (uint32) (mesh.vbo.size / mesh.vbl.stride);
-    result.element_count = (uint32) (mesh.ibo.size / sizeof(uint32));
+    result.element_count = mesh_with_indexes ? (uint32) (mesh.ibo.size / sizeof(uint32)) : 0;
 
     printf("Mesh loaded: (vao = %d, vbo = %d, ibo = %d, vertex_count = %d, element_count = %d)\n", vao_id, vbo_id, ibo_id, result.vertex_count, result.element_count);
     return result;
