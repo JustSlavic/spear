@@ -22,6 +22,39 @@
 #endif
 
 
+#if DEBUG
+const char* gl_get_error_string(GLenum err) {
+    switch (err) {
+        case GL_NO_ERROR:          return "GL_NO_ERROR";
+        case GL_INVALID_ENUM:      return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE:     return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+        case GL_STACK_OVERFLOW:    return "GL_STACK_OVERFLOW";
+        case GL_STACK_UNDERFLOW:   return "GL_STACK_UNDERFLOW";
+        case GL_OUT_OF_MEMORY:     return "GL_OUT_OF_MEMORY";
+        case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        default:                   return "UNKNOWN_ERROR";
+    }
+}
+
+#define GL_CHECK_ERRORS(...) do { \
+    int err = glGetError();   \
+    if (err) {  \
+        do { \
+            char buf[1024]; \
+            int n = snprintf(buf, 1024, "[%s:%d] Error: ", __FILE__, __LINE__); \
+            n += snprintf(buf + n, 1024 - n, "%s\n", gl_get_error_string(err)); \
+            snprintf(buf + n + 1, 1024 - n, "\n"); \
+            OutputDebugStringA(buf); \
+        } while (false); \
+        ASSERT_FAIL("OpenGL ERROR"); \
+    } \
+} while (0)
+#else
+#define GL_CHECK_ERRORS(...)
+#endif
+
+
 typedef enum
 {
     SpearLoadFile_Success,
