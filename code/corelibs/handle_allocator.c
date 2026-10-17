@@ -23,7 +23,7 @@ void handle_allocator_init(handle_allocator *ha, uint32 capacity, byte *memory, 
         ha->capacity = capacity;
 
         ha->mask = uint32_next_power_of_two(capacity | 1) - 1;
-        ha->shift = __builtin_popcount(ha->mask);
+        ha->shift = set_bits_count(ha->mask);
 
         ha->alive = (bool32 *) (memory);
         ha->generation = (uint32 *) (memory + alive_array_size);

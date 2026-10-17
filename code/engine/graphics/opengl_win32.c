@@ -2,9 +2,6 @@
 
 
 glActiveTextureType *glActiveTexture;
-// glGenFramebuffersType *glGenFramebuffers;
-// glBindFramebufferType *glBindFramebuffer;
-// glFramebufferTexture2DType *glFramebufferTexture2D;
 // glBlitFramebufferType *glBlitFramebuffer;
 // glClearBufferivType *glClearBufferiv;
 glGenBuffersType *glGenBuffers;
@@ -35,11 +32,14 @@ glUniform3fType *glUniform3f;
 glUniform4fType *glUniform4f;
 glUniformMatrix4fvType *glUniformMatrix4fv;
 // glTexImage2DMultisampleType *glTexImage2DMultisample;
-// glGenRenderbuffersType *glGenRenderbuffers;
-// glBindRenderbufferType *glBindRenderbuffer;
-// glRenderbufferStorageType *glRenderbufferStorage;
-// glFramebufferRenderbufferType *glFramebufferRenderbuffer;
-// glCheckFramebufferStatusType *glCheckFramebufferStatus;
+glGenFramebuffersType *glGenFramebuffers;
+glBindFramebufferType *glBindFramebuffer;
+glFramebufferTexture2DType *glFramebufferTexture2D;
+glGenRenderbuffersType *glGenRenderbuffers;
+glBindRenderbufferType *glBindRenderbuffer;
+glRenderbufferStorageType *glRenderbufferStorage;
+glFramebufferRenderbufferType *glFramebufferRenderbuffer;
+glCheckFramebufferStatusType *glCheckFramebufferStatus;
 
 bool opengl_init(void)
 {
@@ -71,6 +71,14 @@ bool opengl_init(void)
     WGL_GET_PROC_ADDRESS(glUniform4f);
     WGL_GET_PROC_ADDRESS(glUniformMatrix4fv);
     WGL_GET_PROC_ADDRESS(glActiveTexture);
+    WGL_GET_PROC_ADDRESS(glGenFramebuffers);
+    WGL_GET_PROC_ADDRESS(glBindFramebuffer);
+    WGL_GET_PROC_ADDRESS(glFramebufferTexture2D);
+    WGL_GET_PROC_ADDRESS(glGenRenderbuffers);
+    WGL_GET_PROC_ADDRESS(glBindRenderbuffer);
+    WGL_GET_PROC_ADDRESS(glRenderbufferStorage);
+    WGL_GET_PROC_ADDRESS(glFramebufferRenderbuffer);
+    WGL_GET_PROC_ADDRESS(glCheckFramebufferStatus);
 
 #undef WGL_GET_PROC_ADDRESS
     return true;

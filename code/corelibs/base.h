@@ -54,6 +54,9 @@
     #else
     #define DEBUG_BREAK
     #endif // DEBUG
+
+    #include <intrin.h>
+    #define set_bits_count __popcnt
 #endif
 
 #if COMPILER_CLANG
@@ -78,6 +81,8 @@
     #endif // DEBUG
 
     #define INFINITY (1.f / 0.f)
+    #define set_bits_count __builtin_popcount
+    #define NULL                 (void *) 0
 #endif
 
 typedef uint32               uint;
@@ -91,7 +96,6 @@ typedef uint64               uintptr;
 typedef int16                sound_sample_t;
 #define true                 1
 #define false                0
-#define NULL                 (void *) 0
 
 #if OS_MAC || OS_WINDOWS
     typedef int64 timestamp_t;
@@ -104,7 +108,17 @@ typedef int16                sound_sample_t;
 #define static_assert(expression, message) _Static_assert((expression), (message))
 #define alignof(T) _Alignof(T)
 
+#if OS_WINDOWS
+#define REPORT_ERROR(...) do { \
+    char spear_report_error_buffer__[1024]; \
+    int spear_report_error_bytes_written__ = snprintf(spear_report_error_buffer__, 1024, "[%s:%d] Error: ", __FILE__, __LINE__); \
+    spear_report_error_bytes_written__ += snprintf(spear_report_error_buffer__ + spear_report_error_bytes_written__, 1024 - spear_report_error_bytes_written__, __VA_ARGS__); \
+    snprintf(spear_report_error_buffer__ + spear_report_error_bytes_written__ + 1, 1024 - spear_report_error_bytes_written__, "\n"); \
+    OutputDebugStringA(spear_report_error_buffer__); \
+ } while (false)
+#else
 #define REPORT_ERROR(...) do { fprintf(stderr, "[%s:%d] Error: ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); fflush(stderr); } while(false)
+#endif
 
 #if DEBUG
 #define ASSERT(COND)             do {if (!(COND)) { DEBUG_BREAK(); }} while(false)

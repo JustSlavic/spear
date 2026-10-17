@@ -100,7 +100,7 @@ asset_hash_table_result asset_hash_table_remove(asset_hash_table *ht, uint32 key
             if ((next_hash & (ht->capacity - 1)) == next_index)
             {
                 ht->ks[index] = INVALID_ASSET_HANDLE;
-                ht->vs[index] = -1;
+                ht->vs[index] = 0xffffffff;
                 ht->count -= 1;
                 return AssetHashTableResult_Success;
             }

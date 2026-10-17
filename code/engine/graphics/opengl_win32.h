@@ -73,9 +73,6 @@
 // typedef float32 GLclampf;
 
 typedef void glActiveTextureType(GLenum texture);
-// typedef void glGenFramebuffersType(isize n, uint32 *ids);
-// typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
-// typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
 // typedef void glBlitFramebufferType(int32 srcX0, int32 srcY0, int32 srcX1, int32 srcY1, int32 dstX0, int32 dstY0, int32 dstX1, int32 dstY1, GLbitfield mask, GLenum filter);
 // typedef void glClearBufferivType(GLenum buffer, int32 drawbuffer, int32 const *value);
 typedef void glGenBuffersType(isize n, uint32 *buffers);
@@ -106,16 +103,16 @@ typedef void glUniform3fType(int32 location, float32 v0, float32 v1, float32 v2)
 typedef void glUniform4fType(int32 location, float32 v0, float32 v1, float32 v2, float32 v3);
 typedef void glUniformMatrix4fvType(int32 location, size_t count, bool transpose, float32 const *value);
 // typedef void glTexImage2DMultisampleType(GLenum target, isize samples, GLenum internalformat, isize width, isize height, GLboolean fixedsamplelocations);
-// typedef void glGenRenderbuffersType(isize n, uint32 *renderbuffers);
-// typedef void glBindRenderbufferType(GLenum target, uint32 renderbuffer);
-// typedef void glRenderbufferStorageType(GLenum target, GLenum internalformat, isize width, isize height);
-// typedef void glFramebufferRenderbufferType(GLenum target, GLenum attachment, GLenum renderbuffertarget, uint32 renderbuffer);
-// typedef GLenum glCheckFramebufferStatusType(GLenum target);
+typedef void glGenFramebuffersType(isize n, uint32 *ids);
+typedef void glBindFramebufferType(GLenum target, uint32 framebuffer);
+typedef void glFramebufferTexture2DType(GLenum target, GLenum attachment, GLenum textarget, uint32 texture, int32 level);
+typedef void glGenRenderbuffersType(isize n, uint32 *renderbuffers);
+typedef void glBindRenderbufferType(GLenum target, uint32 renderbuffer);
+typedef void glRenderbufferStorageType(GLenum target, GLenum internalformat, isize width, isize height);
+typedef void glFramebufferRenderbufferType(GLenum target, GLenum attachment, GLenum renderbuffertarget, uint32 renderbuffer);
+typedef GLenum glCheckFramebufferStatusType(GLenum target);
 
 extern glActiveTextureType *glActiveTexture;
-// extern glGenFramebuffersType *glGenFramebuffers;
-// extern glBindFramebufferType *glBindFramebuffer;
-// extern glFramebufferTexture2DType *glFramebufferTexture2D;
 // extern glBlitFramebufferType *glBlitFramebuffer;
 // extern glClearBufferivType *glClearBufferiv;
 extern glGenBuffersType *glGenBuffers;
@@ -146,11 +143,14 @@ extern glUniform3fType *glUniform3f;
 extern glUniform4fType *glUniform4f;
 extern glUniformMatrix4fvType *glUniformMatrix4fv;
 // extern glTexImage2DMultisampleType *glTexImage2DMultisample;
-// extern glGenRenderbuffersType *glGenRenderbuffers;
-// extern glBindRenderbufferType *glBindRenderbuffer;
-// extern glRenderbufferStorageType *glRenderbufferStorage;
-// extern glFramebufferRenderbufferType *glFramebufferRenderbuffer;
-// extern glCheckFramebufferStatusType *glCheckFramebufferStatus;
+extern glGenFramebuffersType *glGenFramebuffers;
+extern glBindFramebufferType *glBindFramebuffer;
+extern glFramebufferTexture2DType *glFramebufferTexture2D;
+extern glGenRenderbuffersType *glGenRenderbuffers;
+extern glBindRenderbufferType *glBindRenderbuffer;
+extern glRenderbufferStorageType *glRenderbufferStorage;
+extern glFramebufferRenderbufferType *glFramebufferRenderbuffer;
+extern glCheckFramebufferStatusType *glCheckFramebufferStatus;
 
 bool opengl_init(void);
 

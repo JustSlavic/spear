@@ -39,7 +39,7 @@ spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view pat
     printf("    EngineCommand_LoadMesh(handle=%u; name=%s);\n", handle.handle, path.data);
 
     bool use_generated_mesh = false;
-    cpu_mesh generated_mesh;
+    cpu_mesh generated_mesh = {};
     if (string_view_equals_cstring(path, "generated/mesh_cube"))
     {
         generated_mesh = mesh_cube_create();
@@ -97,7 +97,7 @@ spear_engine_get_mesh(spear_engine *engine, mesh_handle handle)
 {
     asset_mesh *result = NULL;
 
-    uint32 index = -1;
+    uint32 index = 0xffffffff;
     asset_hash_table_result ht_result = asset_hash_table_get(&engine->mesh_pool.ht, handle.handle, &index);
     if (ht_result == AssetHashTableResult_Success)
     {

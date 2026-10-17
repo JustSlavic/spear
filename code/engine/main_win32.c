@@ -528,8 +528,11 @@ int WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CmdLine, int ShowC
 #include <corelibs/file_formats/wav.c>
 #include <corelibs/file_formats/obj.c>
 #include <corelibs/crc.c>
+#include <corelibs/string_view.c>
+#include <corelibs/handle_allocator.c>
 
 #include <gamelibs/input.c>
+#include <gamelibs/asset.c>
 
 #include <engine/engine.c>
 #include <engine/graphics/render.c>
