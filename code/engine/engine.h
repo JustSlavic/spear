@@ -115,10 +115,7 @@ typedef struct
 
     gpu_mesh mesh_square;
     gpu_mesh mesh_square_uv;
-    gpu_mesh mesh_sphere;
-    gpu_mesh mesh_ico_sphere;
     gpu_mesh mesh_ui_frame;
-    gpu_mesh mesh_suzanne;
 
     gpu_shader shader_single_color;
     gpu_shader shader_textured;

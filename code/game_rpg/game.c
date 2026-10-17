@@ -474,6 +474,7 @@ INITIALIZE_MEMORY_FUNCTION(context *ctx, memory_view game_memory)
     gs->mesh_icosahedron = send_command_load_mesh(ctx, gs, "generated/mesh_icosahedron");
     gs->mesh_sphere = send_command_load_mesh(ctx, gs, "generated/mesh_sphere");
     gs->mesh_ico_sphere = send_command_load_mesh(ctx, gs, "generated/mesh_ico_sphere");
+    gs->mesh_suzanne = send_command_load_mesh(ctx, gs, "suzanne.obj");
 
     game_entity_create_hero(gs, 3, 3);
 }

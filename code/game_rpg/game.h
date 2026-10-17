@@ -136,6 +136,7 @@ typedef struct game_state
     mesh_handle mesh_icosahedron;
     mesh_handle mesh_sphere;
     mesh_handle mesh_ico_sphere;
+    mesh_handle mesh_suzanne;
 
     bool is_wireframe;
     bool is_free_camera;

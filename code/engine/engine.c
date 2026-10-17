@@ -66,45 +66,115 @@ typedef enum
 } spear_load_file_result;
 
 
+static spear_load_file_result
+spear_engine_load_mesh_file(spear_engine *engine, string_view path, cpu_mesh *mesh)
+{
+    char buffer[1024] = {};
+    int n = snprintf(buffer, 1024, "../data/%.*s", (int) path.size, path.data);
+
+    usize file_size = platform_get_file_size(buffer);
+    if (file_size > 0)
+    {
+        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
+        if (file_data != NULL)
+        {
+            uint32 bytes_read = platform_read_file_into_memory(buffer, file_data, file_size);
+            ASSERT(bytes_read == file_size);
+
+            obj_decode_result decode_result;
+
+            float *vertices = NULL;
+            uint32 vertex_buffer_size = 0;
+
+            int32 *indices = NULL;
+            uint32 index_buffer_size = 0;
+
+#if 0
+            obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
+            printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
+
+            vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
+            indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
+
+            decode_result = obj_decode(file_data, file_size,
+               vertices, vertex_buffer_size,
+               indices, index_buffer_size);
+#else
+            decode_result = obj_decode_no_index(file_data, file_size,
+                (void **) &vertices, &vertex_buffer_size);
+#endif
+            if (decode_result == ObjDecode_Success)
+            {
+                vertex_buffer_layout vbl = {};
+                render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
+                render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
+
+                mesh->vbo.data = vertices;
+                mesh->vbo.size = vertex_buffer_size;
+                mesh->ibo.data = indices;
+                mesh->ibo.size = index_buffer_size;
+                mesh->vbl = vbl;
+            }
+            else
+            {
+                return SpearLoadFile_DecodeFailed;
+            }
+        }
+        else
+        {
+            return SpearLoadFile_NotEnoughMemory;
+        }
+    }
+    else
+    {
+        return SpearLoadFile_FileDoesNotExist;
+    }
+
+    return SpearLoadFile_Success;
+}
+
 static void
 spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view path)
 {
-    printf("    EngineCommand_LoadMesh(handle=%u; name=%s);\n", handle.handle, path.data);
-
-    bool use_generated_mesh = false;
-    cpu_mesh generated_mesh = {};
+    bool load_from_disk_successful = false;
+    cpu_mesh mesh = {};
     if (string_view_equals_cstring(path, "generated/mesh_cube"))
     {
-        generated_mesh = mesh_cube_create();
-        use_generated_mesh = true;
+        mesh = mesh_cube_create();
+        load_from_disk_successful = true;
     }
     else if (string_view_equals_cstring(path, "generated/mesh_tetrahedron"))
     {
-        generated_mesh = mesh_tetrahedron_create();
-        use_generated_mesh = true;
+        mesh = mesh_tetrahedron_create();
+        load_from_disk_successful = true;
     }
     else if (string_view_equals_cstring(path, "generated/mesh_octahedron"))
     {
-        generated_mesh = mesh_octahedron_create();
-        use_generated_mesh = true;
+        mesh = mesh_octahedron_create();
+        load_from_disk_successful = true;
     }
     else if (string_view_equals_cstring(path, "generated/mesh_icosahedron"))
     {
-        generated_mesh = mesh_icosahedron_create();
-        use_generated_mesh = true;
+        mesh = mesh_icosahedron_create();
+        load_from_disk_successful = true;
     }
     else if (string_view_equals_cstring(path, "generated/mesh_sphere"))
     {
-        generated_mesh = mesh_sphere_create(10, 10);
-        use_generated_mesh = true;
+        mesh = mesh_sphere_create(10, 10);
+        load_from_disk_successful = true;
     }
     else if (string_view_equals_cstring(path, "generated/mesh_ico_sphere"))
     {
-        generated_mesh = mesh_ico_sphere_create(engine->allocator, engine->temporary);
-        use_generated_mesh = true;
+        mesh = mesh_ico_sphere_create(engine->allocator, engine->temporary);
+        load_from_disk_successful = true;
+    }
+    else
+    {
+        spear_load_file_result load_result = spear_engine_load_mesh_file(engine, path, &mesh);
+        load_from_disk_successful = (load_result == SpearLoadFile_Success);
     }
 
-    if (use_generated_mesh)
+    if (load_from_disk_successful)
     {
         if (engine->mesh_pool.count < engine->mesh_pool.capacity)
         {
@@ -113,15 +183,18 @@ spear_engine_load_mesh(spear_engine *engine, mesh_handle handle, string_view pat
             asset_mesh *asset = engine->mesh_pool.pool + index;
             asset->status = AssetStatus_Ready;
             asset->handle = handle;
-            asset->gpu = render_load_mesh_to_gpu(generated_mesh);
+            asset->gpu = render_load_mesh_to_gpu(mesh);
 
             engine->mesh_pool.count += 1;
 
             // Second, insert the index value to the hash table
             asset_hash_table_insert(&engine->mesh_pool.ht, handle.handle, index);
         }
-
-        return;
+    }
+    else
+    {
+        REPORT_ERROR("Could not load mesh from file (path=\"%.*s\")",
+            (int) path.size, path.data);
     }
 }
 
@@ -376,59 +449,6 @@ spear_engine_load_game_data(spear_engine *engine)
         engine->audio_thunder = spear_audio_add_track(&engine->audio, (int16 *) engine->audio_buffer_thunder.data, sample_count_in_file);
         spear_audio_play_once(&engine->audio, engine->audio_thunder);
     }
-
-    {
-        char const *obj_filename = "../data/suzanne.obj";
-        usize file_size = platform_get_file_size(obj_filename);
-        printf("Obj size = %llu\n", file_size);
-        void *file_data = ALLOCATE_BUFFER_(engine->temporary, file_size);
-        uint32 bytes_read = platform_read_file_into_memory(obj_filename, file_data, file_size);
-        ASSERT(bytes_read == file_size);
-
-        obj_decode_result decode_result;
-
-        float *vertices = NULL;
-        uint32 vertex_buffer_size = 0;
-
-        int32 *indices = NULL;
-        uint32 index_buffer_size = 0;
-#if 0
-        obj_extract_size(file_data, file_size, &vertex_buffer_size, &index_buffer_size);
-        printf("EXTRACTED SIZES: %u; %u\n", vertex_buffer_size, index_buffer_size);
-
-        vertices = ALLOCATE_BUFFER_(engine->allocator, vertex_buffer_size);
-        indices = ALLOCATE_BUFFER_(engine->allocator, index_buffer_size);
-
-        decode_result = obj_decode(file_data, file_size,
-           vertices, vertex_buffer_size,
-           indices, index_buffer_size);
-#else
-        decode_result = obj_decode_no_index(file_data, file_size,
-            (void **) &vertices, &vertex_buffer_size);
-#endif
-
-        UNUSED(decode_result);
-        printf("DECODE RESULT = %s\n", obj_decode_result_to_cstring(decode_result));
-
-        vertex_buffer_layout vbl = {};
-        render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
-        render_vertex_buffer_layout_push(&vbl, sizeof(float), 3);
-
-        cpu_mesh suzanne =
-        {
-            .vbo = {
-                .data = vertices,
-                .size = vertex_buffer_size,
-            },
-            .ibo = {
-                .data = indices,
-                .size = index_buffer_size,
-            },
-            .vbl = vbl,
-        };
-
-        engine->mesh_suzanne = render_load_mesh_to_gpu(suzanne);
-    }
 }
 
 
@@ -595,8 +615,6 @@ void spear_engine_create_meshes(spear_engine *engine)
 {
     engine->mesh_square = render_load_mesh_to_gpu(mesh_square_create());
     engine->mesh_square_uv = render_load_mesh_to_gpu(mesh_square_create_uv());
-    // engine->mesh_sphere = render_load_mesh_to_gpu(mesh_sphere_create(10, 10));
-    engine->mesh_ico_sphere = render_load_mesh_to_gpu(mesh_ico_sphere_create(engine->allocator, engine->temporary));
     engine->mesh_ui_frame = render_load_mesh_to_gpu(mesh_ui_frame_create());
 }
 
@@ -1134,7 +1152,7 @@ void spear_engine_game_render(spear_engine *engine)
     }
 
     // Draw framebuffer contents on top of everything
-    if (1)
+    if (0)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(
@@ -1161,7 +1179,7 @@ void spear_engine_game_render(spear_engine *engine)
     }
 
     // Draw depth map contents on top of everything
-    if (1)
+    if (0)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(
